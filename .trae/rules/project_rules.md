@@ -261,6 +261,7 @@ const emit = defineEmits<Emit>()
 - **COMMAND**: `npm run dev`
 - **HOT RELOAD**: Enabled via Vite
 - **TYPE CHECKING**: `npm run typecheck`
+- **WEBSITE URL**: `https://blackcheetah.test` (always use this URL for IDE preview testing)
 
 ### 2. Production
 - **BUILD**: `npm run build`

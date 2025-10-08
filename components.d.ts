@@ -8,9 +8,11 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AddAuthenticatorAppDialog: typeof import('./resources/ts/components/dialogs/AddAuthenticatorAppDialog.vue')['default']
+    AddDocumentModal: typeof import('./resources/ts/components/dialogs/AddDocumentModal.vue')['default']
     AddEditAddressDialog: typeof import('./resources/ts/components/dialogs/AddEditAddressDialog.vue')['default']
     AddEditPermissionDialog: typeof import('./resources/ts/components/dialogs/AddEditPermissionDialog.vue')['default']
     AddEditRoleDialog: typeof import('./resources/ts/components/dialogs/AddEditRoleDialog.vue')['default']
+    AddFranchiseeModal: typeof import('./resources/ts/components/dialogs/AddFranchiseeModal.vue')['default']
     AddNoteModal: typeof import('./resources/ts/components/franchisor/AddNoteModal.vue')['default']
     AddPaymentMethodDialog: typeof import('./resources/ts/components/dialogs/AddPaymentMethodDialog.vue')['default']
     AppAutocomplete: typeof import('./resources/ts/@core/components/app-form-elements/AppAutocomplete.vue')['default']
@@ -34,6 +36,7 @@ declare module 'vue' {
     CardStatisticsVerticalSimple: typeof import('./resources/ts/@core/components/CardStatisticsVerticalSimple.vue')['default']
     ConfirmDialog: typeof import('./resources/ts/components/dialogs/ConfirmDialog.vue')['default']
     CreateAppDialog: typeof import('./resources/ts/components/dialogs/CreateAppDialog.vue')['default']
+    CreateTaskModal: typeof import('./resources/ts/components/dialogs/CreateTaskModal.vue')['default']
     CustomCheckboxes: typeof import('./resources/ts/@core/components/app-form-elements/CustomCheckboxes.vue')['default']
     CustomCheckboxesWithIcon: typeof import('./resources/ts/@core/components/app-form-elements/CustomCheckboxesWithIcon.vue')['default']
     CustomCheckboxesWithImage: typeof import('./resources/ts/@core/components/app-form-elements/CustomCheckboxesWithImage.vue')['default']
@@ -366,6 +369,7 @@ declare module 'vue' {
     DemoTooltipTransition: typeof import('./resources/ts/views/demos/components/tooltip/DemoTooltipTransition.vue')['default']
     DemoTooltipVModelSupport: typeof import('./resources/ts/views/demos/components/tooltip/DemoTooltipVModelSupport.vue')['default']
     DialogCloseBtn: typeof import('./resources/ts/@core/components/DialogCloseBtn.vue')['default']
+    DocumentActionModal: typeof import('./resources/ts/components/dialogs/DocumentActionModal.vue')['default']
     DropZone: typeof import('./resources/ts/@core/components/DropZone.vue')['default']
     EnableOneTimePasswordDialog: typeof import('./resources/ts/components/dialogs/EnableOneTimePasswordDialog.vue')['default']
     ErrorHeader: typeof import('./resources/ts/components/ErrorHeader.vue')['default']

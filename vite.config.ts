@@ -1,7 +1,7 @@
-import { fileURLToPath } from 'node:url'
-import laravel from 'laravel-vite-plugin'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import laravel from 'laravel-vite-plugin'
+import { fileURLToPath } from 'node:url'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { VueRouterAutoImports, getPascalCaseRouteName } from 'unplugin-vue-router'
@@ -13,11 +13,12 @@ import svgLoader from 'vite-svg-loader'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [// Docs: https://github.com/posva/unplugin-vue-router
-  // ℹ️ This plugin should be placed before vue plugin
+    // ℹ️ This plugin should be placed before vue plugin
     VueRouter({
       getRouteName: routeNode => {
-      // Convert pascal case to kebab case
+        // Convert pascal case to kebab case
         return getPascalCaseRouteName(routeNode)
           .replace(/([a-z\d])([A-Z])/g, '$1-$2')
           .toLowerCase()
@@ -56,7 +57,7 @@ export default defineConfig({
       dts: true,
       resolvers: [
         componentName => {
-        // Auto import `VueApexCharts`
+          // Auto import `VueApexCharts`
           if (componentName === 'VueApexCharts')
             return { name: 'default', from: 'vue3-apexcharts', as: 'VueApexCharts' }
         },
@@ -101,5 +102,16 @@ export default defineConfig({
     entries: [
       './resources/ts/**/*.vue',
     ],
+  },
+  server: {
+    host: 'blackcheetah.test',
+    port: 5173,
+    hmr: {
+      host: 'blackcheetah.test',
+      port: 5173,
+    },
+    watch: {
+      usePolling: true,
+    },
   },
 })
