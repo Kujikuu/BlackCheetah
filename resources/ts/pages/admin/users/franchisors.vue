@@ -106,15 +106,14 @@ const filteredFranchisors = computed(() => {
 
   if (searchQuery.value) {
     filtered = filtered.filter(user =>
-      user.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.franchiseName.toLowerCase().includes(searchQuery.value.toLowerCase()),
+      user.fullName.toLowerCase().includes(searchQuery.value.toLowerCase())
+      || user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+      || user.franchiseName.toLowerCase().includes(searchQuery.value.toLowerCase()),
     )
   }
 
-  if (selectedStatus.value) {
+  if (selectedStatus.value)
     filtered = filtered.filter(user => user.status === selectedStatus.value)
-  }
 
   return filtered
 })
@@ -160,6 +159,7 @@ const userToDelete = ref<any>(null)
 // Add new franchisor
 const addNewFranchisor = (franchisorData: any) => {
   const newId = Math.max(...franchisors.value.map(f => f.id)) + 1
+
   franchisors.value.push({
     ...franchisorData,
     id: newId,
@@ -177,20 +177,19 @@ const editFranchisor = (franchisor: any) => {
 // Update franchisor
 const updateFranchisor = (franchisorData: any) => {
   const index = franchisors.value.findIndex(f => f.id === franchisorData.id)
-  if (index !== -1) {
+  if (index !== -1)
     franchisors.value[index] = { ...franchisors.value[index], ...franchisorData }
-  }
+
   selectedFranchisor.value = null
 }
 
 // Handle drawer data
 const handleFranchisorData = (franchisorData: any) => {
-  if (franchisorData.id) {
+  if (franchisorData.id)
     updateFranchisor(franchisorData)
-  }
-  else {
+
+  else
     addNewFranchisor(franchisorData)
-  }
 }
 
 // Open delete dialog
@@ -201,7 +200,8 @@ const openDeleteDialog = (franchisor: any) => {
 
 // Delete user
 const deleteUser = async () => {
-  if (!userToDelete.value) return
+  if (!userToDelete.value)
+    return
 
   const index = franchisors.value.findIndex(user => user.id === userToDelete.value.id)
   if (index !== -1)
@@ -224,6 +224,7 @@ const openResetPasswordDialog = (franchisor: any) => {
 // Reset password
 const resetPassword = (password: string) => {
   console.log('Password reset for:', selectedFranchisor.value?.fullName, 'New password:', password)
+
   // Implement password reset logic here
   selectedFranchisor.value = null
 }
@@ -251,6 +252,7 @@ const exportToCSV = () => {
     : franchisors.value
 
   console.log('Exporting to CSV:', dataToExport)
+
   // Implement CSV export logic
 }
 
@@ -260,14 +262,14 @@ const exportToPDF = () => {
     : franchisors.value
 
   console.log('Exporting to PDF:', dataToExport)
+
   // Implement PDF export logic
 }
 
 // Widget data
 const widgetData = ref([
   { title: 'Total Franchisors', value: '156', change: 12.5, desc: 'All registered franchisors', icon: 'tabler-building-store', iconColor: 'primary' },
-  // { title: 'Active Franchisors', value: '142', change: 8.3, desc: 'Currently active', icon: 'tabler-user-check', iconColor: 'success' },
-  { title: 'Basic Plan', value: '100', change: -5.2, desc: 'Basic Plan', icon: 'tabler-file-chart', iconColor: 'warning' },
+  { title: 'Basic Plan', value: '100', change: 3.2, desc: 'Basic Plan', icon: 'tabler-file-chart', iconColor: 'success' },
   { title: 'Pro Plan', value: '56', change: -5.2, desc: 'Pro Plan', icon: 'tabler-file-chart', iconColor: 'warning' },
 ])
 </script>
@@ -497,7 +499,9 @@ const widgetData = ref([
                     <template #prepend>
                       <VIcon icon="tabler-trash" color="error" />
                     </template>
-                    <VListItemTitle class="text-error">Delete</VListItemTitle>
+                    <VListItemTitle class="text-error">
+                      Delete
+                    </VListItemTitle>
                   </VListItem>
                 </VList>
               </VMenu>
@@ -513,34 +517,19 @@ const widgetData = ref([
     </VCard>
 
     <!-- Add/Edit Franchisor Drawer -->
-    <AddEditFranchisorDrawer
-      v-model:is-drawer-open="isAddNewUserDrawerVisible"
-      :franchisor="selectedFranchisor"
-      @franchisor-data="handleFranchisorData"
-      @update:is-drawer-open="handleDrawerClose"
-    />
+    <AddEditFranchisorDrawer v-model:is-drawer-open="isAddNewUserDrawerVisible" :franchisor="selectedFranchisor"
+      @franchisor-data="handleFranchisorData" @update:is-drawer-open="handleDrawerClose" />
 
     <!-- Delete Confirmation Dialog -->
-    <ConfirmDeleteDialog
-      v-model:is-dialog-open="isDeleteDialogVisible"
-      :user-name="userToDelete?.fullName"
-      user-type="Franchisor"
-      @confirm="deleteUser"
-    />
+    <ConfirmDeleteDialog v-model:is-dialog-open="isDeleteDialogVisible" :user-name="userToDelete?.fullName"
+      user-type="Franchisor" @confirm="deleteUser" />
 
     <!-- Reset Password Dialog -->
-    <ResetPasswordDialog
-      v-model:is-dialog-open="isResetPasswordDialogVisible"
-      :user-name="selectedFranchisor?.fullName"
-      @confirm="resetPassword"
-    />
+    <ResetPasswordDialog v-model:is-dialog-open="isResetPasswordDialogVisible" :user-name="selectedFranchisor?.fullName"
+      @confirm="resetPassword" />
 
     <!-- View User Dialog -->
-    <ViewUserDialog
-      v-model:is-dialog-open="isViewDialogVisible"
-      :user="selectedFranchisor"
-      user-type="Franchisor"
-      @edit="handleEditFromView"
-    />
+    <ViewUserDialog v-model:is-dialog-open="isViewDialogVisible" :user="selectedFranchisor" user-type="Franchisor"
+      @edit="handleEditFromView" />
   </section>
 </template>

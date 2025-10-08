@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import AdminUsersChart from '@/views/admin/charts/AdminUsersChart.vue'
-import AdminRevenueGrowth from '@/views/admin/charts/AdminRevenueGrowth.vue'
 import AdminRequestsChart from '@/views/admin/charts/AdminRequestsChart.vue'
-import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
-import AddEditFranchisorDrawer from '@/views/admin/modals/AddEditFranchisorDrawer.vue'
+import AdminRevenueGrowth from '@/views/admin/charts/AdminRevenueGrowth.vue'
+import AdminUsersChart from '@/views/admin/charts/AdminUsersChart.vue'
 import AddEditFranchiseeDrawer from '@/views/admin/modals/AddEditFranchiseeDrawer.vue'
+import AddEditFranchisorDrawer from '@/views/admin/modals/AddEditFranchisorDrawer.vue'
 import AddEditSalesDrawer from '@/views/admin/modals/AddEditSalesDrawer.vue'
+import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
 
 definePage({
   meta: {
@@ -124,40 +124,42 @@ const viewUser = (user: any) => {
 // Edit user
 const editUser = (user: any) => {
   selectedUser.value = { ...user }
-  
+
   // Open appropriate drawer based on role
-  if (user.role === 'franchisor') {
+  if (user.role === 'franchisor')
     isEditFranchisorDrawerVisible.value = true
-  }
-  else if (user.role === 'franchisee') {
+
+  else if (user.role === 'franchisee')
     isEditFranchiseeDrawerVisible.value = true
-  }
-  else if (user.role === 'sales') {
+
+  else if (user.role === 'sales')
     isEditSalesDrawerVisible.value = true
-  }
 }
 
 // Handle edit from view dialog
 const handleEditFromView = () => {
-  if (selectedUser.value) {
+  if (selectedUser.value)
     editUser(selectedUser.value)
-  }
 }
 
 // Update user data
 const updateUser = (userData: any) => {
   const index = recentUsers.value.findIndex(u => u.id === userData.id)
-  if (index !== -1) {
+  if (index !== -1)
     recentUsers.value[index] = { ...recentUsers.value[index], ...userData }
-  }
+
   selectedUser.value = null
 }
 
 // Get user type label
 const getUserTypeLabel = (role: string) => {
-  if (role === 'franchisor') return 'Franchisor'
-  if (role === 'franchisee') return 'Franchisee'
-  if (role === 'sales') return 'Sales User'
+  if (role === 'franchisor')
+    return 'Franchisor'
+  if (role === 'franchisee')
+    return 'Franchisee'
+  if (role === 'sales')
+    return 'Sales User'
+
   return 'User'
 }
 </script>
