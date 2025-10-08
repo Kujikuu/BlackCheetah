@@ -2,6 +2,10 @@
 import AdminUsersChart from '@/views/admin/charts/AdminUsersChart.vue'
 import AdminRevenueGrowth from '@/views/admin/charts/AdminRevenueGrowth.vue'
 import AdminRequestsChart from '@/views/admin/charts/AdminRequestsChart.vue'
+import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
+import AddEditFranchisorDrawer from '@/views/admin/modals/AddEditFranchisorDrawer.vue'
+import AddEditFranchiseeDrawer from '@/views/admin/modals/AddEditFranchiseeDrawer.vue'
+import AddEditSalesDrawer from '@/views/admin/modals/AddEditSalesDrawer.vue'
 
 definePage({
   meta: {
@@ -28,6 +32,9 @@ const recentUsers = ref([
     status: 'active',
     avatar: '',
     joinedDate: '2024-01-15',
+    franchiseName: 'Acme Corporation',
+    plan: 'Enterprise',
+    lastLogin: '2024-01-15',
   },
   {
     id: 2,
@@ -37,6 +44,8 @@ const recentUsers = ref([
     status: 'active',
     avatar: '',
     joinedDate: '2024-01-14',
+    location: 'Riyadh',
+    phone: '+966 50 567 8905',
   },
   {
     id: 3,
@@ -46,6 +55,8 @@ const recentUsers = ref([
     status: 'pending',
     avatar: '',
     joinedDate: '2024-01-13',
+    city: 'Riyadh',
+    phone: '+966 50 567 8910',
   },
   {
     id: 4,
@@ -55,6 +66,8 @@ const recentUsers = ref([
     status: 'active',
     avatar: '',
     joinedDate: '2024-01-12',
+    location: 'Jeddah',
+    phone: '+966 55 567 8906',
   },
   {
     id: 5,
@@ -64,6 +77,9 @@ const recentUsers = ref([
     status: 'inactive',
     avatar: '',
     joinedDate: '2024-01-11',
+    franchiseName: 'Global Ventures',
+    plan: 'Pro',
+    lastLogin: '2024-01-11',
   },
 ])
 
@@ -90,6 +106,59 @@ const resolveUserStatusVariant = (stat: string) => {
     return 'secondary'
 
   return 'primary'
+}
+
+// Modal/Drawer states
+const isViewDialogVisible = ref(false)
+const isEditFranchisorDrawerVisible = ref(false)
+const isEditFranchiseeDrawerVisible = ref(false)
+const isEditSalesDrawerVisible = ref(false)
+const selectedUser = ref<any>(null)
+
+// View user
+const viewUser = (user: any) => {
+  selectedUser.value = user
+  isViewDialogVisible.value = true
+}
+
+// Edit user
+const editUser = (user: any) => {
+  selectedUser.value = { ...user }
+  
+  // Open appropriate drawer based on role
+  if (user.role === 'franchisor') {
+    isEditFranchisorDrawerVisible.value = true
+  }
+  else if (user.role === 'franchisee') {
+    isEditFranchiseeDrawerVisible.value = true
+  }
+  else if (user.role === 'sales') {
+    isEditSalesDrawerVisible.value = true
+  }
+}
+
+// Handle edit from view dialog
+const handleEditFromView = () => {
+  if (selectedUser.value) {
+    editUser(selectedUser.value)
+  }
+}
+
+// Update user data
+const updateUser = (userData: any) => {
+  const index = recentUsers.value.findIndex(u => u.id === userData.id)
+  if (index !== -1) {
+    recentUsers.value[index] = { ...recentUsers.value[index], ...userData }
+  }
+  selectedUser.value = null
+}
+
+// Get user type label
+const getUserTypeLabel = (role: string) => {
+  if (role === 'franchisor') return 'Franchisor'
+  if (role === 'franchisee') return 'Franchisee'
+  if (role === 'sales') return 'Sales User'
+  return 'User'
 }
 </script>
 
@@ -284,7 +353,10 @@ const resolveUserStatusVariant = (stat: string) => {
                 </td>
                 <td>
                   <div class="d-flex gap-1">
-                    <IconBtn size="small">
+                    <IconBtn
+                      size="small"
+                      @click="viewUser(user)"
+                    >
                       <VIcon icon="tabler-eye" />
                       <VTooltip
                         activator="parent"
@@ -294,7 +366,10 @@ const resolveUserStatusVariant = (stat: string) => {
                       </VTooltip>
                     </IconBtn>
 
-                    <IconBtn size="small">
+                    <IconBtn
+                      size="small"
+                      @click="editUser(user)"
+                    >
                       <VIcon icon="tabler-edit" />
                       <VTooltip
                         activator="parent"
@@ -311,5 +386,34 @@ const resolveUserStatusVariant = (stat: string) => {
         </VCard>
       </VCol>
     </VRow>
+
+    <!-- View User Dialog -->
+    <ViewUserDialog
+      v-model:is-dialog-open="isViewDialogVisible"
+      :user="selectedUser"
+      :user-type="selectedUser ? getUserTypeLabel(selectedUser.role) : 'User'"
+      @edit="handleEditFromView"
+    />
+
+    <!-- Edit Franchisor Drawer -->
+    <AddEditFranchisorDrawer
+      v-model:is-drawer-open="isEditFranchisorDrawerVisible"
+      :franchisor="selectedUser"
+      @franchisor-data="updateUser"
+    />
+
+    <!-- Edit Franchisee Drawer -->
+    <AddEditFranchiseeDrawer
+      v-model:is-drawer-open="isEditFranchiseeDrawerVisible"
+      :franchisee="selectedUser"
+      @franchisee-data="updateUser"
+    />
+
+    <!-- Edit Sales Drawer -->
+    <AddEditSalesDrawer
+      v-model:is-drawer-open="isEditSalesDrawerVisible"
+      :sales-user="selectedUser"
+      @sales-user-data="updateUser"
+    />
   </section>
 </template>
