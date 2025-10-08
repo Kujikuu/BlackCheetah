@@ -4,6 +4,13 @@ export default [
     icon: { icon: 'tabler-building-community' },
     children: [
       {
+        title: 'Overview',
+        to: 'franchisor',
+        icon: { icon: 'tabler-dashboard' },
+        badgeContent: 'Phase 04',
+        badgeClass: 'bg-warning',
+      },
+      {
         title: 'Dashboard',
         icon: { icon: 'tabler-building-community' },
         children: [
@@ -42,6 +49,13 @@ export default [
         icon: { icon: 'tabler-user-search' },
         badgeContent: 'Phase 02',
         badgeClass: 'bg-success',
+      },
+      {
+        title: 'Franchise Registration',
+        to: 'franchisor-franchise-registration-wizard',
+        icon: { icon: 'tabler-forms' },
+        badgeContent: 'Phase 04',
+        badgeClass: 'bg-warning',
       },
     ],
   },

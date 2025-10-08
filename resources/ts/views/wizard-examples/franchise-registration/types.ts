@@ -1,0 +1,50 @@
+export interface PersonalInfoData {
+  contactNumber: string
+  country: string
+  state: string
+  city: string
+  address: string
+}
+
+export interface FranchiseDetailsData {
+  franchiseDetails: {
+    franchiseName: string
+    website: string
+    logo: File | null
+  }
+  legalDetails: {
+    legalEntityName: string
+    businessStructure: string
+    taxId: string
+    industry: string
+    fundingAmount: string
+    fundingSource: string
+  }
+  contactDetails: {
+    contactNumber: string
+    email: string
+    address: string
+    country: string
+    state: string
+    city: string
+  }
+}
+
+export interface DocumentUploadData {
+  fdd: File | null
+  franchiseAgreement: File | null
+  operationsManual: File | null
+  brandGuidelines: File | null
+  legalDocuments: File[] | null
+}
+
+export interface ReviewCompleteData {
+  termsAccepted: boolean
+}
+
+export interface FranchiseRegistrationData {
+  personalInfo: PersonalInfoData
+  franchiseDetails: FranchiseDetailsData
+  documents: DocumentUploadData
+  reviewComplete: ReviewCompleteData
+}
