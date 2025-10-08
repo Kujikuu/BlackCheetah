@@ -1,0 +1,854 @@
+<script setup lang="ts">
+import EditTechnicalRequestDrawer from '@/views/admin/modals/EditTechnicalRequestDrawer.vue'
+
+definePage({
+  meta: {
+    subject: 'Admin',
+    action: 'read',
+  },
+})
+
+// Store
+const searchQuery = ref('')
+const selectedStatus = ref()
+const selectedPriority = ref()
+
+// Data table options
+const itemsPerPage = ref(10)
+const page = ref(1)
+const sortBy = ref()
+const orderBy = ref()
+const selectedRows = ref<number[]>([])
+
+// Update data table options
+const updateOptions = (options: any) => {
+  sortBy.value = options.sortBy[0]?.key
+  orderBy.value = options.sortBy[0]?.order
+}
+
+// Headers
+const headers = [
+  { title: 'Request ID', key: 'requestId' },
+  { title: 'User', key: 'user' },
+  { title: 'Subject', key: 'subject' },
+  { title: 'Priority', key: 'priority' },
+  { title: 'Status', key: 'status' },
+  { title: 'Date', key: 'date' },
+  { title: 'Actions', key: 'actions', sortable: false },
+]
+
+// Mock data - Replace with API call
+const technicalRequests = ref([
+  {
+    id: 1,
+    requestId: 'TR-2024-001',
+    userName: 'John Doe',
+    userEmail: 'john.doe@example.com',
+    userAvatar: '',
+    subject: 'Login issues on mobile app',
+    description: 'Unable to login using mobile device. Getting authentication error.',
+    priority: 'high',
+    status: 'open',
+    date: '2024-01-15',
+    category: 'Authentication',
+    attachments: [
+      { name: 'error-screenshot.png', size: '245 KB', url: '#' },
+      { name: 'error-log.txt', size: '12 KB', url: '#' },
+    ],
+  },
+  {
+    id: 2,
+    requestId: 'TR-2024-002',
+    userName: 'Jane Smith',
+    userEmail: 'jane.smith@example.com',
+    userAvatar: '',
+    subject: 'Payment processing error',
+    description: 'Payment gateway not responding during checkout process.',
+    priority: 'critical',
+    status: 'in-progress',
+    date: '2024-01-14',
+    category: 'Payment',
+    attachments: [
+      { name: 'payment-error.pdf', size: '156 KB', url: '#' },
+    ],
+  },
+  {
+    id: 3,
+    requestId: 'TR-2024-003',
+    userName: 'Mike Johnson',
+    userEmail: 'mike.j@example.com',
+    userAvatar: '',
+    subject: 'Dashboard data not loading',
+    description: 'Dashboard statistics showing blank after recent update.',
+    priority: 'medium',
+    status: 'open',
+    date: '2024-01-13',
+    category: 'Dashboard',
+    attachments: [],
+  },
+  {
+    id: 4,
+    requestId: 'TR-2024-004',
+    userName: 'Sarah Williams',
+    userEmail: 'sarah.w@example.com',
+    userAvatar: '',
+    subject: 'Email notifications not working',
+    description: 'Not receiving email notifications for new orders.',
+    priority: 'low',
+    status: 'resolved',
+    date: '2024-01-12',
+    category: 'Notifications',
+    attachments: [],
+  },
+  {
+    id: 5,
+    requestId: 'TR-2024-005',
+    userName: 'David Brown',
+    userEmail: 'david.b@example.com',
+    userAvatar: '',
+    subject: 'Report generation timeout',
+    description: 'Monthly reports timing out when trying to generate.',
+    priority: 'high',
+    status: 'in-progress',
+    date: '2024-01-11',
+    category: 'Reports',
+    attachments: [
+      { name: 'report-timeout-log.txt', size: '8 KB', url: '#' },
+    ],
+  },
+])
+
+const totalRequests = computed(() => technicalRequests.value.length)
+
+// Filtered data
+const filteredRequests = computed(() => {
+  let filtered = technicalRequests.value
+
+  if (searchQuery.value) {
+    filtered = filtered.filter(request =>
+      request.requestId.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      request.userName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      request.subject.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      request.category.toLowerCase().includes(searchQuery.value.toLowerCase()),
+    )
+  }
+
+  if (selectedStatus.value) {
+    filtered = filtered.filter(request => request.status === selectedStatus.value)
+  }
+
+  if (selectedPriority.value) {
+    filtered = filtered.filter(request => request.priority === selectedPriority.value)
+  }
+
+  return filtered
+})
+
+// Status options
+const statusOptions = [
+  { title: 'Open', value: 'open' },
+  { title: 'In Progress', value: 'in-progress' },
+  { title: 'Resolved', value: 'resolved' },
+  { title: 'Closed', value: 'closed' },
+]
+
+// Priority options
+const priorityOptions = [
+  { title: 'Low', value: 'low' },
+  { title: 'Medium', value: 'medium' },
+  { title: 'High', value: 'high' },
+  { title: 'Critical', value: 'critical' },
+]
+
+const resolveStatusVariant = (status: string) => {
+  const statusLowerCase = status.toLowerCase()
+  if (statusLowerCase === 'open')
+    return 'info'
+  if (statusLowerCase === 'in-progress')
+    return 'warning'
+  if (statusLowerCase === 'resolved')
+    return 'success'
+  if (statusLowerCase === 'closed')
+    return 'secondary'
+
+  return 'primary'
+}
+
+const resolvePriorityVariant = (priority: string) => {
+  const priorityLowerCase = priority.toLowerCase()
+  if (priorityLowerCase === 'low')
+    return { color: 'info', icon: 'tabler-arrow-down' }
+  if (priorityLowerCase === 'medium')
+    return { color: 'warning', icon: 'tabler-minus' }
+  if (priorityLowerCase === 'high')
+    return { color: 'error', icon: 'tabler-arrow-up' }
+  if (priorityLowerCase === 'critical')
+    return { color: 'error', icon: 'tabler-alert-triangle' }
+
+  return { color: 'primary', icon: 'tabler-minus' }
+}
+
+const isViewRequestDialogVisible = ref(false)
+const isEditRequestDrawerVisible = ref(false)
+const selectedRequest = ref<any>(null)
+
+// View request
+const viewRequest = (request: any) => {
+  selectedRequest.value = request
+  isViewRequestDialogVisible.value = true
+}
+
+// Edit request
+const editRequest = (request: any) => {
+  selectedRequest.value = { ...request }
+  isEditRequestDrawerVisible.value = true
+}
+
+// Update request
+const updateRequest = (requestData: any) => {
+  const index = technicalRequests.value.findIndex(r => r.id === requestData.id)
+  if (index !== -1) {
+    technicalRequests.value[index] = { ...technicalRequests.value[index], ...requestData }
+  }
+  selectedRequest.value = null
+}
+
+// Delete request
+const deleteRequest = async (id: number) => {
+  const index = technicalRequests.value.findIndex(request => request.id === id)
+  if (index !== -1)
+    technicalRequests.value.splice(index, 1)
+
+  // Remove from selectedRows
+  const selectedIndex = selectedRows.value.findIndex(row => row === id)
+  if (selectedIndex !== -1)
+    selectedRows.value.splice(selectedIndex, 1)
+}
+
+// Change status
+const changeStatus = (id: number, newStatus: string) => {
+  const request = technicalRequests.value.find(r => r.id === id)
+  if (request) {
+    request.status = newStatus
+  }
+}
+
+// Export functions
+const exportToCSV = () => {
+  const dataToExport = selectedRows.value.length > 0
+    ? technicalRequests.value.filter(request => selectedRows.value.includes(request.id))
+    : technicalRequests.value
+
+  console.log('Exporting to CSV:', dataToExport)
+  // Implement CSV export logic
+}
+
+const exportToPDF = () => {
+  const dataToExport = selectedRows.value.length > 0
+    ? technicalRequests.value.filter(request => selectedRows.value.includes(request.id))
+    : technicalRequests.value
+
+  console.log('Exporting to PDF:', dataToExport)
+  // Implement PDF export logic
+}
+
+// Bulk delete
+const bulkDelete = () => {
+  if (selectedRows.value.length === 0) return
+
+  technicalRequests.value = technicalRequests.value.filter(
+    request => !selectedRows.value.includes(request.id),
+  )
+  selectedRows.value = []
+}
+
+// Download attachment
+const downloadAttachment = (attachment: any) => {
+  console.log('Downloading:', attachment.name)
+  // In production, this would trigger actual file download
+  // window.open(attachment.url, '_blank')
+}
+
+// Get file icon based on extension
+const getFileIcon = (fileName: string) => {
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext || ''))
+    return 'tabler-photo'
+  if (['pdf'].includes(ext || ''))
+    return 'tabler-file-type-pdf'
+  if (['doc', 'docx'].includes(ext || ''))
+    return 'tabler-file-type-doc'
+  if (['xls', 'xlsx'].includes(ext || ''))
+    return 'tabler-file-type-xls'
+  if (['txt', 'log'].includes(ext || ''))
+    return 'tabler-file-text'
+  if (['zip', 'rar', '7z'].includes(ext || ''))
+    return 'tabler-file-zip'
+  
+  return 'tabler-file'
+}
+</script>
+
+<template>
+  <section>
+    <!-- Page Header -->
+    <VRow class="mb-6">
+      <VCol cols="12">
+        <div class="d-flex align-center justify-space-between">
+          <div>
+            <h2 class="text-h2 mb-1">
+              Technical Requests
+            </h2>
+            <p class="text-body-1 text-medium-emphasis">
+              Manage and track all technical support requests
+            </p>
+          </div>
+        </div>
+      </VCol>
+    </VRow>
+
+    <!-- Filters and Table -->
+    <VCard class="mb-6">
+      <VCardItem class="pb-4">
+        <VCardTitle>Filters</VCardTitle>
+      </VCardItem>
+
+      <VCardText>
+        <VRow>
+          <!-- Select Status -->
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedStatus"
+              placeholder="Select Status"
+              :items="statusOptions"
+              clearable
+              clear-icon="tabler-x"
+            />
+          </VCol>
+
+          <!-- Select Priority -->
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedPriority"
+              placeholder="Select Priority"
+              :items="priorityOptions"
+              clearable
+              clear-icon="tabler-x"
+            />
+          </VCol>
+        </VRow>
+      </VCardText>
+
+      <VDivider />
+
+      <VCardText class="d-flex flex-wrap gap-4">
+        <div class="me-3 d-flex gap-3">
+          <AppSelect
+            :model-value="itemsPerPage"
+            :items="[
+              { value: 10, title: '10' },
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+              { value: -1, title: 'All' },
+            ]"
+            style="inline-size: 6.25rem;"
+            @update:model-value="itemsPerPage = parseInt($event, 10)"
+          />
+
+          <!-- Bulk Actions -->
+          <VBtn
+            v-if="selectedRows.length > 0"
+            variant="tonal"
+            color="error"
+            @click="bulkDelete"
+          >
+            <VIcon
+              icon="tabler-trash"
+              class="me-2"
+            />
+            Delete Selected ({{ selectedRows.length }})
+          </VBtn>
+        </div>
+        <VSpacer />
+
+        <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
+          <!-- Search -->
+          <div style="inline-size: 15.625rem;">
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Search Requests"
+            />
+          </div>
+
+          <!-- Export Menu -->
+          <VBtn
+            variant="tonal"
+            color="secondary"
+          >
+            <VIcon
+              icon="tabler-upload"
+              class="me-2"
+            />
+            Export
+            <VMenu activator="parent">
+              <VList>
+                <VListItem @click="exportToCSV">
+                  <template #prepend>
+                    <VIcon icon="tabler-file-type-csv" />
+                  </template>
+                  <VListItemTitle>Export to CSV</VListItemTitle>
+                </VListItem>
+                <VListItem @click="exportToPDF">
+                  <template #prepend>
+                    <VIcon icon="tabler-file-type-pdf" />
+                  </template>
+                  <VListItemTitle>Export to PDF</VListItemTitle>
+                </VListItem>
+              </VList>
+            </VMenu>
+          </VBtn>
+        </div>
+      </VCardText>
+
+      <VDivider />
+
+      <!-- Data Table -->
+      <VDataTableServer
+        v-model:items-per-page="itemsPerPage"
+        v-model:model-value="selectedRows"
+        v-model:page="page"
+        :items="filteredRequests"
+        item-value="id"
+        :items-length="totalRequests"
+        :headers="headers"
+        class="text-no-wrap"
+        show-select
+        @update:options="updateOptions"
+      >
+        <!-- Empty State -->
+        <template #no-data>
+          <div class="text-center pa-8">
+            <VIcon
+              icon="tabler-inbox-off"
+              size="64"
+              class="mb-4 text-disabled"
+            />
+            <h3 class="text-h5 mb-2">
+              No Technical Requests Found
+            </h3>
+            <p class="text-body-1 text-medium-emphasis mb-4">
+              No requests match your search criteria. Try adjusting your filters.
+            </p>
+          </div>
+        </template>
+
+        <!-- Request ID -->
+        <template #item.requestId="{ item }">
+          <div class="text-body-1 font-weight-medium text-primary">
+            {{ item.requestId }}
+          </div>
+        </template>
+
+        <!-- User -->
+        <template #item.user="{ item }">
+          <div class="d-flex align-center gap-x-4">
+            <VAvatar
+              size="34"
+              :variant="!item.userAvatar ? 'tonal' : undefined"
+              color="primary"
+            >
+              <VImg
+                v-if="item.userAvatar"
+                :src="item.userAvatar"
+              />
+              <span v-else>{{ avatarText(item.userName) }}</span>
+            </VAvatar>
+            <div class="d-flex flex-column">
+              <h6 class="text-base font-weight-medium">
+                {{ item.userName }}
+              </h6>
+              <div class="text-sm text-medium-emphasis">
+                {{ item.userEmail }}
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Subject -->
+        <template #item.subject="{ item }">
+          <div class="text-body-1">
+            {{ item.subject }}
+          </div>
+          <div class="text-sm text-medium-emphasis">
+            {{ item.category }}
+          </div>
+        </template>
+
+        <!-- Priority -->
+        <template #item.priority="{ item }">
+          <VChip
+            :color="resolvePriorityVariant(item.priority).color"
+            size="small"
+            label
+            class="text-capitalize"
+          >
+            <VIcon
+              :icon="resolvePriorityVariant(item.priority).icon"
+              size="16"
+              class="me-1"
+            />
+            {{ item.priority }}
+          </VChip>
+        </template>
+
+        <!-- Status -->
+        <template #item.status="{ item }">
+          <VChip
+            :color="resolveStatusVariant(item.status)"
+            size="small"
+            label
+            class="text-capitalize"
+          >
+            {{ item.status }}
+          </VChip>
+        </template>
+
+        <!-- Date -->
+        <template #item.date="{ item }">
+          <div class="text-body-1">
+            {{ item.date }}
+          </div>
+        </template>
+
+        <!-- Actions -->
+        <template #item.actions="{ item }">
+          <div class="d-flex gap-1">
+            <IconBtn
+              size="small"
+              @click="viewRequest(item)"
+            >
+              <VIcon icon="tabler-eye" />
+              <VTooltip
+                activator="parent"
+                location="top"
+              >
+                View
+              </VTooltip>
+            </IconBtn>
+
+            <VBtn
+              icon
+              variant="text"
+              color="medium-emphasis"
+              size="small"
+            >
+              <VIcon
+                icon="tabler-dots-vertical"
+                size="22"
+              />
+              <VMenu activator="parent">
+                <VList>
+                  <VListItem @click="viewRequest(item)">
+                    <template #prepend>
+                      <VIcon icon="tabler-eye" />
+                    </template>
+                    <VListItemTitle>View Details</VListItemTitle>
+                  </VListItem>
+
+                  <VListItem @click="editRequest(item)">
+                    <template #prepend>
+                      <VIcon icon="tabler-pencil" />
+                    </template>
+                    <VListItemTitle>Edit</VListItemTitle>
+                  </VListItem>
+
+                  <VDivider class="my-2" />
+
+                  <VListSubheader>Change Status</VListSubheader>
+
+                  <VListItem @click="changeStatus(item.id, 'open')">
+                    <template #prepend>
+                      <VIcon
+                        icon="tabler-circle"
+                        color="info"
+                      />
+                    </template>
+                    <VListItemTitle>Open</VListItemTitle>
+                  </VListItem>
+
+                  <VListItem @click="changeStatus(item.id, 'in-progress')">
+                    <template #prepend>
+                      <VIcon
+                        icon="tabler-circle"
+                        color="warning"
+                      />
+                    </template>
+                    <VListItemTitle>In Progress</VListItemTitle>
+                  </VListItem>
+
+                  <VListItem @click="changeStatus(item.id, 'resolved')">
+                    <template #prepend>
+                      <VIcon
+                        icon="tabler-circle"
+                        color="success"
+                      />
+                    </template>
+                    <VListItemTitle>Resolved</VListItemTitle>
+                  </VListItem>
+
+                  <VListItem @click="changeStatus(item.id, 'closed')">
+                    <template #prepend>
+                      <VIcon
+                        icon="tabler-circle"
+                        color="secondary"
+                      />
+                    </template>
+                    <VListItemTitle>Closed</VListItemTitle>
+                  </VListItem>
+
+                  <VDivider class="my-2" />
+
+                  <VListItem @click="deleteRequest(item.id)">
+                    <template #prepend>
+                      <VIcon
+                        icon="tabler-trash"
+                        color="error"
+                      />
+                    </template>
+                    <VListItemTitle class="text-error">
+                      Delete
+                    </VListItemTitle>
+                  </VListItem>
+                </VList>
+              </VMenu>
+            </VBtn>
+          </div>
+        </template>
+
+        <!-- Pagination -->
+        <template #bottom>
+          <TablePagination
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total-items="totalRequests"
+          />
+        </template>
+      </VDataTableServer>
+    </VCard>
+
+    <!-- View Request Dialog -->
+    <VDialog
+      v-model="isViewRequestDialogVisible"
+      max-width="600"
+    >
+      <VCard v-if="selectedRequest">
+        <VCardItem>
+          <VCardTitle>Request Details</VCardTitle>
+
+          <template #append>
+            <IconBtn @click="isViewRequestDialogVisible = false">
+              <VIcon icon="tabler-x" />
+            </IconBtn>
+          </template>
+        </VCardItem>
+
+        <VDivider />
+
+        <VCardText>
+          <VRow>
+            <VCol cols="12">
+              <div class="d-flex align-center gap-x-4 mb-4">
+                <VAvatar
+                  size="48"
+                  :variant="!selectedRequest.userAvatar ? 'tonal' : undefined"
+                  color="primary"
+                >
+                  <VImg
+                    v-if="selectedRequest.userAvatar"
+                    :src="selectedRequest.userAvatar"
+                  />
+                  <span v-else>{{ avatarText(selectedRequest.userName) }}</span>
+                </VAvatar>
+                <div>
+                  <h6 class="text-h6">
+                    {{ selectedRequest.userName }}
+                  </h6>
+                  <div class="text-body-2 text-medium-emphasis">
+                    {{ selectedRequest.userEmail }}
+                  </div>
+                </div>
+              </div>
+            </VCol>
+
+            <VCol cols="6">
+              <div class="text-body-2 text-medium-emphasis mb-1">
+                Request ID
+              </div>
+              <div class="text-body-1 font-weight-medium">
+                {{ selectedRequest.requestId }}
+              </div>
+            </VCol>
+
+            <VCol cols="6">
+              <div class="text-body-2 text-medium-emphasis mb-1">
+                Date
+              </div>
+              <div class="text-body-1">
+                {{ selectedRequest.date }}
+              </div>
+            </VCol>
+
+            <VCol cols="6">
+              <div class="text-body-2 text-medium-emphasis mb-1">
+                Priority
+              </div>
+              <VChip
+                :color="resolvePriorityVariant(selectedRequest.priority).color"
+                size="small"
+                label
+                class="text-capitalize"
+              >
+                <VIcon
+                  :icon="resolvePriorityVariant(selectedRequest.priority).icon"
+                  size="16"
+                  class="me-1"
+                />
+                {{ selectedRequest.priority }}
+              </VChip>
+            </VCol>
+
+            <VCol cols="6">
+              <div class="text-body-2 text-medium-emphasis mb-1">
+                Status
+              </div>
+              <VChip
+                :color="resolveStatusVariant(selectedRequest.status)"
+                size="small"
+                label
+                class="text-capitalize"
+              >
+                {{ selectedRequest.status }}
+              </VChip>
+            </VCol>
+
+            <VCol cols="12">
+              <div class="text-body-2 text-medium-emphasis mb-1">
+                Category
+              </div>
+              <div class="text-body-1">
+                {{ selectedRequest.category }}
+              </div>
+            </VCol>
+
+            <VCol cols="12">
+              <div class="text-body-2 text-medium-emphasis mb-1">
+                Subject
+              </div>
+              <div class="text-body-1 font-weight-medium">
+                {{ selectedRequest.subject }}
+              </div>
+            </VCol>
+
+            <VCol cols="12">
+              <div class="text-body-2 text-medium-emphasis mb-1">
+                Description
+              </div>
+              <div class="text-body-1">
+                {{ selectedRequest.description }}
+              </div>
+            </VCol>
+
+            <!-- Attachments -->
+            <VCol
+              v-if="selectedRequest.attachments && selectedRequest.attachments.length > 0"
+              cols="12"
+            >
+              <div class="text-body-2 text-medium-emphasis mb-2">
+                Attachments ({{ selectedRequest.attachments.length }})
+              </div>
+              <VList
+                lines="two"
+                density="compact"
+                class="pa-0"
+              >
+                <VListItem
+                  v-for="(attachment, index) in selectedRequest.attachments"
+                  :key="index"
+                  class="px-0"
+                >
+                  <template #prepend>
+                    <VAvatar
+                      color="primary"
+                      variant="tonal"
+                      size="40"
+                    >
+                      <VIcon :icon="getFileIcon(attachment.name)" />
+                    </VAvatar>
+                  </template>
+
+                  <VListItemTitle class="font-weight-medium">
+                    {{ attachment.name }}
+                  </VListItemTitle>
+                  <VListItemSubtitle>
+                    {{ attachment.size }}
+                  </VListItemSubtitle>
+
+                  <template #append>
+                    <VBtn
+                      icon
+                      variant="text"
+                      size="small"
+                      color="primary"
+                      @click="downloadAttachment(attachment)"
+                    >
+                      <VIcon icon="tabler-download" />
+                      <VTooltip
+                        activator="parent"
+                        location="top"
+                      >
+                        Download
+                      </VTooltip>
+                    </VBtn>
+                  </template>
+                </VListItem>
+              </VList>
+            </VCol>
+          </VRow>
+        </VCardText>
+
+        <VDivider />
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            variant="outlined"
+            @click="isViewRequestDialogVisible = false"
+          >
+            Close
+          </VBtn>
+          <VBtn
+            color="primary"
+            @click="editRequest(selectedRequest); isViewRequestDialogVisible = false"
+          >
+            Edit Request
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Edit Technical Request Drawer -->
+    <EditTechnicalRequestDrawer
+      v-model:is-drawer-open="isEditRequestDrawerVisible"
+      :request="selectedRequest"
+      @request-data="updateRequest"
+    />
+  </section>
+</template>
