@@ -78,14 +78,14 @@ watch(() => props.isDialogVisible, (newVal) => {
 <template>
   <VDialog :model-value="props.isDialogVisible" max-width="500" persistent @update:model-value="updateModelValue">
     <VCard>
+      <VCardTitle class="text-h5 pa-6 pb-4">
+        {{ actionTitle }}
+      </VCardTitle>
+
+      <VDivider />
       <VCardText class="text-center px-10 py-6">
         <!-- Icon -->
         <VIcon :icon="actionIcon" :color="actionColor" size="48" class="mb-4" />
-
-        <!-- Title -->
-        <h4 class="text-h4 mb-2">
-          {{ actionTitle }}
-        </h4>
 
         <!-- Description -->
         <p class="text-body-1 text-medium-emphasis mb-6">
@@ -112,7 +112,11 @@ watch(() => props.isDialogVisible, (newVal) => {
         </VForm>
       </VCardText>
 
-      <VCardActions class="justify-center px-10 pb-6">
+      <VDivider />
+
+
+
+      <VCardActions class="justify-center pa-6">
         <VBtn color="error" variant="text" @click="onCancel">
           Cancel
         </VBtn>
