@@ -148,8 +148,18 @@ const resolvePriorityVariant = (priority: string) => {
   return 'primary'
 }
 
-// 👉 Delete task
-const deleteTask = async (id: number) => {
+// 👉 Delete task with confirmation
+const isDeleteDialogVisible = ref(false)
+const taskToDelete = ref<number | null>(null)
+
+const confirmDelete = (id: number) => {
+  taskToDelete.value = id
+  isDeleteDialogVisible.value = true
+}
+
+const deleteTask = async () => {
+  if (taskToDelete.value === null) return
+
   // TODO: Implement API call
   const taskList = currentTab.value === 'franchisee' 
     ? tasksData.value.franchisee.tasks 
@@ -157,14 +167,94 @@ const deleteTask = async (id: number) => {
       ? tasksData.value.sales.tasks 
       : tasksData.value.staff.tasks
 
-  const index = taskList.findIndex(task => task.id === id)
+  const index = taskList.findIndex(task => task.id === taskToDelete.value)
   if (index !== -1)
     taskList.splice(index, 1)
 
   // Delete from selectedRows
-  const selectedIndex = selectedRows.value.findIndex(row => row === id)
+  const selectedIndex = selectedRows.value.findIndex(row => row === taskToDelete.value)
   if (selectedIndex !== -1)
     selectedRows.value.splice(selectedIndex, 1)
+
+  isDeleteDialogVisible.value = false
+  taskToDelete.value = null
+}
+
+// 👉 Modal states
+const isViewTaskModalVisible = ref(false)
+const isEditTaskModalVisible = ref(false)
+const selectedTask = ref<any>(null)
+
+// 👉 View task
+const viewTask = (id: number) => {
+  const taskList = currentTab.value === 'franchisee' 
+    ? tasksData.value.franchisee.tasks 
+    : currentTab.value === 'sales' 
+      ? tasksData.value.sales.tasks 
+      : tasksData.value.staff.tasks
+
+  const task = taskList.find(t => t.id === id)
+  if (task) {
+    selectedTask.value = task
+    isViewTaskModalVisible.value = true
+  }
+}
+
+// 👉 Edit task
+const editTask = (id: number) => {
+  const taskList = currentTab.value === 'franchisee' 
+    ? tasksData.value.franchisee.tasks 
+    : currentTab.value === 'sales' 
+      ? tasksData.value.sales.tasks 
+      : tasksData.value.staff.tasks
+
+  const task = taskList.find(t => t.id === id)
+  if (task) {
+    selectedTask.value = { ...task }
+    isEditTaskModalVisible.value = true
+  }
+}
+
+// 👉 Save edited task
+const saveTask = async () => {
+  if (!selectedTask.value) return
+
+  // TODO: Implement API call
+  const taskList = currentTab.value === 'franchisee' 
+    ? tasksData.value.franchisee.tasks 
+    : currentTab.value === 'sales' 
+      ? tasksData.value.sales.tasks 
+      : tasksData.value.staff.tasks
+
+  const index = taskList.findIndex(task => task.id === selectedTask.value.id)
+  if (index !== -1) {
+    taskList[index] = { ...selectedTask.value }
+  }
+
+  isEditTaskModalVisible.value = false
+  selectedTask.value = null
+}
+
+// 👉 Export functionality
+const exportTasks = () => {
+  const dataToExport = selectedRows.value.length > 0 
+    ? currentTasks.value.filter(task => selectedRows.value.includes(task.id))
+    : currentTasks.value
+
+  const csvContent = [
+    'Task,Assigned To,Priority,Status,Due Date',
+    ...dataToExport.map(task => 
+      `"${task.task}","${task.assignedTo}","${task.priority}","${task.status}","${task.dueDate}"`
+    )
+  ].join('\n')
+
+  const blob = new Blob([csvContent], { type: 'text/csv' })
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${currentTab.value}_tasks_${selectedRows.value.length > 0 ? 'selected' : 'all'}_${new Date().toISOString().split('T')[0]}.csv`
+  a.click()
+  window.URL.revokeObjectURL(url)
 }
 
 const widgetData = computed(() => {
@@ -335,14 +425,15 @@ const tabs = [
                 variant="tonal"
                 color="secondary"
                 prepend-icon="tabler-upload"
+                @click="exportTasks"
               >
-                Export
+                Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
               </VBtn>
 
-              <!-- 👉 Add task button -->
-              <VBtn prepend-icon="tabler-plus">
+              <!-- 👉 Add task button - Commented out as requested -->
+              <!-- <VBtn prepend-icon="tabler-plus">
                 Add New Task
-              </VBtn>
+              </VBtn> -->
             </div>
           </VCardText>
 
@@ -419,14 +510,6 @@ const tabs = [
 
             <!-- Actions -->
             <template #item.actions="{ item }">
-              <IconBtn @click="deleteTask(item.id)">
-                <VIcon icon="tabler-trash" />
-              </IconBtn>
-
-              <IconBtn>
-                <VIcon icon="tabler-eye" />
-              </IconBtn>
-
               <VBtn
                 icon
                 variant="text"
@@ -435,21 +518,21 @@ const tabs = [
                 <VIcon icon="tabler-dots-vertical" />
                 <VMenu activator="parent">
                   <VList>
-                    <VListItem link>
+                    <VListItem @click="viewTask(item.id)">
                       <template #prepend>
                         <VIcon icon="tabler-eye" />
                       </template>
                       <VListItemTitle>View</VListItemTitle>
                     </VListItem>
 
-                    <VListItem link>
+                    <VListItem @click="editTask(item.id)">
                       <template #prepend>
                         <VIcon icon="tabler-pencil" />
                       </template>
                       <VListItemTitle>Edit</VListItemTitle>
                     </VListItem>
 
-                    <VListItem @click="deleteTask(item.id)">
+                    <VListItem @click="confirmDelete(item.id)">
                       <template #prepend>
                         <VIcon icon="tabler-trash" />
                       </template>
@@ -473,5 +556,189 @@ const tabs = [
         </VCard>
       </VWindowItem>
     </VWindow>
+
+    <!-- 👉 View Task Modal -->
+    <VDialog
+      v-model="isViewTaskModalVisible"
+      max-width="600"
+    >
+      <VCard v-if="selectedTask">
+        <VCardItem>
+          <VCardTitle>Task Details</VCardTitle>
+        </VCardItem>
+
+        <VCardText>
+          <VRow>
+            <VCol cols="12">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Task</div>
+                <div class="text-body-1 font-weight-medium">{{ selectedTask.task }}</div>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Assigned To</div>
+                <div class="text-body-1">{{ selectedTask.assignedTo }}</div>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Due Date</div>
+                <div class="text-body-1">{{ selectedTask.dueDate }}</div>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Priority</div>
+                <VChip
+                  :color="resolvePriorityVariant(selectedTask.priority)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
+                  {{ selectedTask.priority }}
+                </VChip>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Status</div>
+                <VChip
+                  :color="resolveStatusVariant(selectedTask.status)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
+                  {{ selectedTask.status.replace('_', ' ') }}
+                </VChip>
+              </div>
+            </VCol>
+          </VRow>
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewTaskModalVisible = false"
+          >
+            Close
+          </VBtn>
+          <VBtn
+            color="primary"
+            @click="editTask(selectedTask.id)"
+          >
+            Edit
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- 👉 Edit Task Modal -->
+    <VDialog
+      v-model="isEditTaskModalVisible"
+      max-width="700"
+    >
+      <VCard v-if="selectedTask">
+        <VCardItem>
+          <VCardTitle>Edit Task</VCardTitle>
+        </VCardItem>
+
+        <VCardText>
+          <VForm @submit.prevent="saveTask">
+            <VRow>
+              <VCol cols="12">
+                <AppTextField
+                  v-model="selectedTask.task"
+                  label="Task"
+                  placeholder="Enter task description"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <AppTextField
+                  v-model="selectedTask.assignedTo"
+                  label="Assigned To"
+                  placeholder="Enter assignee name"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <AppTextField
+                  v-model="selectedTask.dueDate"
+                  label="Due Date"
+                  type="date"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <AppSelect
+                  v-model="selectedTask.priority"
+                  label="Priority"
+                  :items="priorities"
+                  placeholder="Select priority"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <AppSelect
+                  v-model="selectedTask.status"
+                  label="Status"
+                  :items="statuses"
+                  placeholder="Select status"
+                />
+              </VCol>
+            </VRow>
+          </VForm>
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isEditTaskModalVisible = false"
+          >
+            Cancel
+          </VBtn>
+          <VBtn
+            color="primary"
+            @click="saveTask"
+          >
+            Save Changes
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- 👉 Delete Confirmation Dialog -->
+    <VDialog
+      v-model="isDeleteDialogVisible"
+      max-width="500"
+    >
+      <VCard>
+        <VCardItem>
+          <VCardTitle>Confirm Delete</VCardTitle>
+        </VCardItem>
+
+        <VCardText>
+          Are you sure you want to delete this task? This action cannot be undone.
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteDialogVisible = false"
+          >
+            Cancel
+          </VBtn>
+          <VBtn
+            color="error"
+            @click="deleteTask"
+          >
+            Delete
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </section>
 </template>

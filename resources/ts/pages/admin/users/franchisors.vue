@@ -364,7 +364,7 @@ const widgetData = ref([
           <!-- Export Menu -->
           <VBtn variant="tonal" color="secondary">
             <VIcon icon="tabler-upload" class="me-2" />
-            Export
+            Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
             <VMenu activator="parent">
               <VList>
                 <VListItem @click="exportToCSV">

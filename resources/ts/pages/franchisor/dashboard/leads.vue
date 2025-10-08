@@ -91,17 +91,82 @@ const resolveStatusVariant = (stat: string) => {
   return 'primary'
 }
 
-// 👉 Delete lead
-const deleteLead = async (id: number) => {
+// 👉 Modal states
+const isViewLeadModalVisible = ref(false)
+const isEditLeadModalVisible = ref(false)
+const isDeleteDialogVisible = ref(false)
+const selectedLead = ref<any>(null)
+const leadToDelete = ref<number | null>(null)
+
+// 👉 View lead
+const viewLead = (lead: any) => {
+  selectedLead.value = lead
+  isViewLeadModalVisible.value = true
+}
+
+// 👉 Edit lead
+const editLead = (lead: any) => {
+  selectedLead.value = { ...lead }
+  isEditLeadModalVisible.value = true
+}
+
+// 👉 Delete lead with confirmation
+const confirmDelete = (id: number) => {
+  leadToDelete.value = id
+  isDeleteDialogVisible.value = true
+}
+
+const deleteLead = async () => {
+  if (leadToDelete.value === null) return
+
   // TODO: Implement API call
-  const index = leadsData.value.leads.findIndex(lead => lead.id === id)
+  const index = leadsData.value.leads.findIndex(lead => lead.id === leadToDelete.value)
   if (index !== -1)
     leadsData.value.leads.splice(index, 1)
 
   // Delete from selectedRows
-  const selectedIndex = selectedRows.value.findIndex(row => row === id)
+  const selectedIndex = selectedRows.value.findIndex(row => row === leadToDelete.value)
   if (selectedIndex !== -1)
     selectedRows.value.splice(selectedIndex, 1)
+
+  isDeleteDialogVisible.value = false
+  leadToDelete.value = null
+}
+
+// 👉 Save edited lead
+const saveLead = async () => {
+  if (!selectedLead.value) return
+
+  // TODO: Implement API call
+  const index = leadsData.value.leads.findIndex(lead => lead.id === selectedLead.value.id)
+  if (index !== -1) {
+    leadsData.value.leads[index] = { ...selectedLead.value }
+  }
+
+  isEditLeadModalVisible.value = false
+  selectedLead.value = null
+}
+
+// 👉 Export functionality
+const exportLeads = () => {
+  const dataToExport = selectedRows.value.length > 0 
+    ? leads.value.filter(lead => selectedRows.value.includes(lead.id))
+    : leads.value
+
+  const csvContent = [
+    'Name,Email,Phone,Source,Status,Created Date',
+    ...dataToExport.map(lead => 
+      `"${lead.name}","${lead.email}","${lead.phone}","${lead.source}","${lead.status}","${lead.createdDate}"`
+    )
+  ].join('\n')
+
+  const blob = new Blob([csvContent], { type: 'text/csv' })
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `leads_${selectedRows.value.length > 0 ? 'selected' : 'all'}_${new Date().toISOString().split('T')[0]}.csv`
+  a.click()
+  window.URL.revokeObjectURL(url)
 }
 
 const widgetData = ref([
@@ -236,14 +301,15 @@ const widgetData = ref([
             variant="tonal"
             color="secondary"
             prepend-icon="tabler-upload"
+            @click="exportLeads"
           >
-            Export
+            Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
           </VBtn>
 
-          <!-- 👉 Add lead button -->
-          <VBtn prepend-icon="tabler-plus">
+          <!-- 👉 Add lead button - Commented out as requested -->
+          <!-- <VBtn prepend-icon="tabler-plus">
             Add New Lead
-          </VBtn>
+          </VBtn> -->
         </div>
       </VCardText>
 
@@ -322,14 +388,6 @@ const widgetData = ref([
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <IconBtn @click="deleteLead(item.id)">
-            <VIcon icon="tabler-trash" />
-          </IconBtn>
-
-          <IconBtn>
-            <VIcon icon="tabler-eye" />
-          </IconBtn>
-
           <VBtn
             icon
             variant="text"
@@ -338,21 +396,21 @@ const widgetData = ref([
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem link>
+                <VListItem @click="viewLead(item)">
                   <template #prepend>
                     <VIcon icon="tabler-eye" />
                   </template>
                   <VListItemTitle>View</VListItemTitle>
                 </VListItem>
 
-                <VListItem link>
+                <VListItem @click="editLead(item)">
                   <template #prepend>
                     <VIcon icon="tabler-pencil" />
                   </template>
                   <VListItemTitle>Edit</VListItemTitle>
                 </VListItem>
 
-                <VListItem @click="deleteLead(item.id)">
+                <VListItem @click="confirmDelete(item.id)">
                   <template #prepend>
                     <VIcon icon="tabler-trash" />
                   </template>
@@ -374,5 +432,196 @@ const widgetData = ref([
       </VDataTableServer>
       <!-- SECTION -->
     </VCard>
+
+    <!-- 👉 View Lead Modal -->
+    <VDialog
+      v-model="isViewLeadModalVisible"
+      max-width="600"
+    >
+      <VCard v-if="selectedLead">
+        <VCardItem>
+          <VCardTitle>Lead Details</VCardTitle>
+        </VCardItem>
+
+        <VCardText>
+          <VRow>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Name</div>
+                <div class="text-body-1 font-weight-medium">{{ selectedLead.name }}</div>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Email</div>
+                <div class="text-body-1">{{ selectedLead.email }}</div>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Phone</div>
+                <div class="text-body-1">{{ selectedLead.phone }}</div>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Source</div>
+                <div class="text-body-1 text-capitalize">{{ selectedLead.source }}</div>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Status</div>
+                <VChip
+                  :color="resolveStatusVariant(selectedLead.status)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
+                  {{ selectedLead.status }}
+                </VChip>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Created Date</div>
+                <div class="text-body-1">{{ selectedLead.createdDate }}</div>
+              </div>
+            </VCol>
+          </VRow>
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewLeadModalVisible = false"
+          >
+            Close
+          </VBtn>
+          <VBtn
+            color="primary"
+            @click="editLead(selectedLead)"
+          >
+            Edit
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- 👉 Edit Lead Modal -->
+    <VDialog
+      v-model="isEditLeadModalVisible"
+      max-width="700"
+    >
+      <VCard v-if="selectedLead">
+        <VCardItem>
+          <VCardTitle>Edit Lead</VCardTitle>
+        </VCardItem>
+
+        <VCardText>
+          <VForm @submit.prevent="saveLead">
+            <VRow>
+              <VCol cols="12" md="6">
+                <AppTextField
+                  v-model="selectedLead.name"
+                  label="Name"
+                  placeholder="Enter lead name"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <AppTextField
+                  v-model="selectedLead.email"
+                  label="Email"
+                  type="email"
+                  placeholder="Enter email address"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <AppTextField
+                  v-model="selectedLead.phone"
+                  label="Phone"
+                  placeholder="Enter phone number"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <AppSelect
+                  v-model="selectedLead.source"
+                  label="Source"
+                  :items="sources"
+                  placeholder="Select source"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <AppSelect
+                  v-model="selectedLead.status"
+                  label="Status"
+                  :items="statuses"
+                  placeholder="Select status"
+                />
+              </VCol>
+              <VCol cols="12" md="6">
+                <AppTextField
+                  v-model="selectedLead.createdDate"
+                  label="Created Date"
+                  type="date"
+                />
+              </VCol>
+            </VRow>
+          </VForm>
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isEditLeadModalVisible = false"
+          >
+            Cancel
+          </VBtn>
+          <VBtn
+            color="primary"
+            @click="saveLead"
+          >
+            Save Changes
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- 👉 Delete Confirmation Dialog -->
+    <VDialog
+      v-model="isDeleteDialogVisible"
+      max-width="500"
+    >
+      <VCard>
+        <VCardItem>
+          <VCardTitle>Confirm Delete</VCardTitle>
+        </VCardItem>
+
+        <VCardText>
+          Are you sure you want to delete this lead? This action cannot be undone.
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteDialogVisible = false"
+          >
+            Cancel
+          </VBtn>
+          <VBtn
+            color="error"
+            @click="deleteLead"
+          >
+            Delete
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </section>
 </template>

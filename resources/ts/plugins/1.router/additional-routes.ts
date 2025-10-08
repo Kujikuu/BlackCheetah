@@ -73,4 +73,48 @@ export const routes: RouteRecordRaw[] = [
     name: 'apps-ecommerce-dashboard',
     component: () => import('@/pages/dashboards/ecommerce.vue'),
   },
+
+  // Franchisor Dashboard - Phase 01
+  {
+    path: '/franchisor/dashboard/leads',
+    name: 'franchisor-dashboard-leads',
+    component: () => import('@/pages/franchisor/dashboard/leads.vue'),
+  },
+  {
+    path: '/franchisor/dashboard/operations',
+    name: 'franchisor-dashboard-operations',
+    component: () => import('@/pages/franchisor/dashboard/operations.vue'),
+  },
+  {
+    path: '/franchisor/dashboard/timeline',
+    name: 'franchisor-dashboard-timeline',
+    component: () => import('@/pages/franchisor/dashboard/timeline.vue'),
+  },
+  {
+    path: '/franchisor/dashboard/finance',
+    name: 'franchisor-dashboard-finance',
+    component: () => import('@/pages/franchisor/dashboard/finance.vue'),
+  },
+
+  // Franchisor - Phase 02
+  {
+    path: '/franchisor/sales-associates',
+    name: 'franchisor-sales-associates',
+    component: () => import('@/pages/franchisor/sales-associates.vue'),
+  },
+  {
+    path: '/franchisor/lead-management',
+    name: 'franchisor-lead-management',
+    component: () => import('@/pages/franchisor/lead-management.vue'),
+  },
+  {
+    path: '/franchisor/add-lead',
+    name: 'franchisor-add-lead',
+    component: () => import('@/pages/franchisor/add-lead.vue'),
+  },
+  {
+    path: '/franchisor/lead/:id',
+    name: 'franchisor-lead-view-id',
+    component: () => import('@/pages/franchisor/lead-view-[id].vue'),
+  },
 ]
