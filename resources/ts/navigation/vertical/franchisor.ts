@@ -51,9 +51,9 @@ export default [
         badgeClass: 'bg-success',
       },
       {
-        title: 'Franchise Registration',
-        to: 'franchisor-franchise-registration-wizard',
-        icon: { icon: 'tabler-forms' },
+        title: 'My Franchise',
+        to: 'franchisor-my-franchise',
+        icon: { icon: 'tabler-building-store' },
         badgeContent: 'Phase 04',
         badgeClass: 'bg-warning',
       },

@@ -106,6 +106,7 @@ declare module 'vue-router/auto-routes' {
     'franchisor-franchise-registration-wizard': RouteRecordInfo<'franchisor-franchise-registration-wizard', '/franchisor/franchise-registration-wizard', Record<never, never>, Record<never, never>>,
     'franchisor-lead-management': RouteRecordInfo<'franchisor-lead-management', '/franchisor/lead-management', Record<never, never>, Record<never, never>>,
     'franchisor-lead-view-id': RouteRecordInfo<'franchisor-lead-view-id', '/franchisor/lead-view-:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    'franchisor-my-franchise': RouteRecordInfo<'franchisor-my-franchise', '/franchisor/my-franchise', Record<never, never>, Record<never, never>>,
     'franchisor-sales-associates': RouteRecordInfo<'franchisor-sales-associates', '/franchisor/sales-associates', Record<never, never>, Record<never, never>>,
     'front-pages-checkout': RouteRecordInfo<'front-pages-checkout', '/front-pages/checkout', Record<never, never>, Record<never, never>>,
     'front-pages-help-center': RouteRecordInfo<'front-pages-help-center', '/front-pages/help-center', Record<never, never>, Record<never, never>>,
