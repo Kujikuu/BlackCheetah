@@ -39,12 +39,9 @@ const suggestionGroups: SuggestionGroup[] = [
     ],
   },
   {
-    title: 'Apps & Pages',
+    title: 'Pages',
     content: [
-      { icon: 'tabler-calendar', title: 'Calendar', url: { name: 'apps-calendar' } },
-      { icon: 'tabler-lock', title: 'Roles & Permissions', url: { name: 'apps-roles' } },
-      { icon: 'tabler-settings', title: 'Account Settings', url: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
-      { icon: 'tabler-copy', title: 'Dialog Examples', url: { name: 'pages-dialog-examples' } },
+      { icon: 'tabler-settings', title: 'Account Settings', url: { name: 'account-settings-tab', params: { tab: 'account' } } },
     ],
   },
   {

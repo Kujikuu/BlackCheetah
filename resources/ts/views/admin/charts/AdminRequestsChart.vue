@@ -1,10 +1,58 @@
 <script setup lang="ts">
-const series = [
+// Reactive data
+const isLoading = ref(true)
+const error = ref('')
+const totalRequests = ref(0)
+const requestsGrowth = ref(0)
+const series = ref([
   {
     name: 'Requests',
-    data: [45, 38, 25, 40, 48, 35, 55],
+    data: [0, 0, 0, 0, 0, 0, 0],
   },
-]
+])
+
+// Fetch chart data from API
+const fetchChartData = async () => {
+  try {
+    isLoading.value = true
+    const response = await $api('/v1/admin/dashboard/chart-data')
+    
+    if (response.success && response.data.requests) {
+      // Get last 7 months of requests data
+      const requestsData = response.data.requests.slice(-7)
+      const requestsCounts = requestsData.map((item: any) => item.requests)
+      
+      series.value = [
+        {
+          name: 'Requests',
+          data: requestsCounts,
+        },
+      ]
+      
+      // Calculate total requests and growth
+      const currentMonth = requestsCounts[requestsCounts.length - 1] || 0
+      const previousMonth = requestsCounts[requestsCounts.length - 2] || 0
+      
+      totalRequests.value = requestsData.reduce((sum: number, item: any) => sum + item.requests, 0)
+      
+      if (previousMonth > 0) {
+        requestsGrowth.value = ((currentMonth - previousMonth) / previousMonth) * 100
+      } else {
+        requestsGrowth.value = currentMonth > 0 ? 100 : 0
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching requests chart data:', err)
+    error.value = 'Failed to load chart data'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchChartData()
+})
 
 const chartOptions = computed(() => {
   return {
@@ -107,12 +155,22 @@ const chartOptions = computed(() => {
         :height="62"
       />
 
-      <div class="d-flex align-center justify-space-between gap-x-2 mt-3">
+      <div v-if="isLoading" class="d-flex align-center justify-space-between gap-x-2 mt-3">
+        <VSkeleton type="text" width="60px" height="32px" />
+        <VSkeleton type="text" width="40px" />
+      </div>
+      <div v-else-if="error" class="text-center text-error text-sm mt-3">
+        {{ error }}
+      </div>
+      <div v-else class="d-flex align-center justify-space-between gap-x-2 mt-3">
         <h4 class="text-h4 text-center">
-          287
+          {{ totalRequests.toLocaleString() }}
         </h4>
-        <div class="text-sm text-success">
-          +8.4%
+        <div 
+          class="text-sm"
+          :class="requestsGrowth >= 0 ? 'text-success' : 'text-error'"
+        >
+          {{ requestsGrowth >= 0 ? '+' : '' }}{{ requestsGrowth.toFixed(1) }}%
         </div>
       </div>
     </VCardText>

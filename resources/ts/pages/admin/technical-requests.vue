@@ -1,6 +1,22 @@
 <script setup lang="ts">
 import EditTechnicalRequestDrawer from '@/views/admin/modals/EditTechnicalRequestDrawer.vue'
 
+// Define interface for technical request
+interface TechnicalRequest {
+  id: number
+  requestId: string
+  userName: string
+  userEmail: string
+  userAvatar: string
+  subject: string
+  description: string
+  priority: string
+  status: string
+  date: string
+  category: string
+  attachments: any[]
+}
+
 definePage({
   meta: {
     subject: 'Admin',
@@ -20,10 +36,17 @@ const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref<number[]>([])
 
+// Loading states
+const isLoading = ref(false)
+const isDeleting = ref(false)
+
 // Update data table options
 const updateOptions = (options: any) => {
-  sortBy.value = options.sortBy[0]?.key
-  orderBy.value = options.sortBy[0]?.order
+  if (options.sortBy && options.sortBy.length > 0) {
+    sortBy.value = [options.sortBy[0]]
+  } else {
+    sortBy.value = []
+  }
 }
 
 // Headers
@@ -37,112 +60,118 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Mock data - Replace with API call
-const technicalRequests = ref([
-  {
-    id: 1,
-    requestId: 'TR-2024-001',
-    userName: 'John Doe',
-    userEmail: 'john.doe@example.com',
-    userAvatar: '',
-    subject: 'Login issues on mobile app',
-    description: 'Unable to login using mobile device. Getting authentication error.',
-    priority: 'high',
-    status: 'open',
-    date: '2024-01-15',
-    category: 'Authentication',
-    attachments: [
-      { name: 'error-screenshot.png', size: '245 KB', url: '#' },
-      { name: 'error-log.txt', size: '12 KB', url: '#' },
-    ],
-  },
-  {
-    id: 2,
-    requestId: 'TR-2024-002',
-    userName: 'Jane Smith',
-    userEmail: 'jane.smith@example.com',
-    userAvatar: '',
-    subject: 'Payment processing error',
-    description: 'Payment gateway not responding during checkout process.',
-    priority: 'critical',
-    status: 'in-progress',
-    date: '2024-01-14',
-    category: 'Payment',
-    attachments: [
-      { name: 'payment-error.pdf', size: '156 KB', url: '#' },
-    ],
-  },
-  {
-    id: 3,
-    requestId: 'TR-2024-003',
-    userName: 'Mike Johnson',
-    userEmail: 'mike.j@example.com',
-    userAvatar: '',
-    subject: 'Dashboard data not loading',
-    description: 'Dashboard statistics showing blank after recent update.',
-    priority: 'medium',
-    status: 'open',
-    date: '2024-01-13',
-    category: 'Dashboard',
-    attachments: [],
-  },
-  {
-    id: 4,
-    requestId: 'TR-2024-004',
-    userName: 'Sarah Williams',
-    userEmail: 'sarah.w@example.com',
-    userAvatar: '',
-    subject: 'Email notifications not working',
-    description: 'Not receiving email notifications for new orders.',
-    priority: 'low',
-    status: 'resolved',
-    date: '2024-01-12',
-    category: 'Notifications',
-    attachments: [],
-  },
-  {
-    id: 5,
-    requestId: 'TR-2024-005',
-    userName: 'David Brown',
-    userEmail: 'david.b@example.com',
-    userAvatar: '',
-    subject: 'Report generation timeout',
-    description: 'Monthly reports timing out when trying to generate.',
-    priority: 'high',
-    status: 'in-progress',
-    date: '2024-01-11',
-    category: 'Reports',
-    attachments: [
-      { name: 'report-timeout-log.txt', size: '8 KB', url: '#' },
-    ],
-  },
-])
+// API data with proper typing
+const technicalRequests = ref<TechnicalRequest[]>([])
+const totalRequests = ref(0)
 
-const totalRequests = computed(() => technicalRequests.value.length)
+// Fetch technical requests from API
+const fetchTechnicalRequests = async () => {
+  try {
+    isLoading.value = true
+    
+    const params = new URLSearchParams({
+      page: page.value.toString(),
+      per_page: itemsPerPage.value.toString(),
+    })
 
-// Filtered data
-const filteredRequests = computed(() => {
-  let filtered = technicalRequests.value
+    if (searchQuery.value) {
+      params.append('search', searchQuery.value)
+    }
 
-  if (searchQuery.value) {
-    filtered = filtered.filter(request =>
-      request.requestId.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      request.userName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      request.subject.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      request.category.toLowerCase().includes(searchQuery.value.toLowerCase()),
-    )
+    if (selectedStatus.value) {
+      params.append('status', selectedStatus.value)
+    }
+
+    if (selectedPriority.value) {
+      params.append('priority', selectedPriority.value)
+    }
+
+    if (sortBy.value && sortBy.value.length > 0) {
+      params.append('sortBy', sortBy.value[0].key)
+      params.append('sortOrder', sortBy.value[0].order || 'desc')
+    }
+
+    const response = await $api('/v1/admin/technical-requests?' + params.toString())
+    
+    if (response.success) {
+      // Map API response to component format
+      technicalRequests.value = response.data.data.map((request: any) => ({
+        id: request.id,
+        requestId: request.ticket_number || `TR-${request.id}`,
+        userName: request.user?.name || 'Unknown User',
+        userEmail: request.user?.email || '',
+        userAvatar: request.user?.avatar || '',
+        subject: request.title || request.subject,
+        description: request.description,
+        priority: request.priority,
+        status: request.status,
+        date: new Date(request.created_at).toLocaleDateString(),
+        category: request.category,
+        attachments: request.attachments || [],
+      }))
+      
+      totalRequests.value = response.data.total
+    }
+  } catch (error) {
+    console.error('Error fetching technical requests:', error)
+    // Show error notification
+  } finally {
+    isLoading.value = false
   }
+}
 
-  if (selectedStatus.value) {
-    filtered = filtered.filter(request => request.status === selectedStatus.value)
+// Since we're using server-side filtering, we don't need client-side filtering
+const filteredRequests = computed(() => technicalRequests.value)
+
+// Helper function for avatar text
+const avatarText = (name: string) => {
+  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase()
+}
+
+// CRUD Operations
+const deleteRequest = async (id: number) => {
+  try {
+    isDeleting.value = true
+    await $api('/api/v1/admin/technical-requests/' + id, {
+      method: 'DELETE'
+    })
+    await fetchTechnicalRequests()
+  } catch (error) {
+    console.error('Error deleting request:', error)
+  } finally {
+    isDeleting.value = false
   }
+}
 
-  if (selectedPriority.value) {
-    filtered = filtered.filter(request => request.priority === selectedPriority.value)
+const updateRequestStatus = async (id: number, status: string) => {
+  try {
+    await $api('/api/v1/admin/technical-requests/' + id + '/status', {
+      method: 'PUT',
+      body: { status }
+    })
+    await fetchTechnicalRequests()
+  } catch (error) {
+    console.error('Error updating status:', error)
   }
+}
 
-  return filtered
-})
+const bulkDelete = async () => {
+  if (selectedRows.value.length === 0) return
+  
+  try {
+    isDeleting.value = true
+    await $api('/api/v1/admin/technical-requests/bulk-delete', {
+      method: 'DELETE',
+      body: { ids: selectedRows.value }
+    })
+    selectedRows.value = []
+    await fetchTechnicalRequests()
+  } catch (error) {
+    console.error('Error bulk deleting:', error)
+  } finally {
+    isDeleting.value = false
+  }
+}
 
 // Status options
 const statusOptions = [
@@ -213,24 +242,9 @@ const updateRequest = (requestData: any) => {
   selectedRequest.value = null
 }
 
-// Delete request
-const deleteRequest = async (id: number) => {
-  const index = technicalRequests.value.findIndex(request => request.id === id)
-  if (index !== -1)
-    technicalRequests.value.splice(index, 1)
-
-  // Remove from selectedRows
-  const selectedIndex = selectedRows.value.findIndex(row => row === id)
-  if (selectedIndex !== -1)
-    selectedRows.value.splice(selectedIndex, 1)
-}
-
-// Change status
-const changeStatus = (id: number, newStatus: string) => {
-  const request = technicalRequests.value.find(r => r.id === id)
-  if (request) {
-    request.status = newStatus
-  }
+// Change status (using API)
+const changeStatus = async (id: number, newStatus: string) => {
+  await updateRequestStatus(id, newStatus)
 }
 
 // Export functions
@@ -252,15 +266,7 @@ const exportToPDF = () => {
   // Implement PDF export logic
 }
 
-// Bulk delete
-const bulkDelete = () => {
-  if (selectedRows.value.length === 0) return
-
-  technicalRequests.value = technicalRequests.value.filter(
-    request => !selectedRows.value.includes(request.id),
-  )
-  selectedRows.value = []
-}
+// Bulk delete is now handled by the API version above
 
 // Download attachment
 const downloadAttachment = (attachment: any) => {
@@ -288,6 +294,11 @@ const getFileIcon = (fileName: string) => {
   
   return 'tabler-file'
 }
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchTechnicalRequests()
+})
 </script>
 
 <template>

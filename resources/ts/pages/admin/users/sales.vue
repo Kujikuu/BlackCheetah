@@ -4,6 +4,17 @@ import ConfirmDeleteDialog from '@/views/admin/modals/ConfirmDeleteDialog.vue'
 import ResetPasswordDialog from '@/views/admin/modals/ResetPasswordDialog.vue'
 import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
 
+interface SalesUser {
+  id: number
+  fullName: string
+  email: string
+  phone: string
+  location: string
+  status: string
+  avatar?: string
+  joinedDate: string
+}
+
 definePage({
   meta: {
     subject: 'Admin',
@@ -18,14 +29,16 @@ const selectedStatus = ref()
 // Data table options
 const itemsPerPage = ref(10)
 const page = ref(1)
-const sortBy = ref()
-const orderBy = ref()
+const sortBy = ref([{ key: 'created_at', order: 'desc' }])
+const orderBy = ref('desc')
 const selectedRows = ref<number[]>([])
 
 // Update data table options
 const updateOptions = (options: any) => {
-  sortBy.value = options.sortBy[0]?.key
-  orderBy.value = options.sortBy[0]?.order
+  if (options.sortBy && options.sortBy.length > 0) {
+    sortBy.value = options.sortBy
+    orderBy.value = options.sortBy[0]?.order
+  }
 }
 
 // Headers
@@ -38,61 +51,43 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Mock data - Replace with API call
-const salesUsers = ref([
-  {
-    id: 1,
-    fullName: 'Mike Johnson',
-    email: 'mike.j@example.com',
-    phone: '+1 234 567 8910',
-    city: 'Riyadh',
-    status: 'active',
-    avatar: '',
-    joinedDate: '2024-01-15',
-  },
-  {
-    id: 2,
-    fullName: 'Amanda Davis',
-    email: 'amanda.d@example.com',
-    phone: '+1 234 567 8911',
-    city: 'Makkah',
-    status: 'active',
-    avatar: '',
-    joinedDate: '2024-01-14',
-  },
-  {
-    id: 3,
-    fullName: 'Chris Martinez',
-    email: 'chris.m@example.com',
-    phone: '+1 234 567 8912',
-    city: 'Jeddah',
-    status: 'pending',
-    avatar: '',
-    joinedDate: '2024-01-13',
-  },
-  {
-    id: 4,
-    fullName: 'Jessica Lee',
-    email: 'jessica.l@example.com',
-    phone: '+1 234 567 8913',
-    city: 'Madinah',
-    status: 'active',
-    avatar: '',
-    joinedDate: '2024-01-12',
-  },
-  {
-    id: 5,
-    fullName: 'Daniel White',
-    email: 'daniel.w@example.com',
-    phone: '+1 234 567 8914',
-    city: 'Madinah',
-    status: 'inactive',
-    avatar: '',
-    joinedDate: '2024-01-11',
-  },
-])
+// API data
+const salesUsers = ref<SalesUser[]>([])
+const isLoading = ref(false)
+const error = ref('')
+const totalSalesUsers = ref(0)
 
-const totalSalesUsers = computed(() => salesUsers.value.length)
+// Fetch sales users from API
+const fetchSalesUsers = async () => {
+  isLoading.value = true
+  error.value = ''
+  
+  try {
+    const response = await $api('/v1/admin/users/sales', {
+      method: 'GET',
+      query: {
+        search: searchQuery.value,
+        status: selectedStatus.value,
+        sort_by: sortBy.value[0]?.key || 'created_at',
+        sort_direction: sortBy.value[0]?.order || 'desc',
+        page: page.value,
+        per_page: itemsPerPage.value,
+      },
+    })
+    
+    if (response.success) {
+      salesUsers.value = response.data.data || []
+      totalSalesUsers.value = response.data.total || 0
+    } else {
+      error.value = response.message || 'Failed to fetch sales users'
+    }
+  } catch (err) {
+    console.error('Error fetching sales users:', err)
+    error.value = 'Failed to fetch sales users'
+  } finally {
+    isLoading.value = false
+  }
+}
 
 // Filtered data
 const filteredSalesUsers = computed(() => {
@@ -139,38 +134,68 @@ const isViewDialogVisible = ref(false)
 const selectedSalesUser = ref<any>(null)
 const userToDelete = ref<any>(null)
 
+// Utility functions
+const prefixWithPlus = (value: number) => value > 0 ? `+${value}` : value
+const avatarText = (name: string) => {
+  const words = name.split(' ')
+  return words.length > 1 ? `${words[0][0]}${words[1][0]}` : name.slice(0, 2)
+}
+
 // Add new sales user
-const addNewSalesUser = (salesUserData: any) => {
-  const newId = Math.max(...salesUsers.value.map(s => s.id)) + 1
-  salesUsers.value.push({
-    ...salesUserData,
-    id: newId,
-    joinedDate: new Date().toISOString().split('T')[0],
-  })
+const addNewSalesUser = async (salesUserData: any) => {
+  try {
+    const response = await $api('/v1/admin/users', {
+      method: 'POST',
+      body: {
+        ...salesUserData,
+        role: 'sales',
+      },
+    })
+    
+    if (response.success) {
+      await fetchSalesUsers() // Refresh the list
+    } else {
+      error.value = response.message || 'Failed to create sales user'
+    }
+  } catch (err) {
+    console.error('Error creating sales user:', err)
+    error.value = 'Failed to create sales user'
+  }
 }
 
 // Edit sales user
-const editSalesUser = (salesUser: any) => {
+const editSalesUser = (salesUser: SalesUser) => {
   selectedSalesUser.value = { ...salesUser }
   isAddNewUserDrawerVisible.value = true
 }
 
 // Update sales user
-const updateSalesUser = (salesUserData: any) => {
-  const index = salesUsers.value.findIndex(s => s.id === salesUserData.id)
-  if (index !== -1) {
-    salesUsers.value[index] = { ...salesUsers.value[index], ...salesUserData }
+const updateSalesUser = async (salesUserData: any) => {
+  try {
+    const response = await $api(`/v1/admin/users/${salesUserData.id}`, {
+      method: 'PUT',
+      body: salesUserData,
+    })
+    
+    if (response.success) {
+      await fetchSalesUsers() // Refresh the list
+      selectedSalesUser.value = null
+    } else {
+      error.value = response.message || 'Failed to update sales user'
+    }
+  } catch (err) {
+    console.error('Error updating sales user:', err)
+    error.value = 'Failed to update sales user'
   }
-  selectedSalesUser.value = null
 }
 
 // Handle drawer data
-const handleSalesUserData = (salesUserData: any) => {
+const handleSalesUserData = async (salesUserData: any) => {
   if (salesUserData.id) {
-    updateSalesUser(salesUserData)
+    await updateSalesUser(salesUserData)
   }
   else {
-    addNewSalesUser(salesUserData)
+    await addNewSalesUser(salesUserData)
   }
 }
 
@@ -184,27 +209,55 @@ const openDeleteDialog = (salesUser: any) => {
 const deleteUser = async () => {
   if (!userToDelete.value) return
 
-  const index = salesUsers.value.findIndex(user => user.id === userToDelete.value.id)
-  if (index !== -1)
-    salesUsers.value.splice(index, 1)
-
-  // Remove from selectedRows
-  const selectedIndex = selectedRows.value.findIndex(row => row === userToDelete.value.id)
-  if (selectedIndex !== -1)
-    selectedRows.value.splice(selectedIndex, 1)
+  try {
+    const response = await $api(`/v1/admin/users/${userToDelete.value.id}`, {
+      method: 'DELETE',
+    })
+    
+    if (response.success) {
+      await fetchSalesUsers() // Refresh the list
+      
+      // Remove from selectedRows
+      const selectedIndex = selectedRows.value.findIndex(row => row === userToDelete.value.id)
+      if (selectedIndex !== -1)
+        selectedRows.value.splice(selectedIndex, 1)
+    } else {
+      error.value = response.message || 'Failed to delete sales user'
+    }
+  } catch (err) {
+    console.error('Error deleting sales user:', err)
+    error.value = 'Failed to delete sales user'
+  }
 
   userToDelete.value = null
 }
 
 // Open reset password dialog
-const openResetPasswordDialog = (salesUser: any) => {
+const openResetPasswordDialog = (salesUser: SalesUser) => {
   selectedSalesUser.value = salesUser
   isResetPasswordDialogVisible.value = true
 }
 
 // Reset password
-const resetPassword = (password: string) => {
-  console.log('Password reset for:', selectedSalesUser.value?.fullName, 'New password:', password)
+const resetPassword = async (password: string) => {
+  if (!selectedSalesUser.value) return
+
+  try {
+    const response = await $api(`/v1/admin/users/${selectedSalesUser.value.id}/reset-password`, {
+      method: 'POST',
+      body: { password },
+    })
+    
+    if (response.success) {
+      console.log('Password reset successfully for:', selectedSalesUser.value.fullName)
+    } else {
+      error.value = response.message || 'Failed to reset password'
+    }
+  } catch (err) {
+    console.error('Error resetting password:', err)
+    error.value = 'Failed to reset password'
+  }
+  
   selectedSalesUser.value = null
 }
 
@@ -243,12 +296,30 @@ const exportToPDF = () => {
   // Implement PDF export logic
 }
 
+// Fetch data on component mount
+onMounted(() => {
+  fetchSalesUsers()
+  fetchWidgetStats()
+})
+
 // Widget data
 const widgetData = ref([
-  { title: 'Total Sales Users', value: '197', change: 8.4, desc: 'All sales team members', icon: 'tabler-chart-line', iconColor: 'primary' },
-  { title: 'Active Sales', value: '183', change: 6.2, desc: 'Currently active', icon: 'tabler-user-check', iconColor: 'success' },
-  { title: 'Pending Approval', value: '12', change: 15.8, desc: 'Awaiting verification', icon: 'tabler-clock', iconColor: 'warning' },
+  { title: 'Total Sales Users', value: '0', change: 0, desc: 'All sales team members', icon: 'tabler-chart-line', iconColor: 'primary' },
+  { title: 'Active Sales', value: '0', change: 0, desc: 'Currently active', icon: 'tabler-user-check', iconColor: 'success' },
+  { title: 'Pending Approval', value: '0', change: 0, desc: 'Awaiting verification', icon: 'tabler-clock', iconColor: 'warning' },
 ])
+
+// Fetch widget statistics
+const fetchWidgetStats = async () => {
+  try {
+    const response = await $api('/v1/admin/users/sales/stats')
+    if (response.success) {
+      widgetData.value = response.data
+    }
+  } catch (err) {
+    console.error('Error fetching sales stats:', err)
+  }
+}
 </script>
 
 <template>
@@ -369,10 +440,15 @@ const widgetData = ref([
 
       <VDivider />
 
+      <!-- Error Alert -->
+      <VAlert v-if="error" type="error" class="ma-4" closable @click:close="error = null">
+        {{ error }}
+      </VAlert>
+
       <!-- Data Table -->
       <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
         :items="filteredSalesUsers" item-value="id" :items-length="totalSalesUsers" :headers="headers"
-        class="text-no-wrap" show-select @update:options="updateOptions">
+        class="text-no-wrap" show-select :loading="isLoading" @update:options="updateOptions">
         <!-- Empty State -->
         <template #no-data>
           <div class="text-center pa-8">

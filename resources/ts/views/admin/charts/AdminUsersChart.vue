@@ -4,12 +4,60 @@ import { useTheme } from 'vuetify'
 const vuetifyTheme = useTheme()
 const currentTheme = vuetifyTheme.current.value.colors
 
-const series = [
+// Reactive data
+const isLoading = ref(true)
+const error = ref('')
+const totalUsers = ref(0)
+const userGrowth = ref(0)
+const series = ref([
   {
     name: 'Users',
-    data: [28, 40, 36, 52, 38, 60, 55],
+    data: [0, 0, 0, 0, 0, 0, 0],
   },
-]
+])
+
+// Fetch chart data from API
+const fetchChartData = async () => {
+  try {
+    isLoading.value = true
+    const response = await $api('/v1/admin/dashboard/chart-data')
+    
+    if (response.success && response.data.users) {
+      // Get last 7 months of user data
+      const userData = response.data.users.slice(-7)
+      const userCounts = userData.map((item: any) => item.users)
+      
+      series.value = [
+        {
+          name: 'Users',
+          data: userCounts,
+        },
+      ]
+      
+      // Calculate total users and growth
+      const currentMonth = userCounts[userCounts.length - 1] || 0
+      const previousMonth = userCounts[userCounts.length - 2] || 0
+      
+      totalUsers.value = userData.reduce((sum: number, item: any) => sum + item.users, 0)
+      
+      if (previousMonth > 0) {
+        userGrowth.value = ((currentMonth - previousMonth) / previousMonth) * 100
+      } else {
+        userGrowth.value = currentMonth > 0 ? 100 : 0
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching chart data:', err)
+    error.value = 'Failed to load chart data'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchChartData()
+})
 
 const chartOptions = {
   chart: {
@@ -91,12 +139,22 @@ const chartOptions = {
     />
 
     <VCardText class="pt-1">
-      <div class="d-flex align-center justify-space-between gap-x-2">
+      <div v-if="isLoading" class="d-flex align-center justify-space-between gap-x-2">
+        <VSkeleton type="text" width="60px" height="32px" />
+        <VSkeleton type="text" width="40px" />
+      </div>
+      <div v-else-if="error" class="text-center text-error text-sm">
+        {{ error }}
+      </div>
+      <div v-else class="d-flex align-center justify-space-between gap-x-2">
         <h4 class="text-h4 text-center">
-          1,245
+          {{ totalUsers.toLocaleString() }}
         </h4>
-        <span class="text-sm text-success">
-          +18.2%
+        <span 
+          class="text-sm"
+          :class="userGrowth >= 0 ? 'text-success' : 'text-error'"
+        >
+          {{ userGrowth >= 0 ? '+' : '' }}{{ userGrowth.toFixed(1) }}%
         </span>
       </div>
     </VCardText>

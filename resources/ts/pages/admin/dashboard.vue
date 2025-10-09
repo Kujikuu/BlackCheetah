@@ -7,6 +7,31 @@ import AddEditFranchisorDrawer from '@/views/admin/modals/AddEditFranchisorDrawe
 import AddEditSalesDrawer from '@/views/admin/modals/AddEditSalesDrawer.vue'
 import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
 
+interface StatData {
+  title: string
+  value: string
+  change: number
+  desc: string
+  icon: string
+  iconColor: string
+}
+
+interface RecentUser {
+  id: number
+  fullName: string
+  email: string
+  role: string
+  status: string
+  avatar: string
+  joinedDate: string
+  lastLogin?: string
+  franchiseName?: string
+  plan?: string
+  location?: string
+  phone?: string
+  city?: string
+}
+
 definePage({
   meta: {
     subject: 'Admin',
@@ -14,74 +39,61 @@ definePage({
   },
 })
 
-// Stats data
-const statsData = ref([
-  { title: 'Total Users', value: '1,245', change: 18.2, desc: 'All registered users', icon: 'tabler-users', iconColor: 'primary' },
-  { title: 'Franchisors', value: '156', change: 12.5, desc: 'Active franchisors', icon: 'tabler-building-store', iconColor: 'success' },
-  { title: 'Franchisees', value: '892', change: 22.8, desc: 'Active franchisees', icon: 'tabler-user-check', iconColor: 'info' },
-  { title: 'Sales Users', value: '197', change: 8.4, desc: 'Sales team members', icon: 'tabler-chart-line', iconColor: 'warning' },
-])
+// Reactive data
+const statsData = ref<StatData[]>([])
+const recentUsers = ref<RecentUser[]>([])
+const isLoading = ref(true)
+const error = ref('')
 
-// Recent users data
-const recentUsers = ref([
-  {
-    id: 1,
-    fullName: 'John Doe',
-    email: 'john.doe@example.com',
-    role: 'franchisor',
-    status: 'active',
-    avatar: '',
-    joinedDate: '2024-01-15',
-    franchiseName: 'Acme Corporation',
-    plan: 'Enterprise',
-    lastLogin: '2024-01-15',
-  },
-  {
-    id: 2,
-    fullName: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    role: 'franchisee',
-    status: 'active',
-    avatar: '',
-    joinedDate: '2024-01-14',
-    location: 'Riyadh',
-    phone: '+966 50 567 8905',
-  },
-  {
-    id: 3,
-    fullName: 'Mike Johnson',
-    email: 'mike.j@example.com',
-    role: 'sales',
-    status: 'pending',
-    avatar: '',
-    joinedDate: '2024-01-13',
-    city: 'Riyadh',
-    phone: '+966 50 567 8910',
-  },
-  {
-    id: 4,
-    fullName: 'Sarah Williams',
-    email: 'sarah.w@example.com',
-    role: 'franchisee',
-    status: 'active',
-    avatar: '',
-    joinedDate: '2024-01-12',
-    location: 'Jeddah',
-    phone: '+966 55 567 8906',
-  },
-  {
-    id: 5,
-    fullName: 'David Brown',
-    email: 'david.b@example.com',
-    role: 'franchisor',
-    status: 'inactive',
-    avatar: '',
-    joinedDate: '2024-01-11',
-    franchiseName: 'Global Ventures',
-    plan: 'Pro',
-    lastLogin: '2024-01-11',
-  },
-])
+// Fetch dashboard statistics
+const fetchStats = async () => {
+  try {
+    const response = await $api('/v1/admin/dashboard/stats')
+    if (response.success) {
+      // Use the actual API response structure
+      statsData.value = response.data
+    }
+  } catch (err) {
+    console.error('Error fetching stats:', err)
+    error.value = 'Failed to load dashboard statistics'
+  }
+}
+
+// Fetch recent users
+const fetchRecentUsers = async () => {
+  try {
+    const response = await $api('/v1/admin/dashboard/recent-users')
+    if (response.success) {
+      recentUsers.value = response.data
+    }
+  } catch (err) {
+    console.error('Error fetching recent users:', err)
+    error.value = 'Failed to load recent users'
+  }
+}
+
+// Load dashboard data
+const loadDashboardData = async () => {
+  isLoading.value = true
+  error.value = ''
+  
+  try {
+    await Promise.all([
+      fetchStats(),
+      fetchRecentUsers()
+    ])
+  } catch (err) {
+    console.error('Error loading dashboard data:', err)
+    error.value = 'Failed to load dashboard data'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Load data on component mount
+onMounted(() => {
+  loadDashboardData()
+})
 
 const resolveUserRoleVariant = (role: string) => {
   const roleLowerCase = role.toLowerCase()
@@ -162,6 +174,15 @@ const getUserTypeLabel = (role: string) => {
 
   return 'User'
 }
+
+// Utility functions
+const prefixWithPlus = (value: number) => {
+  return value > 0 ? `+${value}` : value.toString()
+}
+
+const avatarText = (name: string) => {
+  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase()
+}
 </script>
 
 <template>
@@ -182,9 +203,46 @@ const getUserTypeLabel = (role: string) => {
       </VCol>
     </VRow>
 
+    <!-- Error Alert -->
+    <VRow v-if="error" class="mb-6">
+      <VCol cols="12">
+        <VAlert
+          type="error"
+          variant="tonal"
+          closable
+          @click:close="error = ''"
+        >
+          {{ error }}
+        </VAlert>
+      </VCol>
+    </VRow>
+
     <!-- Stats Cards -->
     <VRow class="mb-6">
+      <template v-if="isLoading">
+        <VCol
+          v-for="i in 4"
+          :key="i"
+          cols="12"
+          md="3"
+          sm="6"
+        >
+          <VCard>
+            <VCardText>
+              <div class="d-flex justify-space-between">
+                <div class="d-flex flex-column gap-y-1">
+                  <VSkeleton type="text" width="80px" />
+                  <VSkeleton type="text" width="60px" height="32px" />
+                  <VSkeleton type="text" width="120px" />
+                </div>
+                <VSkeleton type="avatar" size="42" />
+              </div>
+            </VCardText>
+          </VCard>
+        </VCol>
+      </template>
       <template
+        v-else
         v-for="(data, id) in statsData"
         :key="id"
       >

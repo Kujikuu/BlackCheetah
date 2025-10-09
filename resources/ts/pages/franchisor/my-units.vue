@@ -331,7 +331,7 @@ const viewUnitDetails = (unit: any) => {
 
                     <!-- Units Table -->
                     <VDataTable :items="unitsData" :headers="unitHeaders" class="text-no-wrap" item-value="id"
-                        @click:row="(_event: any, { item }: { item: any }) => viewUnitDetails(item)"
+                        @click:row="(event: any, { item }: any) => viewUnitDetails(item)"
                         style="cursor: pointer;">
                         <!-- Branch Info -->
                         <template #item.branchInfo="{ item }">

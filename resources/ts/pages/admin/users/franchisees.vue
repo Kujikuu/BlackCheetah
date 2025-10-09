@@ -4,6 +4,18 @@ import ConfirmDeleteDialog from '@/views/admin/modals/ConfirmDeleteDialog.vue'
 import ResetPasswordDialog from '@/views/admin/modals/ResetPasswordDialog.vue'
 import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
 
+// TypeScript interfaces
+interface Franchisee {
+  id: number
+  fullName: string
+  email: string
+  phone: string
+  location: string
+  status: string
+  avatar: string
+  joinedDate: string
+}
+
 definePage({
   meta: {
     subject: 'Admin',
@@ -18,14 +30,16 @@ const selectedStatus = ref()
 // Data table options
 const itemsPerPage = ref(10)
 const page = ref(1)
-const sortBy = ref()
-const orderBy = ref()
+const sortBy = ref([{ key: 'created_at', order: 'desc' }])
+const orderBy = ref('desc')
 const selectedRows = ref<number[]>([])
 
 // Update data table options
 const updateOptions = (options: any) => {
-  sortBy.value = options.sortBy[0]?.key
-  orderBy.value = options.sortBy[0]?.order
+  if (options.sortBy && options.sortBy.length > 0) {
+    sortBy.value = options.sortBy
+    orderBy.value = options.sortBy[0]?.order
+  }
 }
 
 // Headers
@@ -38,61 +52,45 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Mock data - Replace with API call
-const franchisees = ref([
-  {
-    id: 1,
-    fullName: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    phone: '+966 50 567 8905',
-    location: 'Riyadh',
-    status: 'active',
-    avatar: '',
-    joinedDate: '2024-01-15',
-  },
-  {
-    id: 2,
-    fullName: 'Robert Wilson',
-    email: 'robert.w@example.com',
-    phone: '+966 55 567 8906',
-    location: 'Makkah',
-    status: 'active',
-    avatar: '',
-    joinedDate: '2024-01-14',
-  },
-  {
-    id: 3,
-    fullName: 'Lisa Anderson',
-    email: 'lisa.a@example.com',
-    phone: '+966 55 567 8907',
-    location: 'Jeddah',
-    status: 'pending',
-    avatar: '',
-    joinedDate: '2024-01-13',
-  },
-  {
-    id: 4,
-    fullName: 'James Taylor',
-    email: 'james.t@example.com',
-    phone: '+966 55 567 8908',
-    location: 'Madinah',
-    status: 'active',
-    avatar: '',
-    joinedDate: '2024-01-12',
-  },
-  {
-    id: 5,
-    fullName: 'Maria Garcia',
-    email: 'maria.g@example.com',
-    phone: '+966 55 567 8909',
-    location: 'Madinah',
-    status: 'inactive',
-    avatar: '',
-    joinedDate: '2024-01-11',
-  },
-])
+// API data
+const franchisees = ref<Franchisee[]>([])
+const isLoading = ref(false)
+const error = ref('')
+const totalFranchisees = ref(0)
 
-const totalFranchisees = computed(() => franchisees.value.length)
+// Fetch franchisees from API
+const fetchFranchisees = async () => {
+  try {
+    isLoading.value = true
+    error.value = ''
+
+    const params = {
+      search: searchQuery.value || undefined,
+      status: selectedStatus.value || undefined,
+      sortBy: sortBy.value || 'created_at',
+      sortOrder: orderBy.value || 'desc',
+      perPage: itemsPerPage.value,
+      page: page.value,
+    }
+
+    const response = await $api('/v1/admin/users/franchisees', {
+      method: 'GET',
+      params,
+    })
+
+    if (response.success) {
+      franchisees.value = response.data.data || []
+      totalFranchisees.value = response.data.total || 0
+    } else {
+      error.value = response.message || 'Failed to fetch franchisees'
+    }
+  } catch (err) {
+    console.error('Error fetching franchisees:', err)
+    error.value = 'Failed to fetch franchisees'
+  } finally {
+    isLoading.value = false
+  }
+}
 
 // Filtered data
 const filteredFranchisees = computed(() => {
@@ -139,38 +137,82 @@ const isViewDialogVisible = ref(false)
 const selectedFranchisee = ref<any>(null)
 const userToDelete = ref<any>(null)
 
+// Utility functions
+const prefixWithPlus = (value: number) => value > 0 ? `+${value}` : value
+const avatarText = (name: string) => {
+  const words = name.split(' ')
+  return words.length > 1 ? `${words[0][0]}${words[1][0]}` : name.slice(0, 2)
+}
+
 // Add new franchisee
-const addNewFranchisee = (franchiseeData: any) => {
-  const newId = Math.max(...franchisees.value.map(f => f.id)) + 1
-  franchisees.value.push({
-    ...franchiseeData,
-    id: newId,
-    joinedDate: new Date().toISOString().split('T')[0],
-  })
+const addNewFranchisee = async (franchiseeData: any) => {
+  try {
+    // Map location to city for backend compatibility
+    const apiData = {
+      ...franchiseeData,
+      city: franchiseeData.location,
+      role: 'franchisee',
+    }
+    // Remove location field as backend expects city
+    delete apiData.location
+
+    const response = await $api('/v1/admin/users', {
+      method: 'POST',
+      body: apiData,
+    })
+
+    if (response.success) {
+      await fetchFranchisees() // Refresh the list
+    } else {
+      error.value = response.message || 'Failed to create franchisee'
+    }
+  } catch (err) {
+    console.error('Error creating franchisee:', err)
+    error.value = 'Failed to create franchisee'
+  }
 }
 
 // Edit franchisee
-const editFranchisee = (franchisee: any) => {
+const editFranchisee = (franchisee: Franchisee) => {
   selectedFranchisee.value = { ...franchisee }
   isAddNewUserDrawerVisible.value = true
 }
 
 // Update franchisee
-const updateFranchisee = (franchiseeData: any) => {
-  const index = franchisees.value.findIndex(f => f.id === franchiseeData.id)
-  if (index !== -1) {
-    franchisees.value[index] = { ...franchisees.value[index], ...franchiseeData }
+const updateFranchisee = async (franchiseeData: any) => {
+  try {
+    // Map location to city for backend compatibility
+    const apiData = {
+      ...franchiseeData,
+      city: franchiseeData.location,
+    }
+    // Remove location field as backend expects city
+    delete apiData.location
+
+    const response = await $api(`/v1/admin/users/${franchiseeData.id}`, {
+      method: 'PUT',
+      body: apiData,
+    })
+
+    if (response.success) {
+      await fetchFranchisees() // Refresh the list
+      selectedFranchisee.value = null
+    } else {
+      error.value = response.message || 'Failed to update franchisee'
+    }
+  } catch (err) {
+    console.error('Error updating franchisee:', err)
+    error.value = 'Failed to update franchisee'
   }
-  selectedFranchisee.value = null
 }
 
 // Handle drawer data
-const handleFranchiseeData = (franchiseeData: any) => {
+const handleFranchiseeData = async (franchiseeData: any) => {
   if (franchiseeData.id) {
-    updateFranchisee(franchiseeData)
+    await updateFranchisee(franchiseeData)
   }
   else {
-    addNewFranchisee(franchiseeData)
+    await addNewFranchisee(franchiseeData)
   }
 }
 
@@ -184,15 +226,27 @@ const openDeleteDialog = (franchisee: any) => {
 const deleteUser = async () => {
   if (!userToDelete.value) return
 
-  const index = franchisees.value.findIndex(user => user.id === userToDelete.value.id)
-  if (index !== -1)
-    franchisees.value.splice(index, 1)
+  try {
+    const response = await $api(`/v1/admin/users/${userToDelete.value.id}`, {
+      method: 'DELETE',
+    })
 
-  // Remove from selectedRows
-  const selectedIndex = selectedRows.value.findIndex(row => row === userToDelete.value.id)
-  if (selectedIndex !== -1)
-    selectedRows.value.splice(selectedIndex, 1)
+    if (response.success) {
+      await fetchFranchisees() // Refresh the list
 
+      // Remove from selectedRows
+      const selectedIndex = selectedRows.value.findIndex(row => row === userToDelete.value.id)
+      if (selectedIndex !== -1)
+        selectedRows.value.splice(selectedIndex, 1)
+    } else {
+      error.value = response.message || 'Failed to delete franchisee'
+    }
+  } catch (err) {
+    console.error('Error deleting franchisee:', err)
+    error.value = 'Failed to delete franchisee'
+  }
+
+  isDeleteDialogVisible.value = false
   userToDelete.value = null
 }
 
@@ -203,15 +257,39 @@ const openResetPasswordDialog = (franchisee: any) => {
 }
 
 // Reset password
-const resetPassword = (password: string) => {
-  console.log('Password reset for:', selectedFranchisee.value?.fullName, 'New password:', password)
-  selectedFranchisee.value = null
-}
+const resetPassword = async (password: string) => {
+  if (!selectedFranchisee.value) return
 
-// Handle drawer close
+  try {
+    const response = await $api(`/v1/admin/users/${selectedFranchisee.value.id}/reset-password`, {
+      method: 'POST',
+      body: {
+        password: password,
+      },
+    })
+
+    if (response.success) {
+      console.log('Password reset successfully for:', selectedFranchisee.value?.fullName)
+    } else {
+      error.value = response.message || 'Failed to reset password'
+    }
+  } catch (err) {
+    console.error('Error resetting password:', err)
+    error.value = 'Failed to reset password'
+  }
+
+  isResetPasswordDialogVisible.value = false
+  selectedFranchisee.value = null
+}// Handle drawer close
 const handleDrawerClose = () => {
   selectedFranchisee.value = null
 }
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchFranchisees()
+  fetchWidgetStats()
+})
 
 // View user
 const viewUser = (franchisee: any) => {
@@ -245,10 +323,22 @@ const exportToPDF = () => {
 
 // Widget data
 const widgetData = ref([
-  { title: 'Total Franchisees', value: '892', change: 22.8, desc: 'All registered franchisees', icon: 'tabler-user-check', iconColor: 'primary' },
-  { title: 'Active Franchisees', value: '834', change: 18.5, desc: 'Currently active', icon: 'tabler-user-circle', iconColor: 'success' },
-  { title: 'Pending Approval', value: '42', change: 12.3, desc: 'Awaiting verification', icon: 'tabler-clock', iconColor: 'warning' },
+  { title: 'Total Franchisees', value: '0', change: 0, desc: 'All registered franchisees', icon: 'tabler-user-check', iconColor: 'primary' },
+  { title: 'Active Franchisees', value: '0', change: 0, desc: 'Currently active', icon: 'tabler-user-circle', iconColor: 'success' },
+  { title: 'Pending Approval', value: '0', change: 0, desc: 'Awaiting verification', icon: 'tabler-clock', iconColor: 'warning' },
 ])
+
+// Fetch widget statistics
+const fetchWidgetStats = async () => {
+  try {
+    const response = await $api('/v1/admin/users/franchisees/stats')
+    if (response.success) {
+      widgetData.value = response.data
+    }
+  } catch (err) {
+    console.error('Error fetching franchisee stats:', err)
+  }
+}
 </script>
 
 <template>
@@ -369,10 +459,15 @@ const widgetData = ref([
 
       <VDivider />
 
+      <!-- Error Alert -->
+      <VAlert v-if="error" type="error" class="ma-4" closable @click:close="error = ''">
+        {{ error }}
+      </VAlert>
+
       <!-- Data Table -->
       <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
         :items="filteredFranchisees" item-value="id" :items-length="totalFranchisees" :headers="headers"
-        class="text-no-wrap" show-select @update:options="updateOptions">
+        :loading="isLoading" class="text-no-wrap" show-select @update:options="updateOptions">
         <!-- Empty State -->
         <template #no-data>
           <div class="text-center pa-8">
@@ -485,34 +580,19 @@ const widgetData = ref([
     </VCard>
 
     <!-- Add/Edit Franchisee Drawer -->
-    <AddEditFranchiseeDrawer
-      v-model:is-drawer-open="isAddNewUserDrawerVisible"
-      :franchisee="selectedFranchisee"
-      @franchisee-data="handleFranchiseeData"
-      @update:is-drawer-open="handleDrawerClose"
-    />
+    <AddEditFranchiseeDrawer v-model:is-drawer-open="isAddNewUserDrawerVisible" :franchisee="selectedFranchisee"
+      @franchisee-data="handleFranchiseeData" @update:is-drawer-open="handleDrawerClose" />
 
     <!-- Delete Confirmation Dialog -->
-    <ConfirmDeleteDialog
-      v-model:is-dialog-open="isDeleteDialogVisible"
-      :user-name="userToDelete?.fullName"
-      user-type="Franchisee"
-      @confirm="deleteUser"
-    />
+    <ConfirmDeleteDialog v-model:is-dialog-open="isDeleteDialogVisible" :user-name="userToDelete?.fullName"
+      user-type="Franchisee" @confirm="deleteUser" />
 
     <!-- Reset Password Dialog -->
-    <ResetPasswordDialog
-      v-model:is-dialog-open="isResetPasswordDialogVisible"
-      :user-name="selectedFranchisee?.fullName"
-      @confirm="resetPassword"
-    />
+    <ResetPasswordDialog v-model:is-dialog-open="isResetPasswordDialogVisible" :user-name="selectedFranchisee?.fullName"
+      @confirm="resetPassword" />
 
     <!-- View User Dialog -->
-    <ViewUserDialog
-      v-model:is-dialog-open="isViewDialogVisible"
-      :user="selectedFranchisee"
-      user-type="Franchisee"
-      @edit="handleEditFromView"
-    />
+    <ViewUserDialog v-model:is-dialog-open="isViewDialogVisible" :user="selectedFranchisee" user-type="Franchisee"
+      @edit="handleEditFromView" />
   </section>
 </template>
