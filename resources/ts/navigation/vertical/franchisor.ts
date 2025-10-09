@@ -69,6 +69,16 @@ export default [
         to: 'franchisor-financial-overview',
         icon: { icon: 'tabler-chart-pie' },
       },
+      {
+        title: 'Royalty Management',
+        to: 'franchisor-royalty-management',
+        icon: { icon: 'tabler-coins' },
+      },
+      {
+        title: 'Technical Requests',
+        to: 'franchisor-technical-requests',
+        icon: { icon: 'tabler-headset' },
+      }
     ],
   },
 ]
