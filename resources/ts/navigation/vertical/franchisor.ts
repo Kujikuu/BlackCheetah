@@ -64,6 +64,11 @@ export default [
         to: 'franchisor-performance-management',
         icon: { icon: 'tabler-chart-line' },
       },
+      {
+        title: 'Financial Overview',
+        to: 'franchisor-financial-overview',
+        icon: { icon: 'tabler-chart-pie' },
+      },
     ],
   },
 ]
