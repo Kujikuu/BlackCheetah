@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { requiredValidator } from '@/@core/utils/validators'
+
 interface Props {
   isDrawerOpen: boolean
   request?: any
@@ -154,6 +156,11 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
     resetForm()
   }
 }
+
+// Helper function for avatar text
+const avatarText = (name: string) => {
+  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase()
+}
 </script>
 
 <template>
@@ -169,6 +176,43 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
       title="Edit Technical Request"
       @cancel="handleDrawerModelValueUpdate(false)"
     />
+
+    <VDivider />
+
+    <!-- Requester Information Section -->
+    <VCard 
+      flat
+      class="mb-4"
+    >
+      <VCardText>
+        <div class="text-body-2 text-medium-emphasis mb-3">
+          Requested By
+        </div>
+        <div class="d-flex align-center gap-3">
+          <VAvatar
+            size="40"
+            :color="props.request?.userAvatar ? undefined : 'primary'"
+            :image="props.request?.userAvatar || undefined"
+            variant="tonal"
+          >
+            <span 
+              v-if="!props.request?.userAvatar && props.request?.userName"
+              class="text-sm font-weight-medium"
+            >
+              {{ avatarText(props.request.userName) }}
+            </span>
+          </VAvatar>
+          <div>
+            <div class="text-body-1 font-weight-medium">
+              {{ props.request?.userName || 'Unknown User' }}
+            </div>
+            <div class="text-body-2 text-medium-emphasis">
+              {{ props.request?.userEmail || 'No email available' }}
+            </div>
+          </div>
+        </div>
+      </VCardText>
+    </VCard>
 
     <VDivider />
 
