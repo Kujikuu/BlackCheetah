@@ -59,6 +59,11 @@ export default [
         to: 'franchisor-tasks-management',
         icon: { icon: 'tabler-clipboard-list' },
       },
+      {
+        title: 'Performance Management',
+        to: 'franchisor-performance-management',
+        icon: { icon: 'tabler-chart-line' },
+      },
     ],
   },
 ]

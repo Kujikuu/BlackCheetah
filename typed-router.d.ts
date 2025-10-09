@@ -108,6 +108,7 @@ declare module 'vue-router/auto-routes' {
     'franchisor-lead-view-id': RouteRecordInfo<'franchisor-lead-view-id', '/franchisor/lead-view-:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'franchisor-my-franchise': RouteRecordInfo<'franchisor-my-franchise', '/franchisor/my-franchise', Record<never, never>, Record<never, never>>,
     'franchisor-my-units': RouteRecordInfo<'franchisor-my-units', '/franchisor/my-units', Record<never, never>, Record<never, never>>,
+    'franchisor-performance-management': RouteRecordInfo<'franchisor-performance-management', '/franchisor/performance-management', Record<never, never>, Record<never, never>>,
     'franchisor-sales-associates': RouteRecordInfo<'franchisor-sales-associates', '/franchisor/sales-associates', Record<never, never>, Record<never, never>>,
     'franchisor-tasks-management': RouteRecordInfo<'franchisor-tasks-management', '/franchisor/tasks-management', Record<never, never>, Record<never, never>>,
     'franchisor-units-id': RouteRecordInfo<'franchisor-units-id', '/franchisor/units/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
