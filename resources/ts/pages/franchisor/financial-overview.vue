@@ -11,6 +11,18 @@ definePage({
     },
 })
 
+// Data table options
+const itemsPerPage = ref(10)
+const page = ref(1)
+const sortBy = ref()
+const orderBy = ref()
+
+// Update data table options
+const updateOptions = (options: any) => {
+  sortBy.value = options.sortBy[0]?.key
+  orderBy.value = options.sortBy[0]?.order
+}
+
 // Type definitions
 interface UnitData {
     sales: number[]
@@ -346,6 +358,266 @@ const tableHeaders = [
 <template>
     <section>
         <!-- Page Header -->
+        <div class="d-flex justify-space-between align-center mb-6">
+            <div>
+                <h4 class="text-h4 mb-1">
+                    Financial Overview
+                </h4>
+                <p class="text-body-1 mb-0">
+                    Manage your financial data across sales, expenses, and profit
+                </p>
+            </div>
+            <div class="d-flex gap-3">
+                <VBtn
+                    variant="outlined"
+                    prepend-icon="tabler-upload"
+                    @click="openImportModal"
+                >
+                    Import
+                </VBtn>
+                <VBtn
+                    prepend-icon="tabler-plus"
+                    @click="openAddDataModal"
+                >
+                    Add Data
+                </VBtn>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <VTabs
+            v-model="activeTab"
+            class="mb-6"
+        >
+            <VTab value="sales">
+                Sales
+            </VTab>
+            <VTab value="expenses">
+                Expenses
+            </VTab>
+            <VTab value="profit">
+                Profit
+            </VTab>
+        </VTabs>
+
+        <!-- Main Data Table Card -->
+        <VCard class="mb-6">
+            <VCardText class="d-flex flex-wrap gap-4">
+                <div class="me-3 d-flex gap-3">
+                    <AppSelect
+                        :model-value="itemsPerPage"
+                        :items="[
+                            { value: 10, title: '10' },
+                            { value: 25, title: '25' },
+                            { value: 50, title: '50' },
+                            { value: 100, title: '100' },
+                            { value: -1, title: 'All' },
+                        ]"
+                        style="inline-size: 6.25rem;"
+                        @update:model-value="itemsPerPage = parseInt($event, 10)"
+                    />
+                </div>
+                <VSpacer />
+
+                <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
+                    <!-- Search -->
+                    <div style="inline-size: 15.625rem;">
+                        <AppTextField
+                            v-model="searchQuery"
+                            :placeholder="`Search ${activeTab}...`"
+                        />
+                    </div>
+
+                    <!-- Export button -->
+                    <VBtn
+                        variant="tonal"
+                        color="secondary"
+                        prepend-icon="tabler-upload"
+                        :disabled="!currentSelectedRows.length"
+                        @click="exportData"
+                    >
+                        Export
+                    </VBtn>
+
+                    <!-- Delete button -->
+                    <VBtn
+                        variant="tonal"
+                        color="error"
+                        prepend-icon="tabler-trash"
+                        :disabled="!currentSelectedRows.length"
+                        @click="deleteSelected"
+                    >
+                        Delete Selected
+                    </VBtn>
+                </div>
+            </VCardText>
+
+            <VDivider />
+
+            <!-- Data Table -->
+            <VDataTableServer
+                v-model:items-per-page="itemsPerPage"
+                v-model:page="page"
+                :model-value="currentSelectedRows"
+                :items="currentData"
+                item-value="id"
+                :items-length="currentTotal"
+                :headers="currentHeaders"
+                class="text-no-wrap"
+                show-select
+                @update:options="updateOptions"
+                @update:model-value="(value) => {
+                    switch (activeTab) {
+                        case 'sales': selectedSalesRows = value; break;
+                        case 'expenses': selectedExpensesRows = value; break;
+                        case 'profit': selectedProfitRows = value; break;
+                    }
+                }"
+            >
+                <!-- Sales specific templates -->
+                <template v-if="activeTab === 'sales'" #item.product="{ item }">
+                    <div class="d-flex align-center gap-x-2">
+                        <VIcon
+                            icon="tabler-package"
+                            size="22"
+                            color="primary"
+                        />
+                        <div class="text-body-1 text-high-emphasis">
+                            {{ item.product }}
+                        </div>
+                    </div>
+                </template>
+
+                <template v-if="activeTab === 'sales'" #item.unitPrice="{ item }">
+                    <div class="text-body-1 text-high-emphasis">
+                        {{ formatCurrency(item.unitPrice) }}
+                    </div>
+                </template>
+
+                <template v-if="activeTab === 'sales'" #item.sale="{ item }">
+                    <VChip
+                        color="success"
+                        size="small"
+                        label
+                    >
+                        {{ formatCurrency(item.sale) }}
+                    </VChip>
+                </template>
+
+                <!-- Expenses specific templates -->
+                <template v-if="activeTab === 'expenses'" #item.expenseCategory="{ item }">
+                    <div class="d-flex align-center gap-x-2">
+                        <VIcon
+                            icon="tabler-receipt"
+                            size="22"
+                            color="warning"
+                        />
+                        <div class="text-body-1 text-high-emphasis text-capitalize">
+                            {{ item.expenseCategory }}
+                        </div>
+                    </div>
+                </template>
+
+                <template v-if="activeTab === 'expenses'" #item.amount="{ item }">
+                    <VChip
+                        color="error"
+                        size="small"
+                        label
+                    >
+                        {{ formatCurrency(item.amount) }}
+                    </VChip>
+                </template>
+
+                <template v-if="activeTab === 'expenses'" #item.description="{ item }">
+                    <div class="text-body-2" style="max-width: 200px;">
+                        {{ item.description }}
+                    </div>
+                </template>
+
+                <!-- Profit specific templates -->
+                <template v-if="activeTab === 'profit'" #item.date="{ item }">
+                    <div class="d-flex align-center gap-x-2">
+                        <VIcon
+                            icon="tabler-calendar"
+                            size="22"
+                            color="info"
+                        />
+                        <div class="text-body-1 text-high-emphasis">
+                            {{ item.date }}
+                        </div>
+                    </div>
+                </template>
+
+                <template v-if="activeTab === 'profit'" #item.totalSales="{ item }">
+                    <div class="text-body-1 text-high-emphasis">
+                        {{ formatCurrency(item.totalSales) }}
+                    </div>
+                </template>
+
+                <template v-if="activeTab === 'profit'" #item.totalExpenses="{ item }">
+                    <div class="text-body-1 text-high-emphasis">
+                        {{ formatCurrency(item.totalExpenses) }}
+                    </div>
+                </template>
+
+                <template v-if="activeTab === 'profit'" #item.profit="{ item }">
+                    <VChip
+                        :color="resolveProfitVariant(item.profit)"
+                        size="small"
+                        label
+                    >
+                        {{ formatCurrency(item.profit) }}
+                    </VChip>
+                </template>
+
+                <!-- Actions -->
+                <template #item.actions="{ item }">
+                    <IconBtn @click="deleteItem(item.id)">
+                        <VIcon icon="tabler-trash" />
+                    </IconBtn>
+
+                    <IconBtn @click="editItem(item.id)">
+                        <VIcon icon="tabler-edit" />
+                    </IconBtn>
+
+                    <VBtn
+                        icon
+                        variant="text"
+                        color="medium-emphasis"
+                    >
+                        <VIcon icon="tabler-dots-vertical" />
+                        <VMenu activator="parent">
+                            <VList>
+                                <VListItem @click="editItem(item.id)">
+                                    <template #prepend>
+                                        <VIcon icon="tabler-edit" />
+                                    </template>
+                                    <VListItemTitle>Edit</VListItemTitle>
+                                </VListItem>
+
+                                <VListItem @click="deleteItem(item.id)">
+                                    <template #prepend>
+                                        <VIcon icon="tabler-trash" />
+                                    </template>
+                                    <VListItemTitle>Delete</VListItemTitle>
+                                </VListItem>
+                            </VList>
+                        </VMenu>
+                    </VBtn>
+                </template>
+
+                <!-- Pagination -->
+                <template #bottom>
+                    <TablePagination
+                        v-model:page="page"
+                        :items-per-page="itemsPerPage"
+                        :total-items="currentTotal"
+                    />
+                </template>
+            </VDataTableServer>
+        </VCard>
+
+        <!-- Period Selector -->
         <VRow class="mb-6">
             <VCol cols="12">
                 <div class="d-flex justify-space-between align-center flex-wrap gap-4">
@@ -442,108 +714,141 @@ const tableHeaders = [
             </VCol>
         </VRow>
 
-        <!-- Financial Chart -->
-        <VRow class="mb-6">
-            <VCol cols="12">
-                <VCard>
-                    <VCardItem class="pb-4">
-                        <VCardTitle class="text-h6">Franchise Finance Overview</VCardTitle>
-                        <template #append>
-                            <!-- Unit Selector Tabs -->
-                            <VTabs v-model="selectedUnit" density="compact" color="primary">
-                                <VTab v-for="unit in franchiseeUnits" :key="unit.id" :value="unit.id" size="small">
-                                    {{ unit.name }}
-                                </VTab>
-                            </VTabs>
-                        </template>
-                    </VCardItem>
 
-                    <VDivider />
 
-                    <VCardText>
-                        <!-- Chart Container -->
-                        <div style="height: 400px; position: relative;">
-                            <VueApexCharts type="line" height="400" :options="chartOptions" :series="chartData" />
-                        </div>
-                    </VCardText>
-                </VCard>
-            </VCol>
-        </VRow>
-
-        <!-- Units Table -->
-        <VRow>
-            <VCol cols="12">
-                <VCard>
-                    <VCardItem class="pb-4">
-                        <VCardTitle class="text-h6">Franchisee Financial Performance</VCardTitle>
-                        <VCardSubtitle class="text-body-2">
-                            Detailed financial metrics for each franchise unit
-                        </VCardSubtitle>
-                    </VCardItem>
-
-                    <VDivider />
-
-                    <VDataTable
-                        :headers="tableHeaders"
-                        :items="unitsTableData"
-                        :items-per-page="10"
-                        class="text-no-wrap"
+        <!-- Add Data Modal -->
+        <VDialog
+            v-model="isAddDataModalVisible"
+            max-width="600"
+        >
+            <VCard>
+                <VCardTitle>Add New Data</VCardTitle>
+                <VCardText>
+                    <VSelect
+                        v-model="addDataCategory"
+                        :items="[
+                            { title: 'Sales', value: 'sales' },
+                            { title: 'Expense', value: 'expense' }
+                        ]"
+                        label="Category"
+                        class="mb-4"
+                    />
+                    
+                    <!-- Sales Fields -->
+                    <div v-if="addDataCategory === 'sales'">
+                        <VTextField
+                            v-model="addDataForm.product"
+                            label="Product"
+                            class="mb-4"
+                        />
+                        <VTextField
+                            v-model="addDataForm.dateOfSale"
+                            label="Date of Sale"
+                            type="date"
+                            class="mb-4"
+                        />
+                        <VTextField
+                            v-model="addDataForm.unitPrice"
+                            label="Unit Price"
+                            type="number"
+                            prefix="$"
+                            class="mb-4"
+                        />
+                        <VTextField
+                            v-model="addDataForm.quantitySold"
+                            label="Quantity Sold"
+                            type="number"
+                            class="mb-4"
+                        />
+                    </div>
+                    
+                    <!-- Expense Fields -->
+                    <div v-if="addDataCategory === 'expense'">
+                        <VTextField
+                            v-model="addDataForm.expenseCategory"
+                            label="Expense Category"
+                            class="mb-4"
+                        />
+                        <VTextField
+                            v-model="addDataForm.dateOfExpense"
+                            label="Date of Expense"
+                            type="date"
+                            class="mb-4"
+                        />
+                        <VTextField
+                            v-model="addDataForm.amount"
+                            label="Amount"
+                            type="number"
+                            prefix="$"
+                            class="mb-4"
+                        />
+                        <VTextField
+                            v-model="addDataForm.description"
+                            label="Description"
+                            class="mb-4"
+                        />
+                    </div>
+                </VCardText>
+                <VCardActions>
+                    <VSpacer />
+                    <VBtn
+                        variant="outlined"
+                        @click="isAddDataModalVisible = false"
                     >
-                        <!-- Sales Column -->
-                        <template #item.sales="{ item }">
-                            <div class="font-weight-medium text-success">
-                                {{ item.sales.toLocaleString() }}
-                            </div>
-                        </template>
+                        Cancel
+                    </VBtn>
+                    <VBtn
+                        color="primary"
+                        @click="submitAddData"
+                    >
+                        Add Data
+                    </VBtn>
+                </VCardActions>
+            </VCard>
+        </VDialog>
 
-                        <!-- Expenses Column -->
-                        <template #item.expenses="{ item }">
-                            <div class="font-weight-medium text-error">
-                                {{ item.expenses.toLocaleString() }}
-                            </div>
-                        </template>
+        <!-- Import Modal -->
+        <VDialog
+            v-model="isImportModalVisible"
+            max-width="500"
+        >
+            <VCard>
+                <VCardTitle>Import Data</VCardTitle>
+                <VCardText>
+                    <VSelect
+                        v-model="importCategory"
+                        :items="[
+                            { title: 'Sales', value: 'sales' },
+                            { title: 'Expense', value: 'expense' }
+                        ]"
+                        label="Category"
+                        class="mb-4"
+                    />
+                    <VFileInput
+                        v-model="importFile"
+                        label="Choose file"
+                        accept=".csv,.xlsx"
+                        prepend-icon="tabler-upload"
+                    />
+                </VCardText>
+                <VCardActions>
+                    <VSpacer />
+                    <VBtn
+                        variant="outlined"
+                        @click="isImportModalVisible = false"
+                    >
+                        Cancel
+                    </VBtn>
+                    <VBtn
+                        color="primary"
+                        @click="submitImport"
+                    >
+                        Import
+                    </VBtn>
+                </VCardActions>
+            </VCard>
+        </VDialog>
 
-                        <!-- Royalties Column -->
-                        <template #item.royalties="{ item }">
-                            <div class="font-weight-medium text-warning">
-                                {{ item.royalties.toLocaleString() }}
-                            </div>
-                        </template>
 
-                        <!-- Net Sales Column -->
-                        <template #item.netSales="{ item }">
-                            <div class="font-weight-medium text-info">
-                                {{ item.netSales.toLocaleString() }}
-                            </div>
-                        </template>
-
-                        <!-- Profit Column -->
-                        <template #item.profit="{ item }">
-                            <div class="font-weight-medium text-primary">
-                                {{ item.profit.toLocaleString() }}
-                            </div>
-                        </template>
-
-                        <!-- Profit Margin Column -->
-                        <template #item.profitMargin="{ item }">
-                            <VChip
-                                :color="item.profitMargin >= 30 ? 'success' : item.profitMargin >= 20 ? 'warning' : 'error'"
-                                size="small"
-                                variant="tonal"
-                            >
-                                {{ item.profitMargin.toFixed(2) }}%
-                            </VChip>
-                        </template>
-
-                        <!-- Location Column -->
-                        <template #item.location="{ item }">
-                            <div class="text-body-2 text-medium-emphasis">
-                                {{ item.location }}
-                            </div>
-                        </template>
-                    </VDataTable>
-                </VCard>
-            </VCol>
-        </VRow>
     </section>
 </template>

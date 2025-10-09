@@ -1,6 +1,9 @@
 import admin from './admin'
+import franchisee from './franchisee'
 import franchisor from './franchisor'
 import sales from './sales'
+
+
 
 // import appsAndPages from './apps-and-pages'
 // import charts from './charts'
@@ -10,4 +13,4 @@ import sales from './sales'
 // import uiElements from './ui-elements'
 import type { VerticalNavItems } from '@layouts/types'
 
-export default [...admin, ...franchisor, ...sales] as VerticalNavItems
+export default [...admin, ...franchisor, ...sales, ...franchisee] as VerticalNavItems

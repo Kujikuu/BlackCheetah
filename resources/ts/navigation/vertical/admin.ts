@@ -34,8 +34,6 @@ export default [
         to: 'admin-technical-requests',
         icon: { icon: 'tabler-headset' },
       },
-    ],
-    badgeContent: 'New',
-    badgeClass: 'bg-primary',
+    ]
   },
 ]
