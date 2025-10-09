@@ -200,7 +200,7 @@ const chartOptions = computed(() => {
                     colors: `rgba(${currentTheme['on-surface']}, 0.6)`,
                     fontSize: '13px',
                 },
-                formatter: (value: number) => `$${(value / 1000).toFixed(0)}k`,
+                formatter: (value: number) => `${(value / 1000).toFixed(0)}k SAR`,
             },
         },
         legend: {
@@ -230,7 +230,7 @@ const chartOptions = computed(() => {
         tooltip: {
             theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
             y: {
-                formatter: (value: number) => `$${value.toLocaleString()}`,
+                formatter: (value: number) => `${value.toLocaleString()} SAR`,
             },
         },
     }
@@ -251,9 +251,9 @@ const chartData = computed(() => {
 
 // Mock stat data
 const topPerformingLocations = [
-    { name: 'Downtown Branch', location: 'New York, NY', revenue: '$285,000', growth: '+15.2%' },
-    { name: 'Airport Store', location: 'Chicago, IL', revenue: '$267,000', growth: '+12.8%' },
-    { name: 'Mall Location', location: 'Los Angeles, CA', revenue: '$245,000', growth: '+9.5%' },
+    { name: 'Downtown Branch', location: 'New York, NY', revenue: '285,000 SAR', growth: '+15.2%' },
+    { name: 'Airport Store', location: 'Chicago, IL', revenue: '267,000 SAR', growth: '+12.8%' },
+    { name: 'Mall Location', location: 'Los Angeles, CA', revenue: '245,000 SAR', growth: '+9.5%' },
 ]
 
 const customerSatisfactionScore = {
@@ -279,10 +279,165 @@ const lowestRatedFranchise = {
     manager: 'Mike Wilson',
 }
 
-// Functions
+// Export functionality
+const isExportDialogVisible = ref(false)
+const exportFormat = ref('csv')
+const exportDataType = ref('performance')
+
+const exportFormatOptions = [
+    { title: 'CSV Format', value: 'csv' },
+    { title: 'Excel Format', value: 'xlsx' },
+]
+
+const exportDataTypeOptions = [
+    { title: 'Performance Data', value: 'performance' },
+    { title: 'Statistics Summary', value: 'stats' },
+    { title: 'All Data', value: 'all' },
+]
+
+// Helper function to convert data to CSV
+const convertToCSV = (data: any[], headers: string[]) => {
+    const csvContent = [
+        headers.join(','),
+        ...data.map(row => headers.map(header => {
+            const value = row[header] || ''
+            return typeof value === 'string' && value.includes(',') ? `"${value}"` : value
+        }).join(','))
+    ].join('\n')
+    return csvContent
+}
+
+// Helper function to download file
+const downloadFile = (content: string, filename: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+}
+
+// Main export function
 const exportData = () => {
-    // Export functionality would be implemented here
-    console.log('Exporting performance data...')
+    isExportDialogVisible.value = true
+}
+
+const performExport = () => {
+    const timestamp = new Date().toISOString().split('T')[0]
+    const unitName = franchiseeUnits.find(u => u.id === selectedUnit.value)?.name || 'All Units'
+    
+    if (exportDataType.value === 'performance' || exportDataType.value === 'all') {
+        exportPerformanceData(timestamp, unitName)
+    }
+    
+    if (exportDataType.value === 'stats' || exportDataType.value === 'all') {
+        exportStatsData(timestamp)
+    }
+    
+    isExportDialogVisible.value = false
+}
+
+const exportPerformanceData = (timestamp: string, unitName: string) => {
+    const periodData = performanceData[selectedPeriod.value] as PeriodData
+    const data = periodData?.[selectedUnit.value] || periodData?.all
+    
+    if (!data) return
+    
+    // Prepare performance data for export
+    const categories = selectedPeriod.value === 'monthly'
+        ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        : selectedPeriod.value === 'yearly'
+            ? ['2019', '2020', '2021', '2022', '2023']
+            : ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10', 'Day 11', 'Day 12', 'Day 13', 'Day 14']
+    
+    const exportRows = categories.map((category, index) => ({
+        Period: category,
+        'Sales (SAR)': data.sales[index]?.toLocaleString() || '0',
+        'Expenses (SAR)': data.expenses[index]?.toLocaleString() || '0',
+        'Royalties (SAR)': data.royalties[index]?.toLocaleString() || '0',
+        'Profit (SAR)': data.profit[index]?.toLocaleString() || '0',
+        'Profit Margin (%)': data.sales[index] ? ((data.profit[index] / data.sales[index]) * 100).toFixed(2) : '0',
+    }))
+    
+    const headers = ['Period', 'Sales (SAR)', 'Expenses (SAR)', 'Royalties (SAR)', 'Profit (SAR)', 'Profit Margin (%)']
+    const filename = `performance-data-${unitName.replace(/\s+/g, '-').toLowerCase()}-${selectedPeriod.value}-${timestamp}.${exportFormat.value}`
+    
+    if (exportFormat.value === 'csv') {
+        const csvContent = convertToCSV(exportRows, headers)
+        downloadFile(csvContent, filename, 'text/csv')
+    } else {
+        // For Excel format, we'll create a simple CSV with .xlsx extension
+        // In a real application, you'd use a library like xlsx or exceljs
+        const csvContent = convertToCSV(exportRows, headers)
+        downloadFile(csvContent, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    }
+}
+
+const exportStatsData = (timestamp: string) => {
+    const statsRows = [
+        // Top Performing Locations
+        ...topPerformingLocations.map((location, index) => ({
+            Category: 'Top Performing Locations',
+            Rank: index + 1,
+            Name: location.name,
+            Location: location.location,
+            'Revenue (SAR)': location.revenue,
+            'Growth (%)': location.growth,
+            Rating: '',
+            Reviews: '',
+            Manager: '',
+        })),
+        // Customer Satisfaction
+        {
+            Category: 'Customer Satisfaction',
+            Rank: '',
+            Name: 'Overall Score',
+            Location: '',
+            'Revenue (SAR)': '',
+            'Growth (%)': '',
+            Rating: `${customerSatisfactionScore.score}/5.0`,
+            Reviews: customerSatisfactionScore.totalReviews.toString(),
+            Manager: '',
+        },
+        // Top Rated Franchise
+        {
+            Category: 'Top Rated Franchise',
+            Rank: 1,
+            Name: topRatedFranchise.name,
+            Location: topRatedFranchise.location,
+            'Revenue (SAR)': '',
+            'Growth (%)': '',
+            Rating: `${topRatedFranchise.rating}/5.0`,
+            Reviews: topRatedFranchise.reviews.toString(),
+            Manager: topRatedFranchise.manager,
+        },
+        // Lowest Rated Franchise
+        {
+            Category: 'Needs Attention',
+            Rank: '',
+            Name: lowestRatedFranchise.name,
+            Location: lowestRatedFranchise.location,
+            'Revenue (SAR)': '',
+            'Growth (%)': '',
+            Rating: `${lowestRatedFranchise.rating}/5.0`,
+            Reviews: lowestRatedFranchise.reviews.toString(),
+            Manager: lowestRatedFranchise.manager,
+        },
+    ]
+    
+    const headers = ['Category', 'Rank', 'Name', 'Location', 'Revenue (SAR)', 'Growth (%)', 'Rating', 'Reviews', 'Manager']
+    const filename = `stats-summary-${timestamp}.${exportFormat.value}`
+    
+    if (exportFormat.value === 'csv') {
+        const csvContent = convertToCSV(statsRows, headers)
+        downloadFile(csvContent, filename, 'text/csv')
+    } else {
+        const csvContent = convertToCSV(statsRows, headers)
+        downloadFile(csvContent, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    }
 }
 
 const periodOptions = [
@@ -320,8 +475,36 @@ const periodOptions = [
             </VCol>
         </VRow>
 
+        <!-- Performance Chart -->
+        <VRow>
+            <VCol cols="12">
+                <VCard>
+                    <VCardItem class="pb-4">
+                        <VCardTitle class="text-h6">Franchise Performance Overview</VCardTitle>
+                        <template #append>
+                            <!-- Unit Selector Tabs -->
+                            <VTabs v-model="selectedUnit" density="compact" color="primary">
+                                <VTab v-for="unit in franchiseeUnits" :key="unit.id" :value="unit.id" size="small">
+                                    {{ unit.name }}
+                                </VTab>
+                            </VTabs>
+                        </template>
+                    </VCardItem>
+
+                    <VDivider />
+
+                    <VCardText>
+                        <!-- Chart Container -->
+                        <div style="height: 400px; position: relative;">
+                            <VueApexCharts type="line" height="400" :options="chartOptions" :series="chartData" />
+                        </div>
+                    </VCardText>
+                </VCard>
+            </VCol>
+        </VRow>
+
         <!-- Stat Cards -->
-        <VRow class="mb-6">
+        <VRow class="mt-6">
             <!-- Top 3 Performing Locations -->
             <VCol cols="12" md="3">
                 <VCard class="h-100">
@@ -504,33 +687,85 @@ const periodOptions = [
             </VCol>
         </VRow>
 
-        <!-- Performance Chart -->
-        <VRow>
-            <VCol cols="12">
-                <VCard>
-                    <VCardItem class="pb-4">
-                        <VCardTitle class="text-h6">Franchise Performance Overview</VCardTitle>
-                        <template #append>
-                            <!-- Unit Selector Tabs -->
-                            <VTabs v-model="selectedUnit" density="compact" color="primary">
-                                <VTab v-for="unit in franchiseeUnits" :key="unit.id" :value="unit.id" size="small">
-                                    {{ unit.name }}
-                                </VTab>
-                            </VTabs>
+        <!-- Export Options Dialog -->
+        <VDialog v-model="isExportDialogVisible" max-width="500">
+            <VCard class="text-center px-6 py-8">
+                <VCardItem class="pb-4">
+                    <VCardTitle class="text-h5 mb-2">
+                        <VIcon icon="tabler-download" class="me-2" />
+                        Export Data
+                    </VCardTitle>
+                    <VCardSubtitle class="text-body-1">
+                        Choose export format and data type
+                    </VCardSubtitle>
+                </VCardItem>
+
+                <VDivider class="mb-6" />
+
+                <VCardText class="text-start">
+                    <VRow>
+                        <VCol cols="12">
+                            <VSelect
+                                v-model="exportDataType"
+                                :items="exportDataTypeOptions"
+                                item-title="title"
+                                item-value="value"
+                                label="Data Type"
+                                variant="outlined"
+                                density="comfortable"
+                                prepend-inner-icon="tabler-database"
+                            />
+                        </VCol>
+                        <VCol cols="12">
+                            <VSelect
+                                v-model="exportFormat"
+                                :items="exportFormatOptions"
+                                item-title="title"
+                                item-value="value"
+                                label="Export Format"
+                                variant="outlined"
+                                density="comfortable"
+                                prepend-inner-icon="tabler-file-type-csv"
+                            />
+                        </VCol>
+                    </VRow>
+
+                    <!-- Export Info -->
+                    <VAlert
+                        type="info"
+                        variant="tonal"
+                        class="mt-4"
+                        density="compact"
+                    >
+                        <template #prepend>
+                            <VIcon icon="tabler-info-circle" />
                         </template>
-                    </VCardItem>
-
-                    <VDivider />
-
-                    <VCardText>
-                        <!-- Chart Container -->
-                        <div style="height: 400px; position: relative;">
-                            <VueApexCharts type="line" height="400" :options="chartOptions" :series="chartData" />
+                        <div class="text-body-2">
+                            <strong>Current Selection:</strong><br>
+                            Period: {{ periodOptions.find(p => p.value === selectedPeriod)?.title }}<br>
+                            Unit: {{ franchiseeUnits.find(u => u.id === selectedUnit)?.name }}
                         </div>
-                    </VCardText>
-                </VCard>
-            </VCol>
-        </VRow>
+                    </VAlert>
+                </VCardText>
+
+                <VCardActions class="d-flex align-center justify-center gap-3 pt-4">
+                    <VBtn
+                        variant="outlined"
+                        color="secondary"
+                        @click="isExportDialogVisible = false"
+                    >
+                        Cancel
+                    </VBtn>
+                    <VBtn
+                        color="primary"
+                        prepend-icon="tabler-download"
+                        @click="performExport"
+                    >
+                        Export Data
+                    </VBtn>
+                </VCardActions>
+            </VCard>
+        </VDialog>
     </section>
 </template>
 
