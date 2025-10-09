@@ -14,6 +14,15 @@ export const redirects: RouteRecordRaw[] = [
 
       if (userRole === 'admin')
         return { name: 'admin-dashboard' }
+      // Redirect franchisor to their dashboard/landing
+      if (userRole === 'franchisor')
+        return { name: 'franchisor' }
+      // Redirect franchisee to their dashboard/landing
+      if (userRole === 'franchisee')
+        return { name: 'franchisee-dashboard-sales' }
+      // Redirect sales to lead management
+      if (userRole === 'sales')
+        return { name: 'sales-lead-management' }
       if (userRole === 'client')
         return { name: 'access-control' }
 

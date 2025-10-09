@@ -127,7 +127,7 @@ const royaltyChartOptions = computed(() => {
         tooltip: {
             theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
             y: {
-                formatter: (val: number) => `$${val}`,
+                formatter: (val: number) => `${val} SAR`,
             },
         },
         markers: {

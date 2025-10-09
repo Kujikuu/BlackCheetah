@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\FranchiseController;
+use App\Http\Controllers\Api\FranchisorController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\TaskController;
@@ -48,7 +49,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
-    
+
     // Franchise Management Routes
     Route::apiResource('franchises', FranchiseController::class);
     Route::prefix('franchises')->group(function () {
@@ -141,7 +142,7 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
 
 // Admin-only routes (requires admin role)
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(function () {
-    
+
     // Admin franchise management
     Route::prefix('franchises')->group(function () {
         Route::get('all-statistics', [FranchiseController::class, 'statistics']);
@@ -200,47 +201,101 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(fun
 });
 
 // Franchise Owner routes (requires franchise_owner role)
-Route::middleware(['auth:sanctum', 'role:franchise_owner'])->prefix('v1/franchise-owner')->group(function () {
-    
-    // Franchise owner can only access their own franchise data
-    Route::get('franchise', [FranchiseController::class, 'myFranchise']);
-    Route::get('units', [UnitController::class, 'myUnits']);
+// Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')->group(function () {
+
+//     // Franchise owner can only access their own franchise data
+//     Route::get('franchise', [FranchiseController::class, 'myFranchise']);
+//     Route::get('units', [UnitController::class, 'myUnits']);
+//     Route::get('leads', [LeadController::class, 'myLeads']);
+//     Route::get('tasks', [TaskController::class, 'myTasks']);
+//     Route::get('transactions', [TransactionController::class, 'myTransactions']);
+//     Route::get('royalties', [RoyaltyController::class, 'myRoyalties']);
+//     Route::get('revenues', [RevenueController::class, 'myRevenues']);
+//     Route::get('technical-requests', [TechnicalRequestController::class, 'myRequests']);
+
+//     // Statistics for franchise owner
+//     Route::get('statistics', [FranchiseController::class, 'myStatistics']);
+// });
+
+// Franchisor routes (requires franchisor role)
+Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')->group(function () {
+
+    // Dashboard endpoints
+    Route::get('dashboard/stats', [FranchisorController::class, 'dashboardStats']);
+    Route::get('dashboard/finance', [FranchisorController::class, 'financeStats']);
+    Route::get('dashboard/leads', [FranchisorController::class, 'leadsStats']);
+    Route::get('dashboard/operations', [FranchisorController::class, 'operationsStats']);
+    Route::get('dashboard/timeline', [FranchisorController::class, 'timelineStats']);
+
+    // Franchisor can access their franchise network data
+    Route::get('franchise', [FranchisorController::class, 'myFranchise']);
+    Route::get('franchisees', [FranchisorController::class, 'myFranchisees']);
+    Route::get('units', [FranchisorController::class, 'myUnits']);
+
+    // Lead management for franchisor
     Route::get('leads', [LeadController::class, 'myLeads']);
+    Route::post('leads', [LeadController::class, 'store']);
+    Route::put('leads/{lead}', [LeadController::class, 'update']);
+    Route::delete('leads/{lead}', [LeadController::class, 'destroy']);
+    Route::patch('leads/{lead}/assign', [LeadController::class, 'assign']);
+    Route::patch('leads/{lead}/convert', [LeadController::class, 'convert']);
+    Route::patch('leads/{lead}/mark-lost', [LeadController::class, 'markAsLost']);
+    Route::post('leads/{lead}/notes', [LeadController::class, 'addNote']);
+
+    // Task management for franchisor
     Route::get('tasks', [TaskController::class, 'myTasks']);
+    Route::post('tasks', [TaskController::class, 'store']);
+    Route::put('tasks/{task}', [TaskController::class, 'update']);
+    Route::delete('tasks/{task}', [TaskController::class, 'destroy']);
+    Route::patch('tasks/{task}/assign', [TaskController::class, 'assign']);
+    Route::patch('tasks/{task}/complete', [TaskController::class, 'complete']);
+    Route::patch('tasks/{task}/start', [TaskController::class, 'start']);
+    Route::patch('tasks/{task}/progress', [TaskController::class, 'updateProgress']);
+
+    // Technical requests for franchisor network
+    Route::get('technical-requests', [TechnicalRequestController::class, 'myRequests']);
+    Route::patch('technical-requests/{technicalRequest}/assign', [TechnicalRequestController::class, 'assign']);
+    Route::post('technical-requests/{technicalRequest}/respond', [TechnicalRequestController::class, 'respond']);
+    Route::patch('technical-requests/{technicalRequest}/resolve', [TechnicalRequestController::class, 'resolve']);
+    Route::patch('technical-requests/{technicalRequest}/close', [TechnicalRequestController::class, 'close']);
+    Route::patch('technical-requests/{technicalRequest}/escalate', [TechnicalRequestController::class, 'escalate']);
+
+    // Financial data for franchisor
     Route::get('transactions', [TransactionController::class, 'myTransactions']);
     Route::get('royalties', [RoyaltyController::class, 'myRoyalties']);
     Route::get('revenues', [RevenueController::class, 'myRevenues']);
-    Route::get('technical-requests', [TechnicalRequestController::class, 'myRequests']);
-    
-    // Statistics for franchise owner
-    Route::get('statistics', [FranchiseController::class, 'myStatistics']);
+    Route::patch('royalties/{royalty}/mark-paid', [RoyaltyController::class, 'markAsPaid']);
+    Route::post('royalties/{royalty}/late-fee', [RoyaltyController::class, 'calculateLateFee']);
+    Route::post('royalties/{royalty}/adjustments', [RoyaltyController::class, 'addAdjustment']);
+    Route::patch('revenues/{revenue}/verify', [RevenueController::class, 'verify']);
+    Route::post('revenues/{revenue}/dispute', [RevenueController::class, 'dispute']);
 });
 
-// Unit Manager routes (requires unit_manager role)
-Route::middleware(['auth:sanctum', 'role:unit_manager'])->prefix('v1/unit-manager')->group(function () {
-    
+// Unit Manager routes (requires franchisee role)
+Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('v1/unit-manager')->group(function () {
+
     // Unit manager can only access their unit data
     Route::get('unit', [UnitController::class, 'myUnit']);
     Route::get('tasks', [TaskController::class, 'myUnitTasks']);
     Route::get('transactions', [TransactionController::class, 'myUnitTransactions']);
     Route::get('revenues', [RevenueController::class, 'myUnitRevenues']);
     Route::get('technical-requests', [TechnicalRequestController::class, 'myUnitRequests']);
-    
+
     // Statistics for unit manager
     Route::get('statistics', [UnitController::class, 'myUnitStatistics']);
 });
 
-// Employee routes (requires employee role)
-Route::middleware(['auth:sanctum', 'role:employee'])->prefix('v1/employee')->group(function () {
-    
+// Employee routes (requires sales role)
+Route::middleware(['auth:sanctum', 'role:sales'])->prefix('v1/employee')->group(function () {
+
     // Employee can access assigned tasks and requests
     Route::get('tasks', [TaskController::class, 'myAssignedTasks']);
     Route::get('technical-requests', [TechnicalRequestController::class, 'myAssignedRequests']);
-    
+
     // Employee can update their assigned tasks
     Route::patch('tasks/{task}/progress', [TaskController::class, 'updateProgress']);
     Route::patch('tasks/{task}/complete', [TaskController::class, 'complete']);
-    
+
     // Employee can respond to technical requests
     Route::post('technical-requests/{technicalRequest}/respond', [TechnicalRequestController::class, 'respond']);
     Route::patch('technical-requests/{technicalRequest}/resolve', [TechnicalRequestController::class, 'resolve']);
@@ -248,28 +303,28 @@ Route::middleware(['auth:sanctum', 'role:employee'])->prefix('v1/employee')->gro
 
 // Admin routes (requires admin role)
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(function () {
-    
+
     // Dashboard endpoints
     Route::get('dashboard/stats', [AdminController::class, 'dashboardStats']);
     Route::get('dashboard/recent-users', [AdminController::class, 'recentUsers']);
     Route::get('dashboard/chart-data', [AdminController::class, 'chartData']);
-    
+
     // User management endpoints
     Route::get('users/franchisors', [AdminController::class, 'franchisors']);
     Route::get('users/franchisees', [AdminController::class, 'franchisees']);
     Route::get('users/sales', [AdminController::class, 'salesUsers']);
-    
+
     // User stats endpoints
     Route::get('users/franchisors/stats', [AdminController::class, 'franchisorStats']);
     Route::get('users/franchisees/stats', [AdminController::class, 'franchiseeStats']);
     Route::get('users/sales/stats', [AdminController::class, 'salesStats']);
-    
+
     // User CRUD operations
     Route::post('users', [AdminController::class, 'createUser']);
     Route::put('users/{id}', [AdminController::class, 'updateUser']);
     Route::delete('users/{id}', [AdminController::class, 'deleteUser']);
     Route::post('users/{id}/reset-password', [AdminController::class, 'resetPassword']);
-    
+
     // Technical requests management
     Route::get('technical-requests', [AdminController::class, 'technicalRequests']);
     Route::patch('technical-requests/{id}/status', [AdminController::class, 'updateTechnicalRequestStatus']);

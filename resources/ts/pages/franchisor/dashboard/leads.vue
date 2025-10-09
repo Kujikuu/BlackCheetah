@@ -1,4 +1,7 @@
 <script setup lang="ts">
+// 👉 API composable
+const { data: leadsApiData, execute: fetchLeadsData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/leads')
+
 // 👉 Store
 const searchQuery = ref('')
 const selectedStatus = ref()
@@ -9,7 +12,7 @@ const itemsPerPage = ref(10)
 const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
-const selectedRows = ref([])
+const selectedRows = ref<number[]>([])
 
 // Update data table options
 const updateOptions = (options: any) => {
@@ -28,42 +31,152 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Mock data - Replace with actual API call
-const leadsData = ref({
-  leads: [
-    {
-      id: 1,
-      name: 'John Smith',
-      email: 'john.smith@example.com',
-      phone: '+1 234-567-8900',
-      source: 'Website',
-      status: 'pending',
-      createdDate: '2024-01-15',
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      email: 'sarah.j@example.com',
-      phone: '+1 234-567-8901',
-      source: 'Referral',
-      status: 'won',
-      createdDate: '2024-01-14',
-    },
-    {
-      id: 3,
-      name: 'Michael Brown',
-      email: 'michael.b@example.com',
-      phone: '+1 234-567-8902',
-      source: 'Social Media',
-      status: 'lost',
-      createdDate: '2024-01-13',
-    },
-  ],
-  totalLeads: 3,
+// 👉 Lead Interface
+interface Lead {
+  id: number
+  name: string
+  email: string
+  phone: string
+  source: string
+  status: string
+  createdDate: string
+}
+
+// 👉 Widget Interface
+interface Widget {
+  title: string
+  value: string
+  change: number
+  desc: string
+  icon: string
+  iconColor: string
+}
+
+// 👉 API Response Interface
+interface ApiResponse {
+  success: boolean
+  data: {
+    stats: {
+      total_leads: number
+      total_leads_change: number
+      won_leads: number
+      won_leads_change: number
+      lost_leads: number
+      lost_leads_change: number
+      pending_leads: number
+      pending_leads_change: number
+    }
+    leads: Array<{
+      id: number
+      first_name: string
+      last_name: string
+      email: string
+      phone: string
+      lead_source: string
+      status: string
+      created_at: string
+    }>
+    pagination: {
+      total: number
+      per_page: number
+      current_page: number
+      last_page: number
+    }
+  }
+}
+
+// 👉 Reactive data
+const leadsData = ref<{
+  leads: Lead[]
+  totalLeads: number
+}>({
+  leads: [],
+  totalLeads: 0,
 })
+
+const widgetData = ref<Widget[]>([
+  { title: 'Total Leads', value: '0', change: 0, desc: 'All time leads', icon: 'tabler-users', iconColor: 'primary' },
+  { title: 'Closed and Won', value: '0', change: 0, desc: 'Converted leads', icon: 'tabler-trophy', iconColor: 'success' },
+  { title: 'Closed and Lost', value: '0', change: 0, desc: 'Lost opportunities', icon: 'tabler-x', iconColor: 'error' },
+  { title: 'Pending Leads', value: '0', change: 0, desc: 'Active leads', icon: 'tabler-clock', iconColor: 'warning' },
+])
+
+// 👉 Watch for API data changes
+watch(leadsApiData, (newData) => {
+  const apiData = newData as ApiResponse
+  if (apiData?.success && apiData?.data) {
+    const data = apiData.data
+
+    // Update leads data with null/undefined checks
+    leadsData.value = {
+      leads: Array.isArray(data.leads) ? data.leads.map(lead => ({
+        id: lead.id,
+        name: `${lead.first_name || ''} ${lead.last_name || ''}`.trim(),
+        email: lead.email,
+        phone: lead.phone,
+        source: lead.lead_source,
+        status: lead.status,
+        createdDate: new Date(lead.created_at).toLocaleDateString(),
+      })) : [],
+      totalLeads: data.pagination?.total || (Array.isArray(data.leads) ? data.leads.length : 0),
+    }
+
+    // Update widget data with real stats (with null/undefined checks)
+    const stats = data.stats || {
+      total_leads: 0,
+      total_leads_change: 0,
+      won_leads: 0,
+      won_leads_change: 0,
+      lost_leads: 0,
+      lost_leads_change: 0,
+      pending_leads: 0,
+      pending_leads_change: 0,
+    }
+
+    widgetData.value = [
+      { 
+        title: 'Total Leads', 
+        value: stats.total_leads.toLocaleString(), 
+        change: stats.total_leads_change, 
+        desc: 'All time leads', 
+        icon: 'tabler-users', 
+        iconColor: 'primary' 
+      },
+      { 
+        title: 'Closed and Won', 
+        value: stats.won_leads.toLocaleString(), 
+        change: stats.won_leads_change, 
+        desc: 'Converted leads', 
+        icon: 'tabler-trophy', 
+        iconColor: 'success' 
+      },
+      { 
+        title: 'Closed and Lost', 
+        value: stats.lost_leads.toLocaleString(), 
+        change: stats.lost_leads_change, 
+        desc: 'Lost opportunities', 
+        icon: 'tabler-x', 
+        iconColor: 'error' 
+      },
+      { 
+        title: 'Pending Leads', 
+        value: stats.pending_leads.toLocaleString(), 
+        change: stats.pending_leads_change, 
+        desc: 'Active leads', 
+        icon: 'tabler-clock', 
+        iconColor: 'warning' 
+      },
+    ]
+  }
+}, { immediate: true })
 
 const leads = computed(() => leadsData.value.leads)
 const totalLeads = computed(() => leadsData.value.totalLeads)
+
+// 👉 Fetch data on component mount
+onMounted(() => {
+  fetchLeadsData()
+})
 
 // 👉 search filters
 const sources = [
@@ -95,17 +208,17 @@ const resolveStatusVariant = (stat: string) => {
 const isViewLeadModalVisible = ref(false)
 const isEditLeadModalVisible = ref(false)
 const isDeleteDialogVisible = ref(false)
-const selectedLead = ref<any>(null)
+const selectedLead = ref<Lead | null>(null)
 const leadToDelete = ref<number | null>(null)
 
 // 👉 View lead
-const viewLead = (lead: any) => {
+const viewLead = (lead: Lead) => {
   selectedLead.value = lead
   isViewLeadModalVisible.value = true
 }
 
 // 👉 Edit lead
-const editLead = (lead: any) => {
+const editLead = (lead: Lead) => {
   selectedLead.value = { ...lead }
   isEditLeadModalVisible.value = true
 }
@@ -119,7 +232,7 @@ const confirmDelete = (id: number) => {
 const deleteLead = async () => {
   if (leadToDelete.value === null) return
 
-  // TODO: Implement API call
+  // TODO: Implement API call for delete
   const index = leadsData.value.leads.findIndex(lead => lead.id === leadToDelete.value)
   if (index !== -1)
     leadsData.value.leads.splice(index, 1)
@@ -137,8 +250,8 @@ const deleteLead = async () => {
 const saveLead = async () => {
   if (!selectedLead.value) return
 
-  // TODO: Implement API call
-  const index = leadsData.value.leads.findIndex(lead => lead.id === selectedLead.value.id)
+  // TODO: Implement API call for update
+  const index = leadsData.value.leads.findIndex(lead => lead.id === selectedLead.value!.id)
   if (index !== -1) {
     leadsData.value.leads[index] = { ...selectedLead.value }
   }
@@ -169,12 +282,18 @@ const exportLeads = () => {
   window.URL.revokeObjectURL(url)
 }
 
-const widgetData = ref([
-  { title: 'Total Leads', value: '1,245', change: 15, desc: 'All time leads', icon: 'tabler-users', iconColor: 'primary' },
-  { title: 'Closed and Won', value: '487', change: 22, desc: 'Converted leads', icon: 'tabler-trophy', iconColor: 'success' },
-  { title: 'Closed and Lost', value: '156', change: -8, desc: 'Lost opportunities', icon: 'tabler-x', iconColor: 'error' },
-  { title: 'Pending Leads', value: '602', change: 12, desc: 'Active leads', icon: 'tabler-clock', iconColor: 'warning' },
-])
+// 👉 Utility functions
+const prefixWithPlus = (phone: string) => {
+  return phone.startsWith('+') ? phone : `+${phone}`
+}
+
+const prefixWithPlusNumber = (num: number) => {
+  return num > 0 ? `+${num}` : `${num}`
+}
+
+const avatarText = (name: string) => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase()
+}
 </script>
 
 <template>
@@ -206,7 +325,7 @@ const widgetData = ref([
                         class="text-base"
                         :class="data.change > 0 ? 'text-success' : 'text-error'"
                       >
-                        ({{ prefixWithPlus(data.change) }}%)
+                        ({{ prefixWithPlusNumber(data.change) }}%)
                       </div>
                     </div>
                     <div class="text-sm">
@@ -282,7 +401,7 @@ const widgetData = ref([
               { value: -1, title: 'All' },
             ]"
             style="inline-size: 6.25rem;"
-            @update:model-value="itemsPerPage = parseInt($event, 10)"
+            @update:model-value="(value: string | number) => itemsPerPage = parseInt(String(value), 10)"
           />
         </div>
         <VSpacer />

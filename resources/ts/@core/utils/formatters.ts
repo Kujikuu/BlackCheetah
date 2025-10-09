@@ -46,3 +46,22 @@ export const formatDateToMonthShort = (value: string, toTimeForCurrentDay = true
 }
 
 export const prefixWithPlus = (value: number) => value > 0 ? `+${value}` : value
+
+/**
+ * Format number as SAR currency
+ * @param {number} value - The numeric value to format
+ * @param {boolean} showDecimals - Whether to show decimal places (default: true)
+ * @returns {string} Formatted currency string
+ */
+export const formatCurrency = (value: number, showDecimals: boolean = true) => {
+  if (typeof value !== 'number' || isNaN(value)) {
+    return '0 SAR'
+  }
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'SAR',
+    minimumFractionDigits: showDecimals ? 2 : 0,
+    maximumFractionDigits: showDecimals ? 2 : 0,
+  }).format(value).replace('ر.س.', 'SAR')
+}

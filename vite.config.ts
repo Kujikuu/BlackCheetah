@@ -107,11 +107,7 @@ export default defineConfig({
     host: 'blackcheetah.test',
     port: 5173,
     hmr: {
-      host: 'blackcheetah.test',
       port: 5173,
-    },
-    watch: {
-      usePolling: true,
     },
   },
 })

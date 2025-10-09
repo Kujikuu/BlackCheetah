@@ -151,12 +151,14 @@ class Revenue extends Model
 
     public function getFormattedAmountAttribute(): string
     {
-        return number_format($this->amount, 2) . ' ' . $this->currency;
+        $currency = $this->currency ?? 'SAR';
+        return number_format($this->amount, 2) . ' ' . $currency;
     }
 
     public function getFormattedNetAmountAttribute(): string
     {
-        return number_format($this->net_amount, 2) . ' ' . $this->currency;
+        $currency = $this->currency ?? 'SAR';
+        return number_format($this->net_amount, 2) . ' ' . $currency;
     }
 
     public function getDiscountPercentageAttribute(): float

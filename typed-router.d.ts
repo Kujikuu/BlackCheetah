@@ -44,6 +44,7 @@ declare module 'vue-router/auto-routes' {
     'components-tabs': RouteRecordInfo<'components-tabs', '/components/tabs', Record<never, never>, Record<never, never>>,
     'components-timeline': RouteRecordInfo<'components-timeline', '/components/timeline', Record<never, never>, Record<never, never>>,
     'components-tooltip': RouteRecordInfo<'components-tooltip', '/components/tooltip', Record<never, never>, Record<never, never>>,
+    'debug-login': RouteRecordInfo<'debug-login', '/debug-login', Record<never, never>, Record<never, never>>,
     'extensions-swiper': RouteRecordInfo<'extensions-swiper', '/extensions/swiper', Record<never, never>, Record<never, never>>,
     'extensions-tour': RouteRecordInfo<'extensions-tour', '/extensions/tour', Record<never, never>, Record<never, never>>,
     'forgot-password': RouteRecordInfo<'forgot-password', '/forgot-password', Record<never, never>, Record<never, never>>,
@@ -102,8 +103,11 @@ declare module 'vue-router/auto-routes' {
     'login': RouteRecordInfo<'login', '/login', Record<never, never>, Record<never, never>>,
     'not-authorized': RouteRecordInfo<'not-authorized', '/not-authorized', Record<never, never>, Record<never, never>>,
     'register': RouteRecordInfo<'register', '/register', Record<never, never>, Record<never, never>>,
+    'reset-password': RouteRecordInfo<'reset-password', '/reset-password', Record<never, never>, Record<never, never>>,
     'sales-lead-management': RouteRecordInfo<'sales-lead-management', '/sales/lead-management', Record<never, never>, Record<never, never>>,
     'sales-my-tasks': RouteRecordInfo<'sales-my-tasks', '/sales/my-tasks', Record<never, never>, Record<never, never>>,
     'sales-technical-requests': RouteRecordInfo<'sales-technical-requests', '/sales/technical-requests', Record<never, never>, Record<never, never>>,
+    'two-steps': RouteRecordInfo<'two-steps', '/two-steps', Record<never, never>, Record<never, never>>,
+    'verify-email': RouteRecordInfo<'verify-email', '/verify-email', Record<never, never>, Record<never, never>>,
   }
 }

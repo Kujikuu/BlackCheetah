@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
+import { $api } from '@/utils/api'
 
 const router = useRouter()
 const ability = useAbility()
@@ -8,21 +9,31 @@ const ability = useAbility()
 const userData = useCookie<any>('userData')
 
 const logout = async () => {
-  // Remove "accessToken" from cookie
-  useCookie('accessToken').value = null
+  try {
+    // Call logout API to revoke token on server
+    await $api('/auth/logout', {
+      method: 'POST'
+    })
+  } catch (error) {
+    // Log error but continue with logout process
+    console.error('Logout API error:', error)
+  } finally {
+    // Always clear local data regardless of API response
+    // Remove "accessToken" from cookie
+    useCookie('accessToken').value = null
 
-  // Remove "userData" from cookie
-  userData.value = null
+    // Remove "userData" from cookie
+    userData.value = null
 
-  // Redirect to login page
-  await router.push('/login')
+    // Remove "userAbilities" from cookie
+    useCookie('userAbilityRules').value = null
 
-  // ℹ️ We had to remove abilities in then block because if we don't nav menu items mutation is visible while redirecting user to login page
-  // Remove "userAbilities" from cookie
-  useCookie('userAbilityRules').value = null
+    // Reset ability to initial ability
+    ability.update([])
 
-  // Reset ability to initial ability
-  ability.update([])
+    // Redirect to login page
+    await router.push('/login')
+  }
 }
 
 const userProfileList = [

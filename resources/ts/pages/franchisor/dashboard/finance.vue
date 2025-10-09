@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { formatCurrency } from '@/@core/utils/formatters'
+// API composable
+const { data: financeData, execute: fetchFinanceData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/finance')
+
 const chartColors = {
   primary: '#9155FD',
   warning: '#FFB400',
@@ -11,51 +15,210 @@ const headingColor = 'rgba(var(--v-theme-on-background), var(--v-high-emphasis-o
 const labelColor = 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))'
 const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))'
 
-// 👉 Finance Stats
-const financeStats = ref([
+// 👉 Reactive data with proper types
+interface FinanceStat {
+  icon: string
+  color: string
+  title: string
+  value: string
+  change: number
+  isHover: boolean
+}
+
+interface ChartSeries {
+  name: string
+  data: number[]
+}
+
+interface ApiResponse {
+  success: boolean
+  data: {
+    stats: {
+      total_sales: number
+      sales_change: number
+      total_expenses: number
+      expenses_change: number
+      net_profit: number
+      profit_change: number
+      profit_margin: number
+      margin_change: number
+    }
+    top_stores_sales?: Array<{ name: string; sales: number }>
+    top_stores_royalty?: Array<{ name: string; royalty: number }>
+    sales_chart?: Array<{ month: string; amount: number }>
+    expenses_chart?: Array<{ month: string; amount: number }>
+    profit_chart?: Array<{ month: string; amount: number }>
+    royalty_chart?: Array<{ month: string; amount: number }>
+    monthly_breakdown?: Array<{ 
+      month: string
+      sales: number
+      expenses: number
+      royalties: number
+      profit: number
+    }>
+  }
+}
+
+const financeStats = ref<FinanceStat[]>([])
+const topStoresSalesSeries = ref<ChartSeries[]>([{ name: 'Sales', data: [] }])
+const topStoresRoyaltySeries = ref<ChartSeries[]>([{ name: 'Royalty', data: [] }])
+const salesChartSeries = ref<ChartSeries[]>([{ name: 'Sales', data: [] }])
+const expensesChartSeries = ref<ChartSeries[]>([{ name: 'Expenses', data: [] }])
+const profitChartSeries = ref<ChartSeries[]>([{ name: 'Profit', data: [] }])
+const royaltyChartSeries = ref<ChartSeries[]>([{ name: 'Royalty', data: [] }])
+const monthlyBreakdownData = ref<Array<{ 
+  month: string
+  sales: number
+  expenses: number
+  royalties: number
+  profit: number
+}>>([])
+
+// 👉 Watch for API data changes
+watch(financeData, (newData) => {
+  const apiData = newData as ApiResponse
+  if (apiData?.success && apiData?.data) {
+    const data = apiData.data
+
+    // Update finance stats
+    financeStats.value = [
+      { 
+        icon: 'tabler-currency-dollar', 
+        color: 'primary', 
+        title: 'Total Sales', 
+        value: formatCurrency(data.stats.total_sales), 
+        change: data.stats.sales_change, 
+        isHover: false,
+      },
+      { 
+        icon: 'tabler-receipt', 
+        color: 'error', 
+        title: 'Total Expenses', 
+        value: formatCurrency(data.stats.total_expenses), 
+        change: data.stats.expenses_change, 
+        isHover: false,
+      },
+      { 
+        icon: 'tabler-chart-line', 
+        color: 'success', 
+        title: 'Net Profit', 
+        value: formatCurrency(data.stats.net_profit), 
+        change: data.stats.profit_change, 
+        isHover: false,
+      },
+      { 
+        icon: 'tabler-percentage', 
+        color: 'warning', 
+        title: 'Profit Margin', 
+        value: `${data.stats.profit_margin}%`, 
+        change: data.stats.margin_change, 
+        isHover: false,
+      },
+    ]
+
+    // Update chart series for top stores sales
+    if (data.top_stores_sales) {
+      topStoresSalesSeries.value = [{
+        name: 'Sales',
+        data: data.top_stores_sales.map((store: any) => store.sales)
+      }]
+    }
+
+    // Update chart series for top stores royalty
+    if (data.top_stores_royalty) {
+      topStoresRoyaltySeries.value = [{
+        name: 'Royalty',
+        data: data.top_stores_royalty.map((store: any) => store.royalty)
+      }]
+    }
+
+    // Update sales chart series
+    if (data.sales_chart) {
+      salesChartSeries.value = [{
+        name: 'Sales',
+        data: data.sales_chart.map((item: any) => item.amount)
+      }]
+    }
+
+    // Update expenses chart series
+    if (data.expenses_chart) {
+      expensesChartSeries.value = [{
+        name: 'Expenses',
+        data: data.expenses_chart.map((item: any) => item.amount)
+      }]
+    }
+
+    // Update profit chart series
+    if (data.profit_chart) {
+      profitChartSeries.value = [{
+        name: 'Profit',
+        data: data.profit_chart.map((item: any) => item.amount)
+      }]
+    }
+
+    // Update royalty chart series
+    if (data.royalty_chart) {
+      royaltyChartSeries.value = [{
+        name: 'Royalty',
+        data: data.royalty_chart.map((item: any) => item.amount)
+      }]
+    }
+
+    // Update monthly breakdown data
+    if (data.monthly_breakdown) {
+      monthlyBreakdownData.value = data.monthly_breakdown
+    }
+  }
+}, { immediate: true })
+
+// Fallback data in case API fails
+const fallbackFinanceStats: FinanceStat[] = [
   { 
     icon: 'tabler-currency-dollar', 
     color: 'primary', 
     title: 'Total Sales', 
-    value: '$2,458,650', 
-    change: 18.2, 
+    value: '$0', 
+    change: 0, 
     isHover: false,
   },
   { 
     icon: 'tabler-receipt', 
     color: 'error', 
     title: 'Total Expenses', 
-    value: '$845,230', 
-    change: -8.7, 
+    value: '$0', 
+    change: 0, 
     isHover: false,
   },
   { 
-    icon: 'tabler-crown', 
-    color: 'warning', 
-    title: 'Total Royalties', 
-    value: '$368,295', 
-    change: 12.3, 
-    isHover: false,
-  },
-  { 
-    icon: 'tabler-trending-up', 
+    icon: 'tabler-chart-line', 
     color: 'success', 
-    title: 'Total Profit', 
-    value: '$1,245,125', 
-    change: 24.5, 
+    title: 'Net Profit', 
+    value: '$0', 
+    change: 0, 
     isHover: false,
   },
-])
-
-// 👉 Top Stores by Sales Chart
-const topStoresSalesSeries = [
-  {
-    name: 'Monthly Sales',
-    data: [485000, 425000, 398000, 365000, 342000],
+  { 
+    icon: 'tabler-percentage', 
+    color: 'warning', 
+    title: 'Profit Margin', 
+    value: '0%', 
+    change: 0, 
+    isHover: false,
   },
 ]
 
-const topStoresSalesConfig = {
+// Use fallback data if API data is not available
+const displayStats = computed(() => {
+  return financeStats.value.length > 0 ? financeStats.value : fallbackFinanceStats
+})
+
+// 👉 Fetch data on component mount
+onMounted(() => {
+  fetchFinanceData()
+})
+
+// 👉 Top Stores by Sales Chart Configuration
+const topStoresSalesConfig = computed(() => ({
   chart: {
     type: 'bar',
     toolbar: {
@@ -73,7 +236,7 @@ const topStoresSalesConfig = {
   dataLabels: {
     enabled: true,
     formatter(val: number) {
-      return `$${(val / 1000).toFixed(0)}k`
+      return `${(val / 1000).toFixed(0)}k SAR`
     },
     style: {
       colors: ['#fff'],
@@ -90,7 +253,7 @@ const topStoresSalesConfig = {
         fontSize: '13px',
       },
       formatter(val: number) {
-        return `$${(val / 1000).toFixed(0)}k`
+        return `${(val / 1000).toFixed(0)}k SAR`
       },
     },
     axisBorder: {
@@ -131,21 +294,14 @@ const topStoresSalesConfig = {
   tooltip: {
     y: {
       formatter(val: number) {
-        return `$${val.toLocaleString()}`
+        return `${val.toLocaleString()} SAR`
       },
     },
   },
-}
+}))
 
-// 👉 Top Stores by Royalty Chart
-const topStoresRoyaltySeries = [
-  {
-    name: 'Monthly Royalty',
-    data: [72750, 63750, 59700, 54750, 51300],
-  },
-]
-
-const topStoresRoyaltyConfig = {
+// 👉 Top Stores by Royalty Chart Configuration
+const topStoresRoyaltyConfig = computed(() => ({
   chart: {
     type: 'bar',
     toolbar: {
@@ -163,7 +319,7 @@ const topStoresRoyaltyConfig = {
   dataLabels: {
     enabled: true,
     formatter(val: number) {
-      return `$${(val / 1000).toFixed(1)}k`
+      return `${(val / 1000).toFixed(1)}k SAR`
     },
     style: {
       colors: ['#fff'],
@@ -180,7 +336,7 @@ const topStoresRoyaltyConfig = {
         fontSize: '13px',
       },
       formatter(val: number) {
-        return `$${(val / 1000).toFixed(0)}k`
+        return `${(val / 1000).toFixed(0)}k SAR`
       },
     },
     axisBorder: {
@@ -221,31 +377,31 @@ const topStoresRoyaltyConfig = {
   tooltip: {
     y: {
       formatter(val: number) {
-        return `$${val.toLocaleString()}`
+        return `${val.toLocaleString()} SAR`
       },
     },
   },
-}
+}))
 
 // 👉 Summary Chart (Combined Sales, Expenses, Royalties, Profit)
-const summarySeries = [
+const summarySeries = computed(() => [
   {
     name: 'Sales',
-    data: [420000, 385000, 445000, 398000, 465000, 425000, 485000, 452000, 478000, 495000, 512000, 548000],
+    data: salesChartSeries.value.length > 0 ? salesChartSeries.value[0].data : [],
   },
   {
     name: 'Expenses',
-    data: [145000, 132000, 158000, 142000, 165000, 148000, 172000, 155000, 168000, 175000, 182000, 188000],
+    data: expensesChartSeries.value.length > 0 ? expensesChartSeries.value[0].data : [],
   },
   {
     name: 'Royalties',
-    data: [63000, 57750, 66750, 59700, 69750, 63750, 72750, 67800, 71700, 74250, 76800, 82200],
+    data: royaltyChartSeries.value.length > 0 ? royaltyChartSeries.value[0].data : [],
   },
   {
     name: 'Profit',
-    data: [212000, 195250, 220250, 196300, 230250, 213250, 240250, 229200, 238300, 245750, 253200, 277800],
+    data: profitChartSeries.value.length > 0 ? profitChartSeries.value[0].data : [],
   },
-]
+])
 
 const summaryConfig = {
   chart: {
@@ -325,64 +481,30 @@ const summaryConfig = {
         fontWeight: 400,
       },
       formatter(val: number) {
-        return `$${(val / 1000).toFixed(0)}k`
+        return `${(val / 1000).toFixed(0)}k SAR`
       },
     },
   },
   tooltip: {
     y: {
       formatter(val: number) {
-        return `$${val.toLocaleString()}`
+        return `${val.toLocaleString()} SAR`
       },
     },
   },
 }
 
 // 👉 Summary Table Data
-const summaryTableData = ref([
-  {
-    month: 'January',
-    sales: '$420,000',
-    expenses: '$145,000',
-    royalties: '$63,000',
-    profit: '$212,000',
-  },
-  {
-    month: 'February',
-    sales: '$385,000',
-    expenses: '$132,000',
-    royalties: '$57,750',
-    profit: '$195,250',
-  },
-  {
-    month: 'March',
-    sales: '$445,000',
-    expenses: '$158,000',
-    royalties: '$66,750',
-    profit: '$220,250',
-  },
-  {
-    month: 'April',
-    sales: '$398,000',
-    expenses: '$142,000',
-    royalties: '$59,700',
-    profit: '$196,300',
-  },
-  {
-    month: 'May',
-    sales: '$465,000',
-    expenses: '$165,000',
-    royalties: '$69,750',
-    profit: '$230,250',
-  },
-  {
-    month: 'June',
-    sales: '$425,000',
-    expenses: '$148,000',
-    royalties: '$63,750',
-    profit: '$213,250',
-  },
-])
+const summaryTableData = computed(() => {
+  // Use API data only - no fallback
+  return monthlyBreakdownData.value.map(item => ({
+    month: item.month,
+    sales: formatCurrency(item.sales),
+    expenses: formatCurrency(item.expenses),
+    royalties: formatCurrency(item.royalties),
+    profit: formatCurrency(item.profit),
+  }))
+})
 
 const summaryHeaders = [
   { title: 'Month', key: 'month' },
@@ -395,10 +517,10 @@ const summaryHeaders = [
 
 <template>
   <section>
-    <!-- 👉 Finance Stats Cards -->
+    <!-- 👉 Finance Statistics Cards -->
     <VRow class="mb-6">
       <VCol
-        v-for="(data, index) in financeStats"
+        v-for="(data, index) in displayStats"
         :key="index"
         cols="12"
         md="3"

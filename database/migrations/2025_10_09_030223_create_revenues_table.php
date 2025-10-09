@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('type', ['sales', 'franchise_fee', 'royalty', 'marketing_fee', 'other']);
             $table->enum('category', ['product_sales', 'service_sales', 'initial_fee', 'ongoing_fee', 'commission', 'other']);
             $table->decimal('amount', 15, 2);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('SAR');
             $table->text('description')->nullable();
             
             // Date and period information

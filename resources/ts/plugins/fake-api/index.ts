@@ -40,6 +40,10 @@ const worker = setupWorker(
 )
 
 export default function () {
+  // Only enable Fake API (MSW) when explicitly requested
+  const useFakeApi = import.meta.env.VITE_USE_FAKE_API === 'true'
+  if (!useFakeApi) return
+
   const baseUrl = import.meta.env.BASE_URL?.replace(/build\/$/g, '') ?? '/'
   const workerUrl = `${baseUrl}mockServiceWorker.js`
 

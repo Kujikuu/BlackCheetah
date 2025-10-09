@@ -97,7 +97,8 @@ class Transaction extends Model
 
     public function getFormattedAmountAttribute(): string
     {
-        return number_format($this->amount, 2) . ' ' . $this->currency;
+        $currency = $this->currency ?? 'SAR';
+        return number_format($this->amount, 2) . ' ' . $currency;
     }
 
     // Methods

@@ -1,4 +1,12 @@
 <script setup lang="ts">
+import { useDisplay } from 'vuetify'
+
+// 👉 API composable
+const { data: timelineApiData, execute: fetchTimelineData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/timeline')
+
+// 👉 Vuetify composables
+const { smAndDown } = useDisplay()
+
 const selectedFilter = ref('all')
 
 const filters = [
@@ -8,89 +16,121 @@ const filters = [
   { title: 'Overdue', value: 'overdue' },
 ]
 
-// Mock timeline data - Replace with actual API call
-const timelineItems = ref([
-  {
-    id: 1,
-    title: 'Store Opening - Downtown Location',
-    description: 'Grand opening ceremony completed with 200+ attendees. All permits and licenses verified.',
-    week: 'Week 1',
-    date: '2 weeks ago',
-    status: 'completed',
-    icon: 'tabler-building-store',
-    color: 'success',
-  },
-  {
-    id: 2,
-    title: 'Staff Training Program - Phase 1',
-    description: 'Initial training for 15 staff members covering customer service, POS systems, and brand standards.',
-    week: 'Week 2',
-    date: '1 week ago',
-    status: 'completed',
-    icon: 'tabler-school',
-    color: 'success',
-  },
-  {
-    id: 3,
-    title: 'Marketing Campaign Launch',
-    description: 'Social media campaign and local advertising initiated. Target reach: 50,000 potential customers.',
-    week: 'Week 3',
-    date: '3 days ago',
-    status: 'completed',
-    icon: 'tabler-speakerphone',
-    color: 'success',
-  },
-  {
-    id: 4,
-    title: 'Inventory Management System Setup',
-    description: 'Implementation of new inventory tracking system across all franchise locations.',
-    week: 'Week 4',
-    date: 'Today',
-    status: 'scheduled',
-    icon: 'tabler-package',
-    color: 'info',
-  },
-  {
-    id: 5,
-    title: 'Quality Assurance Inspection',
-    description: 'Scheduled inspection of all operational standards and compliance requirements.',
-    week: 'Week 5',
-    date: 'In 4 days',
-    status: 'scheduled',
-    icon: 'tabler-clipboard-check',
-    color: 'info',
-  },
-  {
-    id: 6,
-    title: 'Financial Review Meeting',
-    description: 'Quarterly financial performance review with all franchisees. Budget planning for Q2.',
-    week: 'Week 6',
-    date: 'In 10 days',
-    status: 'scheduled',
-    icon: 'tabler-report-money',
-    color: 'info',
-  },
-  {
-    id: 7,
-    title: 'Equipment Maintenance - Mall Location',
-    description: 'Scheduled maintenance was missed. Requires immediate attention to prevent operational issues.',
-    week: 'Week 2',
-    date: '5 days overdue',
-    status: 'overdue',
-    icon: 'tabler-tools',
-    color: 'error',
-  },
-  {
-    id: 8,
-    title: 'License Renewal - City Center Store',
-    description: 'Business license renewal deadline approaching. Documentation pending submission.',
-    week: 'Week 3',
-    date: '2 days overdue',
-    status: 'overdue',
-    icon: 'tabler-file-certificate',
-    color: 'error',
-  },
+// 👉 Timeline Item Interface
+interface TimelineItem {
+  id: number
+  title: string
+  description: string
+  week: string
+  date: string
+  status: string
+  icon: string
+  color: string
+}
+
+// 👉 Stats Interface
+interface Stats {
+  title: string
+  value: string
+  icon: string
+  color: string
+}
+
+// 👉 API Response Interface
+interface ApiResponse {
+  success: boolean
+  data: {
+    stats: {
+      total_milestones: number
+      completed: number
+      scheduled: number
+      overdue: number
+    }
+    timeline: Array<{
+      id: number
+      title: string
+      description: string
+      week: string
+      date: string
+      status: string
+      icon: string
+      created_at: string
+    }>
+  }
+}
+
+// 👉 Reactive data
+const timelineItems = ref<TimelineItem[]>([])
+
+const stats = ref<Stats[]>([
+  { title: 'Total Milestones', value: '0', icon: 'tabler-flag', color: 'primary' },
+  { title: 'Completed', value: '0', icon: 'tabler-circle-check', color: 'success' },
+  { title: 'Scheduled', value: '0', icon: 'tabler-calendar', color: 'info' },
+  { title: 'Overdue', value: '0', icon: 'tabler-alert-triangle', color: 'error' },
 ])
+
+// 👉 Helper function to determine color based on status
+const getStatusColor = (status: string): string => {
+  switch (status.toLowerCase()) {
+    case 'completed':
+      return 'success'
+    case 'scheduled':
+      return 'info'
+    case 'overdue':
+      return 'error'
+    default:
+      return 'primary'
+  }
+}
+
+// 👉 Helper function to format date
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffTime = now.getTime() - date.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return '1 day ago'
+  if (diffDays > 1 && diffDays <= 7) return `${diffDays} days ago`
+  if (diffDays > 7 && diffDays <= 14) return `${Math.ceil(diffDays / 7)} week ago`
+  if (diffDays > 14) return `${Math.ceil(diffDays / 7)} weeks ago`
+  if (diffDays < 0) {
+    const futureDays = Math.abs(diffDays)
+    if (futureDays === 1) return 'In 1 day'
+    if (futureDays <= 7) return `In ${futureDays} days`
+    return `In ${Math.ceil(futureDays / 7)} weeks`
+  }
+  return dateString
+}
+
+// 👉 Watch for API data changes
+watch(timelineApiData, (newData) => {
+  const apiData = newData as ApiResponse
+  if (apiData?.success && apiData?.data) {
+    const data = apiData.data
+
+    // Update timeline items with null/undefined checks
+    timelineItems.value = Array.isArray(data.timeline) ? data.timeline.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      week: item.week,
+      date: item.date || formatDate(item.created_at),
+      status: item.status,
+      icon: item.icon || 'tabler-calendar',
+      color: getStatusColor(item.status),
+    })) : []
+
+    // Update stats
+    stats.value = [
+      { title: 'Total Milestones', value: data.stats.total_milestones.toLocaleString(), icon: 'tabler-flag', color: 'primary' },
+      { title: 'Completed', value: data.stats.completed.toLocaleString(), icon: 'tabler-circle-check', color: 'success' },
+      { title: 'Scheduled', value: data.stats.scheduled.toLocaleString(), icon: 'tabler-calendar', color: 'info' },
+      { title: 'Overdue', value: data.stats.overdue.toLocaleString(), icon: 'tabler-alert-triangle', color: 'error' },
+    ]
+  }
+}, { immediate: true })
 
 const filteredTimelineItems = computed(() => {
   if (selectedFilter.value === 'all')
@@ -98,12 +138,10 @@ const filteredTimelineItems = computed(() => {
   return timelineItems.value.filter(item => item.status === selectedFilter.value)
 })
 
-const stats = ref([
-  { title: 'Total Milestones', value: '48', icon: 'tabler-flag', color: 'primary' },
-  { title: 'Completed', value: '32', icon: 'tabler-circle-check', color: 'success' },
-  { title: 'Scheduled', value: '12', icon: 'tabler-calendar', color: 'info' },
-  { title: 'Overdue', value: '4', icon: 'tabler-alert-triangle', color: 'error' },
-])
+// 👉 Fetch data on component mount
+onMounted(() => {
+  fetchTimelineData()
+})
 </script>
 
 <template>
@@ -166,7 +204,7 @@ const stats = ref([
           line-inset="19"
           truncate-line="start"
           justify="center"
-          :density="$vuetify.display.smAndDown ? 'compact' : 'default'"
+          :density="smAndDown ? 'compact' : 'default'"
           class="mt-4"
         >
           <VTimelineItem

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+// 👉 API composable
+const { data: operationsApiData, execute: fetchOperationsData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/operations')
+
 // 👉 Store
 const currentTab = ref('franchisee')
 const searchQuery = ref('')
@@ -10,7 +13,7 @@ const itemsPerPage = ref(10)
 const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
-const selectedRows = ref([])
+const selectedRows = ref<number[]>([])
 
 // Update data table options
 const updateOptions = (options: any) => {
@@ -28,72 +31,192 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Mock data - Replace with actual API call
-const tasksData = ref({
-  franchisee: {
-    tasks: [
-      {
-        id: 1,
-        task: 'Complete monthly report',
-        assignedTo: 'Downtown Store',
-        priority: 'high',
-        status: 'in_progress',
-        dueDate: '2024-01-20',
-      },
-      {
-        id: 2,
-        task: 'Staff training completion',
-        assignedTo: 'Mall Location',
-        priority: 'medium',
-        status: 'completed',
-        dueDate: '2024-01-18',
-      },
-    ],
-    total: 2,
-  },
-  sales: {
-    tasks: [
-      {
-        id: 3,
-        task: 'Follow up with leads',
-        assignedTo: 'John Smith',
-        priority: 'high',
-        status: 'in_progress',
-        dueDate: '2024-01-19',
-      },
-      {
-        id: 4,
-        task: 'Prepare sales presentation',
-        assignedTo: 'Sarah Johnson',
-        priority: 'medium',
-        status: 'due',
-        dueDate: '2024-01-17',
-      },
-    ],
-    total: 2,
-  },
-  staff: {
-    tasks: [
-      {
-        id: 5,
-        task: 'Update inventory system',
-        assignedTo: 'Michael Brown',
-        priority: 'low',
-        status: 'completed',
-        dueDate: '2024-01-16',
-      },
-      {
-        id: 6,
-        task: 'Customer service training',
-        assignedTo: 'Emily Davis',
-        priority: 'medium',
-        status: 'in_progress',
-        dueDate: '2024-01-21',
-      },
-    ],
-    total: 2,
-  },
+// 👉 Task Interface
+interface Task {
+  id: number
+  task: string
+  assignedTo: string
+  priority: string
+  status: string
+  dueDate: string
+}
+
+// 👉 Widget Interface
+interface Widget {
+  title: string
+  value: string
+  change: number
+  desc: string
+  icon: string
+  iconColor: string
+}
+
+// 👉 API Response Interface
+interface ApiResponse {
+  success: boolean
+  data: {
+    stats: {
+      franchisee: {
+        total: number
+        total_change: number
+        completed: number
+        completed_change: number
+        in_progress: number
+        in_progress_change: number
+        due: number
+        due_change: number
+      }
+      sales: {
+        total: number
+        total_change: number
+        completed: number
+        completed_change: number
+        in_progress: number
+        in_progress_change: number
+        due: number
+        due_change: number
+      }
+      staff: {
+        total: number
+        total_change: number
+        completed: number
+        completed_change: number
+        in_progress: number
+        in_progress_change: number
+        due: number
+        due_change: number
+      }
+    }
+    tasks: {
+      franchisee: Array<{
+        id: number
+        task: string
+        assigned_to: string
+        priority: string
+        status: string
+        due_date: string
+      }>
+      sales: Array<{
+        id: number
+        task: string
+        assigned_to: string
+        priority: string
+        status: string
+        due_date: string
+      }>
+      staff: Array<{
+        id: number
+        task: string
+        assigned_to: string
+        priority: string
+        status: string
+        due_date: string
+      }>
+    }
+  }
+}
+
+// 👉 Reactive data
+const tasksData = ref<{
+  franchisee: { tasks: Task[], total: number }
+  sales: { tasks: Task[], total: number }
+  staff: { tasks: Task[], total: number }
+}>({
+  franchisee: { tasks: [], total: 0 },
+  sales: { tasks: [], total: 0 },
+  staff: { tasks: [], total: 0 },
 })
+
+const statsData = ref<{
+  franchisee: Widget[]
+  sales: Widget[]
+  staff: Widget[]
+}>({
+  franchisee: [
+    { title: 'Total', value: '0', change: 0, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
+    { title: 'Completed', value: '0', change: 0, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
+    { title: 'In Progress', value: '0', change: 0, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
+    { title: 'Due', value: '0', change: 0, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
+  ],
+  sales: [
+    { title: 'Total', value: '0', change: 0, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
+    { title: 'Completed', value: '0', change: 0, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
+    { title: 'In Progress', value: '0', change: 0, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
+    { title: 'Due', value: '0', change: 0, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
+  ],
+  staff: [
+    { title: 'Total', value: '0', change: 0, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
+    { title: 'Completed', value: '0', change: 0, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
+    { title: 'In Progress', value: '0', change: 0, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
+    { title: 'Due', value: '0', change: 0, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
+  ],
+})
+
+// 👉 Watch for API data changes
+watch(operationsApiData, (newData) => {
+  const apiData = newData as ApiResponse
+  if (apiData?.success && apiData?.data) {
+    const data = apiData.data
+
+    // Helper function to map tasks with null/undefined checks
+    const mapTasks = (tasks: any[]): Task[] => {
+      return Array.isArray(tasks) ? tasks.map(task => ({
+        id: task.id,
+        task: task.task,
+        assignedTo: task.assigned_to,
+        priority: task.priority,
+        status: task.status,
+        dueDate: new Date(task.due_date).toLocaleDateString(),
+      })) : []
+    }
+
+    // Create fallback objects for safe access
+    const tasks = data.tasks ?? { franchisee: [], sales: [], staff: [] }
+    const stats = data.stats ?? {
+      franchisee: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 },
+      sales: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 },
+      staff: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 }
+    }
+
+    // Update tasks data
+    tasksData.value = {
+      franchisee: {
+        tasks: mapTasks(tasks.franchisee),
+        total: stats.franchisee.total,
+      },
+      sales: {
+        tasks: mapTasks(tasks.sales),
+        total: stats.sales.total,
+      },
+      staff: {
+        tasks: mapTasks(tasks.staff),
+        total: stats.staff.total,
+      },
+    }
+
+    // Update stats data
+    statsData.value = {
+      franchisee: [
+        { title: 'Total', value: stats.franchisee.total.toLocaleString(), change: stats.franchisee.total_change, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
+        { title: 'Completed', value: stats.franchisee.completed.toLocaleString(), change: stats.franchisee.completed_change, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
+        { title: 'In Progress', value: stats.franchisee.in_progress.toLocaleString(), change: stats.franchisee.in_progress_change, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
+        { title: 'Due', value: stats.franchisee.due.toLocaleString(), change: stats.franchisee.due_change, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
+      ],
+      sales: [
+        { title: 'Total', value: stats.sales.total.toLocaleString(), change: stats.sales.total_change, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
+        { title: 'Completed', value: stats.sales.completed.toLocaleString(), change: stats.sales.completed_change, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
+        { title: 'In Progress', value: stats.sales.in_progress.toLocaleString(), change: stats.sales.in_progress_change, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
+        { title: 'Due', value: stats.sales.due.toLocaleString(), change: stats.sales.due_change, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
+      ],
+      staff: [
+        { title: 'Total', value: stats.staff.total.toLocaleString(), change: stats.staff.total_change, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
+        { title: 'Completed', value: stats.staff.completed.toLocaleString(), change: stats.staff.completed_change, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
+        { title: 'In Progress', value: stats.staff.in_progress.toLocaleString(), change: stats.staff.in_progress_change, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
+        { title: 'Due', value: stats.staff.due.toLocaleString(), change: stats.staff.due_change, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
+      ],
+    }
+  }
+}, { immediate: true })
 
 const currentTasks = computed(() => {
   if (currentTab.value === 'franchisee')
@@ -109,6 +232,19 @@ const totalTasks = computed(() => {
   if (currentTab.value === 'sales')
     return tasksData.value.sales.total
   return tasksData.value.staff.total
+})
+
+const widgetData = computed(() => {
+  if (currentTab.value === 'franchisee')
+    return statsData.value.franchisee
+  if (currentTab.value === 'sales')
+    return statsData.value.sales
+  return statsData.value.staff
+})
+
+// 👉 Fetch data on component mount
+onMounted(() => {
+  fetchOperationsData()
 })
 
 // 👉 search filters
@@ -160,7 +296,7 @@ const confirmDelete = (id: number) => {
 const deleteTask = async () => {
   if (taskToDelete.value === null) return
 
-  // TODO: Implement API call
+  // TODO: Implement API call for delete
   const taskList = currentTab.value === 'franchisee' 
     ? tasksData.value.franchisee.tasks 
     : currentTab.value === 'sales' 
@@ -183,7 +319,7 @@ const deleteTask = async () => {
 // 👉 Modal states
 const isViewTaskModalVisible = ref(false)
 const isEditTaskModalVisible = ref(false)
-const selectedTask = ref<any>(null)
+const selectedTask = ref<Task | null>(null)
 
 // 👉 View task
 const viewTask = (id: number) => {
@@ -219,14 +355,14 @@ const editTask = (id: number) => {
 const saveTask = async () => {
   if (!selectedTask.value) return
 
-  // TODO: Implement API call
+  // TODO: Implement API call for update
   const taskList = currentTab.value === 'franchisee' 
     ? tasksData.value.franchisee.tasks 
     : currentTab.value === 'sales' 
       ? tasksData.value.sales.tasks 
       : tasksData.value.staff.tasks
 
-  const index = taskList.findIndex(task => task.id === selectedTask.value.id)
+  const index = taskList.findIndex(task => task.id === selectedTask.value!.id)
   if (index !== -1) {
     taskList[index] = { ...selectedTask.value }
   }
@@ -257,15 +393,18 @@ const exportTasks = () => {
   window.URL.revokeObjectURL(url)
 }
 
-const widgetData = computed(() => {
-  // In real implementation, these would be calculated based on currentTab
-  return [
-    { title: 'Total', value: '156', change: 12, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
-    { title: 'Completed', value: '89', change: 18, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
-    { title: 'In Progress', value: '45', change: 5, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
-    { title: 'Due', value: '22', change: -3, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
-  ]
-})
+// 👉 Utility functions
+const prefixWithPlus = (phone: string) => {
+  return phone.startsWith('+') ? phone : `+${phone}`
+}
+
+const prefixWithPlusNumber = (num: number) => {
+  return num > 0 ? `+${num}` : `${num}`
+}
+
+const avatarText = (name: string) => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase()
+}
 
 const tabs = [
   { title: 'Franchisee', value: 'franchisee', icon: 'tabler-building-store' },
@@ -330,7 +469,7 @@ const tabs = [
                             class="text-base"
                             :class="data.change > 0 ? 'text-success' : 'text-error'"
                           >
-                            ({{ prefixWithPlus(data.change) }}%)
+                            ({{ prefixWithPlusNumber(data.change) }}%)
                           </div>
                         </div>
                         <div class="text-sm">

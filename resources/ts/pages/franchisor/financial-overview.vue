@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useTheme } from 'vuetify'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 const vuetifyTheme = useTheme()
 
@@ -19,8 +20,8 @@ const orderBy = ref()
 
 // Update data table options
 const updateOptions = (options: any) => {
-  sortBy.value = options.sortBy[0]?.key
-  orderBy.value = options.sortBy[0]?.order
+    sortBy.value = options.sortBy[0]?.key
+    orderBy.value = options.sortBy[0]?.order
 }
 
 // Type definitions
@@ -54,6 +55,22 @@ interface FranchiseeUnit {
 // Reactive data
 const selectedPeriod = ref('monthly')
 const selectedUnit = ref('all')
+
+// Data table state
+const activeTab = ref('sales')
+const selectedSalesRows = ref([])
+const selectedExpensesRows = ref([])
+const selectedProfitRows = ref([])
+
+// Computed current selected rows based on active tab
+const currentSelectedRows = computed(() => {
+    switch (activeTab.value) {
+        case 'sales': return selectedSalesRows.value
+        case 'expenses': return selectedExpensesRows.value
+        case 'profit': return selectedProfitRows.value
+        default: return []
+    }
+})
 
 // Mock data for franchisee units
 const franchiseeUnits = [
@@ -298,7 +315,7 @@ const totalProfit = computed(() => {
 // Computed units table data
 const unitsTableData = computed((): FranchiseeUnit[] => {
     const periodData = financialData[selectedPeriod.value] as PeriodData
-    
+
     return franchiseeUnits.slice(1).map(unit => {
         const data = periodData?.[unit.id]
         if (!data) {
@@ -314,14 +331,14 @@ const unitsTableData = computed((): FranchiseeUnit[] => {
                 profitMargin: 0,
             }
         }
-        
+
         const sales = data.sales.reduce((sum, value) => sum + value, 0)
         const expenses = data.expenses.reduce((sum, value) => sum + value, 0)
         const royalties = data.royalties.reduce((sum, value) => sum + value, 0)
         const profit = data.profit.reduce((sum, value) => sum + value, 0)
         const netSales = sales - royalties
         const profitMargin = sales > 0 ? (profit / sales) * 100 : 0
-        
+
         return {
             id: unit.id,
             name: unit.name,
@@ -353,6 +370,130 @@ const tableHeaders = [
     { title: 'Profit (SAR)', key: 'profit', sortable: true },
     { title: 'Profit Margin (%)', key: 'profitMargin', sortable: true },
 ]
+
+// Mock data for different tabs
+const salesData = ref([
+    { id: 1, product: 'Product A', unitPrice: 150, quantity: 100, sale: 15000, date: '2024-01-15' },
+    { id: 2, product: 'Product B', unitPrice: 200, quantity: 75, sale: 15000, date: '2024-01-16' },
+])
+
+const expensesData = ref([
+    { id: 1, expenseCategory: 'Rent', amount: 5000, description: 'Monthly rent', date: '2024-01-01' },
+    { id: 2, expenseCategory: 'Utilities', amount: 1200, description: 'Electricity and water', date: '2024-01-02' },
+])
+
+const profitData = ref([
+    { id: 1, date: '2024-01-01', totalSales: 50000, totalExpenses: 30000, profit: 20000 },
+    { id: 2, date: '2024-01-02', totalSales: 55000, totalExpenses: 32000, profit: 23000 },
+])
+
+// Headers for different tabs
+const salesHeaders = [
+    { title: 'Product', key: 'product', sortable: true },
+    { title: 'Unit Price', key: 'unitPrice', sortable: true },
+    { title: 'Quantity', key: 'quantity', sortable: true },
+    { title: 'Sale Amount', key: 'sale', sortable: true },
+    { title: 'Date', key: 'date', sortable: true },
+    { title: 'Actions', key: 'actions', sortable: false },
+]
+
+const expensesHeaders = [
+    { title: 'Category', key: 'expenseCategory', sortable: true },
+    { title: 'Amount', key: 'amount', sortable: true },
+    { title: 'Description', key: 'description', sortable: true },
+    { title: 'Date', key: 'date', sortable: true },
+    { title: 'Actions', key: 'actions', sortable: false },
+]
+
+const profitHeaders = [
+    { title: 'Date', key: 'date', sortable: true },
+    { title: 'Total Sales', key: 'totalSales', sortable: true },
+    { title: 'Total Expenses', key: 'totalExpenses', sortable: true },
+    { title: 'Profit', key: 'profit', sortable: true },
+    { title: 'Actions', key: 'actions', sortable: false },
+]
+
+// Computed properties for current tab
+const currentData = computed(() => {
+    switch (activeTab.value) {
+        case 'sales': return salesData.value
+        case 'expenses': return expensesData.value
+        case 'profit': return profitData.value
+        default: return []
+    }
+})
+
+const currentHeaders = computed(() => {
+    switch (activeTab.value) {
+        case 'sales': return salesHeaders
+        case 'expenses': return expensesHeaders
+        case 'profit': return profitHeaders
+        default: return []
+    }
+})
+
+const currentTotal = computed(() => currentData.value.length)
+
+// Search query
+const searchQuery = ref('')
+
+// Modal states
+const isAddDataModalVisible = ref(false)
+const isImportModalVisible = ref(false)
+const addDataCategory = ref('sales')
+const importCategory = ref('sales')
+const importFile = ref(null)
+const addDataForm = ref({
+    product: '',
+    dateOfSale: '',
+    unitPrice: 0,
+    quantitySold: 0,
+    expenseCategory: '',
+    dateOfExpense: '',
+    amount: 0,
+    description: ''
+})
+
+// Functions
+const exportData = () => {
+    console.log('Exporting data for tab:', activeTab.value)
+    // Implementation for export functionality
+}
+
+const deleteSelected = () => {
+    console.log('Deleting selected items for tab:', activeTab.value)
+    // Implementation for delete functionality
+}
+
+const openImportModal = () => {
+    isImportModalVisible.value = true
+}
+
+const openAddDataModal = () => {
+    isAddDataModalVisible.value = true
+}
+
+const submitAddData = () => {
+    console.log('Adding data:', addDataForm.value)
+    isAddDataModalVisible.value = false
+}
+
+const submitImport = () => {
+    console.log('Importing file:', importFile.value)
+    isImportModalVisible.value = false
+}
+
+const deleteItem = (id: string | number) => {
+    console.log('Deleting item:', id)
+}
+
+const editItem = (id: string | number) => {
+    console.log('Editing item:', id)
+}
+
+const resolveProfitVariant = (profit: number) => {
+    return profit > 0 ? 'success' : 'error'
+}
 </script>
 
 <template>
@@ -368,27 +509,17 @@ const tableHeaders = [
                 </p>
             </div>
             <div class="d-flex gap-3">
-                <VBtn
-                    variant="outlined"
-                    prepend-icon="tabler-upload"
-                    @click="openImportModal"
-                >
+                <VBtn variant="outlined" prepend-icon="tabler-upload" @click="openImportModal">
                     Import
                 </VBtn>
-                <VBtn
-                    prepend-icon="tabler-plus"
-                    @click="openAddDataModal"
-                >
+                <VBtn prepend-icon="tabler-plus" @click="openAddDataModal">
                     Add Data
                 </VBtn>
             </div>
         </div>
 
         <!-- Tabs -->
-        <VTabs
-            v-model="activeTab"
-            class="mb-6"
-        >
+        <VTabs v-model="activeTab" class="mb-6">
             <VTab value="sales">
                 Sales
             </VTab>
@@ -404,49 +535,31 @@ const tableHeaders = [
         <VCard class="mb-6">
             <VCardText class="d-flex flex-wrap gap-4">
                 <div class="me-3 d-flex gap-3">
-                    <AppSelect
-                        :model-value="itemsPerPage"
-                        :items="[
-                            { value: 10, title: '10' },
-                            { value: 25, title: '25' },
-                            { value: 50, title: '50' },
-                            { value: 100, title: '100' },
-                            { value: -1, title: 'All' },
-                        ]"
-                        style="inline-size: 6.25rem;"
-                        @update:model-value="itemsPerPage = parseInt($event, 10)"
-                    />
+                    <AppSelect :model-value="itemsPerPage" :items="[
+                        { value: 10, title: '10' },
+                        { value: 25, title: '25' },
+                        { value: 50, title: '50' },
+                        { value: 100, title: '100' },
+                        { value: -1, title: 'All' },
+                    ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
                 </div>
                 <VSpacer />
 
                 <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
                     <!-- Search -->
                     <div style="inline-size: 15.625rem;">
-                        <AppTextField
-                            v-model="searchQuery"
-                            :placeholder="`Search ${activeTab}...`"
-                        />
+                        <AppTextField v-model="searchQuery" :placeholder="`Search ${activeTab}...`" />
                     </div>
 
                     <!-- Export button -->
-                    <VBtn
-                        variant="tonal"
-                        color="secondary"
-                        prepend-icon="tabler-upload"
-                        :disabled="!currentSelectedRows.length"
-                        @click="exportData"
-                    >
+                    <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload"
+                        :disabled="!currentSelectedRows.length" @click="exportData">
                         Export
                     </VBtn>
 
                     <!-- Delete button -->
-                    <VBtn
-                        variant="tonal"
-                        color="error"
-                        prepend-icon="tabler-trash"
-                        :disabled="!currentSelectedRows.length"
-                        @click="deleteSelected"
-                    >
+                    <VBtn variant="tonal" color="error" prepend-icon="tabler-trash"
+                        :disabled="!currentSelectedRows.length" @click="deleteSelected">
                         Delete Selected
                     </VBtn>
                 </div>
@@ -455,33 +568,20 @@ const tableHeaders = [
             <VDivider />
 
             <!-- Data Table -->
-            <VDataTableServer
-                v-model:items-per-page="itemsPerPage"
-                v-model:page="page"
-                :model-value="currentSelectedRows"
-                :items="currentData"
-                item-value="id"
-                :items-length="currentTotal"
-                :headers="currentHeaders"
-                class="text-no-wrap"
-                show-select
-                @update:options="updateOptions"
+            <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:page="page"
+                :model-value="currentSelectedRows" :items="currentData" item-value="id" :items-length="currentTotal"
+                :headers="currentHeaders" class="text-no-wrap" show-select @update:options="updateOptions"
                 @update:model-value="(value) => {
                     switch (activeTab) {
                         case 'sales': selectedSalesRows = value; break;
                         case 'expenses': selectedExpensesRows = value; break;
                         case 'profit': selectedProfitRows = value; break;
                     }
-                }"
-            >
+                }">
                 <!-- Sales specific templates -->
                 <template v-if="activeTab === 'sales'" #item.product="{ item }">
                     <div class="d-flex align-center gap-x-2">
-                        <VIcon
-                            icon="tabler-package"
-                            size="22"
-                            color="primary"
-                        />
+                        <VIcon icon="tabler-package" size="22" color="primary" />
                         <div class="text-body-1 text-high-emphasis">
                             {{ item.product }}
                         </div>
@@ -495,11 +595,7 @@ const tableHeaders = [
                 </template>
 
                 <template v-if="activeTab === 'sales'" #item.sale="{ item }">
-                    <VChip
-                        color="success"
-                        size="small"
-                        label
-                    >
+                    <VChip color="success" size="small" label>
                         {{ formatCurrency(item.sale) }}
                     </VChip>
                 </template>
@@ -507,11 +603,7 @@ const tableHeaders = [
                 <!-- Expenses specific templates -->
                 <template v-if="activeTab === 'expenses'" #item.expenseCategory="{ item }">
                     <div class="d-flex align-center gap-x-2">
-                        <VIcon
-                            icon="tabler-receipt"
-                            size="22"
-                            color="warning"
-                        />
+                        <VIcon icon="tabler-receipt" size="22" color="warning" />
                         <div class="text-body-1 text-high-emphasis text-capitalize">
                             {{ item.expenseCategory }}
                         </div>
@@ -519,11 +611,7 @@ const tableHeaders = [
                 </template>
 
                 <template v-if="activeTab === 'expenses'" #item.amount="{ item }">
-                    <VChip
-                        color="error"
-                        size="small"
-                        label
-                    >
+                    <VChip color="error" size="small" label>
                         {{ formatCurrency(item.amount) }}
                     </VChip>
                 </template>
@@ -537,11 +625,7 @@ const tableHeaders = [
                 <!-- Profit specific templates -->
                 <template v-if="activeTab === 'profit'" #item.date="{ item }">
                     <div class="d-flex align-center gap-x-2">
-                        <VIcon
-                            icon="tabler-calendar"
-                            size="22"
-                            color="info"
-                        />
+                        <VIcon icon="tabler-calendar" size="22" color="info" />
                         <div class="text-body-1 text-high-emphasis">
                             {{ item.date }}
                         </div>
@@ -561,11 +645,7 @@ const tableHeaders = [
                 </template>
 
                 <template v-if="activeTab === 'profit'" #item.profit="{ item }">
-                    <VChip
-                        :color="resolveProfitVariant(item.profit)"
-                        size="small"
-                        label
-                    >
+                    <VChip :color="resolveProfitVariant(item.profit)" size="small" label>
                         {{ formatCurrency(item.profit) }}
                     </VChip>
                 </template>
@@ -580,11 +660,7 @@ const tableHeaders = [
                         <VIcon icon="tabler-edit" />
                     </IconBtn>
 
-                    <VBtn
-                        icon
-                        variant="text"
-                        color="medium-emphasis"
-                    >
+                    <VBtn icon variant="text" color="medium-emphasis">
                         <VIcon icon="tabler-dots-vertical" />
                         <VMenu activator="parent">
                             <VList>
@@ -608,11 +684,7 @@ const tableHeaders = [
 
                 <!-- Pagination -->
                 <template #bottom>
-                    <TablePagination
-                        v-model:page="page"
-                        :items-per-page="itemsPerPage"
-                        :total-items="currentTotal"
-                    />
+                    <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="currentTotal" />
                 </template>
             </VDataTableServer>
         </VCard>
@@ -631,15 +703,8 @@ const tableHeaders = [
                     <!-- Header Actions -->
                     <div class="d-flex gap-3 align-center flex-wrap">
                         <!-- Period Selector -->
-                        <VSelect 
-                            v-model="selectedPeriod" 
-                            :items="periodOptions" 
-                            item-title="title" 
-                            item-value="value"
-                            density="compact" 
-                            style="min-width: 120px;" 
-                            variant="outlined" 
-                        />
+                        <VSelect v-model="selectedPeriod" :items="periodOptions" item-title="title" item-value="value"
+                            density="compact" style="min-width: 120px;" variant="outlined" />
                     </div>
                 </div>
             </VCol>
@@ -655,7 +720,9 @@ const tableHeaders = [
                             <div>
                                 <h6 class="text-h6 mb-1">Total Sales</h6>
                                 <div class="text-body-2 text-medium-emphasis mb-3">
-                                    {{ selectedPeriod === 'yearly' ? 'Annual' : selectedPeriod === 'monthly' ? 'Monthly' : 'Daily' }} Revenue
+                                    {{ selectedPeriod === 'yearly' ? 'Annual' : selectedPeriod === 'monthly' ? 'Monthly'
+                                    :
+                                    'Daily' }} Revenue
                                 </div>
                                 <h4 class="text-h4 text-success">
                                     {{ totalSales.toLocaleString() }} SAR
@@ -677,7 +744,9 @@ const tableHeaders = [
                             <div>
                                 <h6 class="text-h6 mb-1">Total Expenses</h6>
                                 <div class="text-body-2 text-medium-emphasis mb-3">
-                                    {{ selectedPeriod === 'yearly' ? 'Annual' : selectedPeriod === 'monthly' ? 'Monthly' : 'Daily' }} Costs
+                                    {{ selectedPeriod === 'yearly' ? 'Annual' : selectedPeriod === 'monthly' ? 'Monthly'
+                                    :
+                                    'Daily' }} Costs
                                 </div>
                                 <h4 class="text-h4 text-error">
                                     {{ totalExpenses.toLocaleString() }} SAR
@@ -699,7 +768,9 @@ const tableHeaders = [
                             <div>
                                 <h6 class="text-h6 mb-1">Total Profit</h6>
                                 <div class="text-body-2 text-medium-emphasis mb-3">
-                                    {{ selectedPeriod === 'yearly' ? 'Annual' : selectedPeriod === 'monthly' ? 'Monthly' : 'Daily' }} Earnings
+                                    {{ selectedPeriod === 'yearly' ? 'Annual' : selectedPeriod === 'monthly' ? 'Monthly'
+                                    :
+                                    'Daily' }} Earnings
                                 </div>
                                 <h4 class="text-h4 text-primary">
                                     {{ totalProfit.toLocaleString() }} SAR
@@ -717,90 +788,40 @@ const tableHeaders = [
 
 
         <!-- Add Data Modal -->
-        <VDialog
-            v-model="isAddDataModalVisible"
-            max-width="600"
-        >
+        <VDialog v-model="isAddDataModalVisible" max-width="600">
             <VCard>
                 <VCardTitle>Add New Data</VCardTitle>
                 <VCardText>
-                    <VSelect
-                        v-model="addDataCategory"
-                        :items="[
-                            { title: 'Sales', value: 'sales' },
-                            { title: 'Expense', value: 'expense' }
-                        ]"
-                        label="Category"
-                        class="mb-4"
-                    />
-                    
+                    <VSelect v-model="addDataCategory" :items="[
+                        { title: 'Sales', value: 'sales' },
+                        { title: 'Expense', value: 'expense' }
+                    ]" label="Category" class="mb-4" />
+
                     <!-- Sales Fields -->
                     <div v-if="addDataCategory === 'sales'">
-                        <VTextField
-                            v-model="addDataForm.product"
-                            label="Product"
-                            class="mb-4"
-                        />
-                        <VTextField
-                            v-model="addDataForm.dateOfSale"
-                            label="Date of Sale"
-                            type="date"
-                            class="mb-4"
-                        />
-                        <VTextField
-                            v-model="addDataForm.unitPrice"
-                            label="Unit Price"
-                            type="number"
-                            prefix="$"
-                            class="mb-4"
-                        />
-                        <VTextField
-                            v-model="addDataForm.quantitySold"
-                            label="Quantity Sold"
-                            type="number"
-                            class="mb-4"
-                        />
+                        <VTextField v-model="addDataForm.product" label="Product" class="mb-4" />
+                        <VTextField v-model="addDataForm.dateOfSale" label="Date of Sale" type="date" class="mb-4" />
+                        <VTextField v-model="addDataForm.unitPrice" label="Unit Price" type="number" prefix="$"
+                            class="mb-4" />
+                        <VTextField v-model="addDataForm.quantitySold" label="Quantity Sold" type="number"
+                            class="mb-4" />
                     </div>
-                    
+
                     <!-- Expense Fields -->
                     <div v-if="addDataCategory === 'expense'">
-                        <VTextField
-                            v-model="addDataForm.expenseCategory"
-                            label="Expense Category"
-                            class="mb-4"
-                        />
-                        <VTextField
-                            v-model="addDataForm.dateOfExpense"
-                            label="Date of Expense"
-                            type="date"
-                            class="mb-4"
-                        />
-                        <VTextField
-                            v-model="addDataForm.amount"
-                            label="Amount"
-                            type="number"
-                            prefix="$"
-                            class="mb-4"
-                        />
-                        <VTextField
-                            v-model="addDataForm.description"
-                            label="Description"
-                            class="mb-4"
-                        />
+                        <VTextField v-model="addDataForm.expenseCategory" label="Expense Category" class="mb-4" />
+                        <VTextField v-model="addDataForm.dateOfExpense" label="Date of Expense" type="date"
+                            class="mb-4" />
+                        <VTextField v-model="addDataForm.amount" label="Amount" type="number" prefix="$" class="mb-4" />
+                        <VTextField v-model="addDataForm.description" label="Description" class="mb-4" />
                     </div>
                 </VCardText>
                 <VCardActions>
                     <VSpacer />
-                    <VBtn
-                        variant="outlined"
-                        @click="isAddDataModalVisible = false"
-                    >
+                    <VBtn variant="outlined" @click="isAddDataModalVisible = false">
                         Cancel
                     </VBtn>
-                    <VBtn
-                        color="primary"
-                        @click="submitAddData"
-                    >
+                    <VBtn color="primary" @click="submitAddData">
                         Add Data
                     </VBtn>
                 </VCardActions>
@@ -808,41 +829,23 @@ const tableHeaders = [
         </VDialog>
 
         <!-- Import Modal -->
-        <VDialog
-            v-model="isImportModalVisible"
-            max-width="500"
-        >
+        <VDialog v-model="isImportModalVisible" max-width="500">
             <VCard>
                 <VCardTitle>Import Data</VCardTitle>
                 <VCardText>
-                    <VSelect
-                        v-model="importCategory"
-                        :items="[
-                            { title: 'Sales', value: 'sales' },
-                            { title: 'Expense', value: 'expense' }
-                        ]"
-                        label="Category"
-                        class="mb-4"
-                    />
-                    <VFileInput
-                        v-model="importFile"
-                        label="Choose file"
-                        accept=".csv,.xlsx"
-                        prepend-icon="tabler-upload"
-                    />
+                    <VSelect v-model="importCategory" :items="[
+                        { title: 'Sales', value: 'sales' },
+                        { title: 'Expense', value: 'expense' }
+                    ]" label="Category" class="mb-4" />
+                    <VFileInput v-model="importFile" label="Choose file" accept=".csv,.xlsx"
+                        prepend-icon="tabler-upload" />
                 </VCardText>
                 <VCardActions>
                     <VSpacer />
-                    <VBtn
-                        variant="outlined"
-                        @click="isImportModalVisible = false"
-                    >
+                    <VBtn variant="outlined" @click="isImportModalVisible = false">
                         Cancel
                     </VBtn>
-                    <VBtn
-                        color="primary"
-                        @click="submitImport"
-                    >
+                    <VBtn color="primary" @click="submitImport">
                         Import
                     </VBtn>
                 </VCardActions>

@@ -1,92 +1,136 @@
 <script setup lang="ts">
-import { VForm } from 'vuetify/components/VForm'
-
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
+import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
+import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-
-import authV2RegisterIllustrationBorderedDark from '@images/pages/auth-v2-register-illustration-bordered-dark.png'
-import authV2RegisterIllustrationBorderedLight from '@images/pages/auth-v2-register-illustration-bordered-light.png'
-import authV2RegisterIllustrationDark from '@images/pages/auth-v2-register-illustration-dark.png'
-import authV2RegisterIllustrationLight from '@images/pages/auth-v2-register-illustration-light.png'
-import authV2MaskDark from '@images/pages/misc-mask-dark.png'
-import authV2MaskLight from '@images/pages/misc-mask-light.png'
-
-const imageVariant = useGenerateImageVariant(authV2RegisterIllustrationLight,
-  authV2RegisterIllustrationDark,
-  authV2RegisterIllustrationBorderedLight,
-  authV2RegisterIllustrationBorderedDark, true)
-
-const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
+import { h } from 'vue'
+import { useDisplay } from 'vuetify'
+import type { Rule } from '@/plugins/casl/ability'
 
 definePage({
   meta: {
     layout: 'blank',
-    unauthenticatedOnly: true,
+    public: true,
   },
 })
 
 const form = ref({
-  username: '',
+  name: '',
   email: '',
   password: '',
+  password_confirmation: '',
+  role: 'franchisor',
   privacyPolicies: false,
 })
 
 const isPasswordVisible = ref(false)
+const isConfirmPasswordVisible = ref(false)
+const loading = ref(false)
+const errorMessages = ref<{ name?: string[]; email?: string[]; password?: string[]; password_confirmation?: string[]; role?: string[]; general?: string } | null>(null)
+const router = useRouter()
+const { smAndUp } = useDisplay()
+
+const register = async () => {
+  if (!form.value.privacyPolicies) {
+    errorMessages.value = { general: 'Please agree to the privacy policy & terms to continue.' }
+    return
+  }
+
+  loading.value = true
+  errorMessages.value = null
+  try {
+    const resp = await $api<{ success: boolean; message: string; data: { user: { id: number; name: string; email: string; role: string; status: string }; token: string } }>('/auth/register', {
+      method: 'POST',
+      body: {
+        name: form.value.name,
+        email: form.value.email,
+        password: form.value.password,
+        password_confirmation: form.value.password_confirmation,
+        role: form.value.role,
+      },
+    })
+
+    // Persist token and basic user data
+    useCookie<string>('accessToken').value = resp.data.token
+    useCookie<any>('userData').value = {
+      id: resp.data.user.id,
+      fullName: resp.data.user.name,
+      username: resp.data.user.email,
+      avatar: undefined,
+      email: resp.data.user.email,
+      role: resp.data.user.role,
+      status: resp.data.user.status,
+    }
+
+    // Attempt login to fetch ability rules from backend and ensure consistent cookies
+    try {
+      const loginResp = await $api<{ accessToken: string; userData: any; userAbilityRules: Rule[] }>('/auth/login', {
+        method: 'POST',
+        body: {
+          email: form.value.email,
+          password: form.value.password,
+        },
+      })
+      useCookie<string>('accessToken').value = loginResp.accessToken
+      useCookie<any>('userData').value = loginResp.userData
+      useCookie<Rule[]>('userAbilityRules').value = loginResp.userAbilityRules
+    }
+    catch (e) {
+      // If auto-login fails, proceed with registration token and empty abilities
+      useCookie<Rule[]>('userAbilityRules').value = []
+    }
+
+    router.push('/')
+  }
+  catch (e: any) {
+    const data = e?.data || e?.response?._data || null
+    if (data?.errors) {
+      errorMessages.value = {
+        name: data.errors.name,
+        email: data.errors.email,
+        password: data.errors.password,
+        password_confirmation: data.errors.password_confirmation,
+        role: data.errors.role,
+        general: data.message,
+      }
+    }
+    else {
+      errorMessages.value = { general: data?.message || 'Registration failed. Please check your details and try again.' }
+    }
+  }
+  finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
-  <RouterLink to="/">
-    <div class="auth-logo d-flex align-center gap-x-3">
-      <VNodeRenderer :nodes="themeConfig.app.logo" />
-      <h1 class="auth-title">
-        {{ themeConfig.app.title }}
-      </h1>
-    </div>
-  </RouterLink>
+  <div class="auth-wrapper d-flex align-center justify-center pa-4">
+    <div class="position-relative my-sm-16">
+      <!-- 👉 Top shape -->
+      <VNodeRenderer :nodes="h('div', { innerHTML: authV1TopShape })"
+        class="text-primary auth-v1-top-shape d-none d-sm-block" />
 
-  <VRow
-    no-gutters
-    class="auth-wrapper bg-surface"
-  >
-    <VCol
-      md="8"
-      class="d-none d-md-flex"
-    >
-      <div class="position-relative bg-background w-100 me-0">
-        <div
-          class="d-flex align-center justify-center w-100 h-100"
-          style="padding-inline: 100px;"
-        >
-          <VImg
-            max-width="500"
-            :src="imageVariant"
-            class="auth-illustration mt-16 mb-2"
-          />
-        </div>
+      <!-- 👉 Bottom shape -->
+      <VNodeRenderer :nodes="h('div', { innerHTML: authV1BottomShape })"
+        class="text-primary auth-v1-bottom-shape d-none d-sm-block" />
 
-        <img
-          class="auth-footer-mask"
-          :src="authThemeMask"
-          alt="auth-footer-mask"
-          height="280"
-          width="100"
-        >
-      </div>
-    </VCol>
+      <!-- 👉 Auth card -->
+      <VCard class="auth-card" max-width="460" :class="smAndUp ? 'pa-6' : 'pa-0'">
+        <VCardItem class="justify-center">
+          <VCardTitle>
+            <RouterLink to="/">
+              <div class="app-logo">
+                <VNodeRenderer :nodes="themeConfig.app.logo" />
+                <h1 class="app-logo-title">
+                  {{ themeConfig.app.title }}
+                </h1>
+              </div>
+            </RouterLink>
+          </VCardTitle>
+        </VCardItem>
 
-    <VCol
-      cols="12"
-      md="4"
-      class="auth-card-v2 d-flex align-center justify-center"
-      style="background-color: rgb(var(--v-theme-surface));"
-    >
-      <VCard
-        flat
-        :max-width="500"
-        class="mt-12 mt-sm-0 pa-4"
-      >
         <VCardText>
           <h4 class="text-h4 mb-1">
             Adventure starts here 🚀
@@ -97,105 +141,83 @@ const isPasswordVisible = ref(false)
         </VCardText>
 
         <VCardText>
-          <VForm @submit.prevent="() => {}">
+          <VForm @submit.prevent="register">
             <VRow>
-              <!-- Username -->
               <VCol cols="12">
-                <AppTextField
-                  v-model="form.username"
-                  :rules="[requiredValidator]"
-                  autofocus
-                  label="Username"
-                  placeholder="Johndoe"
-                />
+                <VAlert v-if="errorMessages?.general" type="error" variant="tonal" class="mb-4">
+                  {{ errorMessages?.general }}
+                </VAlert>
+              </VCol>
+              <!-- Name -->
+              <VCol cols="12">
+                <AppTextField v-model="form.name" autofocus label="Full Name" placeholder="John Doe" :error-messages="errorMessages?.name" />
+              </VCol>
+              <!-- Email -->
+              <VCol cols="12">
+                <AppTextField v-model="form.email" label="Email" type="email" placeholder="johndoe@email.com" :error-messages="errorMessages?.email" />
               </VCol>
 
-              <!-- email -->
+              <!-- Role -->
               <VCol cols="12">
-                <AppTextField
-                  v-model="form.email"
-                  :rules="[requiredValidator, emailValidator]"
-                  label="Email"
-                  type="email"
-                  placeholder="johndoe@email.com"
-                />
+                <AppSelect v-model="form.role" :items="['franchisor','franchisee','sales']" label="Role" :error-messages="errorMessages?.role" />
               </VCol>
 
-              <!-- password -->
+              <!-- Password -->
               <VCol cols="12">
-                <AppTextField
-                  v-model="form.password"
-                  :rules="[requiredValidator]"
-                  label="Password"
-                  placeholder="············"
-                  :type="isPasswordVisible ? 'text' : 'password'"
-                  autocomplete="password"
+                <AppTextField v-model="form.password" label="Password" placeholder="············"
+                  :type="isPasswordVisible ? 'text' : 'password'" autocomplete="new-password"
+                  :error-messages="errorMessages?.password"
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
-                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
-                />
+                  @click:append-inner="isPasswordVisible = !isPasswordVisible" />
+              </VCol>
 
+              <!-- Confirm Password -->
+              <VCol cols="12">
+                <AppTextField v-model="form.password_confirmation" label="Confirm Password" autocomplete="new-password"
+                  placeholder="············" :type="isConfirmPasswordVisible ? 'text' : 'password'"
+                  :error-messages="errorMessages?.password_confirmation"
+                  :append-inner-icon="isConfirmPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
+                  @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible" />
+              </VCol>
+
+              <VCol cols="12">
                 <div class="d-flex align-center my-6">
-                  <VCheckbox
-                    id="privacy-policy"
-                    v-model="form.privacyPolicies"
-                    inline
-                  />
-                  <VLabel
-                    for="privacy-policy"
-                    style="opacity: 1;"
-                  >
+                  <VCheckbox id="privacy-policy" v-model="form.privacyPolicies" inline />
+                  <VLabel for="privacy-policy" style="opacity: 1;">
                     <span class="me-1 text-high-emphasis">I agree to</span>
-                    <a
-                      href="javascript:void(0)"
-                      class="text-primary"
-                    >privacy policy & terms</a>
+                    <a href="javascript:void(0)" class="text-primary">privacy policy & terms</a>
                   </VLabel>
                 </div>
 
-                <VBtn
-                  block
-                  type="submit"
-                >
+                <VBtn block type="submit" :loading="loading" :disabled="loading">
                   Sign up
                 </VBtn>
               </VCol>
 
-              <!-- create account -->
-              <VCol
-                cols="12"
-                class="text-center text-base"
-              >
-                <span class="d-inline-block">Already have an account?</span>
-                <RouterLink
-                  class="text-primary ms-1 d-inline-block"
-                  :to="{ name: 'login' }"
-                >
+              <!-- login instead -->
+              <VCol cols="12" class="text-center text-base">
+                <span>Already have an account?</span>
+                <RouterLink class="text-primary ms-1" :to="{ name: 'login' }">
                   Sign in instead
                 </RouterLink>
               </VCol>
 
-              <VCol
-                cols="12"
-                class="d-flex align-center"
-              >
+              <VCol cols="12" class="d-flex align-center">
                 <VDivider />
                 <span class="mx-4">or</span>
                 <VDivider />
               </VCol>
 
               <!-- auth providers -->
-              <VCol
-                cols="12"
-                class="text-center"
-              >
+              <VCol cols="12" class="text-center">
                 <AuthProvider />
               </VCol>
             </VRow>
           </VForm>
         </VCardText>
       </VCard>
-    </VCol>
-  </VRow>
+    </div>
+  </div>
 </template>
 
 <style lang="scss">

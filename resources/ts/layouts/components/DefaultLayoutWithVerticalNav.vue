@@ -1,6 +1,11 @@
 <script lang="ts" setup>
-import navItems from '@/navigation/vertical'
+import { useNavigation } from '@/composables/useNavigation'
 import { themeConfig } from '@themeConfig'
+
+// Get role-based navigation items
+const { navigationItems } = useNavigation()
+
+
 
 // Components
 import Footer from '@/layouts/components/Footer.vue'
@@ -15,7 +20,7 @@ import { VerticalNavLayout } from '@layouts'
 </script>
 
 <template>
-  <VerticalNavLayout :nav-items="navItems">
+  <VerticalNavLayout :nav-items="navigationItems">
     <!-- 👉 navbar -->
     <template #navbar="{ toggleVerticalOverlayNavActive }">
       <div class="d-flex h-100 align-center">

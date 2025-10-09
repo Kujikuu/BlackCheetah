@@ -58,9 +58,9 @@ class RoleMiddleware
         // Role hierarchy - higher roles can access lower role functions
         $roleHierarchy = [
             'admin' => 4,
-            'franchise_owner' => 3,
-            'unit_manager' => 2,
-            'employee' => 1
+            'franchisor' => 3,
+            'franchisee' => 2,
+            'sales' => 1
         ];
 
         $userRoleLevel = $roleHierarchy[$userRole] ?? 0;

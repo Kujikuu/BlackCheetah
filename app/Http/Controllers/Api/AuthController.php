@@ -31,16 +31,16 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            $credentials = $request->only('email', 'password');
+            // Manually verify user credentials to avoid guard-related issues
+            $user = \App\Models\User::where('email', $request->email)->first();
 
-            if (!Auth::attempt($credentials)) {
+            if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid credentials'
                 ], 401);
             }
 
-            $user = Auth::user();
             $token = $user->createToken('API Token')->plainTextToken;
 
             // Update last login

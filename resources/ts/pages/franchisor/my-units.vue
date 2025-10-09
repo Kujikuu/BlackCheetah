@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AddFranchiseeModal from '@/components/dialogs/AddFranchiseeModal.vue'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // 👉 Router
 const router = useRouter()
@@ -114,13 +115,7 @@ const addFranchisee = () => {
     isAddFranchiseeModalVisible.value = true
 }
 
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-SA', {
-        style: 'currency',
-        currency: 'SAR',
-        minimumFractionDigits: 0,
-    }).format(amount)
-}
+
 
 const onFranchiseeAdded = (franchiseeData: any) => {
     // Add the new franchisee to the units data

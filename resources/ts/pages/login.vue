@@ -1,171 +1,159 @@
-<!-- ❗Errors in the form are set on line 60 -->
 <script setup lang="ts">
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
-import { emailValidator, requiredValidator } from '@/@core/utils/validators'
-import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
-import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
-import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
-import authV2LoginIllustrationDark from '@images/pages/auth-v2-login-illustration-dark.png'
-import authV2LoginIllustrationLight from '@images/pages/auth-v2-login-illustration-light.png'
-import authV2MaskDark from '@images/pages/misc-mask-dark.png'
-import authV2MaskLight from '@images/pages/misc-mask-light.png'
+import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
+import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-import { VForm } from 'vuetify/components/VForm'
-
-const authThemeImg = useGenerateImageVariant(authV2LoginIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true)
-
-const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
+import { h } from 'vue'
+import { useDisplay } from 'vuetify'
+import type { Rule } from '@/plugins/casl/ability'
 
 definePage({
   meta: {
     layout: 'blank',
-    unauthenticatedOnly: true,
+    public: true,
   },
 })
 
+const form = ref({
+  email: '',
+  password: '',
+  remember: false,
+})
+
 const isPasswordVisible = ref(false)
-
-const route = useRoute()
+const loading = ref(false)
+const errorMessages = ref<{ email?: string[]; password?: string[]; general?: string } | null>(null)
 const router = useRouter()
-
-const ability = useAbility()
-
-const errors = ref<Record<string, string | undefined>>({
-  email: undefined,
-  password: undefined,
-})
-
-const refVForm = ref<VForm>()
-
-const credentials = ref({
-  email: 'admin@blackcheetah.com',
-  password: 'password',
-})
-
-const rememberMe = ref(false)
+const { smAndUp } = useDisplay()
 
 const login = async () => {
+  loading.value = true
+  errorMessages.value = null
   try {
-    const res = await $api('/auth/login', {
-      method: 'POST',
-      body: {
-        email: credentials.value.email,
-        password: credentials.value.password,
+    const resp = await $api<{ accessToken: string; userData: any; userAbilityRules: any[] }>(
+      '/auth/login',
+      {
+        method: 'POST',
+        body: {
+          email: form.value.email,
+          password: form.value.password,
+        },
       },
-      onResponseError({ response }) {
-        errors.value = response._data.errors
-      },
-    })
+    )
 
-    const { accessToken, userData, userAbilityRules } = res
+    // Persist auth data in cookies (used by guards & CASL ability)
+    useCookie<string>('accessToken').value = resp.accessToken
+    useCookie<any>('userData').value = resp.userData
+    useCookie<Rule[]>('userAbilityRules').value = resp.userAbilityRules
 
-    useCookie('userAbilityRules').value = userAbilityRules
-    ability.update(userAbilityRules)
-
-    useCookie('userData').value = userData
-    useCookie('accessToken').value = accessToken
-
-    // Redirect to `to` query if exist or redirect to index route
-    // ❗ nextTick is required to wait for DOM updates and later redirect
-    await nextTick(() => {
-      router.replace(route.query.to ? String(route.query.to) : '/')
-    })
+    // Redirect to home/dashboard
+    router.push('/')
   }
-  catch (err) {
-    console.error(err)
+  catch (e: any) {
+    const data = e?.data || e?.response?._data || null
+    if (data?.errors) {
+      errorMessages.value = {
+        email: data.errors.email,
+        password: data.errors.password,
+        general: data.message,
+      }
+    }
+    else {
+      errorMessages.value = { general: data?.message || 'Login failed. Please check your credentials and try again.' }
+    }
   }
-}
-
-const onSubmit = () => {
-  refVForm.value?.validate()
-    .then(({ valid: isValid }) => {
-      if (isValid)
-        login()
-    })
+  finally {
+    loading.value = false
+  }
 }
 </script>
 
 <template>
-  <RouterLink to="/">
-    <div class="auth-logo d-flex align-center gap-x-3">
-      <VNodeRenderer :nodes="themeConfig.app.logo" />
-      <h1 class="auth-title">
-        {{ themeConfig.app.title }}
-      </h1>
-    </div>
-  </RouterLink>
+  <div class="auth-wrapper d-flex align-center justify-center pa-4">
+    <div class="position-relative my-sm-16">
+      <!-- 👉 Top shape -->
+      <VNodeRenderer :nodes="h('div', { innerHTML: authV1TopShape })"
+        class="text-primary auth-v1-top-shape d-none d-sm-block" />
 
-  <VRow no-gutters class="auth-wrapper bg-surface">
-    <VCol md="8" class="d-none d-md-flex">
-      <div class="position-relative bg-background w-100 me-0">
-        <div class="d-flex align-center justify-center w-100 h-100" style="padding-inline: 6.25rem;">
-          <VImg max-width="613" :src="authThemeImg" class="auth-illustration mt-16 mb-2" />
-        </div>
+      <!-- 👉 Bottom shape -->
+      <VNodeRenderer :nodes="h('div', { innerHTML: authV1BottomShape })"
+        class="text-primary auth-v1-bottom-shape d-none d-sm-block" />
 
-        <img class="auth-footer-mask" :src="authThemeMask" alt="auth-footer-mask" height="280" width="100">
-      </div>
-    </VCol>
+      <!-- 👉 Auth Card -->
+      <VCard class="auth-card" max-width="460" :class="smAndUp ? 'pa-6' : 'pa-0'">
+        <VCardItem class="justify-center">
+          <VCardTitle>
+            <RouterLink to="/">
+              <div class="app-logo">
+                <VNodeRenderer :nodes="themeConfig.app.logo" />
+                <h1 class="app-logo-title">
+                  {{ themeConfig.app.title }}
+                </h1>
+              </div>
+            </RouterLink>
+          </VCardTitle>
+        </VCardItem>
 
-    <VCol cols="12" md="4" class="auth-card-v2 d-flex align-center justify-center">
-      <VCard flat :max-width="500" class="mt-12 mt-sm-0 pa-4">
         <VCardText>
           <h4 class="text-h4 mb-1">
-            Welcome to <span class="text-capitalize"> {{ themeConfig.app.title }} </span>! 👋🏻
+            Welcome to <span class="text-capitalize">{{ themeConfig.app.title }}</span>! 👋🏻
           </h4>
           <p class="mb-0">
             Please sign-in to your account and start the adventure
           </p>
         </VCardText>
+
         <VCardText>
-          <VAlert color="primary" variant="tonal">
-            <p class="text-sm mb-2">
-              Admin Email: <strong>admin@blackcheetah.com</strong> / Pass: <strong>password</strong>
-            </p>
-            <p class="text-sm mb-0">
-              Client Email: <strong>client@demo.com</strong> / Pass: <strong>client</strong>
-            </p>
-          </VAlert>
-        </VCardText>
-        <VCardText>
-          <VForm ref="refVForm" @submit.prevent="onSubmit">
+          <VForm @submit.prevent="login">
             <VRow>
+              <VCol cols="12">
+                <VAlert v-if="errorMessages?.general" type="error" variant="tonal" class="mb-4">
+                  {{ errorMessages?.general }}
+                </VAlert>
+              </VCol>
               <!-- email -->
               <VCol cols="12">
-                <AppTextField v-model="credentials.email" label="Email" placeholder="johndoe@email.com" type="email"
-                  autofocus :rules="[requiredValidator, emailValidator]" :error-messages="errors.email" />
+                <AppTextField v-model="form.email" autofocus label="Email or Username" type="email"
+                  :error-messages="errorMessages?.email" placeholder="johndoe@email.com" />
               </VCol>
 
               <!-- password -->
               <VCol cols="12">
-                <AppTextField v-model="credentials.password" label="Password" placeholder="············"
-                  :rules="[requiredValidator]" :type="isPasswordVisible ? 'text' : 'password'" autocomplete="password"
-                  :error-messages="errors.password"
+                <AppTextField v-model="form.password" label="Password" placeholder="············"
+                  :type="isPasswordVisible ? 'text' : 'password'" autocomplete="password"
+                  :error-messages="errorMessages?.password"
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
                   @click:append-inner="isPasswordVisible = !isPasswordVisible" />
 
-                <div class="d-flex align-center flex-wrap justify-space-between my-6">
-                  <VCheckbox v-model="rememberMe" label="Remember me" />
-                  <RouterLink class="text-primary ms-2 mb-1" :to="{ name: 'forgot-password' }">
+                <!-- remember me checkbox -->
+                <div class="d-flex align-center justify-space-between flex-wrap my-6">
+                  <VCheckbox v-model="form.remember" label="Remember me" />
+
+                  <RouterLink class="text-primary" :to="{ name: 'forgot-password' }">
                     Forgot Password?
                   </RouterLink>
                 </div>
 
-                <VBtn block type="submit">
+                <!-- login button -->
+                <VBtn block type="submit" :loading="loading" :disabled="loading">
                   Login
                 </VBtn>
               </VCol>
 
               <!-- create account -->
-              <VCol cols="12" class="text-center">
-                <span>New on our platform?</span>
-                <RouterLink class="text-primary ms-1" :to="{ name: 'register' }">
+              <VCol cols="12" class="text-body-1 text-center">
+                <span class="d-inline-block">
+                  New on our platform?
+                </span>
+                <RouterLink class="text-primary ms-1 d-inline-block text-body-1" :to="{ name: 'register' }">
                   Create an account
                 </RouterLink>
               </VCol>
+
               <VCol cols="12" class="d-flex align-center">
                 <VDivider />
-                <span class="mx-4">or</span>
+                <span class="mx-4 text-high-emphasis">or</span>
                 <VDivider />
               </VCol>
 
@@ -177,8 +165,8 @@ const onSubmit = () => {
           </VForm>
         </VCardText>
       </VCard>
-    </VCol>
-  </VRow>
+    </div>
+  </div>
 </template>
 
 <style lang="scss">

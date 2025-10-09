@@ -91,6 +91,7 @@ const timezones = [
 ]
 
 const currencies = [
+  'SAR',
   'USD',
   'EUR',
   'GBP',
