@@ -72,7 +72,7 @@ interface PersonalInfo {
 interface FranchiseDetails {
   franchiseName: string
   website: string
-  logo: File | null
+  logo: string | null
 }
 
 interface LegalDetails {
@@ -414,13 +414,23 @@ const isProductModalVisible = computed({
 
 // 👉 Selected items
 const selectedDocument = ref<{
-  title: string
+  id: number | null
+  name: string
   description: string
   file: File | null
+  type: string
+  status: string
+  is_confidential: boolean
+  expiry_date: string | null
 }>({
-  title: '',
+  id: null,
+  name: '',
   description: '',
   file: null,
+  type: 'other',
+  status: 'active',
+  is_confidential: false,
+  expiry_date: null,
 })
 
 const selectedProduct = ref<{
@@ -1357,7 +1367,7 @@ const resolveStatusVariant = (status: string) => {
         </VCardItem>
 
         <VCardText>
-          Are you sure you want to delete "{{ documentToDelete?.title }}"? This action cannot be undone.
+          Are you sure you want to delete "{{ documentToDelete?.name }}"? This action cannot be undone.
         </VCardText>
 
         <VCardActions>
