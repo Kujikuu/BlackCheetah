@@ -1,310 +1,214 @@
-# project_rules.md
+<laravel-boost-guidelines>
+=== foundation rules ===
 
-BlackCheetah is a Vue 3 + Vuetify + Laravel admin template with a sophisticated design system. This document outlines the rules and conventions for maintaining consistency across the application.
+# Laravel Boost Guidelines
 
-## Guidelines
+The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to enhance the user's satisfaction building Laravel applications.
 
-## Technology Stack
-- **Frontend**: Vue 3 with TypeScript
-- **UI Framework**: Vuetify 3
-- **Backend**: Laravel
-- **Build Tool**: Vite
-- **State Management**: Pinia
-- **Routing**: Vue Router with auto-imports
-- **Styling**: SCSS with custom design system
+## Foundational Context
+This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-## Project Structure
+- php - 8.3.25
+- laravel/framework (LARAVEL) - v12
+- laravel/prompts (PROMPTS) - v0
+- laravel/sanctum (SANCTUM) - v4
+- laravel/mcp (MCP) - v0
+- laravel/pint (PINT) - v1
+- laravel/sail (SAIL) - v1
+- phpunit/phpunit (PHPUNIT) - v11
+- vue (VUE) - v3
+- eslint (ESLINT) - v8
 
-### Directory Organization
-```
-resources/ts/
-├── @core/           # Core framework components and utilities
-├── @layouts/        # Layout components and enums
-├── components/      # Reusable UI components
-├── pages/           # Application pages (auto-routed)
-├── composables/     # Vue composables
-├── utils/           # Utility functions
-├── plugins/         # Vue plugins
-└── navigation/      # Navigation configuration
-```
 
-## UI Framework Guidelines
+## Conventions
+- You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, naming.
+- Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
+- Check for existing components to reuse before writing a new one.
 
-### 1. Component Creation Rules
+## Verification Scripts
+- Do not create verification scripts or tinker when tests cover that functionality and prove it works. Unit and feature tests are more important.
 
-#### When creating new components:
-- **ALWAYS** use existing Vuetify components as base
-- **FOLLOW** the established component patterns in `resources/ts/components/`
-- **USE** TypeScript with proper type definitions
-- **IMPLEMENT** proper props interface with `defineProps<Props>()`
-- **EMIT** events using `defineEmits<Emit>()`
+## Application Structure & Architecture
+- Stick to existing directory structure - don't create new base folders without approval.
+- Do not change the application's dependencies without approval.
 
-#### Component Structure Template:
-```vue
-<script setup lang="ts">
-interface Props {
-  // Define props with proper types
+## Frontend Bundling
+- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
+
+## Replies
+- Be concise in your explanations - focus on what's important rather than explaining obvious details.
+
+## Documentation Files
+- You must only create documentation files if explicitly requested by the user.
+
+
+=== boost rules ===
+
+## Laravel Boost
+- Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
+
+## Artisan
+- Use the `list-artisan-commands` tool when you need to call an Artisan command to double check the available parameters.
+
+## URLs
+- Whenever you share a project URL with the user you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain / IP, and port.
+
+## Tinker / Debugging
+- You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
+- Use the `database-query` tool when you only need to read from the database.
+
+## Reading Browser Logs With the `browser-logs` Tool
+- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
+- Only recent browser logs will be useful - ignore old logs.
+
+## Searching Documentation (Critically Important)
+- Boost comes with a powerful `search-docs` tool you should use before any other approaches. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation specific for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
+- The 'search-docs' tool is perfect for all Laravel related packages, including Laravel, Inertia, Livewire, Filament, Tailwind, Pest, Nova, Nightwatch, etc.
+- You must use this tool to search for Laravel-ecosystem documentation before falling back to other approaches.
+- Search the documentation before making code changes to ensure we are taking the correct approach.
+- Use multiple, broad, simple, topic based queries to start. For example: `['rate limiting', 'routing rate limiting', 'routing']`.
+- Do not add package names to queries - package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
+
+### Available Search Syntax
+- You can and should pass multiple queries at once. The most relevant results will be returned first.
+
+1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'
+2. Multiple Words (AND Logic) - query=rate limit - finds knowledge containing both "rate" AND "limit"
+3. Quoted Phrases (Exact Position) - query="infinite scroll" - Words must be adjacent and in that order
+4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit"
+5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms
+
+
+=== php rules ===
+
+## PHP
+
+- Always use curly braces for control structures, even if it has one line.
+
+### Constructors
+- Use PHP 8 constructor property promotion in `__construct()`.
+    - <code-snippet>public function __construct(public GitHub $github) { }</code-snippet>
+- Do not allow empty `__construct()` methods with zero parameters.
+
+### Type Declarations
+- Always use explicit return type declarations for methods and functions.
+- Use appropriate PHP type hints for method parameters.
+
+<code-snippet name="Explicit Return Types and Method Params" lang="php">
+protected function isAccessible(User $user, ?string $path = null): bool
+{
+    ...
 }
+</code-snippet>
 
-interface Emit {
-  // Define emitted events
-}
+## Comments
+- Prefer PHPDoc blocks over comments. Never use comments within the code itself unless there is something _very_ complex going on.
 
-const props = defineProps<Props>()
-const emit = defineEmits<Emit>()
-</script>
+## PHPDoc Blocks
+- Add useful array shape type definitions for arrays when appropriate.
 
-<template>
-  <!-- Use Vuetify components with consistent styling -->
-</template>
-```
+## Enums
+- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
 
-### 2. Page Creation Rules
 
-#### When creating new pages:
-- **PLACE** pages in `resources/ts/pages/` directory
-- **USE** Vue Router auto-import conventions
-- **FOLLOW** existing page structure patterns
-- **IMPLEMENT** proper meta layouts using `MetaLayouts`
-- **USE** consistent grid system with `VRow` and `VCol`
+=== laravel/core rules ===
 
-#### Page Structure Template:
-```vue
-<script setup lang="ts">
-// Import required components and composables
-</script>
+## Do Things the Laravel Way
 
-<template>
-  <VRow>
-    <VCol cols="12">
-      <!-- Page content using Vuetify components -->
-    </VCol>
-  </VRow>
-</template>
-```
+- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using the `list-artisan-commands` tool.
+- If you're creating a generic PHP class, use `artisan make:class`.
+- Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
-### 3. Dialog/Modal Guidelines
+### Database
+- Always use proper Eloquent relationship methods with return type hints. Prefer relationship methods over raw queries or manual joins.
+- Use Eloquent models and relationships before suggesting raw database queries
+- Avoid `DB::`; prefer `Model::query()`. Generate code that leverages Laravel's ORM capabilities rather than bypassing them.
+- Generate code that prevents N+1 query problems by using eager loading.
+- Use Laravel's query builder for very complex database operations.
 
-#### For dialogs and modals:
-- **USE** existing dialog patterns from `resources/ts/components/dialogs/`
-- **IMPLEMENT** proper v-model binding with `isDialogVisible`
-- **FOLLOW** the ConfirmDialog pattern for confirmation dialogs
-- **USE** consistent dialog sizing: `max-width="500"` for small dialogs
-- **APPLY** proper padding: `class="text-center px-10 py-6"`
+### Model Creation
+- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `list-artisan-commands` to check the available options to `php artisan make:model`.
 
-#### Dialog Template:
-```vue
-<VDialog
-  max-width="500"
-  :model-value="props.isDialogVisible"
-  @update:model-value="updateModelValue"
->
-  <VCard class="text-center px-10 py-6">
-    <VCardText>
-      <!-- Dialog content -->
-    </VCardText>
-    <VCardText class="d-flex align-center justify-center gap-2">
-      <!-- Action buttons -->
-    </VCardText>
-  </VCard>
-</VDialog>
-```
+### APIs & Eloquent Resources
+- For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
 
-## Design System
+### Controllers & Validation
+- Always create Form Request classes for validation rather than inline validation in controllers. Include both validation rules and custom error messages.
+- Check sibling Form Requests to see if the application uses array or string based validation rules.
 
-### 1. Typography
-- **PRIMARY FONT**: "Public Sans" (defined in `$font-family-custom`)
-- **FONT SIZES**: Use predefined sizes from `$font-sizes` map
-- **HEADINGS**: Follow Vuetify typography scale (h1-h6)
-- **BODY TEXT**: Use `body-1` (0.9375rem) and `body-2` (0.8125rem)
+### Queues
+- Use queued jobs for time-consuming operations with the `ShouldQueue` interface.
 
-### 2. Colors and Theming
-- **USE** CSS custom properties: `rgb(var(--v-theme-primary))`
-- **FOLLOW** the theme configuration in `themeConfig.ts`
-- **SUPPORT** both light and dark themes
-- **USE** semantic color names: `primary`, `secondary`, `success`, `warning`, `error`
+### Authentication & Authorization
+- Use Laravel's built-in authentication and authorization features (gates, policies, Sanctum, etc.).
 
-### 3. Spacing and Layout
-- **BORDER RADIUS**: Default 6px (`$border-radius-root`)
-- **CARD PADDING**: 24px (`$card-text-padding`)
-- **COMPONENT SPACING**: Use Vuetify spacing classes (`ma-`, `pa-`, `mx-`, etc.)
-- **GRID SYSTEM**: Use Vuetify's 12-column grid with `VRow` and `VCol`
+### URL Generation
+- When generating links to other pages, prefer named routes and the `route()` function.
 
-### 4. Shadows and Elevation
-- **CARD ELEVATION**: Default 6 (`$card-elevation`)
-- **DIALOG ELEVATION**: 8 (`$dialog-elevation`)
-- **MENU ELEVATION**: 8 (`$menu-elevation`)
-- **USE** custom shadow system defined in SCSS variables
+### Configuration
+- Use environment variables only in configuration files - never use the `env()` function directly outside of config files. Always use `config('app.name')`, not `env('APP_NAME')`.
 
-## Component Conventions
+### Testing
+- When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
+- Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
+- When creating tests, make use of `php artisan make:test [options] <name>` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 
-### 1. Buttons
-- **DEFAULT HEIGHT**: 38px
-- **VARIANTS**: `elevated`, `outlined`, `text`, `tonal`, `flat`, `plain`
-- **COLORS**: Use semantic color names
-- **ICONS**: Use Tabler icons with proper sizing
+### Vite Error
+- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
-### 2. Cards
-- **STRUCTURE**: Use `VCard` with `VCardText`, `VCardTitle`, `VCardActions`
-- **PADDING**: Follow `$card-text-padding` (24px)
-- **ELEVATION**: Use default elevation (6)
 
-### 3. Forms
-- **DENSITY**: Use `default`, `comfortable`, or `compact`
-- **VALIDATION**: Implement proper form validation patterns
-- **LABELS**: Use consistent label styling
-- **INPUTS**: Follow Vuetify field conventions
+=== laravel/v12 rules ===
 
-### 4. Navigation
-- **VERTICAL NAV**: Use existing vertical navigation patterns
-- **HORIZONTAL NAV**: Follow horizontal navigation conventions
-- **ICONS**: Use Tabler icons consistently
-- **SPACING**: Follow `$vertical-nav-horizontal-spacing`
+## Laravel 12
 
-## Code Style Guidelines
+- Use the `search-docs` tool to get version specific documentation.
+- Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
 
-### 1. TypeScript
-- **ALWAYS** use TypeScript for all new components
-- **DEFINE** proper interfaces for props and emits
-- **USE** type imports when necessary
-- **IMPLEMENT** proper type checking
+### Laravel 12 Structure
+- No middleware files in `app/Http/Middleware/`.
+- `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
+- `bootstrap/providers.php` contains application specific service providers.
+- **No app\Console\Kernel.php** - use `bootstrap/app.php` or `routes/console.php` for console configuration.
+- **Commands auto-register** - files in `app/Console/Commands/` are automatically available and do not require manual registration.
 
-### 2. Vue 3 Composition API
-- **USE** `<script setup>` syntax
-- **IMPLEMENT** proper reactivity with `ref`, `reactive`, `computed`
-- **USE** composables for reusable logic
-- **FOLLOW** Vue 3 best practices
+### Database
+- When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
+- Laravel 11 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
 
-### 3. Styling
-- **USE** Vuetify utility classes when possible
-- **IMPLEMENT** custom styles in SCSS files
-- **FOLLOW** the existing SCSS structure
-- **USE** CSS custom properties for theming
+### Models
+- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
 
-### 4. Auto-imports
-- **LEVERAGE** auto-imports for Vue, Vuetify, and utilities
-- **AVOID** manual imports for auto-imported items
-- **USE** the configured auto-import directories
 
-## File Naming Conventions
+=== pint/core rules ===
 
-### 1. Components
-- **PASCAL CASE**: `MyComponent.vue`
-- **DESCRIPTIVE**: Use clear, descriptive names
-- **CATEGORIZE**: Group related components in subdirectories
+## Laravel Pint Code Formatter
 
-### 2. Pages
-- **KEBAB CASE**: `my-page.vue`
-- **ROUTE BASED**: Follow Vue Router conventions
-- **NESTED**: Use directory structure for nested routes
+- You must run `vendor/bin/pint --dirty` before finalizing changes to ensure your code matches the project's expected style.
+- Do not run `vendor/bin/pint --test`, simply run `vendor/bin/pint` to fix any formatting issues.
 
-### 3. Composables
-- **CAMEL CASE**: `useMyComposable.ts`
-- **PREFIX**: Start with `use`
-- **DESCRIPTIVE**: Clear function names
 
-## Performance Guidelines
+=== phpunit/core rules ===
 
-### 1. Component Optimization
-- **USE** `defineAsyncComponent` for large components
-- **IMPLEMENT** proper lazy loading
-- **OPTIMIZE** bundle size with code splitting
+## PHPUnit Core
 
-### 2. Image Handling
-- **USE** SVG for icons and simple graphics
-- **OPTIMIZE** images for web
-- **IMPLEMENT** lazy loading for images
+- This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use `php artisan make:test --phpunit <name>` to create a new test.
+- If you see a test using "Pest", convert it to PHPUnit.
+- Every time a test has been updated, run that singular test.
+- When the tests relating to your feature are passing, ask the user if they would like to also run the entire test suite to make sure everything is still passing.
+- Tests should test all of the happy paths, failure paths, and weird paths.
+- You must not remove any tests or test files from the tests directory without approval. These are not temporary or helper files, these are core to the application.
 
-### 3. State Management
-- **USE** Pinia for global state
-- **KEEP** component state local when possible
-- **IMPLEMENT** proper state persistence
+### Running Tests
+- Run the minimal number of tests, using an appropriate filter, before finalizing.
+- To run all tests: `php artisan test`.
+- To run all tests in a file: `php artisan test tests/Feature/ExampleTest.php`.
+- To filter on a particular test name: `php artisan test --filter=testName` (recommended after making a change to a related file).
 
-## Accessibility Guidelines
 
-### 1. Semantic HTML
-- **USE** proper HTML semantics
-- **IMPLEMENT** ARIA attributes when necessary
-- **ENSURE** keyboard navigation support
+=== tests rules ===
 
-### 2. Color Contrast
-- **MAINTAIN** proper color contrast ratios
-- **SUPPORT** high contrast mode
-- **TEST** with accessibility tools
+## Test Enforcement
 
-## Testing Guidelines
-
-### 1. Component Testing
-- **WRITE** unit tests for components
-- **TEST** user interactions
-- **MOCK** external dependencies
-
-### 2. Integration Testing
-- **TEST** component integration
-- **VERIFY** routing functionality
-- **CHECK** state management
-
-## Internationalization (i18n)
-
-### 1. Text Content
-- **USE** i18n for all user-facing text
-- **SUPPORT** RTL languages (Arabic configured)
-- **IMPLEMENT** proper locale switching
-
-### 2. Configuration
-- **DEFAULT LOCALE**: English (`en`)
-- **SUPPORTED LOCALES**: English, Arabic
-- **FILES**: Use JSON format in `lang/` directory
-
-## Build and Deployment
-
-### 1. Development
-- **COMMAND**: `npm run dev`
-- **HOT RELOAD**: Enabled via Vite
-- **TYPE CHECKING**: `npm run typecheck`
-- **WEBSITE URL**: `https://blackcheetah.test` (always use this URL for IDE preview testing)
-
-### 2. Production
-- **BUILD**: `npm run build`
-- **OPTIMIZATION**: Automatic via Vite
-- **ASSETS**: Properly hashed and optimized
-
-## Security Guidelines
-
-### 1. Data Handling
-- **SANITIZE** user inputs
-- **VALIDATE** on both client and server
-- **PROTECT** against XSS and CSRF
-
-### 2. Authentication
-- **USE** Laravel authentication
-- **IMPLEMENT** proper session management
-- **SECURE** API endpoints
-
-## Maintenance Guidelines
-
-### 1. Dependencies
-- **KEEP** dependencies updated
-- **REVIEW** security advisories
-- **TEST** after updates
-
-### 2. Code Quality
-- **RUN** linting: `npm run lint`
-- **MAINTAIN** consistent code style
-- **REVIEW** code before merging
-
-## Examples and References
-
-### 1. Existing Components
-- **DIALOGS**: `resources/ts/components/dialogs/`
-- **FORMS**: `resources/ts/pages/forms/`
-- **LAYOUTS**: `resources/ts/@layouts/`
-
-### 2. Documentation
-- **VUETIFY**: [Vuetify Documentation](https://vuetifyjs.com/)
-- **VUE 3**: [Vue 3 Documentation](https://vuejs.org/)
-- **LARAVEL**: [Laravel Documentation](https://laravel.com/docs)
-
----
-
-**Remember**: Always follow these guidelines when creating new components, pages, or features to maintain consistency and quality across the BlackCheetah application.
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test` with a specific filename or filter.
+</laravel-boost-guidelines>
