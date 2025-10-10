@@ -1,14 +1,14 @@
 {
     "mcpServers": {
         "laravel-boost": {
-            "command": "php",
+            "command": "C:\\Users\\Afifi\\.config\\herd\\bin\\php83\\php.exe",
             "args": [
-                "artisan",
+                "C:\\Users\\Afifi\\BlackCheetah\\artisan",
                 "boost:mcp"
             ]
         },
         "herd": {
-            "command": "php",
+            "command": "C:\\Users\\Afifi\\.config\\herd\\bin\\php83\\php.exe",
             "args": [
                 "C:/Users/Afifi/.config/herd/bin/herd-mcp.phar"
             ],
