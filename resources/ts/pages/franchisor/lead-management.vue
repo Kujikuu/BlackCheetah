@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { avatarText, prefixWithPlus } from '@core/utils/formatters'
-import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
 import AssignLeadModal from '@/components/dialogs/AssignLeadModal.vue'
 import ConvertLeadModal from '@/components/dialogs/ConvertLeadModal.vue'
 import MarkAsLostModal from '@/components/dialogs/MarkAsLostModal.vue'
+import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
+import { avatarText, prefixWithPlus } from '@core/utils/formatters'
 
 // 👉 Types
 interface Lead {
@@ -124,33 +124,33 @@ const fetchStats = async () => {
     if (response.success) {
       const stats = response.data.stats
       statsData.value = [
-        { 
-          title: 'Total Leads', 
-          value: stats.total_leads?.toString() || '0', 
-          change: stats.total_leads_change || 0, 
-          icon: 'tabler-users', 
-          iconColor: 'primary' 
+        {
+          title: 'Total Leads',
+          value: stats.total_leads?.toString() || '0',
+          change: stats.total_leads_change || 0,
+          icon: 'tabler-users',
+          iconColor: 'primary'
         },
-        { 
-          title: 'Pending', 
-          value: stats.pending_leads?.toString() || '0', 
-          change: stats.pending_leads_change || 0, 
-          icon: 'tabler-clock', 
-          iconColor: 'warning' 
+        {
+          title: 'Pending',
+          value: stats.pending_leads?.toString() || '0',
+          change: stats.pending_leads_change || 0,
+          icon: 'tabler-clock',
+          iconColor: 'warning'
         },
-        { 
-          title: 'Won', 
-          value: stats.won_leads?.toString() || '0', 
-          change: stats.won_leads_change || 0, 
-          icon: 'tabler-user-check', 
-          iconColor: 'success' 
+        {
+          title: 'Won',
+          value: stats.won_leads?.toString() || '0',
+          change: stats.won_leads_change || 0,
+          icon: 'tabler-user-check',
+          iconColor: 'success'
         },
-        { 
-          title: 'Lost', 
-          value: stats.lost_leads?.toString() || '0', 
-          change: stats.lost_leads_change || 0, 
-          icon: 'tabler-user-x', 
-          iconColor: 'error' 
+        {
+          title: 'Lost',
+          value: stats.lost_leads?.toString() || '0',
+          change: stats.lost_leads_change || 0,
+          icon: 'tabler-user-x',
+          iconColor: 'error'
         },
       ]
     }
@@ -258,7 +258,7 @@ const deleteLead = async () => {
     if (response.success) {
       // Refresh the leads list
       await fetchLeads()
-      
+
       // Remove from selectedRows if it was selected
       const selectedIndex = selectedRows.value.findIndex(row => row === leadToDelete.value)
       if (selectedIndex !== -1)
@@ -332,13 +332,13 @@ const importCSV = () => {
 
 // 👉 Export functionality
 const exportLeads = () => {
-  const dataToExport = selectedRows.value.length > 0 
+  const dataToExport = selectedRows.value.length > 0
     ? leads.value.filter(lead => selectedRows.value.includes(lead.id))
     : leads.value
 
   const csvContent = [
     'First Name,Last Name,Company,Email,Phone,City,State,Source,Status,Owner,Last Contacted',
-    ...dataToExport.map(lead => 
+    ...dataToExport.map(lead =>
       `"${lead.firstName}","${lead.lastName}","${lead.company}","${lead.email}","${lead.phone}","${lead.city}","${lead.state}","${lead.source}","${lead.status}","${lead.owner}","${lead.lastContacted}"`
     )
   ].join('\n')
@@ -475,19 +475,9 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
       <VDivider />
 
       <!-- SECTION datatable -->
-      <VDataTableServer 
-        v-model:items-per-page="itemsPerPage" 
-        v-model:model-value="selectedRows" 
-        v-model:page="page"
-        :items="leads" 
-        item-value="id" 
-        :items-length="totalLeads" 
-        :headers="headers" 
-        :loading="isLoading"
-        class="text-no-wrap" 
-        show-select
-        @update:options="updateOptions"
-      >
+      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
+        :items="leads" item-value="id" :items-length="totalLeads" :headers="headers" :loading="isLoading"
+        class="text-no-wrap" show-select @update:options="updateOptions">
         <!-- Index -->
         <template #item.index="{ index }">
           <div class="text-body-1 font-weight-medium">
@@ -503,7 +493,7 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
             </VAvatar>
             <div class="d-flex flex-column">
               <h6 class="text-base font-weight-medium">
-                <RouterLink :to="{ name: 'franchisor-lead-view-id', params: { id: item.id } }" class="text-link">
+                <RouterLink :to="{ name: 'franchisor-leads-id', params: { id: item.id } }" class="text-link">
                   {{ item.firstName }} {{ item.lastName }}
                 </RouterLink>
               </h6>
@@ -635,14 +625,8 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
             </VBtn>
           </div>
 
-          <VFileInput
-            v-model="csvFile"
-            label="Select CSV File"
-            accept=".csv"
-            prepend-icon="tabler-file-upload"
-            show-size
-            @change="handleFileUpload"
-          />
+          <VFileInput v-model="csvFile" label="Select CSV File" accept=".csv" prepend-icon="tabler-file-upload"
+            show-size @change="handleFileUpload" />
         </VCardText>
 
         <VCardActions>
@@ -681,32 +665,19 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
     </VDialog>
 
     <!-- 👉 Assign Lead Modal -->
-    <AssignLeadModal
-      v-model:is-dialog-visible="isAssignLeadModalVisible"
-      :lead-id="selectedLeadForAssign || 0"
-      :sales-associates="salesAssociates"
-      @lead-assigned="onLeadAssigned"
-    />
+    <AssignLeadModal v-model:is-dialog-visible="isAssignLeadModalVisible" :lead-id="selectedLeadForAssign || 0"
+      :sales-associates="salesAssociates" @lead-assigned="onLeadAssigned" />
 
     <!-- 👉 Convert Lead Modal -->
-    <ConvertLeadModal
-      v-model:is-dialog-visible="isConvertLeadModalVisible"
-      :lead-id="selectedLeadForConvert || 0"
-      @lead-converted="onLeadConverted"
-    />
+    <ConvertLeadModal v-model:is-dialog-visible="isConvertLeadModalVisible" :lead-id="selectedLeadForConvert || 0"
+      @lead-converted="onLeadConverted" />
 
     <!-- 👉 Mark as Lost Modal -->
-    <MarkAsLostModal
-      v-model:is-dialog-visible="isMarkAsLostModalVisible"
-      :lead-id="selectedLeadForMarkLost || 0"
-      @lead-marked-lost="onLeadMarkedLost"
-    />
+    <MarkAsLostModal v-model:is-dialog-visible="isMarkAsLostModalVisible" :lead-id="selectedLeadForMarkLost || 0"
+      @lead-marked-lost="onLeadMarkedLost" />
 
     <!-- 👉 Add Note Modal -->
-    <AddNoteModal
-      v-model:is-dialog-visible="isAddNoteModalVisible"
-      :lead-id="selectedLeadForNote || 0"
-      @note-added="onNoteAdded"
-    />
+    <AddNoteModal v-model:is-dialog-visible="isAddNoteModalVisible" :lead-id="selectedLeadForNote || 0"
+      @note-added="onNoteAdded" />
   </section>
 </template>

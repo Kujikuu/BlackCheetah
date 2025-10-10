@@ -193,13 +193,13 @@ const importCSV = () => {
 
 // 👉 Export functionality
 const exportLeads = () => {
-  const dataToExport = selectedRows.value.length > 0 
+  const dataToExport = selectedRows.value.length > 0
     ? leads.value.filter(lead => selectedRows.value.includes(lead.id))
     : leads.value
 
   const csvContent = [
     'First Name,Last Name,Company,Email,Phone,City,State,Source,Status,Owner,Last Contacted',
-    ...dataToExport.map(lead => 
+    ...dataToExport.map(lead =>
       `"${lead.firstName}","${lead.lastName}","${lead.company}","${lead.email}","${lead.phone}","${lead.city}","${lead.state}","${lead.source}","${lead.status}","${lead.owner}","${lead.lastContacted}"`
     )
   ].join('\n')
@@ -350,7 +350,7 @@ const navigateToAddLead = () => {
             </VAvatar>
             <div class="d-flex flex-column">
               <h6 class="text-base font-weight-medium">
-                <RouterLink :to="{ name: 'franchisor-lead-view-id', params: { id: item.id } }" class="text-link">
+                <RouterLink :to="{ name: 'sales-leads-id', params: { id: item.id } }" class="text-link">
                   {{ item.firstName }} {{ item.lastName }}
                 </RouterLink>
               </h6>
@@ -420,7 +420,7 @@ const navigateToAddLead = () => {
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem :to="{ name: 'franchisor-lead-view-id', params: { id: item.id } }">
+                <VListItem :to="{ name: 'sales-leads-id', params: { id: item.id } }">
                   <template #prepend>
                     <VIcon icon="tabler-eye" />
                   </template>
@@ -468,14 +468,8 @@ const navigateToAddLead = () => {
             </VBtn>
           </div>
 
-          <VFileInput
-            v-model="csvFile"
-            label="Select CSV File"
-            accept=".csv"
-            prepend-icon="tabler-file-upload"
-            show-size
-            @change="handleFileUpload"
-          />
+          <VFileInput v-model="csvFile" label="Select CSV File" accept=".csv" prepend-icon="tabler-file-upload"
+            show-size @change="handleFileUpload" />
         </VCardText>
 
         <VCardActions>
@@ -514,10 +508,7 @@ const navigateToAddLead = () => {
     </VDialog>
 
     <!-- 👉 Add Note Modal -->
-    <AddNoteModal
-      v-model:is-dialog-visible="isAddNoteModalVisible"
-      :lead-id="selectedLeadForNote || 0"
-      @note-added="onNoteAdded"
-    />
+    <AddNoteModal v-model:is-dialog-visible="isAddNoteModalVisible" :lead-id="selectedLeadForNote || 0"
+      @note-added="onNoteAdded" />
   </section>
 </template>

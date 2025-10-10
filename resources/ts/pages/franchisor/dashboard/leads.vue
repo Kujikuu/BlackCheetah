@@ -134,37 +134,37 @@ watch(leadsApiData, (newData) => {
     }
 
     widgetData.value = [
-      { 
-        title: 'Total Leads', 
-        value: stats.total_leads.toLocaleString(), 
-        change: stats.total_leads_change, 
-        desc: 'All time leads', 
-        icon: 'tabler-users', 
-        iconColor: 'primary' 
+      {
+        title: 'Total Leads',
+        value: stats.total_leads.toLocaleString(),
+        change: stats.total_leads_change,
+        desc: 'All time leads',
+        icon: 'tabler-users',
+        iconColor: 'primary'
       },
-      { 
-        title: 'Closed and Won', 
-        value: stats.won_leads.toLocaleString(), 
-        change: stats.won_leads_change, 
-        desc: 'Converted leads', 
-        icon: 'tabler-trophy', 
-        iconColor: 'success' 
+      {
+        title: 'Closed and Won',
+        value: stats.won_leads.toLocaleString(),
+        change: stats.won_leads_change,
+        desc: 'Converted leads',
+        icon: 'tabler-trophy',
+        iconColor: 'success'
       },
-      { 
-        title: 'Closed and Lost', 
-        value: stats.lost_leads.toLocaleString(), 
-        change: stats.lost_leads_change, 
-        desc: 'Lost opportunities', 
-        icon: 'tabler-x', 
-        iconColor: 'error' 
+      {
+        title: 'Closed and Lost',
+        value: stats.lost_leads.toLocaleString(),
+        change: stats.lost_leads_change,
+        desc: 'Lost opportunities',
+        icon: 'tabler-x',
+        iconColor: 'error'
       },
-      { 
-        title: 'Pending Leads', 
-        value: stats.pending_leads.toLocaleString(), 
-        change: stats.pending_leads_change, 
-        desc: 'Active leads', 
-        icon: 'tabler-clock', 
-        iconColor: 'warning' 
+      {
+        title: 'Pending Leads',
+        value: stats.pending_leads.toLocaleString(),
+        change: stats.pending_leads_change,
+        desc: 'Active leads',
+        icon: 'tabler-clock',
+        iconColor: 'warning'
       },
     ]
   }
@@ -262,13 +262,13 @@ const saveLead = async () => {
 
 // 👉 Export functionality
 const exportLeads = () => {
-  const dataToExport = selectedRows.value.length > 0 
+  const dataToExport = selectedRows.value.length > 0
     ? leads.value.filter(lead => selectedRows.value.includes(lead.id))
     : leads.value
 
   const csvContent = [
     'Name,Email,Phone,Source,Status,Created Date',
-    ...dataToExport.map(lead => 
+    ...dataToExport.map(lead =>
       `"${lead.name}","${lead.email}","${lead.phone}","${lead.source}","${lead.status}","${lead.createdDate}"`
     )
   ].join('\n')
@@ -301,15 +301,8 @@ const avatarText = (name: string) => {
     <!-- 👉 Widgets -->
     <div class="d-flex mb-6">
       <VRow>
-        <template
-          v-for="(data, id) in widgetData"
-          :key="id"
-        >
-          <VCol
-            cols="12"
-            md="3"
-            sm="6"
-          >
+        <template v-for="(data, id) in widgetData" :key="id">
+          <VCol cols="12" md="3" sm="6">
             <VCard>
               <VCardText>
                 <div class="d-flex justify-space-between">
@@ -321,10 +314,7 @@ const avatarText = (name: string) => {
                       <h4 class="text-h4">
                         {{ data.value }}
                       </h4>
-                      <div
-                        class="text-base"
-                        :class="data.change > 0 ? 'text-success' : 'text-error'"
-                      >
+                      <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
                         ({{ prefixWithPlusNumber(data.change) }}%)
                       </div>
                     </div>
@@ -332,16 +322,8 @@ const avatarText = (name: string) => {
                       {{ data.desc }}
                     </div>
                   </div>
-                  <VAvatar
-                    :color="data.iconColor"
-                    variant="tonal"
-                    rounded
-                    size="42"
-                  >
-                    <VIcon
-                      :icon="data.icon"
-                      size="26"
-                    />
+                  <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
+                    <VIcon :icon="data.icon" size="26" />
                   </VAvatar>
                 </div>
               </VCardText>
@@ -359,30 +341,14 @@ const avatarText = (name: string) => {
       <VCardText>
         <VRow>
           <!-- 👉 Select Source -->
-          <VCol
-            cols="12"
-            sm="6"
-          >
-            <AppSelect
-              v-model="selectedSource"
-              placeholder="Select Source"
-              :items="sources"
-              clearable
-              clear-icon="tabler-x"
-            />
+          <VCol cols="12" sm="6">
+            <AppSelect v-model="selectedSource" placeholder="Select Source" :items="sources" clearable
+              clear-icon="tabler-x" />
           </VCol>
           <!-- 👉 Select Status -->
-          <VCol
-            cols="12"
-            sm="6"
-          >
-            <AppSelect
-              v-model="selectedStatus"
-              placeholder="Select Status"
-              :items="statuses"
-              clearable
-              clear-icon="tabler-x"
-            />
+          <VCol cols="12" sm="6">
+            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statuses" clearable
+              clear-icon="tabler-x" />
           </VCol>
         </VRow>
       </VCardText>
@@ -391,37 +357,25 @@ const avatarText = (name: string) => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect
-            :model-value="itemsPerPage"
-            :items="[
-              { value: 10, title: '10' },
-              { value: 25, title: '25' },
-              { value: 50, title: '50' },
-              { value: 100, title: '100' },
-              { value: -1, title: 'All' },
-            ]"
-            style="inline-size: 6.25rem;"
-            @update:model-value="(value: string | number) => itemsPerPage = parseInt(String(value), 10)"
-          />
+          <AppSelect :model-value="itemsPerPage" :items="[
+            { value: 10, title: '10' },
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+            { value: -1, title: 'All' },
+          ]" style="inline-size: 6.25rem;"
+            @update:model-value="(value: string | number) => itemsPerPage = parseInt(String(value), 10)" />
         </div>
         <VSpacer />
 
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- 👉 Search  -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField
-              v-model="searchQuery"
-              placeholder="Search Lead"
-            />
+            <AppTextField v-model="searchQuery" placeholder="Search Lead" />
           </div>
 
           <!-- 👉 Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-            @click="exportLeads"
-          >
+          <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload" @click="exportLeads">
             Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
           </VBtn>
 
@@ -435,31 +389,20 @@ const avatarText = (name: string) => {
       <VDivider />
 
       <!-- SECTION datatable -->
-      <VDataTableServer
-        v-model:items-per-page="itemsPerPage"
-        v-model:model-value="selectedRows"
-        v-model:page="page"
-        :items="leads"
-        item-value="id"
-        :items-length="totalLeads"
-        :headers="headers"
-        class="text-no-wrap"
-        show-select
-        @update:options="updateOptions"
-      >
+      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
+        :items="leads" item-value="id" :items-length="totalLeads" :headers="headers" class="text-no-wrap" show-select
+        @update:options="updateOptions">
         <!-- Lead Name -->
         <template #item.name="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <VAvatar
-              size="34"
-              variant="tonal"
-              color="primary"
-            >
+            <VAvatar size="34" variant="tonal" color="primary">
               <span>{{ avatarText(item.name) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
               <h6 class="text-base font-weight-medium">
-                {{ item.name }}
+                <RouterLink :to="{ name: 'franchisor-leads-id', params: { id: item.id } }" class="text-link">
+                  {{ item.name }}
+                </RouterLink>
               </h6>
             </div>
           </div>
@@ -488,12 +431,7 @@ const avatarText = (name: string) => {
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip
-            :color="resolveStatusVariant(item.status)"
-            size="small"
-            label
-            class="text-capitalize"
-          >
+          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
             {{ item.status }}
           </VChip>
         </template>
@@ -507,27 +445,23 @@ const avatarText = (name: string) => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <VBtn
-            icon
-            variant="text"
-            color="medium-emphasis"
-          >
+          <VBtn icon variant="text" color="medium-emphasis">
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem @click="viewLead(item)">
+                <!-- <VListItem @click="viewLead(item)">
                   <template #prepend>
                     <VIcon icon="tabler-eye" />
                   </template>
-                  <VListItemTitle>View</VListItemTitle>
-                </VListItem>
+    <VListItemTitle>View</VListItemTitle>
+    </VListItem>
 
-                <VListItem @click="editLead(item)">
-                  <template #prepend>
+    <VListItem @click="editLead(item)">
+      <template #prepend>
                     <VIcon icon="tabler-pencil" />
                   </template>
-                  <VListItemTitle>Edit</VListItemTitle>
-                </VListItem>
+      <VListItemTitle>Edit</VListItemTitle>
+    </VListItem> -->
 
                 <VListItem @click="confirmDelete(item.id)">
                   <template #prepend>
@@ -542,21 +476,14 @@ const avatarText = (name: string) => {
 
         <!-- pagination -->
         <template #bottom>
-          <TablePagination
-            v-model:page="page"
-            :items-per-page="itemsPerPage"
-            :total-items="totalLeads"
-          />
+          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalLeads" />
         </template>
       </VDataTableServer>
       <!-- SECTION -->
     </VCard>
 
     <!-- 👉 View Lead Modal -->
-    <VDialog
-      v-model="isViewLeadModalVisible"
-      max-width="600"
-    >
+    <VDialog v-model="isViewLeadModalVisible" max-width="600">
       <VCard v-if="selectedLead">
         <VCardItem>
           <VCardTitle>Lead Details</VCardTitle>
@@ -591,12 +518,7 @@ const avatarText = (name: string) => {
             <VCol cols="12" md="6">
               <div class="mb-4">
                 <div class="text-sm text-disabled mb-1">Status</div>
-                <VChip
-                  :color="resolveStatusVariant(selectedLead.status)"
-                  size="small"
-                  label
-                  class="text-capitalize"
-                >
+                <VChip :color="resolveStatusVariant(selectedLead.status)" size="small" label class="text-capitalize">
                   {{ selectedLead.status }}
                 </VChip>
               </div>
@@ -612,17 +534,10 @@ const avatarText = (name: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isViewLeadModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isViewLeadModalVisible = false">
             Close
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="editLead(selectedLead)"
-          >
+          <VBtn color="primary" @click="editLead(selectedLead)">
             Edit
           </VBtn>
         </VCardActions>
@@ -630,10 +545,7 @@ const avatarText = (name: string) => {
     </VDialog>
 
     <!-- 👉 Edit Lead Modal -->
-    <VDialog
-      v-model="isEditLeadModalVisible"
-      max-width="700"
-    >
+    <VDialog v-model="isEditLeadModalVisible" max-width="700">
       <VCard v-if="selectedLead">
         <VCardItem>
           <VCardTitle>Edit Lead</VCardTitle>
@@ -643,49 +555,23 @@ const avatarText = (name: string) => {
           <VForm @submit.prevent="saveLead">
             <VRow>
               <VCol cols="12" md="6">
-                <AppTextField
-                  v-model="selectedLead.name"
-                  label="Name"
-                  placeholder="Enter lead name"
-                />
+                <AppTextField v-model="selectedLead.name" label="Name" placeholder="Enter lead name" />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField
-                  v-model="selectedLead.email"
-                  label="Email"
-                  type="email"
-                  placeholder="Enter email address"
-                />
+                <AppTextField v-model="selectedLead.email" label="Email" type="email"
+                  placeholder="Enter email address" />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField
-                  v-model="selectedLead.phone"
-                  label="Phone"
-                  placeholder="Enter phone number"
-                />
+                <AppTextField v-model="selectedLead.phone" label="Phone" placeholder="Enter phone number" />
               </VCol>
               <VCol cols="12" md="6">
-                <AppSelect
-                  v-model="selectedLead.source"
-                  label="Source"
-                  :items="sources"
-                  placeholder="Select source"
-                />
+                <AppSelect v-model="selectedLead.source" label="Source" :items="sources" placeholder="Select source" />
               </VCol>
               <VCol cols="12" md="6">
-                <AppSelect
-                  v-model="selectedLead.status"
-                  label="Status"
-                  :items="statuses"
-                  placeholder="Select status"
-                />
+                <AppSelect v-model="selectedLead.status" label="Status" :items="statuses" placeholder="Select status" />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField
-                  v-model="selectedLead.createdDate"
-                  label="Created Date"
-                  type="date"
-                />
+                <AppTextField v-model="selectedLead.createdDate" label="Created Date" type="date" />
               </VCol>
             </VRow>
           </VForm>
@@ -693,17 +579,10 @@ const avatarText = (name: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isEditLeadModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isEditLeadModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="saveLead"
-          >
+          <VBtn color="primary" @click="saveLead">
             Save Changes
           </VBtn>
         </VCardActions>
@@ -711,10 +590,7 @@ const avatarText = (name: string) => {
     </VDialog>
 
     <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isDeleteDialogVisible"
-      max-width="500"
-    >
+    <VDialog v-model="isDeleteDialogVisible" max-width="500">
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -726,17 +602,10 @@ const avatarText = (name: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDialogVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteLead"
-          >
+          <VBtn color="error" @click="deleteLead">
             Delete
           </VBtn>
         </VCardActions>

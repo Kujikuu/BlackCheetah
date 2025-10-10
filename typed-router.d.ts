@@ -85,7 +85,7 @@ declare module 'vue-router/auto-routes' {
     'franchisor-financial-overview': RouteRecordInfo<'franchisor-financial-overview', '/franchisor/financial-overview', Record<never, never>, Record<never, never>>,
     'franchisor-franchise-registration-wizard': RouteRecordInfo<'franchisor-franchise-registration-wizard', '/franchisor/franchise-registration-wizard', Record<never, never>, Record<never, never>>,
     'franchisor-lead-management': RouteRecordInfo<'franchisor-lead-management', '/franchisor/lead-management', Record<never, never>, Record<never, never>>,
-    'franchisor-lead-view-id': RouteRecordInfo<'franchisor-lead-view-id', '/franchisor/lead-view-:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
+    'franchisor-leads-id': RouteRecordInfo<'franchisor-leads-id', '/franchisor/leads/:id', { id: ParamValue<true> }, { id: ParamValue<false> }>,
     'franchisor-my-franchise': RouteRecordInfo<'franchisor-my-franchise', '/franchisor/my-franchise', Record<never, never>, Record<never, never>>,
     'franchisor-my-units': RouteRecordInfo<'franchisor-my-units', '/franchisor/my-units', Record<never, never>, Record<never, never>>,
     'franchisor-performance-management': RouteRecordInfo<'franchisor-performance-management', '/franchisor/performance-management', Record<never, never>, Record<never, never>>,

@@ -481,11 +481,14 @@ class FranchisorController extends Controller
                 ->get()
                 ->map(function ($lead) {
                     return [
-                        'type' => 'lead',
+                        'id' => $lead->id,
                         'title' => "New lead: {$lead->first_name} {$lead->last_name}",
                         'description' => "Lead from {$lead->lead_source}",
-                        'date' => $lead->created_at,
-                        'status' => $lead->status,
+                        'week' => 'Week ' . Carbon::parse($lead->created_at)->weekOfYear,
+                        'date' => Carbon::parse($lead->created_at)->format('M d, Y'),
+                        'status' => $lead->status === 'new' ? 'scheduled' : ($lead->status === 'converted' ? 'completed' : $lead->status),
+                        'icon' => 'tabler-user-plus',
+                        'created_at' => $lead->created_at->toISOString(),
                     ];
                 });
 
@@ -497,11 +500,14 @@ class FranchisorController extends Controller
                 ->get()
                 ->map(function ($task) {
                     return [
-                        'type' => 'task',
+                        'id' => $task->id,
                         'title' => "Task assigned: {$task->title}",
                         'description' => $task->description,
-                        'date' => $task->created_at,
-                        'status' => $task->status,
+                        'week' => 'Week ' . Carbon::parse($task->created_at)->weekOfYear,
+                        'date' => Carbon::parse($task->created_at)->format('M d, Y'),
+                        'status' => $task->status === 'pending' ? 'scheduled' : $task->status,
+                        'icon' => 'tabler-checklist',
+                        'created_at' => $task->created_at->toISOString(),
                     ];
                 });
 
@@ -515,26 +521,41 @@ class FranchisorController extends Controller
                 ->get()
                 ->map(function ($request) {
                     return [
-                        'type' => 'technical_request',
+                        'id' => $request->id,
                         'title' => "Technical request: {$request->title}",
                         'description' => $request->description,
-                        'date' => $request->created_at,
-                        'status' => $request->status,
+                        'week' => 'Week ' . Carbon::parse($request->created_at)->weekOfYear,
+                        'date' => Carbon::parse($request->created_at)->format('M d, Y'),
+                        'status' => $request->status === 'pending' ? 'scheduled' : $request->status,
+                        'icon' => 'tabler-tool',
+                        'created_at' => $request->created_at->toISOString(),
                     ];
                 });
 
             // Merge and sort all activities
-            $activities = $recentLeads
+            $timeline = $recentLeads
                 ->concat($recentTasks)
                 ->concat($recentRequests)
-                ->sortByDesc('date')
+                ->sortByDesc('created_at')
                 ->take(20)
                 ->values();
+
+            // Calculate stats
+            $totalMilestones = $timeline->count();
+            $completed = $timeline->where('status', 'completed')->count();
+            $scheduled = $timeline->where('status', 'scheduled')->count();
+            $overdue = $timeline->where('status', 'overdue')->count();
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'activities' => $activities,
+                    'stats' => [
+                        'total_milestones' => $totalMilestones,
+                        'completed' => $completed,
+                        'scheduled' => $scheduled,
+                        'overdue' => $overdue,
+                    ],
+                    'timeline' => $timeline,
                 ],
             ]);
         } catch (\Exception $e) {

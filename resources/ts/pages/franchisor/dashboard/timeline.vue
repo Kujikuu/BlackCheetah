@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { useDisplay } from 'vuetify'
+import { useRouter } from 'vue-router'
+
+// 👉 Router composable
+const router = useRouter()
 
 // 👉 API composable
 const { data: timelineApiData, execute: fetchTimelineData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/timeline')
@@ -140,6 +144,43 @@ const filteredTimelineItems = computed(() => {
   return timelineItems.value.filter(item => item.status === selectedFilter.value)
 })
 
+// 👉 Action handlers
+const viewDetails = (item: TimelineItem) => {
+  // Navigate to appropriate detail page based on item type
+  if (item.description.includes('Lead')) {
+    // Navigate to leads page with specific lead
+    router.push('/franchisor/dashboard/leads')
+  } else if (item.description.includes('Task')) {
+    // Navigate to operations/tasks page
+    router.push('/franchisor/dashboard/operations')
+  } else if (item.description.includes('Technical')) {
+    // Navigate to technical requests page
+    router.push('/franchisor/dashboard/operations')
+  }
+}
+
+const takeAction = (item: TimelineItem) => {
+  // Show action dialog or navigate to action page
+  if (item.description.includes('Lead')) {
+    router.push('/franchisor/dashboard/leads')
+  } else if (item.description.includes('Task')) {
+    router.push('/franchisor/dashboard/operations')
+  } else {
+    router.push('/franchisor/dashboard/operations')
+  }
+}
+
+const reschedule = (item: TimelineItem) => {
+  // Show reschedule dialog or navigate to reschedule page
+  if (item.description.includes('Lead')) {
+    router.push('/franchisor/dashboard/leads')
+  } else if (item.description.includes('Task')) {
+    router.push('/franchisor/dashboard/operations')
+  } else {
+    router.push('/franchisor/dashboard/operations')
+  }
+}
+
 // 👉 Fetch data on component mount
 onMounted(() => {
   fetchTimelineData()
@@ -262,6 +303,7 @@ onMounted(() => {
                 <VBtn
                   variant="tonal"
                   size="small"
+                  @click="viewDetails(item)"
                 >
                   View Details
                 </VBtn>
@@ -270,6 +312,7 @@ onMounted(() => {
                   variant="tonal"
                   color="error"
                   size="small"
+                  @click="takeAction(item)"
                 >
                   Take Action
                 </VBtn>
@@ -278,6 +321,7 @@ onMounted(() => {
                   variant="tonal"
                   color="info"
                   size="small"
+                  @click="reschedule(item)"
                 >
                   Reschedule
                 </VBtn>
