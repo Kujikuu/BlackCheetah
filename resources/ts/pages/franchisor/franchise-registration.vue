@@ -4,10 +4,38 @@ import FranchiseDetails from '@/views/wizard-examples/franchise-registration/Fra
 import PersonalInfo from '@/views/wizard-examples/franchise-registration/PersonalInfo.vue'
 import ReviewComplete from '@/views/wizard-examples/franchise-registration/ReviewComplete.vue'
 
+import { useFranchisorDashboard } from '@/composables/useFranchisorDashboard'
+import { $api } from '@/utils/api'
 import type { FranchiseRegistrationData } from '@/views/wizard-examples/franchise-registration/types'
 
 // 👉 Router
 const router = useRouter()
+
+// 👉 Route protection - check if user already has a franchise
+const { checkFranchiseExists } = useFranchisorDashboard()
+
+onMounted(async () => {
+  const hasFranchise = await checkFranchiseExists()
+  if (hasFranchise) {
+    // User already has a franchise, redirect to dashboard
+    await router.push('/franchisor/my-franchise')
+  }
+})
+
+// 👉 Snackbar for notifications
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'success',
+})
+
+const showSnackbar = (message: string, color: string = 'success') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color,
+  }
+}
 
 const franchiseRegistrationSteps = [
   {
@@ -81,16 +109,41 @@ const franchiseRegistrationData = ref<FranchiseRegistrationData>({
 const onSubmit = async () => {
   isCompleting.value = true
 
-  // TODO: Implement API call to save franchise registration
-  console.log('Submitting franchise registration:', franchiseRegistrationData.value)
+  try {
+    console.log('Submitting franchise registration:', franchiseRegistrationData.value)
 
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 2000))
+    // Call the real API endpoint
+    const response = await $api('/v1/franchisor/franchise/register', {
+      method: 'POST',
+      body: franchiseRegistrationData.value,
+    })
 
-  isCompleting.value = false
+    if (response.success) {
+      showSnackbar('Franchise registered successfully! Redirecting to dashboard...', 'success')
 
-  // Redirect to dashboard
-  router.push('/franchisor')
+      // Wait a moment to show the success message
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // Redirect to dashboard
+      router.push('/franchisor')
+    } else {
+      showSnackbar(response.message || 'Failed to register franchise', 'error')
+    }
+  } catch (error: any) {
+    console.error('Registration error:', error)
+
+    // Handle validation errors
+    if (error.status === 422 && error.data?.errors) {
+      const errorMessages = Object.values(error.data.errors).flat()
+      showSnackbar(`Validation failed: ${errorMessages.join(', ')}`, 'error')
+    } else if (error.status === 400 && error.data?.message) {
+      showSnackbar(error.data.message, 'error')
+    } else {
+      showSnackbar('Failed to register franchise. Please try again.', 'error')
+    }
+  } finally {
+    isCompleting.value = false
+  }
 }
 </script>
 
@@ -146,4 +199,15 @@ const onSubmit = async () => {
       </VCol>
     </VRow>
   </VCard>
+
+  <!-- Snackbar for notifications -->
+  <VSnackbar v-model="snackbar.show" :color="snackbar.color" location="top end" timeout="4000">
+    {{ snackbar.message }}
+
+    <template #actions>
+      <VBtn color="white" variant="text" @click="snackbar.show = false">
+        Close
+      </VBtn>
+    </template>
+  </VSnackbar>
 </template>

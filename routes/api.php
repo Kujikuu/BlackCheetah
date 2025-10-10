@@ -238,6 +238,14 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::get('dashboard/operations', [FranchisorController::class, 'operationsStats']);
     Route::get('dashboard/timeline', [FranchisorController::class, 'timelineStats']);
 
+    // Profile completion status
+    Route::get('profile/completion-status', [FranchisorController::class, 'profileCompletionStatus']);
+
+    // Franchise registration and management
+    Route::post('franchise/register', [FranchisorController::class, 'registerFranchise']);
+    Route::get('franchise/data', [FranchisorController::class, 'getFranchiseData']);
+    Route::put('franchise/update', [FranchisorController::class, 'updateFranchise']);
+
     // Franchisor can access their franchise network data
     Route::get('franchise', [FranchisorController::class, 'myFranchise']);
     Route::get('franchisees', [FranchisorController::class, 'myFranchisees']);

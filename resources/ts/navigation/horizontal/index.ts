@@ -1,12 +1,8 @@
 import admin from './admin'
-import apps from './apps'
-import charts from './charts'
-import dashboard from './dashboard'
-import forms from './forms'
+import franchisee from './franchisee'
+import franchisor from './franchisor'
 import misc from './misc'
-import pages from './pages'
-import tables from './tables'
-import uiElements from './ui-elements'
+import sales from './sales'
 import type { HorizontalNavItems } from '@layouts/types'
 
-export default [...dashboard, ...admin, ...apps, ...pages, ...uiElements, ...forms, ...tables, ...charts, ...misc] as HorizontalNavItems
+export default [...admin, ...franchisee, ...franchisor, ...sales, ...misc] as HorizontalNavItems

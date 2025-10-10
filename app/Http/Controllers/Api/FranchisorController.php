@@ -64,13 +64,15 @@ class FranchisorController extends Controller
             $currentMonthRevenue = Revenue::whereHas('unit.franchise', function ($query) use ($franchise) {
                 $query->where('franchisor_id', $franchise->id);
             })
-                ->where('month', $currentMonth->format('Y-m'))
+                ->where('period_year', $currentMonth->year)
+                ->where('period_month', $currentMonth->month)
                 ->sum('amount');
 
             $previousMonthRevenue = Revenue::whereHas('unit.franchise', function ($query) use ($franchise) {
                 $query->where('franchisor_id', $franchise->id);
             })
-                ->where('month', $previousMonth->format('Y-m'))
+                ->where('period_year', $previousMonth->year)
+                ->where('period_month', $previousMonth->month)
                 ->sum('amount');
 
             $revenueChange = $previousMonthRevenue > 0
@@ -82,7 +84,7 @@ class FranchisorController extends Controller
                 $query->where('franchisor_id', $franchise->id);
             })
                 ->where('status', 'pending')
-                ->sum('amount');
+                ->sum('total_amount');
 
             return response()->json([
                 'success' => true,
@@ -484,7 +486,7 @@ class FranchisorController extends Controller
                         'id' => $lead->id,
                         'title' => "New lead: {$lead->first_name} {$lead->last_name}",
                         'description' => "Lead from {$lead->lead_source}",
-                        'week' => 'Week ' . Carbon::parse($lead->created_at)->weekOfYear,
+                        'week' => 'Week '.Carbon::parse($lead->created_at)->weekOfYear,
                         'date' => Carbon::parse($lead->created_at)->format('M d, Y'),
                         'status' => $lead->status === 'new' ? 'scheduled' : ($lead->status === 'converted' ? 'completed' : $lead->status),
                         'icon' => 'tabler-user-plus',
@@ -503,7 +505,7 @@ class FranchisorController extends Controller
                         'id' => $task->id,
                         'title' => "Task assigned: {$task->title}",
                         'description' => $task->description,
-                        'week' => 'Week ' . Carbon::parse($task->created_at)->weekOfYear,
+                        'week' => 'Week '.Carbon::parse($task->created_at)->weekOfYear,
                         'date' => Carbon::parse($task->created_at)->format('M d, Y'),
                         'status' => $task->status === 'pending' ? 'scheduled' : $task->status,
                         'icon' => 'tabler-checklist',
@@ -524,7 +526,7 @@ class FranchisorController extends Controller
                         'id' => $request->id,
                         'title' => "Technical request: {$request->title}",
                         'description' => $request->description,
-                        'week' => 'Week ' . Carbon::parse($request->created_at)->weekOfYear,
+                        'week' => 'Week '.Carbon::parse($request->created_at)->weekOfYear,
                         'date' => Carbon::parse($request->created_at)->format('M d, Y'),
                         'status' => $request->status === 'pending' ? 'scheduled' : $request->status,
                         'icon' => 'tabler-tool',
@@ -1028,6 +1030,446 @@ class FranchisorController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete sales associate',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Check franchise profile completion status
+     */
+    public function profileCompletionStatus(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            // Define required fields for profile completion
+            $requiredFields = [
+                'business_name',
+                'brand_name',
+                'industry',
+                'description',
+                'website',
+                'business_registration_number',
+                'tax_id',
+                'business_type',
+                'established_date',
+                'headquarters_country',
+                'headquarters_city',
+                'headquarters_address',
+                'contact_phone',
+                'contact_email',
+                'franchise_fee',
+                'royalty_percentage',
+            ];
+
+            $missingFields = [];
+            $completedFields = 0;
+
+            foreach ($requiredFields as $field) {
+                if (empty($franchise->$field)) {
+                    $missingFields[] = $field;
+                } else {
+                    $completedFields++;
+                }
+            }
+
+            $totalFields = count($requiredFields);
+            $completionPercentage = ($completedFields / $totalFields) * 100;
+            $isComplete = empty($missingFields);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'is_complete' => $isComplete,
+                    'completion_percentage' => round($completionPercentage, 2),
+                    'completed_fields' => $completedFields,
+                    'total_fields' => $totalFields,
+                    'missing_fields' => $missingFields,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to check profile completion status',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Register a new franchise
+     */
+    public function registerFranchise(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+
+            // Check if user already has a franchise
+            $existingFranchise = Franchise::where('franchisor_id', $user->id)->first();
+            if ($existingFranchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User already has a franchise registered',
+                ], 400);
+            }
+
+            // Validate the request data
+            $validatedData = $request->validate([
+                // Personal Info
+                'personalInfo.contactNumber' => 'required|string|max:20',
+                'personalInfo.country' => 'required|string|max:100',
+                'personalInfo.state' => 'required|string|max:100',
+                'personalInfo.city' => 'required|string|max:100',
+                'personalInfo.address' => 'required|string|max:500',
+
+                // Franchise Details
+                'franchiseDetails.franchiseDetails.franchiseName' => 'required|string|max:255',
+                'franchiseDetails.franchiseDetails.website' => 'nullable|url|max:255',
+                'franchiseDetails.franchiseDetails.logo' => 'nullable|string',
+
+                // Legal Details
+                'franchiseDetails.legalDetails.legalEntityName' => 'required|string|max:255',
+                'franchiseDetails.legalDetails.businessStructure' => 'required|in:corporation,llc,partnership,sole_proprietorship',
+                'franchiseDetails.legalDetails.taxId' => 'nullable|string|max:50',
+                'franchiseDetails.legalDetails.industry' => 'required|string|max:100',
+                'franchiseDetails.legalDetails.fundingAmount' => 'nullable|string|max:100',
+                'franchiseDetails.legalDetails.fundingSource' => 'nullable|string|max:100',
+
+                // Contact Details
+                'franchiseDetails.contactDetails.contactNumber' => 'required|string|max:20',
+                'franchiseDetails.contactDetails.email' => 'required|email|max:255',
+                'franchiseDetails.contactDetails.address' => 'required|string|max:500',
+                'franchiseDetails.contactDetails.country' => 'required|string|max:100',
+                'franchiseDetails.contactDetails.state' => 'required|string|max:100',
+                'franchiseDetails.contactDetails.city' => 'required|string|max:100',
+
+                // Documents (optional for now)
+                'documents.fdd' => 'nullable|string',
+                'documents.franchiseAgreement' => 'nullable|string',
+                'documents.operationsManual' => 'nullable|string',
+                'documents.brandGuidelines' => 'nullable|string',
+                'documents.legalDocuments' => 'nullable|string',
+
+                // Review Complete
+                'reviewComplete.termsAccepted' => 'required|boolean|accepted',
+            ]);
+
+            // Create the franchise record
+            $franchise = Franchise::create([
+                'franchisor_id' => $user->id,
+                'business_name' => $validatedData['franchiseDetails']['franchiseDetails']['franchiseName'],
+                'brand_name' => $validatedData['franchiseDetails']['franchiseDetails']['franchiseName'],
+                'industry' => $validatedData['franchiseDetails']['legalDetails']['industry'],
+                'description' => null, // Will be filled later
+                'website' => $validatedData['franchiseDetails']['franchiseDetails']['website'],
+                'logo' => $validatedData['franchiseDetails']['franchiseDetails']['logo'],
+                'business_registration_number' => 'BRN-'.strtoupper(uniqid()).'-'.$user->id, // Generate unique business registration number
+                'tax_id' => $validatedData['franchiseDetails']['legalDetails']['taxId'],
+                'business_type' => $validatedData['franchiseDetails']['legalDetails']['businessStructure'],
+                'established_date' => null, // Will be filled later
+                'headquarters_country' => $validatedData['franchiseDetails']['contactDetails']['country'],
+                'headquarters_city' => $validatedData['franchiseDetails']['contactDetails']['city'],
+                'headquarters_address' => $validatedData['franchiseDetails']['contactDetails']['address'],
+                'contact_phone' => $validatedData['franchiseDetails']['contactDetails']['contactNumber'],
+                'contact_email' => $validatedData['franchiseDetails']['contactDetails']['email'],
+                'franchise_fee' => null, // Will be filled later
+                'royalty_percentage' => null, // Will be filled later
+                'marketing_fee_percentage' => null,
+                'total_units' => 0,
+                'active_units' => 0,
+                'status' => 'pending_approval', // Start as pending until approved
+                'plan' => 'Basic',
+                'business_hours' => null,
+                'social_media' => null,
+                'documents' => [
+                    'fdd' => $validatedData['documents']['fdd'] ?? null,
+                    'franchise_agreement' => $validatedData['documents']['franchiseAgreement'] ?? null,
+                    'operations_manual' => $validatedData['documents']['operationsManual'] ?? null,
+                    'brand_guidelines' => $validatedData['documents']['brandGuidelines'] ?? null,
+                    'legal_documents' => $validatedData['documents']['legalDocuments'] ?? null,
+                    'funding_amount' => $validatedData['franchiseDetails']['legalDetails']['fundingAmount'] ?? null,
+                    'funding_source' => $validatedData['franchiseDetails']['legalDetails']['fundingSource'] ?? null,
+                ],
+            ]);
+
+            // Update user's contact information
+            $user->update([
+                'phone' => $validatedData['personalInfo']['contactNumber'],
+                'address' => $validatedData['personalInfo']['address'],
+                'city' => $validatedData['personalInfo']['city'],
+                'state' => $validatedData['personalInfo']['state'],
+                'country' => $validatedData['personalInfo']['country'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Franchise registered successfully',
+                'data' => [
+                    'franchise_id' => $franchise->id,
+                    'status' => $franchise->status,
+                ],
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to register franchise',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get franchise data for the authenticated franchisor
+     */
+    public function getFranchiseData(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            // Get documents from the documents JSON field
+            $documents = $franchise->documents ?? [];
+
+            // Format the response to match the frontend structure
+            $franchiseData = [
+                'franchiseDetails' => [
+                    'franchiseName' => $franchise->brand_name,
+                    'website' => $franchise->website,
+                    'logo' => $franchise->logo,
+                ],
+                'legalDetails' => [
+                    'legalEntityName' => $franchise->business_name,
+                    'businessStructure' => ucfirst($franchise->business_type),
+                    'taxId' => $franchise->tax_id,
+                    'industry' => $franchise->industry,
+                    'fundingAmount' => $documents['funding_amount'] ?? null,
+                    'fundingSource' => $documents['funding_source'] ?? null,
+                ],
+                'contactDetails' => [
+                    'contactNumber' => $franchise->contact_phone,
+                    'email' => $franchise->contact_email,
+                    'address' => $franchise->headquarters_address,
+                    'country' => $franchise->headquarters_country,
+                    'state' => $user->state,
+                    'city' => $franchise->headquarters_city,
+                ],
+            ];
+
+            // Get documents data
+            $documentsData = [];
+            $documentTypes = [
+                'fdd' => 'Franchise Disclosure Document',
+                'franchise_agreement' => 'Franchise Agreement',
+                'operations_manual' => 'Operations Manual',
+                'brand_guidelines' => 'Brand Guidelines',
+                'legal_documents' => 'Legal Documents',
+            ];
+
+            $id = 1;
+            foreach ($documentTypes as $key => $title) {
+                if (! empty($documents[$key])) {
+                    $documentsData[] = [
+                        'id' => $id++,
+                        'title' => $title,
+                        'description' => "Official {$title} for {$franchise->brand_name}",
+                        'fileName' => "{$key}.pdf",
+                        'fileSize' => '2.4 MB', // Mock size for now
+                        'uploadDate' => $franchise->created_at->format('Y-m-d'),
+                        'type' => ucfirst(str_replace('_', ' ', $key)),
+                    ];
+                }
+            }
+
+            // Get products data (mock for now since we don't have a products table)
+            $productsData = [];
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'franchise' => $franchiseData,
+                    'documents' => $documentsData,
+                    'products' => $productsData,
+                    'stats' => [
+                        'status' => ucfirst($franchise->status),
+                        'totalDocuments' => count($documentsData),
+                        'totalProducts' => count($productsData),
+                        'activeProducts' => count($productsData),
+                    ],
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch franchise data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update franchise data
+     */
+    public function updateFranchise(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            // Validate the request data
+            $validatedData = $request->validate([
+                // Personal Info
+                'personalInfo.contactNumber' => 'sometimes|string|max:20',
+                'personalInfo.country' => 'sometimes|string|max:100',
+                'personalInfo.state' => 'sometimes|string|max:100',
+                'personalInfo.city' => 'sometimes|string|max:100',
+                'personalInfo.address' => 'sometimes|string|max:500',
+
+                // Franchise Details
+                'franchiseDetails.franchiseDetails.franchiseName' => 'sometimes|string|max:255',
+                'franchiseDetails.franchiseDetails.website' => 'sometimes|nullable|url|max:255',
+                'franchiseDetails.franchiseDetails.logo' => 'sometimes|nullable|string',
+
+                // Legal Details
+                'franchiseDetails.legalDetails.legalEntityName' => 'sometimes|string|max:255',
+                'franchiseDetails.legalDetails.businessStructure' => 'sometimes|in:corporation,llc,partnership,sole_proprietorship',
+                'franchiseDetails.legalDetails.taxId' => 'sometimes|nullable|string|max:50',
+                'franchiseDetails.legalDetails.industry' => 'sometimes|string|max:100',
+                'franchiseDetails.legalDetails.fundingAmount' => 'sometimes|nullable|string|max:100',
+                'franchiseDetails.legalDetails.fundingSource' => 'sometimes|nullable|string|max:100',
+
+                // Contact Details
+                'franchiseDetails.contactDetails.contactNumber' => 'sometimes|string|max:20',
+                'franchiseDetails.contactDetails.email' => 'sometimes|email|max:255',
+                'franchiseDetails.contactDetails.address' => 'sometimes|string|max:500',
+                'franchiseDetails.contactDetails.country' => 'sometimes|string|max:100',
+                'franchiseDetails.contactDetails.state' => 'sometimes|string|max:100',
+                'franchiseDetails.contactDetails.city' => 'sometimes|string|max:100',
+            ]);
+
+            // Update franchise fields
+            $updateData = [];
+
+            if (isset($validatedData['franchiseDetails']['franchiseDetails']['franchiseName'])) {
+                $updateData['brand_name'] = $validatedData['franchiseDetails']['franchiseDetails']['franchiseName'];
+            }
+            if (isset($validatedData['franchiseDetails']['franchiseDetails']['website'])) {
+                $updateData['website'] = $validatedData['franchiseDetails']['franchiseDetails']['website'];
+            }
+            if (isset($validatedData['franchiseDetails']['franchiseDetails']['logo'])) {
+                $updateData['logo'] = $validatedData['franchiseDetails']['franchiseDetails']['logo'];
+            }
+            if (isset($validatedData['franchiseDetails']['legalDetails']['legalEntityName'])) {
+                $updateData['business_name'] = $validatedData['franchiseDetails']['legalDetails']['legalEntityName'];
+            }
+            if (isset($validatedData['franchiseDetails']['legalDetails']['businessStructure'])) {
+                $updateData['business_type'] = $validatedData['franchiseDetails']['legalDetails']['businessStructure'];
+            }
+            if (isset($validatedData['franchiseDetails']['legalDetails']['taxId'])) {
+                $updateData['tax_id'] = $validatedData['franchiseDetails']['legalDetails']['taxId'];
+            }
+            if (isset($validatedData['franchiseDetails']['legalDetails']['industry'])) {
+                $updateData['industry'] = $validatedData['franchiseDetails']['legalDetails']['industry'];
+            }
+            if (isset($validatedData['franchiseDetails']['contactDetails']['contactNumber'])) {
+                $updateData['contact_phone'] = $validatedData['franchiseDetails']['contactDetails']['contactNumber'];
+            }
+            if (isset($validatedData['franchiseDetails']['contactDetails']['email'])) {
+                $updateData['contact_email'] = $validatedData['franchiseDetails']['contactDetails']['email'];
+            }
+            if (isset($validatedData['franchiseDetails']['contactDetails']['address'])) {
+                $updateData['headquarters_address'] = $validatedData['franchiseDetails']['contactDetails']['address'];
+            }
+            if (isset($validatedData['franchiseDetails']['contactDetails']['country'])) {
+                $updateData['headquarters_country'] = $validatedData['franchiseDetails']['contactDetails']['country'];
+            }
+            if (isset($validatedData['franchiseDetails']['contactDetails']['city'])) {
+                $updateData['headquarters_city'] = $validatedData['franchiseDetails']['contactDetails']['city'];
+            }
+
+            // Update documents if funding info is provided
+            if (isset($validatedData['franchiseDetails']['legalDetails']['fundingAmount']) ||
+                isset($validatedData['franchiseDetails']['legalDetails']['fundingSource'])) {
+                $documents = $franchise->documents ?? [];
+                if (isset($validatedData['franchiseDetails']['legalDetails']['fundingAmount'])) {
+                    $documents['funding_amount'] = $validatedData['franchiseDetails']['legalDetails']['fundingAmount'];
+                }
+                if (isset($validatedData['franchiseDetails']['legalDetails']['fundingSource'])) {
+                    $documents['funding_source'] = $validatedData['franchiseDetails']['legalDetails']['fundingSource'];
+                }
+                $updateData['documents'] = $documents;
+            }
+
+            // Update franchise
+            $franchise->update($updateData);
+
+            // Update user's contact information if provided
+            $userUpdateData = [];
+            if (isset($validatedData['personalInfo']['contactNumber'])) {
+                $userUpdateData['phone'] = $validatedData['personalInfo']['contactNumber'];
+            }
+            if (isset($validatedData['personalInfo']['address'])) {
+                $userUpdateData['address'] = $validatedData['personalInfo']['address'];
+            }
+            if (isset($validatedData['personalInfo']['city'])) {
+                $userUpdateData['city'] = $validatedData['personalInfo']['city'];
+            }
+            if (isset($validatedData['personalInfo']['state'])) {
+                $userUpdateData['state'] = $validatedData['personalInfo']['state'];
+            }
+            if (isset($validatedData['personalInfo']['country'])) {
+                $userUpdateData['country'] = $validatedData['personalInfo']['country'];
+            }
+
+            if (! empty($userUpdateData)) {
+                $user->update($userUpdateData);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Franchise updated successfully',
+                'data' => [
+                    'franchise_id' => $franchise->id,
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update franchise',
                 'error' => $e->getMessage(),
             ], 500);
         }

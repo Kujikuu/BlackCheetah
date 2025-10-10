@@ -1,18 +1,77 @@
 <script setup lang="ts">
+import { useFranchisorDashboard } from '@/composables/useFranchisorDashboard'
+
+// 👉 Add route meta for CASL protection
+definePage({
+  meta: {
+    action: 'read',
+    subject: 'FranchisorDashboard'
+  }
+})
 
 // 👉 Router
 const router = useRouter()
 
-// 👉 Mock user profile completion status
-const isProfileComplete = ref(false) // Set to false to show onboarding banner
+// 👉 Dashboard composable
+const {
+  isLoading,
+  error,
+  dashboardStats: apiStats,
+  salesAssociates,
+  recentActivities,
+  profileCompletionStatus,
+  isProfileComplete,
+  dismissBanner,
+  initializeDashboard,
+  refreshDashboard
+} = useFranchisorDashboard()
 
-// 👉 Dashboard stats
-const dashboardStats = ref([
-  { title: 'Total Leads', value: '156', change: 12.5, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
-  { title: 'Active Operations', value: '23', change: 3.2, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
-  { title: 'Sales Associates', value: '8', change: -2.1, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
-  { title: 'Monthly Revenue', value: '$45,280', change: 8.7, desc: 'This month\'s revenue', icon: 'tabler-currency-dollar', iconColor: 'warning' },
-])
+// 👉 Dashboard stats computed from API data
+const dashboardStats = computed(() => {
+  if (!apiStats.value) {
+    return [
+      { title: 'Total Leads', value: '0', change: 0, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
+      { title: 'Active Tasks', value: '0', change: 0, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
+      { title: 'Sales Associates', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
+      { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: 'tabler-currency-dollar', iconColor: 'warning' },
+    ]
+  }
+
+  return [
+    {
+      title: 'Total Leads',
+      value: apiStats.value.totalLeads.toString(),
+      change: 0, // We could calculate this if we had previous period data
+      desc: 'Active leads in pipeline',
+      icon: 'tabler-users',
+      iconColor: 'primary'
+    },
+    {
+      title: 'Active Tasks',
+      value: apiStats.value.activeTasks.toString(),
+      change: 0,
+      desc: 'Ongoing operations',
+      icon: 'tabler-settings',
+      iconColor: 'success'
+    },
+    {
+      title: 'Sales Associates',
+      value: salesAssociates.value.length.toString(),
+      change: 0,
+      desc: 'Active team members',
+      icon: 'tabler-user-check',
+      iconColor: 'info'
+    },
+    {
+      title: 'Monthly Revenue',
+      value: `$${apiStats.value.currentMonthRevenue.toLocaleString()}`,
+      change: apiStats.value.revenueChange,
+      desc: 'This month\'s revenue',
+      icon: 'tabler-currency-dollar',
+      iconColor: 'warning'
+    },
+  ]
+})
 
 // 👉 Quick actions
 const quickActions = [
@@ -22,27 +81,32 @@ const quickActions = [
   { title: 'Sales Team', icon: 'tabler-user-check', color: 'warning', to: '/franchisor/sales-associates' },
 ]
 
-// 👉 Recent activities
-const recentActivities = ref([
-  { type: 'lead', title: 'New lead: John Smith', time: '2 hours ago', icon: 'tabler-user-plus', color: 'primary' },
-  { type: 'operation', title: 'Operation completed: Site Setup', time: '4 hours ago', icon: 'tabler-check', color: 'success' },
-  { type: 'team', title: 'Sarah Johnson joined the team', time: '1 day ago', icon: 'tabler-user-check', color: 'info' },
-  { type: 'revenue', title: 'Payment received: $2,500', time: '2 days ago', icon: 'tabler-currency-dollar', color: 'warning' },
-])
-
 // 👉 Navigate to onboarding
 const startOnboarding = () => {
-  router.push('/franchisor/franchise-registration-wizard')
+  router.push('/franchisor/franchise-registration')
 }
 
-// 👉 Dismiss banner (for demo purposes)
-const dismissBanner = () => {
-  isProfileComplete.value = true
-}
+// 👉 Initialize dashboard data on mount
+onMounted(async () => {
+  await initializeDashboard()
+})
 </script>
 
 <template>
   <section>
+    <!-- Error Alert -->
+    <VAlert v-if="error" type="error" variant="tonal" class="mb-6" closable @click:close="error = null">
+      <VAlertTitle class="mb-2">
+        Error Loading Dashboard
+      </VAlertTitle>
+      <p class="mb-3">
+        {{ error }}
+      </p>
+      <VBtn color="error" variant="elevated" size="small" @click="refreshDashboard">
+        Retry
+      </VBtn>
+    </VAlert>
+
     <!-- Onboarding Banner -->
     <VAlert v-if="!isProfileComplete" type="warning" variant="tonal" class="mb-6" closable @click:close="dismissBanner">
       <VAlertTitle class="mb-2">
@@ -69,42 +133,60 @@ const dismissBanner = () => {
               Welcome back! Here's what's happening with your franchise.
             </p>
           </div>
-          <VBtn color="primary" prepend-icon="tabler-plus" to="/franchisor/add-lead">
-            Add New Lead
-          </VBtn>
+          <div class="d-flex align-center gap-3">
+            <VBtn v-if="!isLoading" color="secondary" variant="outlined" prepend-icon="tabler-refresh"
+              @click="refreshDashboard">
+              Refresh
+            </VBtn>
+            <VBtn color="primary" prepend-icon="tabler-plus" to="/franchisor/add-lead">
+              Add New Lead
+            </VBtn>
+          </div>
         </div>
       </VCol>
     </VRow>
 
     <!-- Dashboard Stats -->
     <VRow class="mb-6">
-      <template v-for="(data, id) in dashboardStats" :key="id">
-        <VCol cols="12" md="3" sm="6">
+      <template v-if="isLoading">
+        <VCol v-for="i in 4" :key="`loading-${i}`" cols="12" md="3" sm="6">
           <VCard>
-            <VCardText class="d-flex align-center">
-              <VAvatar size="44" rounded :color="data.iconColor" variant="tonal">
-                <VIcon :icon="data.icon" size="26" />
-              </VAvatar>
-
-              <div class="ms-4">
-                <div class="text-body-2 text-disabled">
-                  {{ data.title }}
-                </div>
-                <div class="d-flex align-center flex-wrap">
-                  <h4 class="text-h4 me-2">
-                    {{ data.value }}
-                  </h4>
-                  <div class="text-success text-body-2" :class="data.change > 0 ? 'text-success' : 'text-error'">
-                    {{ data.change > 0 ? '+' : '' }}{{ data.change }}%
-                  </div>
-                </div>
-                <div class="text-body-2 text-disabled">
-                  {{ data.desc }}
-                </div>
-              </div>
+            <VCardText class="d-flex align-center justify-center" style="min-height: 100px;">
+              <VProgressCircular indeterminate color="primary" />
             </VCardText>
           </VCard>
         </VCol>
+      </template>
+      <template v-else>
+        <template v-for="(data, id) in dashboardStats" :key="id">
+          <VCol cols="12" md="3" sm="6">
+            <VCard>
+              <VCardText class="d-flex align-center">
+                <VAvatar size="44" rounded :color="data.iconColor" variant="tonal">
+                  <VIcon :icon="data.icon" size="26" />
+                </VAvatar>
+
+                <div class="ms-4">
+                  <div class="text-body-2 text-disabled">
+                    {{ data.title }}
+                  </div>
+                  <div class="d-flex align-center flex-wrap">
+                    <h4 class="text-h4 me-2">
+                      {{ data.value }}
+                    </h4>
+                    <div v-if="data.change !== 0" class="text-body-2"
+                      :class="data.change > 0 ? 'text-success' : 'text-error'">
+                      {{ data.change > 0 ? '+' : '' }}{{ data.change }}%
+                    </div>
+                  </div>
+                  <div class="text-body-2 text-disabled">
+                    {{ data.desc }}
+                  </div>
+                </div>
+              </VCardText>
+            </VCard>
+          </VCol>
+        </template>
       </template>
     </VRow>
 
@@ -143,21 +225,38 @@ const dismissBanner = () => {
           </VCardItem>
           <VCardText>
             <VList class="card-list">
-              <template v-for="(activity, index) in recentActivities" :key="index">
-                <VListItem>
-                  <template #prepend>
-                    <VAvatar size="32" :color="activity.color" variant="tonal">
-                      <VIcon :icon="activity.icon" size="18" />
-                    </VAvatar>
-                  </template>
-                  <VListItemTitle class="text-body-2 font-weight-medium">
-                    {{ activity.title }}
-                  </VListItemTitle>
-                  <VListItemSubtitle class="text-body-2">
-                    {{ activity.time }}
-                  </VListItemSubtitle>
+              <template v-if="isLoading">
+                <VListItem class="text-center py-8">
+                  <VProgressCircular indeterminate color="primary" />
+                  <div class="mt-2 text-body-2 text-disabled">
+                    Loading recent activities...
+                  </div>
                 </VListItem>
-                <VDivider v-if="index !== recentActivities.length - 1" />
+              </template>
+              <template v-else-if="recentActivities.length > 0">
+                <template v-for="(activity, index) in recentActivities" :key="index">
+                  <VListItem>
+                    <template #prepend>
+                      <VAvatar size="32" :color="activity.color" variant="tonal">
+                        <VIcon :icon="activity.icon" size="18" />
+                      </VAvatar>
+                    </template>
+                    <VListItemTitle class="text-body-2 font-weight-medium">
+                      {{ activity.title }}
+                    </VListItemTitle>
+                    <VListItemSubtitle class="text-body-2">
+                      {{ activity.time }}
+                    </VListItemSubtitle>
+                  </VListItem>
+                  <VDivider v-if="index !== recentActivities.length - 1" />
+                </template>
+              </template>
+              <template v-else>
+                <VListItem>
+                  <VListItemTitle class="text-center text-disabled">
+                    No recent activities
+                  </VListItemTitle>
+                </VListItem>
               </template>
             </VList>
           </VCardText>

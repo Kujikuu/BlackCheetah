@@ -1,97 +1,170 @@
 <script setup lang="ts">
+import { $api } from '@/utils/api'
+
 // 👉 Router
 const router = useRouter()
 
 // 👉 Current tab
 const currentTab = ref('overview')
 
-// 👉 Mock franchise data
+// 👉 Loading states
+const isLoading = ref(true)
+const isUpdating = ref(false)
+const isEditMode = ref(false)
+
+// 👉 Snackbar for notifications
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'success',
+})
+
+const showSnackbar = (message: string, color: string = 'success') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color,
+  }
+}
+
+// 👉 Franchise data (will be populated from API)
 const franchiseData = ref({
-  // Overview data
+  personalInfo: {
+    contactNumber: '',
+    country: '',
+    state: '',
+    city: '',
+    address: '',
+  },
   franchiseDetails: {
-    franchiseName: 'Premium Coffee Co.',
-    website: 'https://premiumcoffee.com',
+    franchiseName: '',
+    website: '',
     logo: null,
   },
   legalDetails: {
-    legalEntityName: 'Premium Coffee Corporation',
-    businessStructure: 'Corporation',
-    taxId: 'EIN-12-3456789',
-    industry: 'Food & Beverage',
-    fundingAmount: 'SAR 937,500', // Approximately $250,000 in SAR
-    fundingSource: 'Bank Loan',
+    legalEntityName: '',
+    businessStructure: '',
+    taxId: '',
+    industry: '',
+    fundingAmount: '',
+    fundingSource: '',
   },
   contactDetails: {
-    contactNumber: '+1 555-123-4567',
-    email: 'info@premiumcoffee.com',
-    address: '123 Business Ave, Suite 100',
-    country: 'United States',
-    state: 'California',
-    city: 'Los Angeles',
+    contactNumber: '',
+    email: '',
+    address: '',
+    country: '',
+    state: '',
+    city: '',
   },
 })
 
-// 👉 Documents data
-const documentsData = ref([
-  {
-    id: 1,
-    title: 'Franchise Disclosure Document',
-    description: 'Official FDD for Premium Coffee Co.',
-    fileName: 'FDD_PremiumCoffee_2024.pdf',
-    fileSize: '2.4 MB',
-    uploadDate: '2024-01-15',
-    type: 'FDD',
-  },
-  {
-    id: 2,
-    title: 'Franchise Agreement',
-    description: 'Legal franchise agreement document',
-    fileName: 'Franchise_Agreement_2024.pdf',
-    fileSize: '1.8 MB',
-    uploadDate: '2024-01-15',
-    type: 'Agreement',
-  },
-  {
-    id: 3,
-    title: 'Operations Manual',
-    description: 'Complete operations and procedures manual',
-    fileName: 'Operations_Manual_v2.pdf',
-    fileSize: '5.2 MB',
-    uploadDate: '2024-01-20',
-    type: 'Manual',
-  },
-])
+// 👉 Type definitions
+interface DocumentData {
+  id: number
+  title: string
+  description: string
+  fileName: string
+  fileSize: string
+  uploadDate: string
+  type: string
+}
 
-// 👉 Products data
-const productsData = ref([
-  {
-    id: 1,
-    name: 'Premium Espresso',
-    description: 'High-quality espresso blend',
-    unitPrice: 93.75, // Approximately $24.99 in SAR
-    category: 'Coffee',
-    status: 'active',
-    stock: 150,
-  },
-  {
-    id: 2,
-    name: 'Organic House Blend',
-    description: 'Organic coffee house blend',
-    unitPrice: 75.00, // Approximately $19.99 in SAR
-    category: 'Coffee',
-    status: 'active',
-    stock: 200,
-  },
-  {
-    id: 3,
-    name: 'Coffee Mug - Premium',
-    description: 'Branded coffee mug with logo',
-    unitPrice: 48.75, // Approximately $12.99 in SAR
-    category: 'Merchandise',
-    status: 'active',
-    stock: 75,
-  },
-])
+interface ProductData {
+  id: number
+  name: string
+  description: string
+  unitPrice: number
+  category: string
+  status: string
+  stock: number
+}
+
+// 👉 Documents data (will be populated from API)
+const documentsData = ref<DocumentData[]>([])
+
+// 👉 Products data (will be populated from API)
+const productsData = ref<ProductData[]>([])
+
+// 👉 Load franchise data from API
+const loadFranchiseData = async () => {
+  try {
+    isLoading.value = true
+    const response = await $api('/v1/franchisor/franchise/data')
+
+    if (response.success && response.data) {
+      franchiseData.value = response.data.franchise || franchiseData.value
+      documentsData.value = response.data.documents || []
+      productsData.value = response.data.products || []
+    }
+  } catch (error: any) {
+    console.error('Failed to load franchise data:', error)
+    showSnackbar('Failed to load franchise data', 'error')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 👉 Update franchise data
+const updateFranchiseData = async () => {
+  try {
+    isUpdating.value = true
+    const response = await $api('/v1/franchisor/franchise/update', {
+      method: 'PUT',
+      body: franchiseData.value,
+    })
+
+    if (response.success) {
+      showSnackbar('Franchise information updated successfully', 'success')
+    } else {
+      showSnackbar(response.message || 'Failed to update franchise information', 'error')
+    }
+  } catch (error: any) {
+    console.error('Failed to update franchise data:', error)
+
+    if (error.status === 422 && error.data?.errors) {
+      const errorMessages = Object.values(error.data.errors).flat()
+      showSnackbar(`Validation failed: ${errorMessages.join(', ')}`, 'error')
+    } else {
+      showSnackbar('Failed to update franchise information', 'error')
+    }
+  } finally {
+    isUpdating.value = false
+  }
+}
+
+// 👉 Edit mode methods
+const originalData = ref(null)
+
+const toggleEditMode = () => {
+  isEditMode.value = !isEditMode.value
+  if (isEditMode.value) {
+    // Store original data for cancel functionality
+    originalData.value = JSON.parse(JSON.stringify(franchiseData.value))
+  }
+}
+
+const cancelEdit = () => {
+  // Restore original data
+  if (originalData.value) {
+    franchiseData.value = JSON.parse(JSON.stringify(originalData.value))
+  }
+  isEditMode.value = false
+  originalData.value = null
+}
+
+const saveChanges = async () => {
+  await updateFranchiseData()
+  if (!isUpdating.value) {
+    isEditMode.value = false
+    originalData.value = null
+  }
+}
+
+// 👉 Load data on component mount
+onMounted(() => {
+  loadFranchiseData()
+})
 
 // 👉 Modals state
 const isAddDocumentModalVisible = ref(false)
@@ -112,13 +185,25 @@ const isProductModalVisible = computed({
 })
 
 // 👉 Selected items
-const selectedDocument = ref({
+const selectedDocument = ref<{
+  title: string
+  description: string
+  file: File | null
+}>({
   title: '',
   description: '',
   file: null,
 })
 
-const selectedProduct = ref({
+const selectedProduct = ref<{
+  id: number | null
+  name: string
+  description: string
+  unitPrice: number
+  category: string
+  status: string
+  stock: number
+}>({
   id: null,
   name: '',
   description: '',
@@ -128,32 +213,34 @@ const selectedProduct = ref({
   stock: 0,
 })
 
-const productToDelete = ref(null)
-const documentToDelete = ref(null)
+const productToDelete = ref<ProductData | null>(null)
+const documentToDelete = ref<DocumentData | null>(null)
 
 // 👉 Options
 const businessStructures = [
-  { title: 'Corporation', value: 'Corporation' },
-  { title: 'LLC', value: 'LLC' },
-  { title: 'Partnership', value: 'Partnership' },
-  { title: 'Sole Proprietorship', value: 'Sole Proprietorship' },
+  { title: 'Corporation', value: 'corporation' },
+  { title: 'LLC', value: 'llc' },
+  { title: 'Partnership', value: 'partnership' },
+  { title: 'Sole Proprietorship', value: 'sole_proprietorship' },
 ]
 
 const industries = [
-  { title: 'Food & Beverage', value: 'Food & Beverage' },
-  { title: 'Retail', value: 'Retail' },
-  { title: 'Services', value: 'Services' },
-  { title: 'Health & Fitness', value: 'Health & Fitness' },
-  { title: 'Education', value: 'Education' },
-  { title: 'Technology', value: 'Technology' },
+  { title: 'Food & Beverage', value: 'food_beverage' },
+  { title: 'Retail', value: 'retail' },
+  { title: 'Services', value: 'services' },
+  { title: 'Health & Fitness', value: 'health_fitness' },
+  { title: 'Education', value: 'education' },
+  { title: 'Technology', value: 'technology' },
+  { title: 'Real Estate', value: 'real_estate' },
+  { title: 'Automotive', value: 'automotive' },
 ]
 
 const fundingSources = [
-  { title: 'Personal Savings', value: 'Personal Savings' },
-  { title: 'Bank Loan', value: 'Bank Loan' },
-  { title: 'Investors', value: 'Investors' },
-  { title: 'SBA Loan', value: 'SBA Loan' },
-  { title: 'Other', value: 'Other' },
+  { title: 'Personal Savings', value: 'personal_savings' },
+  { title: 'Bank Loan', value: 'bank_loan' },
+  { title: 'Investors', value: 'investors' },
+  { title: 'SBA Loan', value: 'sba_loan' },
+  { title: 'Other', value: 'other' },
 ]
 
 const countries = [
@@ -161,6 +248,12 @@ const countries = [
   { title: 'Canada', value: 'Canada' },
   { title: 'United Kingdom', value: 'United Kingdom' },
   { title: 'Australia', value: 'Australia' },
+  { title: 'Germany', value: 'Germany' },
+  { title: 'France', value: 'France' },
+  { title: 'Japan', value: 'Japan' },
+  { title: 'China', value: 'China' },
+  { title: 'India', value: 'India' },
+  { title: 'Brazil', value: 'Brazil' },
 ]
 
 const productCategories = [
@@ -304,6 +397,10 @@ const resolveStatusVariant = (status: string) => {
 
 <template>
   <section>
+    <!-- Loading Overlay -->
+    <VOverlay v-model="isLoading" class="align-center justify-center">
+      <VProgressCircular color="primary" indeterminate size="64" />
+    </VOverlay>
     <!-- Page Header -->
     <VRow class="mb-6">
       <VCol cols="12">
@@ -316,9 +413,9 @@ const resolveStatusVariant = (status: string) => {
               Manage your franchise details, documents, and products
             </p>
           </div>
-          <VBtn color="primary" prepend-icon="tabler-edit"
-            @click="router.push('/franchisor/franchise-registration-wizard')">
-            Edit Franchise Details
+          <VBtn :color="isEditMode ? 'secondary' : 'primary'" :prepend-icon="isEditMode ? 'tabler-x' : 'tabler-edit'"
+            @click="isEditMode = !isEditMode">
+            {{ isEditMode ? 'Cancel Edit' : 'Edit Franchise Details' }}
           </VBtn>
         </div>
       </VCol>
@@ -400,6 +497,57 @@ const resolveStatusVariant = (status: string) => {
         <VCard>
           <VCardText>
             <VRow>
+              <!-- Personal Information -->
+              <!-- <VCol cols="12">
+                <h4 class="text-h6 mb-4">Personal Information</h4>
+                <VCard variant="outlined">
+                  <VCardText>
+                    <VRow>
+                      <VCol cols="12" md="6">
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">Personal Contact Number</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.contactNumber }}</div>
+                          <AppTextField v-else v-model="franchiseData.personalInfo.contactNumber"
+                            label="Personal Contact Number" placeholder="Enter your contact number" />
+                        </div>
+                      </VCol>
+                      <VCol cols="12" md="6">
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">Personal Country</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.country }}</div>
+                          <AppSelect v-else v-model="franchiseData.personalInfo.country" label="Personal Country"
+                            placeholder="Select country" :items="countries" />
+                        </div>
+                      </VCol>
+                      <VCol cols="12" md="6">
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">Personal State</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.state }}</div>
+                          <AppTextField v-else v-model="franchiseData.personalInfo.state" label="Personal State"
+                            placeholder="Enter state" />
+                        </div>
+                      </VCol>
+                      <VCol cols="12" md="6">
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">Personal City</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.city }}</div>
+                          <AppTextField v-else v-model="franchiseData.personalInfo.city" label="Personal City"
+                            placeholder="Enter city" />
+                        </div>
+                      </VCol>
+                      <VCol cols="12">
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">Personal Address</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.address }}</div>
+                          <AppTextarea v-else v-model="franchiseData.personalInfo.address" label="Personal Address"
+                            placeholder="Enter your full address" rows="2" />
+                        </div>
+                      </VCol>
+                    </VRow>
+                  </VCardText>
+                </VCard>
+              </VCol> -->
+
               <!-- Franchise Details -->
               <VCol cols="12">
                 <h4 class="text-h6 mb-4">Franchise Information</h4>
@@ -409,18 +557,38 @@ const resolveStatusVariant = (status: string) => {
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Franchise Name</div>
-                          <div class="text-body-1 font-weight-medium">{{ franchiseData.franchiseDetails.franchiseName }}
-                          </div>
+                          <div v-if="!isEditMode" class="text-body-1 font-weight-medium">{{
+                            franchiseData.franchiseDetails.franchiseName }}</div>
+                          <AppTextField v-else v-model="franchiseData.franchiseDetails.franchiseName"
+                            label="Franchise Name" placeholder="Enter franchise name" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Website</div>
-                          <div class="text-body-1">
+                          <div v-if="!isEditMode" class="text-body-1">
                             <a :href="franchiseData.franchiseDetails.website" target="_blank" class="text-primary">
                               {{ franchiseData.franchiseDetails.website }}
                             </a>
                           </div>
+                          <AppTextField v-else v-model="franchiseData.franchiseDetails.website" label="Website"
+                            placeholder="https://example.com" />
+                        </div>
+                      </VCol>
+                      <VCol cols="12">
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">Franchise Logo</div>
+                          <div v-if="!isEditMode" class="text-body-1">
+                            <div v-if="franchiseData.franchiseDetails.logo" class="d-flex align-center">
+                              <VAvatar size="40" class="me-3">
+                                <VImg :src="franchiseData.franchiseDetails.logo" alt="Franchise Logo" />
+                              </VAvatar>
+                              <span>Logo uploaded</span>
+                            </div>
+                            <span v-else class="text-disabled">No logo uploaded</span>
+                          </div>
+                          <VFileInput v-else v-model="franchiseData.franchiseDetails.logo" label="Franchise Logo"
+                            accept="image/*" prepend-icon="tabler-upload" />
                         </div>
                       </VCol>
                     </VRow>
@@ -437,38 +605,54 @@ const resolveStatusVariant = (status: string) => {
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Legal Entity Name</div>
-                          <div class="text-body-1">{{ franchiseData.legalDetails.legalEntityName }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.legalEntityName }}
+                          </div>
+                          <AppTextField v-else v-model="franchiseData.legalDetails.legalEntityName"
+                            label="Legal Entity Name" placeholder="Enter legal entity name" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Business Structure</div>
-                          <div class="text-body-1">{{ franchiseData.legalDetails.businessStructure }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.businessStructure }}
+                          </div>
+                          <AppSelect v-else v-model="franchiseData.legalDetails.businessStructure"
+                            label="Business Structure" placeholder="Select business structure"
+                            :items="businessStructures" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Tax ID</div>
-                          <div class="text-body-1">{{ franchiseData.legalDetails.taxId }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.taxId }}</div>
+                          <AppTextField v-else v-model="franchiseData.legalDetails.taxId" label="Tax ID"
+                            placeholder="Enter tax ID" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Industry</div>
-                          <div class="text-body-1">{{ franchiseData.legalDetails.industry }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.industry }}</div>
+                          <AppSelect v-else v-model="franchiseData.legalDetails.industry" label="Industry"
+                            placeholder="Select industry" :items="industries" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Funding Amount</div>
-                          <div class="text-body-1 font-weight-medium text-success">{{
+                          <div v-if="!isEditMode" class="text-body-1 font-weight-medium text-success">{{
                             franchiseData.legalDetails.fundingAmount }}</div>
+                          <AppTextField v-else v-model="franchiseData.legalDetails.fundingAmount" label="Funding Amount"
+                            placeholder="Enter funding amount" type="number" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Funding Source</div>
-                          <div class="text-body-1">{{ franchiseData.legalDetails.fundingSource }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.fundingSource }}
+                          </div>
+                          <AppSelect v-else v-model="franchiseData.legalDetails.fundingSource" label="Funding Source"
+                            placeholder="Select funding source" :items="fundingSources" />
                         </div>
                       </VCol>
                     </VRow>
@@ -485,41 +669,54 @@ const resolveStatusVariant = (status: string) => {
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Contact Number</div>
-                          <div class="text-body-1">{{ franchiseData.contactDetails.contactNumber }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.contactNumber }}
+                          </div>
+                          <AppTextField v-else v-model="franchiseData.contactDetails.contactNumber"
+                            label="Contact Number" placeholder="Enter contact number" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Email</div>
-                          <div class="text-body-1">
+                          <div v-if="!isEditMode" class="text-body-1">
                             <a :href="`mailto:${franchiseData.contactDetails.email}`" class="text-primary">
                               {{ franchiseData.contactDetails.email }}
                             </a>
                           </div>
+                          <AppTextField v-else v-model="franchiseData.contactDetails.email" label="Email"
+                            placeholder="Enter email address" type="email" />
                         </div>
                       </VCol>
                       <VCol cols="12">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Address</div>
-                          <div class="text-body-1">{{ franchiseData.contactDetails.address }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.address }}</div>
+                          <AppTextarea v-else v-model="franchiseData.contactDetails.address" label="Address"
+                            placeholder="Enter full address" rows="2" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="4">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">Country</div>
-                          <div class="text-body-1">{{ franchiseData.contactDetails.country }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.country }}</div>
+                          <AppSelect v-else v-model="franchiseData.contactDetails.country" label="Country"
+                            placeholder="Select country" :items="countries" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="4">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">State</div>
-                          <div class="text-body-1">{{ franchiseData.contactDetails.state }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.state }}</div>
+                          <AppTextField v-else v-model="franchiseData.contactDetails.state" label="State"
+                            placeholder="Enter state" />
                         </div>
                       </VCol>
                       <VCol cols="12" md="4">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">City</div>
-                          <div class="text-body-1">{{ franchiseData.contactDetails.city }}</div>
+                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.city }}</div>
+                          <AppTextField v-else v-model="franchiseData.contactDetails.city" label="City"
+                            placeholder="Enter city" />
                         </div>
                       </VCol>
                     </VRow>
@@ -528,6 +725,18 @@ const resolveStatusVariant = (status: string) => {
               </VCol>
             </VRow>
           </VCardText>
+
+          <!-- Action Buttons -->
+          <VCardActions class="justify-end">
+            <template v-if="isEditMode">
+              <VBtn variant="outlined" prepend-icon="tabler-x" @click="cancelEdit" class="me-2">
+                Cancel
+              </VBtn>
+              <VBtn color="primary" :loading="isUpdating" prepend-icon="tabler-device-floppy" @click="saveChanges">
+                Save Changes
+              </VBtn>
+            </template>
+          </VCardActions>
         </VCard>
       </VWindowItem>
 
@@ -787,5 +996,16 @@ const resolveStatusVariant = (status: string) => {
         </VCardActions>
       </VCard>
     </VDialog>
+
+    <!-- Snackbar for notifications -->
+    <VSnackbar v-model="snackbar.show" :color="snackbar.color" location="top end" timeout="4000">
+      {{ snackbar.message }}
+
+      <template #actions>
+        <VBtn color="white" variant="text" @click="snackbar.show = false">
+          Close
+        </VBtn>
+      </template>
+    </VSnackbar>
   </section>
 </template>

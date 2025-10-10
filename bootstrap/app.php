@@ -15,13 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
-        
+
         // Override default authenticate middleware for API
         $middleware->replace(
             \Illuminate\Auth\Middleware\Authenticate::class,
             \App\Http\Middleware\Authenticate::class
         );
-        
+
         // Add CORS middleware to API routes
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
