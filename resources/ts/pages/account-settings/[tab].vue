@@ -5,7 +5,7 @@ import AccountSettingsSecurity from '@/views/account-settings/AccountSettingsSec
 
 definePage({
     meta: {
-        subject: 'Admin',
+        subject: 'User',
         action: 'read',
     },
 })

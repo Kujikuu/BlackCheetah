@@ -1,28 +1,45 @@
 export default [
   {
-    title: 'Admin',
-    icon: { icon: 'tabler-shield-lock' },
+    title: 'Dashboard',
+    to: 'admin-dashboard',
+    icon: { icon: 'tabler-dashboard' },
+    action: 'read',
+    subject: 'AdminDashboard',
+  },
+  {
+    title: 'User Management',
+    icon: { icon: 'tabler-users' },
+    action: 'manage',
+    subject: 'User',
     children: [
-      {
-        title: 'Dashboard',
-        to: 'admin-dashboard',
-      },
       {
         title: 'Franchisors',
         to: 'admin-users-franchisors',
+        icon: { icon: 'tabler-building-store' },
+        action: 'manage',
+        subject: 'User',
       },
       {
         title: 'Franchisees',
         to: 'admin-users-franchisees',
+        icon: { icon: 'tabler-user-check' },
+        action: 'manage',
+        subject: 'User',
       },
       {
         title: 'Sales Team',
         to: 'admin-users-sales',
-      },
-      {
-        title: 'Technical Requests',
-        to: 'admin-technical-requests',
+        icon: { icon: 'tabler-chart-line' },
+        action: 'manage',
+        subject: 'User',
       },
     ],
+  },
+  {
+    title: 'Technical Requests',
+    to: 'admin-technical-requests',
+    icon: { icon: 'tabler-headset' },
+    action: 'manage',
+    subject: 'TechnicalRequest',
   },
 ]

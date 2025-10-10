@@ -16,9 +16,6 @@ export type Subjects =
   | 'Unit'
   | 'Note'
   
-  // Authentication and access control
-  | 'Auth'
-  
   // Dashboard access by role
   | 'Dashboard'
   | 'AdminDashboard'
@@ -55,7 +52,6 @@ export function defineAbilitiesFor(role: string): Rule[] {
     
     case 'franchisor':
       return [
-        { action: 'read', subject: 'Auth' },
         { action: 'read', subject: 'Dashboard' },
         { action: 'read', subject: 'FranchisorDashboard' },
         { action: 'manage', subject: 'Franchise' },
@@ -78,7 +74,6 @@ export function defineAbilitiesFor(role: string): Rule[] {
     
     case 'franchisee':
       return [
-        { action: 'read', subject: 'Auth' },
         { action: 'read', subject: 'Dashboard' },
         { action: 'read', subject: 'FranchiseeDashboard' },
         { action: 'read', subject: 'Franchise' },
@@ -100,7 +95,6 @@ export function defineAbilitiesFor(role: string): Rule[] {
     
     case 'sales':
       return [
-        { action: 'read', subject: 'Auth' },
         { action: 'read', subject: 'Dashboard' },
         { action: 'read', subject: 'SalesDashboard' },
         { action: 'manage', subject: 'Sales' },
@@ -116,9 +110,7 @@ export function defineAbilitiesFor(role: string): Rule[] {
       ]
     
     default:
-      return [
-        { action: 'read', subject: 'Auth' }
-      ]
+      return []
   }
 }
 

@@ -1,6 +1,20 @@
 export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage'
 
-export type Subjects = 'Auth' | 'Admin' | 'AclDemo' | 'all'
+export type Subjects = 
+  | 'AdminDashboard'
+  | 'FranchisorDashboard'
+  | 'FranchiseeDashboard'
+  | 'SalesDashboard'
+  | 'Lead'
+  | 'User'
+  | 'Franchise'
+  | 'Unit'
+  | 'Task'
+  | 'Performance'
+  | 'Revenue'
+  | 'Royalty'
+  | 'TechnicalRequest'
+  | 'all'
 
 export interface UserAbilityRule {
   action: Actions
