@@ -176,6 +176,11 @@
         "delimiter": "délimiteur"
       }
     },
+    "dataIterator": {
+      "loadingText": "Chargement des éléments...",
+      "noResultsText": "Aucun enregistrement correspondant trouvé",
+      "noDataText": "Pas de données disponibles"
+    },
     "dataFooter": {
       "itemsPerPageText": "Objets par page:",
       "itemsPerPageAll": "Tout",

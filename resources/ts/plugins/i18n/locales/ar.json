@@ -175,6 +175,11 @@
         "delimiter": "تحديد"
       }
     },
+    "dataIterator": {
+      "loadingText": "جار تحميل العناصر...",
+      "noResultsText": "لم يتم العثور على سجلات مطابقة",
+      "noDataText": "لا تتوافر بيانات"
+    },
     "dataFooter": {
       "itemsPerPageText": "مواد لكل صفحة:",
       "itemsPerPageAll": "الجميع",
