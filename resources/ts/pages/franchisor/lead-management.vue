@@ -333,7 +333,7 @@ const importCSV = () => {
 // 👉 Export functionality
 const exportLeads = () => {
   const dataToExport = selectedRows.value.length > 0
-    ? leads.value.filter(lead => selectedRows.value.includes(lead.id))
+    ? leads.value.filter(lead => selectedRows.value.includes(lead.id as never))
     : leads.value
 
   const csvContent = [
