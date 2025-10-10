@@ -15,13 +15,6 @@ interface Franchisor {
   joinedDate: string
 }
 
-definePage({
-  meta: {
-    subject: 'Admin',
-    action: 'read',
-  },
-})
-
 // Store
 const searchQuery = ref('')
 const selectedStatus = ref()
@@ -62,7 +55,7 @@ const totalFranchisors = ref(0)
 const fetchFranchisors = async () => {
   isLoading.value = true
   error.value = ''
-  
+
   try {
     const response = await $api('/v1/admin/users/franchisors', {
       method: 'GET',
@@ -75,7 +68,7 @@ const fetchFranchisors = async () => {
         per_page: itemsPerPage.value,
       },
     })
-    
+
     if (response.success) {
       franchisors.value = response.data.data || []
       totalFranchisors.value = response.data.total || 0
@@ -163,7 +156,7 @@ const addNewFranchisor = async (franchisorData: any) => {
         role: 'franchisor',
       },
     })
-    
+
     if (response.success) {
       await fetchFranchisors() // Refresh the list
     } else {
@@ -188,7 +181,7 @@ const updateFranchisor = async (franchisorData: any) => {
       method: 'PUT',
       body: franchisorData,
     })
-    
+
     if (response.success) {
       await fetchFranchisors() // Refresh the list
       selectedFranchisor.value = null
@@ -225,10 +218,10 @@ const deleteUser = async () => {
     const response = await $api(`/v1/admin/users/${userToDelete.value.id}`, {
       method: 'DELETE',
     })
-    
+
     if (response.success) {
       await fetchFranchisors() // Refresh the list
-      
+
       // Remove from selectedRows
       const selectedIndex = selectedRows.value.findIndex(row => row === userToDelete.value.id)
       if (selectedIndex !== -1)
@@ -262,7 +255,7 @@ const resetPassword = async (password: string) => {
         password: password,
       },
     })
-    
+
     if (response.success) {
       console.log('Password reset successfully for:', selectedFranchisor.value?.fullName)
     } else {

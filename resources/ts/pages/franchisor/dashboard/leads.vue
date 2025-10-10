@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 // 👉 API composable
 const { data: leadsApiData, execute: fetchLeadsData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/leads')
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import AddFranchiseeModal from '@/components/dialogs/AddFranchiseeModal.vue'
 import { formatCurrency } from '@/@core/utils/formatters'
+import AddFranchiseeModal from '@/components/dialogs/AddFranchiseeModal.vue'
 
 // 👉 Router
 const router = useRouter()
@@ -326,8 +326,7 @@ const viewUnitDetails = (unit: any) => {
 
                     <!-- Units Table -->
                     <VDataTable :items="unitsData" :headers="unitHeaders" class="text-no-wrap" item-value="id"
-                        @click:row="(event: any, { item }: any) => viewUnitDetails(item)"
-                        style="cursor: pointer;">
+                        @click:row="(event: any, { item }: any) => viewUnitDetails(item)" style="cursor: pointer;">
                         <!-- Branch Info -->
                         <template #item.branchInfo="{ item }">
                             <div class="d-flex align-center gap-x-3">

@@ -256,54 +256,51 @@ const updateTaskStatus = (newStatus: string) => {
 
             <VDivider />
 
-            <VDataTable :items="allTasksData" :headers="taskHeaders" class="text-no-wrap"
-                item-value="id">
-                        <!-- Task Info -->
-                        <template #item.taskInfo="{ item }">
-                            <div>
-                                <h6 class="text-base font-weight-medium">{{ item.title }}</h6>
-                                <div class="text-body-2 text-disabled">{{ item.description }}</div>
-                            </div>
-                        </template>
+            <VDataTable :items="allTasksData" :headers="taskHeaders" class="text-no-wrap" item-value="id">
+                <!-- Task Info -->
+                <template #item.taskInfo="{ item }">
+                    <div>
+                        <h6 class="text-base font-weight-medium">{{ item.title }}</h6>
+                        <div class="text-body-2 text-disabled">{{ item.description }}</div>
+                    </div>
+                </template>
 
-                        <!-- Priority -->
-                        <template #item.priority="{ item }">
-                            <VChip :color="resolvePriorityVariant(item.priority)" size="small" label
-                                class="text-capitalize">
-                                {{ item.priority }}
-                            </VChip>
-                        </template>
+                <!-- Priority -->
+                <template #item.priority="{ item }">
+                    <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
+                        {{ item.priority }}
+                    </VChip>
+                </template>
 
-                        <!-- Status -->
-                        <template #item.status="{ item }">
-                            <VChip :color="resolveStatusVariant(item.status)" size="small" label
-                                class="text-capitalize">
-                                {{ item.status }}
-                            </VChip>
-                        </template>
+                <!-- Status -->
+                <template #item.status="{ item }">
+                    <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+                        {{ item.status }}
+                    </VChip>
+                </template>
 
-                        <!-- Actions -->
-                        <template #item.actions="{ item }">
-                            <VBtn icon variant="text" color="medium-emphasis" size="small">
-                                <VIcon icon="tabler-dots-vertical" />
-                                <VMenu activator="parent">
-                                    <VList>
-                                        <VListItem @click="viewTask(item)">
-                                            <template #prepend>
-                                                <VIcon icon="tabler-eye" />
-                                            </template>
-                                            <VListItemTitle>View</VListItemTitle>
-                                        </VListItem>
-                                        <VListItem @click="changeTaskStatus(item)">
-                                            <template #prepend>
-                                                <VIcon icon="tabler-refresh" />
-                                            </template>
-                                            <VListItemTitle>Change Status</VListItemTitle>
-                                        </VListItem>
-                                    </VList>
-                                </VMenu>
-                            </VBtn>
-                        </template>
+                <!-- Actions -->
+                <template #item.actions="{ item }">
+                    <VBtn icon variant="text" color="medium-emphasis" size="small">
+                        <VIcon icon="tabler-dots-vertical" />
+                        <VMenu activator="parent">
+                            <VList>
+                                <VListItem @click="viewTask(item)">
+                                    <template #prepend>
+                                        <VIcon icon="tabler-eye" />
+                                    </template>
+                                    <VListItemTitle>View</VListItemTitle>
+                                </VListItem>
+                                <VListItem @click="changeTaskStatus(item)">
+                                    <template #prepend>
+                                        <VIcon icon="tabler-refresh" />
+                                    </template>
+                                    <VListItemTitle>Change Status</VListItemTitle>
+                                </VListItem>
+                            </VList>
+                        </VMenu>
+                    </VBtn>
+                </template>
             </VDataTable>
         </VCard>
 
@@ -376,24 +373,19 @@ const updateTaskStatus = (newStatus: string) => {
                 <VCardText class="pa-6" v-if="selectedTask">
                     <div class="mb-4">
                         <h6 class="text-base font-weight-medium mb-2">{{ selectedTask.title }}</h6>
-                        <div class="text-body-2 text-disabled">Current Status: 
-                            <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize ml-2">
+                        <div class="text-body-2 text-disabled">Current Status:
+                            <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label
+                                class="text-capitalize ml-2">
                                 {{ selectedTask.status }}
                             </VChip>
                         </div>
                     </div>
-                    
-                    <VSelect 
-                        label="New Status" 
-                        :items="[
-                            { title: 'Pending', value: 'pending' },
-                            { title: 'In Progress', value: 'in_progress' },
-                            { title: 'Completed', value: 'completed' }
-                        ]" 
-                        :model-value="selectedTask.status"
-                        @update:model-value="updateTaskStatus"
-                        required 
-                    />
+
+                    <VSelect label="New Status" :items="[
+                        { title: 'Pending', value: 'pending' },
+                        { title: 'In Progress', value: 'in_progress' },
+                        { title: 'Completed', value: 'completed' }
+                    ]" :model-value="selectedTask.status" @update:model-value="updateTaskStatus" required />
                 </VCardText>
 
                 <VDivider />

@@ -1,12 +1,4 @@
 <script setup lang="ts">
-import { avatarText } from '@/@core/utils/formatters'
-
-definePage({
-  meta: {
-    subject: 'Franchisor',
-    action: 'read',
-  },
-})
 
 // Store
 const searchQuery = ref('')

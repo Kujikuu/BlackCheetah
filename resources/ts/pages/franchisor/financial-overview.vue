@@ -1,16 +1,9 @@
 <script setup lang="ts">
+import { formatCurrency } from '@/@core/utils/formatters'
 import { computed, ref } from 'vue'
 import { useTheme } from 'vuetify'
-import { formatCurrency } from '@/@core/utils/formatters'
 
 const vuetifyTheme = useTheme()
-
-// Page meta
-definePage({
-    meta: {
-        layout: 'default',
-    },
-})
 
 // Data table options
 const itemsPerPage = ref(10)
@@ -721,8 +714,8 @@ const resolveProfitVariant = (profit: number) => {
                                 <h6 class="text-h6 mb-1">Total Sales</h6>
                                 <div class="text-body-2 text-medium-emphasis mb-3">
                                     {{ selectedPeriod === 'yearly' ? 'Annual' : selectedPeriod === 'monthly' ? 'Monthly'
-                                    :
-                                    'Daily' }} Revenue
+                                        :
+                                        'Daily' }} Revenue
                                 </div>
                                 <h4 class="text-h4 text-success">
                                     {{ totalSales.toLocaleString() }} SAR
@@ -745,8 +738,8 @@ const resolveProfitVariant = (profit: number) => {
                                 <h6 class="text-h6 mb-1">Total Expenses</h6>
                                 <div class="text-body-2 text-medium-emphasis mb-3">
                                     {{ selectedPeriod === 'yearly' ? 'Annual' : selectedPeriod === 'monthly' ? 'Monthly'
-                                    :
-                                    'Daily' }} Costs
+                                        :
+                                        'Daily' }} Costs
                                 </div>
                                 <h4 class="text-h4 text-error">
                                     {{ totalExpenses.toLocaleString() }} SAR
@@ -769,8 +762,8 @@ const resolveProfitVariant = (profit: number) => {
                                 <h6 class="text-h6 mb-1">Total Profit</h6>
                                 <div class="text-body-2 text-medium-emphasis mb-3">
                                     {{ selectedPeriod === 'yearly' ? 'Annual' : selectedPeriod === 'monthly' ? 'Monthly'
-                                    :
-                                    'Daily' }} Earnings
+                                        :
+                                        'Daily' }} Earnings
                                 </div>
                                 <h4 class="text-h4 text-primary">
                                     {{ totalProfit.toLocaleString() }} SAR

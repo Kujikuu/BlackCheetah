@@ -16,13 +16,6 @@ interface Franchisee {
   joinedDate: string
 }
 
-definePage({
-  meta: {
-    subject: 'Admin',
-    action: 'read',
-  },
-})
-
 // Store
 const searchQuery = ref('')
 const selectedStatus = ref()

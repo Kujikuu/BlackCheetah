@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import PersonalInfo from '@/views/wizard-examples/franchise-registration/PersonalInfo.vue'
-import FranchiseDetails from '@/views/wizard-examples/franchise-registration/FranchiseDetails.vue'
 import DocumentUpload from '@/views/wizard-examples/franchise-registration/DocumentUpload.vue'
+import FranchiseDetails from '@/views/wizard-examples/franchise-registration/FranchiseDetails.vue'
+import PersonalInfo from '@/views/wizard-examples/franchise-registration/PersonalInfo.vue'
 import ReviewComplete from '@/views/wizard-examples/franchise-registration/ReviewComplete.vue'
 
 import type { FranchiseRegistrationData } from '@/views/wizard-examples/franchise-registration/types'

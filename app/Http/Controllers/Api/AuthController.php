@@ -54,18 +54,32 @@ class AuthController extends Controller
                 ];
             } elseif ($user->role === 'franchisor') {
                 $userAbilityRules = [
-                    ['action' => 'read', 'subject' => 'Dashboard'],
-                    ['action' => 'manage', 'subject' => 'Franchise'],
+                    ['action' => 'read', 'subject' => 'FranchisorDashboard'],
+                    ['action' => 'read', 'subject' => 'Lead'],
+                    ['action' => 'manage', 'subject' => 'User'],
+                    ['action' => 'read', 'subject' => 'Franchise'],
+                    ['action' => 'read', 'subject' => 'Unit'],
+                    ['action' => 'manage', 'subject' => 'Task'],
+                    ['action' => 'read', 'subject' => 'Performance'],
+                    ['action' => 'read', 'subject' => 'Revenue'],
+                    ['action' => 'manage', 'subject' => 'Royalty'],
+                    ['action' => 'create', 'subject' => 'TechnicalRequest'],
                 ];
             } elseif ($user->role === 'franchisee') {
                 $userAbilityRules = [
-                    ['action' => 'read', 'subject' => 'Dashboard'],
-                    ['action' => 'read', 'subject' => 'Franchise'],
+                    ['action' => 'read', 'subject' => 'FranchiseeDashboard'],
+                    ['action' => 'read', 'subject' => 'Unit'],
+                    ['action' => 'read', 'subject' => 'Task'],
+                    ['action' => 'read', 'subject' => 'Performance'],
+                    ['action' => 'read', 'subject' => 'Revenue'],
+                    ['action' => 'read', 'subject' => 'Royalty'],
+                    ['action' => 'create', 'subject' => 'TechnicalRequest'],
                 ];
             } elseif ($user->role === 'sales') {
                 $userAbilityRules = [
-                    ['action' => 'read', 'subject' => 'Dashboard'],
-                    ['action' => 'manage', 'subject' => 'Sales'],
+                    ['action' => 'manage', 'subject' => 'Lead'],
+                    ['action' => 'read', 'subject' => 'Task'],
+                    ['action' => 'create', 'subject' => 'TechnicalRequest'],
                 ];
             }
 

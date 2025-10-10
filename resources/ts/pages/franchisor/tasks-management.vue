@@ -595,13 +595,15 @@ const saveTask = () => {
                         </VCol>
                         <VCol cols="12" md="6">
                             <div class="text-body-2 text-disabled mb-1">Priority</div>
-                            <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label class="text-capitalize">
+                            <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label
+                                class="text-capitalize">
                                 {{ selectedTask.priority }}
                             </VChip>
                         </VCol>
                         <VCol cols="12" md="6">
                             <div class="text-body-2 text-disabled mb-1">Status</div>
-                            <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize">
+                            <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label
+                                class="text-capitalize">
                                 {{ selectedTask.status }}
                             </VChip>
                         </VCol>
@@ -631,77 +633,40 @@ const saveTask = () => {
                 <VCardText class="pa-6" v-if="selectedTask">
                     <VRow>
                         <VCol cols="12">
-                            <VTextField
-                                v-model="selectedTask.title"
-                                label="Task Title"
-                                placeholder="Enter task title"
-                                required
-                            />
+                            <VTextField v-model="selectedTask.title" label="Task Title" placeholder="Enter task title"
+                                required />
                         </VCol>
                         <VCol cols="12">
-                            <VTextarea
-                                v-model="selectedTask.description"
-                                label="Description"
-                                placeholder="Enter task description"
-                                rows="3"
-                                required
-                            />
+                            <VTextarea v-model="selectedTask.description" label="Description"
+                                placeholder="Enter task description" rows="3" required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VTextField
-                                v-model="selectedTask.category"
-                                label="Category"
-                                placeholder="Enter category"
-                                required
-                            />
+                            <VTextField v-model="selectedTask.category" label="Category" placeholder="Enter category"
+                                required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VTextField
-                                v-model="selectedTask.assignedTo"
-                                label="Assigned To"
-                                placeholder="Enter assignee"
-                                required
-                            />
+                            <VTextField v-model="selectedTask.assignedTo" label="Assigned To"
+                                placeholder="Enter assignee" required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VTextField
-                                v-model="selectedTask.startDate"
-                                label="Start Date"
-                                type="date"
-                                required
-                            />
+                            <VTextField v-model="selectedTask.startDate" label="Start Date" type="date" required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VTextField
-                                v-model="selectedTask.dueDate"
-                                label="Due Date"
-                                type="date"
-                                required
-                            />
+                            <VTextField v-model="selectedTask.dueDate" label="Due Date" type="date" required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VSelect
-                                v-model="selectedTask.priority"
-                                label="Priority"
-                                :items="[
-                                    { title: 'Low', value: 'low' },
-                                    { title: 'Medium', value: 'medium' },
-                                    { title: 'High', value: 'high' }
-                                ]"
-                                required
-                            />
+                            <VSelect v-model="selectedTask.priority" label="Priority" :items="[
+                                { title: 'Low', value: 'low' },
+                                { title: 'Medium', value: 'medium' },
+                                { title: 'High', value: 'high' }
+                            ]" required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VSelect
-                                v-model="selectedTask.status"
-                                label="Status"
-                                :items="[
-                                    { title: 'Pending', value: 'pending' },
-                                    { title: 'In Progress', value: 'in_progress' },
-                                    { title: 'Completed', value: 'completed' }
-                                ]"
-                                required
-                            />
+                            <VSelect v-model="selectedTask.status" label="Status" :items="[
+                                { title: 'Pending', value: 'pending' },
+                                { title: 'In Progress', value: 'in_progress' },
+                                { title: 'Completed', value: 'completed' }
+                            ]" required />
                         </VCol>
                     </VRow>
                 </VCardText>

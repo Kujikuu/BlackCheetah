@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { useTheme } from 'vuetify'
+
 import { getAreaChartSplineConfig } from '@core/libs/apex-chart/apexCharConfig'
+import { useTheme } from 'vuetify'
 
 // Sales dashboard data
 const vuetifyTheme = useTheme()
@@ -55,15 +56,8 @@ const monthlyPerformanceData = [
     <!-- 👉 Widgets -->
     <div class="d-flex mb-6">
       <VRow>
-        <template
-          v-for="(data, id) in widgetData"
-          :key="id"
-        >
-          <VCol
-            cols="12"
-            md="6"
-            sm="6"
-          >
+        <template v-for="(data, id) in widgetData" :key="id">
+          <VCol cols="12" md="6" sm="6">
             <VCard>
               <VCardText>
                 <div class="d-flex justify-space-between">
@@ -75,10 +69,7 @@ const monthlyPerformanceData = [
                       <h4 class="text-h4">
                         {{ data.value }}
                       </h4>
-                      <div
-                        class="text-base"
-                        :class="data.change > 0 ? 'text-success' : 'text-error'"
-                      >
+                      <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
                         ({{ prefixWithPlus(data.change) }}%)
                       </div>
                     </div>
@@ -86,16 +77,8 @@ const monthlyPerformanceData = [
                       {{ data.desc }}
                     </div>
                   </div>
-                  <VAvatar
-                    :color="data.iconColor"
-                    variant="tonal"
-                    rounded
-                    size="42"
-                  >
-                    <VIcon
-                      :icon="data.icon"
-                      size="26"
-                    />
+                  <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
+                    <VIcon :icon="data.icon" size="26" />
                   </VAvatar>
                 </div>
               </VCardText>
@@ -116,31 +99,21 @@ const monthlyPerformanceData = [
           </VCardItem>
           <VCardText>
             <VList class="py-0">
-              <VListItem
-                v-for="(item, index) in mostSellingItemsData"
-                :key="index"
-                class="px-0"
-              >
+              <VListItem v-for="(item, index) in mostSellingItemsData" :key="index" class="px-0">
                 <template #prepend>
                   <VAvatar
                     :color="index === 0 ? 'success' : index === 1 ? 'primary' : index === 2 ? 'warning' : 'secondary'"
-                    size="40"
-                    class="me-3"
-                  >
+                    size="40" class="me-3">
                     <span class="text-sm font-weight-medium">{{ index + 1 }}</span>
                   </VAvatar>
                 </template>
-                
+
                 <VListItemTitle class="font-weight-medium text-high-emphasis">
                   {{ item.name }}
                 </VListItemTitle>
-                
+
                 <VListItemSubtitle class="d-flex align-center gap-2 mt-1">
-                  <VChip
-                    size="small"
-                    color="success"
-                    variant="tonal"
-                  >
+                  <VChip size="small" color="success" variant="tonal">
                     {{ item.quantity }} sold
                   </VChip>
                   <span class="text-body-2 text-medium-emphasis">•</span>
@@ -161,31 +134,20 @@ const monthlyPerformanceData = [
           </VCardItem>
           <VCardText>
             <VList class="py-0">
-              <VListItem
-                v-for="(item, index) in lowSellingItemsData"
-                :key="index"
-                class="px-0"
-              >
+              <VListItem v-for="(item, index) in lowSellingItemsData" :key="index" class="px-0">
                 <template #prepend>
-                  <VAvatar
-                    :color="index === 0 ? 'error' : index === 1 ? 'warning' : index === 2 ? 'info' : 'secondary'"
-                    size="40"
-                    class="me-3"
-                  >
+                  <VAvatar :color="index === 0 ? 'error' : index === 1 ? 'warning' : index === 2 ? 'info' : 'secondary'"
+                    size="40" class="me-3">
                     <span class="text-sm font-weight-medium">{{ index + 1 }}</span>
                   </VAvatar>
                 </template>
-                
+
                 <VListItemTitle class="font-weight-medium text-high-emphasis">
                   {{ item.name }}
                 </VListItemTitle>
-                
+
                 <VListItemSubtitle class="d-flex align-center gap-2 mt-1">
-                  <VChip
-                    size="small"
-                    color="error"
-                    variant="tonal"
-                  >
+                  <VChip size="small" color="error" variant="tonal">
                     {{ item.quantity }} sold
                   </VChip>
                   <span class="text-body-2 text-medium-emphasis">•</span>
@@ -205,17 +167,12 @@ const monthlyPerformanceData = [
         <VCardSubtitle>Monthly performance comparison</VCardSubtitle>
       </VCardItem>
       <VCardText>
-        <VueApexCharts
-              type="area"
-              height="350"
-              :options="{
-                ...monthlyPerformanceChartConfig,
-                xaxis: {
-                  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                }
-              }"
-              :series="monthlyPerformanceData"
-            />
+        <VueApexCharts type="area" height="350" :options="{
+          ...monthlyPerformanceChartConfig,
+          xaxis: {
+            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+          }
+        }" :series="monthlyPerformanceData" />
       </VCardText>
     </VCard>
 

@@ -4,13 +4,6 @@ import { useTheme } from 'vuetify'
 
 const vuetifyTheme = useTheme()
 
-// Page meta
-definePage({
-    meta: {
-        layout: 'default',
-    },
-})
-
 // Type definitions
 interface UnitData {
     sales: number[]
@@ -328,31 +321,31 @@ const exportData = () => {
 const performExport = () => {
     const timestamp = new Date().toISOString().split('T')[0]
     const unitName = franchiseeUnits.find(u => u.id === selectedUnit.value)?.name || 'All Units'
-    
+
     if (exportDataType.value === 'performance' || exportDataType.value === 'all') {
         exportPerformanceData(timestamp, unitName)
     }
-    
+
     if (exportDataType.value === 'stats' || exportDataType.value === 'all') {
         exportStatsData(timestamp)
     }
-    
+
     isExportDialogVisible.value = false
 }
 
 const exportPerformanceData = (timestamp: string, unitName: string) => {
     const periodData = performanceData[selectedPeriod.value] as PeriodData
     const data = periodData?.[selectedUnit.value] || periodData?.all
-    
+
     if (!data) return
-    
+
     // Prepare performance data for export
     const categories = selectedPeriod.value === 'monthly'
         ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         : selectedPeriod.value === 'yearly'
             ? ['2019', '2020', '2021', '2022', '2023']
             : ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10', 'Day 11', 'Day 12', 'Day 13', 'Day 14']
-    
+
     const exportRows = categories.map((category, index) => ({
         Period: category,
         'Sales (SAR)': data.sales[index]?.toLocaleString() || '0',
@@ -361,10 +354,10 @@ const exportPerformanceData = (timestamp: string, unitName: string) => {
         'Profit (SAR)': data.profit[index]?.toLocaleString() || '0',
         'Profit Margin (%)': data.sales[index] ? ((data.profit[index] / data.sales[index]) * 100).toFixed(2) : '0',
     }))
-    
+
     const headers = ['Period', 'Sales (SAR)', 'Expenses (SAR)', 'Royalties (SAR)', 'Profit (SAR)', 'Profit Margin (%)']
     const filename = `performance-data-${unitName.replace(/\s+/g, '-').toLowerCase()}-${selectedPeriod.value}-${timestamp}.${exportFormat.value}`
-    
+
     if (exportFormat.value === 'csv') {
         const csvContent = convertToCSV(exportRows, headers)
         downloadFile(csvContent, filename, 'text/csv')
@@ -427,10 +420,10 @@ const exportStatsData = (timestamp: string) => {
             Manager: lowestRatedFranchise.manager,
         },
     ]
-    
+
     const headers = ['Category', 'Rank', 'Name', 'Location', 'Revenue (SAR)', 'Growth (%)', 'Rating', 'Reviews', 'Manager']
     const filename = `stats-summary-${timestamp}.${exportFormat.value}`
-    
+
     if (exportFormat.value === 'csv') {
         const csvContent = convertToCSV(statsRows, headers)
         downloadFile(csvContent, filename, 'text/csv')
@@ -705,62 +698,35 @@ const periodOptions = [
                 <VCardText class="text-start">
                     <VRow>
                         <VCol cols="12">
-                            <VSelect
-                                v-model="exportDataType"
-                                :items="exportDataTypeOptions"
-                                item-title="title"
-                                item-value="value"
-                                label="Data Type"
-                                variant="outlined"
-                                density="comfortable"
-                                prepend-inner-icon="tabler-database"
-                            />
+                            <VSelect v-model="exportDataType" :items="exportDataTypeOptions" item-title="title"
+                                item-value="value" label="Data Type" variant="outlined" density="comfortable"
+                                prepend-inner-icon="tabler-database" />
                         </VCol>
                         <VCol cols="12">
-                            <VSelect
-                                v-model="exportFormat"
-                                :items="exportFormatOptions"
-                                item-title="title"
-                                item-value="value"
-                                label="Export Format"
-                                variant="outlined"
-                                density="comfortable"
-                                prepend-inner-icon="tabler-file-type-csv"
-                            />
+                            <VSelect v-model="exportFormat" :items="exportFormatOptions" item-title="title"
+                                item-value="value" label="Export Format" variant="outlined" density="comfortable"
+                                prepend-inner-icon="tabler-file-type-csv" />
                         </VCol>
                     </VRow>
 
                     <!-- Export Info -->
-                    <VAlert
-                        type="info"
-                        variant="tonal"
-                        class="mt-4"
-                        density="compact"
-                    >
+                    <VAlert type="info" variant="tonal" class="mt-4" density="compact">
                         <template #prepend>
                             <VIcon icon="tabler-info-circle" />
                         </template>
                         <div class="text-body-2">
                             <strong>Current Selection:</strong><br>
-                            Period: {{ periodOptions.find(p => p.value === selectedPeriod)?.title }}<br>
-                            Unit: {{ franchiseeUnits.find(u => u.id === selectedUnit)?.name }}
+                            Period: {{periodOptions.find(p => p.value === selectedPeriod)?.title}}<br>
+                            Unit: {{franchiseeUnits.find(u => u.id === selectedUnit)?.name}}
                         </div>
                     </VAlert>
                 </VCardText>
 
                 <VCardActions class="d-flex align-center justify-center gap-3 pt-4">
-                    <VBtn
-                        variant="outlined"
-                        color="secondary"
-                        @click="isExportDialogVisible = false"
-                    >
+                    <VBtn variant="outlined" color="secondary" @click="isExportDialogVisible = false">
                         Cancel
                     </VBtn>
-                    <VBtn
-                        color="primary"
-                        prepend-icon="tabler-download"
-                        @click="performExport"
-                    >
+                    <VBtn color="primary" prepend-icon="tabler-download" @click="performExport">
                         Export Data
                     </VBtn>
                 </VCardActions>

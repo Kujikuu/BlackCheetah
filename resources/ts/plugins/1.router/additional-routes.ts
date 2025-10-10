@@ -23,21 +23,9 @@ export const redirects: RouteRecordRaw[] = [
       // Redirect sales to lead management
       if (userRole === 'sales')
         return { name: 'sales-lead-management' }
-      if (userRole === 'client')
-        return { name: 'access-control' }
 
       return { name: 'login', query: to.query }
     },
-  },
-  {
-    path: '/pages/user-profile',
-    name: 'pages-user-profile',
-    redirect: () => ({ name: 'pages-user-profile-tab', params: { tab: 'profile' } }),
-  },
-  {
-    path: '/pages/account-settings',
-    name: 'pages-account-settings',
-    redirect: () => ({ name: 'pages-account-settings-tab', params: { tab: 'account' } }),
   },
 ]
 

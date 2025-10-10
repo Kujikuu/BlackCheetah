@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 import { formatCurrency } from '@/@core/utils/formatters'
 // API composable
 const { data: financeData, execute: fetchFinanceData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/finance')
@@ -49,7 +50,7 @@ interface ApiResponse {
     expenses_chart?: Array<{ month: string; amount: number }>
     profit_chart?: Array<{ month: string; amount: number }>
     royalty_chart?: Array<{ month: string; amount: number }>
-    monthly_breakdown?: Array<{ 
+    monthly_breakdown?: Array<{
       month: string
       sales: number
       expenses: number
@@ -66,7 +67,7 @@ const salesChartSeries = ref<ChartSeries[]>([{ name: 'Sales', data: [] }])
 const expensesChartSeries = ref<ChartSeries[]>([{ name: 'Expenses', data: [] }])
 const profitChartSeries = ref<ChartSeries[]>([{ name: 'Profit', data: [] }])
 const royaltyChartSeries = ref<ChartSeries[]>([{ name: 'Royalty', data: [] }])
-const monthlyBreakdownData = ref<Array<{ 
+const monthlyBreakdownData = ref<Array<{
   month: string
   sales: number
   expenses: number
@@ -82,36 +83,36 @@ watch(financeData, (newData) => {
 
     // Update finance stats
     financeStats.value = [
-      { 
-        icon: 'tabler-currency-dollar', 
-        color: 'primary', 
-        title: 'Total Sales', 
-        value: formatCurrency(data.stats.total_sales), 
-        change: data.stats.sales_change, 
+      {
+        icon: 'tabler-currency-dollar',
+        color: 'primary',
+        title: 'Total Sales',
+        value: formatCurrency(data.stats.total_sales),
+        change: data.stats.sales_change,
         isHover: false,
       },
-      { 
-        icon: 'tabler-receipt', 
-        color: 'error', 
-        title: 'Total Expenses', 
-        value: formatCurrency(data.stats.total_expenses), 
-        change: data.stats.expenses_change, 
+      {
+        icon: 'tabler-receipt',
+        color: 'error',
+        title: 'Total Expenses',
+        value: formatCurrency(data.stats.total_expenses),
+        change: data.stats.expenses_change,
         isHover: false,
       },
-      { 
-        icon: 'tabler-chart-line', 
-        color: 'success', 
-        title: 'Net Profit', 
-        value: formatCurrency(data.stats.net_profit), 
-        change: data.stats.profit_change, 
+      {
+        icon: 'tabler-chart-line',
+        color: 'success',
+        title: 'Net Profit',
+        value: formatCurrency(data.stats.net_profit),
+        change: data.stats.profit_change,
         isHover: false,
       },
-      { 
-        icon: 'tabler-percentage', 
-        color: 'warning', 
-        title: 'Profit Margin', 
-        value: `${data.stats.profit_margin}%`, 
-        change: data.stats.margin_change, 
+      {
+        icon: 'tabler-percentage',
+        color: 'warning',
+        title: 'Profit Margin',
+        value: `${data.stats.profit_margin}%`,
+        change: data.stats.margin_change,
         isHover: false,
       },
     ]
@@ -173,36 +174,36 @@ watch(financeData, (newData) => {
 
 // Fallback data in case API fails
 const fallbackFinanceStats: FinanceStat[] = [
-  { 
-    icon: 'tabler-currency-dollar', 
-    color: 'primary', 
-    title: 'Total Sales', 
-    value: '$0', 
-    change: 0, 
+  {
+    icon: 'tabler-currency-dollar',
+    color: 'primary',
+    title: 'Total Sales',
+    value: '$0',
+    change: 0,
     isHover: false,
   },
-  { 
-    icon: 'tabler-receipt', 
-    color: 'error', 
-    title: 'Total Expenses', 
-    value: '$0', 
-    change: 0, 
+  {
+    icon: 'tabler-receipt',
+    color: 'error',
+    title: 'Total Expenses',
+    value: '$0',
+    change: 0,
     isHover: false,
   },
-  { 
-    icon: 'tabler-chart-line', 
-    color: 'success', 
-    title: 'Net Profit', 
-    value: '$0', 
-    change: 0, 
+  {
+    icon: 'tabler-chart-line',
+    color: 'success',
+    title: 'Net Profit',
+    value: '$0',
+    change: 0,
     isHover: false,
   },
-  { 
-    icon: 'tabler-percentage', 
-    color: 'warning', 
-    title: 'Profit Margin', 
-    value: '0%', 
-    change: 0, 
+  {
+    icon: 'tabler-percentage',
+    color: 'warning',
+    title: 'Profit Margin',
+    value: '0%',
+    change: 0,
     isHover: false,
   },
 ]
@@ -519,30 +520,14 @@ const summaryHeaders = [
   <section>
     <!-- 👉 Finance Statistics Cards -->
     <VRow class="mb-6">
-      <VCol
-        v-for="(data, index) in displayStats"
-        :key="index"
-        cols="12"
-        md="3"
-        sm="6"
-      >
-        <VCard
-          class="finance-card-statistics cursor-pointer"
+      <VCol v-for="(data, index) in displayStats" :key="index" cols="12" md="3" sm="6">
+        <VCard class="finance-card-statistics cursor-pointer"
           :style="data.isHover ? `border-block-end-color: rgb(var(--v-theme-${data.color}))` : `border-block-end-color: rgba(var(--v-theme-${data.color}),0.38)`"
-          @mouseenter="data.isHover = true"
-          @mouseleave="data.isHover = false"
-        >
+          @mouseenter="data.isHover = true" @mouseleave="data.isHover = false">
           <VCardText>
             <div class="d-flex align-center gap-x-4 mb-1">
-              <VAvatar
-                variant="tonal"
-                :color="data.color"
-                rounded
-              >
-                <VIcon
-                  :icon="data.icon"
-                  size="28"
-                />
+              <VAvatar variant="tonal" :color="data.color" rounded>
+                <VIcon :icon="data.icon" size="28" />
               </VAvatar>
               <h4 class="text-h4">
                 {{ data.value }}
@@ -567,65 +552,35 @@ const summaryHeaders = [
     <!-- 👉 Top Stores Charts Row -->
     <VRow class="mb-6">
       <!-- Top 5 Stores by Sales -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
-          <VCardItem
-            title="Top 5 Stores by Monthly Sales"
-            subtitle="Performance comparison"
-          >
+          <VCardItem title="Top 5 Stores by Monthly Sales" subtitle="Performance comparison">
             <template #append>
-              <VBtn
-                variant="tonal"
-                size="small"
-                append-icon="tabler-chevron-down"
-              >
+              <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
                 This Month
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VueApexCharts
-              type="bar"
-              height="320"
-              :options="topStoresSalesConfig"
-              :series="topStoresSalesSeries"
-            />
+            <VueApexCharts type="bar" height="320" :options="topStoresSalesConfig" :series="topStoresSalesSeries" />
           </VCardText>
         </VCard>
       </VCol>
 
       <!-- Top 5 Stores by Royalty -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
-          <VCardItem
-            title="Top 5 Stores by Monthly Royalty"
-            subtitle="Royalty contributions"
-          >
+          <VCardItem title="Top 5 Stores by Monthly Royalty" subtitle="Royalty contributions">
             <template #append>
-              <VBtn
-                variant="tonal"
-                size="small"
-                append-icon="tabler-chevron-down"
-              >
+              <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
                 This Month
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VueApexCharts
-              type="bar"
-              height="320"
-              :options="topStoresRoyaltyConfig"
-              :series="topStoresRoyaltySeries"
-            />
+            <VueApexCharts type="bar" height="320" :options="topStoresRoyaltyConfig" :series="topStoresRoyaltySeries" />
           </VCardText>
         </VCard>
       </VCol>
@@ -635,28 +590,16 @@ const summaryHeaders = [
     <VRow class="mb-6">
       <VCol cols="12">
         <VCard>
-          <VCardItem
-            title="Financial Summary"
-            subtitle="Yearly overview of sales, expenses, royalties and profit"
-          >
+          <VCardItem title="Financial Summary" subtitle="Yearly overview of sales, expenses, royalties and profit">
             <template #append>
-              <VBtn
-                variant="tonal"
-                size="small"
-                append-icon="tabler-chevron-down"
-              >
+              <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
                 2024
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VueApexCharts
-              type="line"
-              height="400"
-              :options="summaryConfig"
-              :series="summarySeries"
-            />
+            <VueApexCharts type="line" height="400" :options="summaryConfig" :series="summarySeries" />
           </VCardText>
         </VCard>
       </VCol>
@@ -673,12 +616,7 @@ const summaryHeaders = [
 
           <VDivider />
 
-          <VDataTable
-            :headers="summaryHeaders"
-            :items="summaryTableData"
-            hide-default-footer
-            class="text-no-wrap"
-          >
+          <VDataTable :headers="summaryHeaders" :items="summaryTableData" hide-default-footer class="text-no-wrap">
             <template #item.month="{ item }">
               <div class="text-body-1 font-weight-medium">
                 {{ item.month }}

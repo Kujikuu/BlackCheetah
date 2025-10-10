@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
 
 // 👉 Store

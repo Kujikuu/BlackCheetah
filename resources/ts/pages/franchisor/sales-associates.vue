@@ -224,10 +224,10 @@ const viewAssociate = async (id: number | null) => {
   if (associate) {
     try {
       isLoading.value = true
-      
+
       // Fetch detailed associate data including leads
-       const response = await $api(`/v1/franchisor/sales-associates/${associate.id}`)
-      
+      const response = await $api(`/v1/franchisor/sales-associates/${associate.id}`)
+
       if (response.success) {
         selectedAssociate.value = response.data
         isViewAssociateModalVisible.value = true
@@ -286,7 +286,7 @@ const saveAssociate = async () => {
 
     const isEditing = selectedAssociate.value.id !== null
     const method = isEditing ? 'PUT' : 'POST'
-    const url = isEditing 
+    const url = isEditing
       ? `/v1/franchisor/sales-associates/${selectedAssociate.value.id}`
       : '/v1/franchisor/sales-associates'
 
@@ -300,7 +300,7 @@ const saveAssociate = async () => {
       state: selectedAssociate.value.state || '',
       city: selectedAssociate.value.city || '',
     }
-    
+
     // Add password for new associates
     if (!isEditing && selectedAssociate.value.password) {
       formData.password = selectedAssociate.value.password
@@ -316,30 +316,30 @@ const saveAssociate = async () => {
       if (associateForm.value) {
         associateForm.value.reset()
       }
-      
+
       // Close modals
       isAddAssociateModalVisible.value = false
       isEditAssociateModalVisible.value = false
-      
+
       // Reset selectedAssociate to initial state instead of null
-       selectedAssociate.value = {
-          id: null,
-          name: '',
-          email: '',
-          phone: '',
-          status: 'active',
-          country: '',
-          state: '',
-          city: '',
-          password: '',
-          assignedLeads: 0,
-          avatar: '',
-          avatarText: ''
-        }
-      
+      selectedAssociate.value = {
+        id: null,
+        name: '',
+        email: '',
+        phone: '',
+        status: 'active',
+        country: '',
+        state: '',
+        city: '',
+        password: '',
+        assignedLeads: 0,
+        avatar: '',
+        avatarText: ''
+      }
+
       // Refresh the associates list
       await fetchSalesAssociates()
-      
+
       // Show success message (you can add a toast notification here)
       console.log(isEditing ? 'Associate updated successfully' : 'Associate created successfully')
     }
@@ -598,59 +598,51 @@ onMounted(() => {
               </div>
             </VCol>
             <VCol cols="12" md="6">
-                <div class="mb-4">
-                  <div class="text-sm text-disabled mb-1">Assigned Leads</div>
-                  <div class="text-body-1">{{ selectedAssociate.assignedLeads }}</div>
-                </div>
-              </VCol>
-            </VRow>
+              <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Assigned Leads</div>
+                <div class="text-body-1">{{ selectedAssociate.assignedLeads }}</div>
+              </div>
+            </VCol>
+          </VRow>
 
-            <!-- Assigned Leads Details -->
-            <VRow v-if="selectedAssociate.leads && selectedAssociate.leads.length > 0">
-              <VCol cols="12">
-                <VDivider class="my-4" />
-                <div class="text-h6 mb-4">Assigned Leads</div>
-                <VCard variant="outlined">
-                  <VCardText class="pa-0">
-                    <VTable>
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Email</th>
-                          <th>Status</th>
-                          <th>Priority</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="lead in selectedAssociate?.leads || []" :key="lead.id">
-                          <td>{{ lead.first_name }} {{ lead.last_name }}</td>
-                          <td>{{ lead.email }}</td>
-                          <td>
-                            <VChip
-                              :color="getLeadStatusColor(lead.status)"
-                              size="small"
-                              class="text-capitalize"
-                            >
-                              {{ lead.status.replace('_', ' ') }}
-                            </VChip>
-                          </td>
-                          <td>
-                            <VChip
-                              :color="getLeadPriorityColor(lead.priority)"
-                              size="small"
-                              class="text-capitalize"
-                            >
-                              {{ lead.priority }}
-                            </VChip>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </VTable>
-                  </VCardText>
-                </VCard>
-              </VCol>
-            </VRow>
-          </VCardText>
+          <!-- Assigned Leads Details -->
+          <VRow v-if="selectedAssociate.leads && selectedAssociate.leads.length > 0">
+            <VCol cols="12">
+              <VDivider class="my-4" />
+              <div class="text-h6 mb-4">Assigned Leads</div>
+              <VCard variant="outlined">
+                <VCardText class="pa-0">
+                  <VTable>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="lead in selectedAssociate?.leads || []" :key="lead.id">
+                        <td>{{ lead.first_name }} {{ lead.last_name }}</td>
+                        <td>{{ lead.email }}</td>
+                        <td>
+                          <VChip :color="getLeadStatusColor(lead.status)" size="small" class="text-capitalize">
+                            {{ lead.status.replace('_', ' ') }}
+                          </VChip>
+                        </td>
+                        <td>
+                          <VChip :color="getLeadPriorityColor(lead.priority)" size="small" class="text-capitalize">
+                            {{ lead.priority }}
+                          </VChip>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </VTable>
+                </VCardText>
+              </VCard>
+            </VCol>
+          </VRow>
+        </VCardText>
 
         <VCardActions>
           <VSpacer />
@@ -667,8 +659,7 @@ onMounted(() => {
     <!-- 👉 Add/Edit Associate Modal -->
     <VDialog :model-value="isAddAssociateModalVisible || isEditAssociateModalVisible"
       @update:model-value="val => { if (!val) { isAddAssociateModalVisible = false; isEditAssociateModalVisible = false } }"
-      max-width="700"
-      persistent>
+      max-width="700" persistent>
       <VCard v-if="selectedAssociate">
         <VCardItem>
           <VCardTitle>{{ selectedAssociate.id === null ? 'Add New' : 'Edit' }} Sales Associate</VCardTitle>
@@ -678,87 +669,53 @@ onMounted(() => {
           <VForm ref="associateForm" @submit.prevent="saveAssociate">
             <VRow>
               <VCol cols="12" md="6">
-                <AppTextField 
-                  v-model="selectedAssociate.name" 
-                  label="Full Name" 
-                  placeholder="Enter full name"
-                  :rules="[
-                    (v: string) => !!v || 'Full name is required',
-                    (v: string) => v.length <= 255 || 'Name must not exceed 255 characters'
-                  ]"
-                  required />
+                <AppTextField v-model="selectedAssociate.name" label="Full Name" placeholder="Enter full name" :rules="[
+                  (v: string) => !!v || 'Full name is required',
+                  (v: string) => v.length <= 255 || 'Name must not exceed 255 characters'
+                ]" required />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField 
-                  v-model="selectedAssociate.email" 
-                  label="Email Address" 
-                  type="email"
-                  placeholder="Enter email address" 
-                  :rules="[
+                <AppTextField v-model="selectedAssociate.email" label="Email Address" type="email"
+                  placeholder="Enter email address" :rules="[
                     (v: string) => !!v || 'Email is required',
                     (v: string) => /.+@.+\..+/.test(v) || 'Email must be valid'
-                  ]"
-                  required />
+                  ]" required />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField 
-                  v-model="selectedAssociate.phone" 
-                  label="Phone Number" 
-                  placeholder="Enter phone number"
+                <AppTextField v-model="selectedAssociate.phone" label="Phone Number" placeholder="Enter phone number"
                   :rules="[
                     (v: string) => !!v || 'Phone number is required',
                     (v: string) => v.length <= 20 || 'Phone number must not exceed 20 characters'
-                  ]"
-                  required />
+                  ]" required />
               </VCol>
 
               <VCol cols="12" md="6">
-                <AppSelect 
-                  v-model="selectedAssociate.status" 
-                  label="Status" 
-                  :items="statuses"
-                  placeholder="Select status" 
-                  :rules="[(v: string) => !!v || 'Status is required']"
-                  required />
+                <AppSelect v-model="selectedAssociate.status" label="Status" :items="statuses"
+                  placeholder="Select status" :rules="[(v: string) => !!v || 'Status is required']" required />
               </VCol>
               <VCol cols="12" md="6">
-                <AppSelect 
-                  v-model="selectedAssociate.country" 
-                  label="Country" 
-                  :items="countries"
+                <AppSelect v-model="selectedAssociate.country" label="Country" :items="countries"
                   placeholder="Select country" />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField 
-                  v-model="selectedAssociate.state" 
-                  label="State/Province"
-                  placeholder="Enter state or province"
-                  :rules="[
+                <AppTextField v-model="selectedAssociate.state" label="State/Province"
+                  placeholder="Enter state or province" :rules="[
                     (v: string) => !v || v.length <= 100 || 'State must not exceed 100 characters'
                   ]" />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField 
-                  v-model="selectedAssociate.city" 
-                  label="City" 
-                  placeholder="Enter city"
-                  :rules="[
-                    (v: string) => !v || v.length <= 100 || 'City must not exceed 100 characters'
-                  ]" />
+                <AppTextField v-model="selectedAssociate.city" label="City" placeholder="Enter city" :rules="[
+                  (v: string) => !v || v.length <= 100 || 'City must not exceed 100 characters'
+                ]" />
               </VCol>
-              
+
               <!-- Password field for new associates only -->
               <VCol v-if="selectedAssociate.id === null" cols="12" md="6">
-                <AppTextField 
-                  v-model="selectedAssociate.password" 
-                  label="Password" 
-                  type="password"
-                  placeholder="Enter password (minimum 8 characters)"
-                  :rules="[
+                <AppTextField v-model="selectedAssociate.password" label="Password" type="password"
+                  placeholder="Enter password (minimum 8 characters)" :rules="[
                     (v: string) => !!v || 'Password is required',
                     (v: string) => v.length >= 8 || 'Password must be at least 8 characters'
-                  ]"
-                  required />
+                  ]" required />
               </VCol>
             </VRow>
           </VForm>
@@ -766,17 +723,11 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn 
-            color="secondary" 
-            variant="tonal"
-            :disabled="isSubmitting"
+          <VBtn color="secondary" variant="tonal" :disabled="isSubmitting"
             @click="isAddAssociateModalVisible = false; isEditAssociateModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn 
-            color="primary" 
-            :loading="isSubmitting"
-            @click="saveAssociate">
+          <VBtn color="primary" :loading="isSubmitting" @click="saveAssociate">
             {{ selectedAssociate.id === null ? 'Create Associate' : 'Save Changes' }}
           </VBtn>
         </VCardActions>

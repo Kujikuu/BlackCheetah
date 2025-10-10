@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 const chartColors = {
   primary: '#9155FD',
   warning: '#FFB400',

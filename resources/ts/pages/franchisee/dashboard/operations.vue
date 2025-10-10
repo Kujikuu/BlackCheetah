@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 import { getBarChartConfig, getLineChartSimpleConfig } from '@core/libs/apex-chart/apexCharConfig'
 import { useTheme } from 'vuetify'
 

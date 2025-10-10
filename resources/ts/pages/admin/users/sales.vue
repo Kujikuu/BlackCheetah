@@ -14,14 +14,6 @@ interface SalesUser {
   avatar?: string
   joinedDate: string
 }
-
-definePage({
-  meta: {
-    subject: 'Admin',
-    action: 'read',
-  },
-})
-
 // Store
 const searchQuery = ref('')
 const selectedStatus = ref()
@@ -61,7 +53,7 @@ const totalSalesUsers = ref(0)
 const fetchSalesUsers = async () => {
   isLoading.value = true
   error.value = ''
-  
+
   try {
     const response = await $api('/v1/admin/users/sales', {
       method: 'GET',
@@ -74,7 +66,7 @@ const fetchSalesUsers = async () => {
         per_page: itemsPerPage.value,
       },
     })
-    
+
     if (response.success) {
       salesUsers.value = response.data.data || []
       totalSalesUsers.value = response.data.total || 0
@@ -151,7 +143,7 @@ const addNewSalesUser = async (salesUserData: any) => {
         role: 'sales',
       },
     })
-    
+
     if (response.success) {
       await fetchSalesUsers() // Refresh the list
     } else {
@@ -176,7 +168,7 @@ const updateSalesUser = async (salesUserData: any) => {
       method: 'PUT',
       body: salesUserData,
     })
-    
+
     if (response.success) {
       await fetchSalesUsers() // Refresh the list
       selectedSalesUser.value = null
@@ -213,10 +205,10 @@ const deleteUser = async () => {
     const response = await $api(`/v1/admin/users/${userToDelete.value.id}`, {
       method: 'DELETE',
     })
-    
+
     if (response.success) {
       await fetchSalesUsers() // Refresh the list
-      
+
       // Remove from selectedRows
       const selectedIndex = selectedRows.value.findIndex(row => row === userToDelete.value.id)
       if (selectedIndex !== -1)
@@ -247,7 +239,7 @@ const resetPassword = async (password: string) => {
       method: 'POST',
       body: { password },
     })
-    
+
     if (response.success) {
       console.log('Password reset successfully for:', selectedSalesUser.value.fullName)
     } else {
@@ -257,7 +249,7 @@ const resetPassword = async (password: string) => {
     console.error('Error resetting password:', err)
     error.value = 'Failed to reset password'
   }
-  
+
   selectedSalesUser.value = null
 }
 
@@ -561,34 +553,19 @@ const fetchWidgetStats = async () => {
     </VCard>
 
     <!-- Add/Edit Sales User Drawer -->
-    <AddEditSalesDrawer
-      v-model:is-drawer-open="isAddNewUserDrawerVisible"
-      :sales-user="selectedSalesUser"
-      @sales-user-data="handleSalesUserData"
-      @update:is-drawer-open="handleDrawerClose"
-    />
+    <AddEditSalesDrawer v-model:is-drawer-open="isAddNewUserDrawerVisible" :sales-user="selectedSalesUser"
+      @sales-user-data="handleSalesUserData" @update:is-drawer-open="handleDrawerClose" />
 
     <!-- Delete Confirmation Dialog -->
-    <ConfirmDeleteDialog
-      v-model:is-dialog-open="isDeleteDialogVisible"
-      :user-name="userToDelete?.fullName"
-      user-type="Sales User"
-      @confirm="deleteUser"
-    />
+    <ConfirmDeleteDialog v-model:is-dialog-open="isDeleteDialogVisible" :user-name="userToDelete?.fullName"
+      user-type="Sales User" @confirm="deleteUser" />
 
     <!-- Reset Password Dialog -->
-    <ResetPasswordDialog
-      v-model:is-dialog-open="isResetPasswordDialogVisible"
-      :user-name="selectedSalesUser?.fullName"
-      @confirm="resetPassword"
-    />
+    <ResetPasswordDialog v-model:is-dialog-open="isResetPasswordDialogVisible" :user-name="selectedSalesUser?.fullName"
+      @confirm="resetPassword" />
 
     <!-- View User Dialog -->
-    <ViewUserDialog
-      v-model:is-dialog-open="isViewDialogVisible"
-      :user="selectedSalesUser"
-      user-type="Sales User"
-      @edit="handleEditFromView"
-    />
+    <ViewUserDialog v-model:is-dialog-open="isViewDialogVisible" :user="selectedSalesUser" user-type="Sales User"
+      @edit="handleEditFromView" />
   </section>
 </template>

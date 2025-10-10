@@ -4,13 +4,6 @@ import { useTheme } from 'vuetify'
 
 const vuetifyTheme = useTheme()
 
-// Page meta
-definePage({
-    meta: {
-        layout: 'default',
-    },
-})
-
 // Mock data for Top and Low Performing Products
 const topPerformingProductData = [85, 75, 82, 100, 98, 85, 103, 90, 95, 65, 68, 15]
 const lowPerformingProductData = [55, 42, 52, 55, 52, 58, 52, 60, 55, 65, 28, 15]
