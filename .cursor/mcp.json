@@ -10,10 +10,10 @@
         "herd": {
             "command": "php",
             "args": [
-                "C:/Users/Afifi/.config/herd/bin/herd-mcp.phar"
+                "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
             ],
             "env": {
-                "SITE_PATH": "C:\\Users\\Afifi\\BlackCheetah"
+                "SITE_PATH": "/Users/afifi/Desktop/BlackCheetah"
             }
         }
     }

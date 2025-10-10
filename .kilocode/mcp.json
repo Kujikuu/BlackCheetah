@@ -9,6 +9,22 @@
       "env": {
         "DEFAULT_MINIMUM_TOKENS": ""
       }
+    },
+    "laravel-boost": {
+      "command": "/Users/afifi/Library/Application Support/Herd/bin/php84",
+      "args": [
+        "/Users/afifi/Desktop/BlackCheetah/artisan",
+        "boost:mcp"
+      ]
+    },
+    "herd": {
+      "command": "/Users/afifi/Library/Application Support/Herd/bin/php84",
+      "args": [
+        "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
+      ],
+      "env": {
+        "SITE_PATH": "/Users/afifi/Desktop/BlackCheetah"
+      }
     }
   }
 }
