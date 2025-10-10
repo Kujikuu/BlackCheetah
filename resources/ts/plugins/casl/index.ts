@@ -6,7 +6,11 @@ import type { Rule } from './ability'
 
 export default function (app: App) {
   const userAbilityRules = useCookie<Rule[]>('userAbilityRules')
-  const initialAbility = createMongoAbility(userAbilityRules.value ?? [])
+  
+  // Provide a fallback empty array if userAbilityRules is null/undefined
+  // This prevents the CASL plugin from failing during initialization
+  const abilityRules = userAbilityRules.value ?? []
+  const initialAbility = createMongoAbility(abilityRules)
 
   app.use(abilitiesPlugin, initialAbility, {
     useGlobalProperties: true,

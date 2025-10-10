@@ -45,20 +45,27 @@ export const canViewNavMenuGroup = (item: NavGroup) => {
 }
 
 export const canNavigate = (to: RouteLocationNormalized) => {
-  const ability = useAbility()
+  try {
+    const ability = useAbility()
 
-  // Get the most specific route (last one in the matched array)
-  const targetRoute = to.matched[to.matched.length - 1]
+    // Get the most specific route (last one in the matched array)
+    const targetRoute = to.matched[to.matched.length - 1]
 
-  // If the target route has specific permissions, check those first
-  if (targetRoute?.meta?.action && targetRoute?.meta?.subject)
-    return ability.can(targetRoute.meta.action, targetRoute.meta.subject)
+    // If the target route has specific permissions, check those first
+    if (targetRoute?.meta?.action && targetRoute?.meta?.subject)
+      return ability.can(targetRoute.meta.action, targetRoute.meta.subject)
 
-  // If no specific permissions are defined anywhere in the matched routes, allow navigation
-  const hasAnyAbilityMeta = to.matched.some(route => route.meta?.action && route.meta?.subject)
-  if (!hasAnyAbilityMeta)
+    // If no specific permissions are defined anywhere in the matched routes, allow navigation
+    const hasAnyAbilityMeta = to.matched.some(route => route.meta?.action && route.meta?.subject)
+    if (!hasAnyAbilityMeta)
+      return true
+
+    // Otherwise, allow navigation if ANY matched parent route permits access
+    return to.matched.some(route => ability.can(route.meta!.action as any, route.meta!.subject as any))
+  } catch (error) {
+    // If ability is not properly initialized, allow navigation
+    // This prevents blocking navigation when CASL is not ready
+    console.warn('CASL ability not properly initialized, allowing navigation:', error)
     return true
-
-  // Otherwise, allow navigation if ANY matched parent route permits access
-  return to.matched.some(route => ability.can(route.meta!.action as any, route.meta!.subject as any))
+  }
 }

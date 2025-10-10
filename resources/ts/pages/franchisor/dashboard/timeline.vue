@@ -122,13 +122,15 @@ watch(timelineApiData, (newData) => {
       color: getStatusColor(item.status),
     })) : []
 
-    // Update stats
-    stats.value = [
-      { title: 'Total Milestones', value: data.stats.total_milestones.toLocaleString(), icon: 'tabler-flag', color: 'primary' },
-      { title: 'Completed', value: data.stats.completed.toLocaleString(), icon: 'tabler-circle-check', color: 'success' },
-      { title: 'Scheduled', value: data.stats.scheduled.toLocaleString(), icon: 'tabler-calendar', color: 'info' },
-      { title: 'Overdue', value: data.stats.overdue.toLocaleString(), icon: 'tabler-alert-triangle', color: 'error' },
-    ]
+    // Update stats with proper null/undefined checks
+    if (data.stats) {
+      stats.value = [
+        { title: 'Total Milestones', value: (data.stats.total_milestones || 0).toLocaleString(), icon: 'tabler-flag', color: 'primary' },
+        { title: 'Completed', value: (data.stats.completed || 0).toLocaleString(), icon: 'tabler-circle-check', color: 'success' },
+        { title: 'Scheduled', value: (data.stats.scheduled || 0).toLocaleString(), icon: 'tabler-calendar', color: 'info' },
+        { title: 'Overdue', value: (data.stats.overdue || 0).toLocaleString(), icon: 'tabler-alert-triangle', color: 'error' },
+      ]
+    }
   }
 }, { immediate: true })
 
