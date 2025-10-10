@@ -103,11 +103,11 @@ export default defineConfig({
       './resources/ts/**/*.vue',
     ],
   },
-  server: {
-    host: 'blackcheetah.test',
-    port: 5173,
-    hmr: {
-      port: 5173,
-    },
-  },
+  // server: {
+  //   host: 'blackcheetah.test',
+  //   port: 5173,
+  //   hmr: {
+  //     port: 5173,
+  //   },
+  // },
 })

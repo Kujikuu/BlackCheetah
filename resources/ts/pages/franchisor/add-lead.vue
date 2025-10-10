@@ -2,6 +2,9 @@
 import BasicInfo from '@/views/franchisor/add-lead/BasicInfo.vue'
 import AdditionalDetails from '@/views/franchisor/add-lead/AdditionalDetails.vue'
 import type { AddLeadData } from '@/views/franchisor/add-lead/types'
+import { useDisplay } from 'vuetify'
+
+const { mdAndUp } = useDisplay()
 
 const addLeadSteps = [
   {
@@ -41,17 +44,49 @@ const addLeadData = ref<AddLeadData>({
   },
 })
 
+const isLoading = ref(false)
+
 const onSubmit = async () => {
   try {
-    // TODO: Implement API call
-    console.log('addLeadData :>> ', addLeadData.value)
+    isLoading.value = true
 
-    // Show success message
-    // Redirect to lead management page
-    router.push({ name: 'franchisor-lead-management' })
+    // Map form data to API format
+    const leadData = {
+      first_name: addLeadData.value.basicInfo.firstName,
+      last_name: addLeadData.value.basicInfo.lastName,
+      email: addLeadData.value.basicInfo.email,
+      phone: addLeadData.value.basicInfo.contactNumber,
+      company: addLeadData.value.basicInfo.companyName || null,
+      country: addLeadData.value.basicInfo.country || null,
+      state: addLeadData.value.basicInfo.state || null,
+      city: addLeadData.value.basicInfo.city || null,
+      source: addLeadData.value.additionalDetails.leadSource || 'website',
+      status: addLeadData.value.additionalDetails.leadStatus || 'new',
+      priority: 'medium', // Default priority
+      notes: addLeadData.value.additionalDetails.note || null,
+      // assigned_to: addLeadData.value.additionalDetails.leadOwner, // TODO: Map owner ID
+    }
+
+    const response = await $api('/v1/franchisor/leads', {
+      method: 'POST',
+      body: leadData,
+    })
+
+    if (response.success) {
+      // Show success message
+      // TODO: Add toast notification
+      console.log('Lead created successfully:', response.data)
+      
+      // Redirect to lead management page
+      router.push({ name: 'franchisor-lead-management' })
+    }
   }
   catch (error) {
     console.error('Error adding lead:', error)
+    // TODO: Show error toast notification
+  }
+  finally {
+    isLoading.value = false
   }
 }
 </script>
@@ -63,7 +98,7 @@ const onSubmit = async () => {
         cols="12"
         md="4"
         lg="3"
-        :class="$vuetify.display.mdAndUp ? 'border-e' : 'border-b'"
+        :class="mdAndUp ? 'border-e' : 'border-b'"
       >
         <VCardText>
           <AppStepper
@@ -113,6 +148,8 @@ const onSubmit = async () => {
             <VBtn
               v-if="addLeadSteps.length - 1 === currentStep"
               color="success"
+              :loading="isLoading"
+              :disabled="isLoading"
               @click="onSubmit"
             >
               Submit

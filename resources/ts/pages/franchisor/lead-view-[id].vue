@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
+import { avatarText } from '@core/utils/formatters'
 
 const route = useRoute('franchisor-lead-view-id')
 const leadId = computed(() => Number(route.params.id))
@@ -13,49 +14,97 @@ const selectedNote = ref<any>(null)
 const noteToDelete = ref<number | null>(null)
 const isEditMode = ref(false)
 
-// Mock lead data - Replace with actual API call
-const leadData = ref({
-  id: leadId.value,
-  firstName: 'John',
-  lastName: 'Smith',
-  email: 'john.smith@example.com',
-  phone: '+1 234-567-8900',
-  company: 'Tech Corp',
-  country: 'USA',
-  state: 'California',
-  city: 'San Francisco',
-  source: 'Website',
-  status: 'qualified',
-  owner: 'Sarah Johnson',
-  lastContacted: '2024-01-15',
-  scheduledMeeting: '2024-01-20',
-  note: 'Interested in franchise opportunities in the Bay Area',
+// Lead data from API
+const leadData = ref<any>(null)
+const isLoadingLead = ref(false)
+
+// Fetch lead data
+const fetchLeadData = async () => {
+  try {
+    isLoadingLead.value = true
+    const response = await $api(`/v1/franchisor/leads/${leadId.value}`, {
+      method: 'GET',
+    })
+
+    if (response.success) {
+      // Map API response to frontend format
+      leadData.value = {
+        id: response.data.id,
+        firstName: response.data.first_name,
+        lastName: response.data.last_name,
+        email: response.data.email,
+        phone: response.data.phone,
+        company: response.data.company_name || response.data.company,
+        country: response.data.country,
+        state: response.data.state || response.data.address,
+        city: response.data.city,
+        source: response.data.lead_source,
+        status: response.data.status,
+        owner: response.data.assignedUser?.name || 'Unassigned',
+        lastContacted: response.data.last_contact_date,
+        scheduledMeeting: response.data.next_follow_up_date,
+        note: response.data.notes,
+        priority: response.data.priority,
+        estimatedInvestment: response.data.estimated_investment,
+        franchiseFeeQuoted: response.data.franchise_fee_quoted,
+        expectedDecisionDate: response.data.expected_decision_date,
+        contactAttempts: response.data.contact_attempts,
+        interests: response.data.interests,
+        documents: response.data.documents,
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching lead data:', error)
+    // TODO: Show error toast
+  } finally {
+    isLoadingLead.value = false
+  }
+}
+
+// Fetch lead data on component mount
+onMounted(() => {
+  fetchLeadData()
 })
 
-// Mock notes data - Replace with actual API call
-const notesData = ref([
-  {
-    id: 1,
-    title: 'Initial Contact',
-    description: 'Had a great initial conversation with John. He expressed strong interest in opening a franchise in San Francisco. Discussed investment requirements and timeline. He mentioned having prior business experience in the food industry and is looking for a proven franchise model. Scheduled a follow-up meeting for next week to discuss location options and financial projections.',
-    createdBy: 'Sarah Johnson',
-    createdAt: '2024-01-15T10:30:00',
-  },
-  {
-    id: 2,
-    title: 'Follow-up Meeting',
-    description: 'Met with John to review franchise agreement and discuss potential locations. He is very interested in the downtown area.',
-    createdBy: 'Sarah Johnson',
-    createdAt: '2024-01-18T14:00:00',
-  },
-  {
-    id: 3,
-    title: 'Financial Review',
-    description: 'Reviewed financial projections and investment requirements. John confirmed he has the necessary capital.',
-    createdBy: 'John Smith',
-    createdAt: '2024-01-20T11:15:00',
-  },
-])
+// Notes data from API
+const notesData = ref<any[]>([])
+const isLoadingNotes = ref(false)
+
+// Fetch notes from API
+const fetchNotes = async () => {
+  if (!leadId.value) return
+  
+  try {
+    isLoadingNotes.value = true
+    const response = await $api('/v1/notes', {
+      method: 'GET',
+      query: { lead_id: leadId.value },
+    })
+
+    if (response.success) {
+      notesData.value = response.data.map((note: any) => ({
+        id: note.id,
+        title: note.title,
+        description: note.description,
+        createdBy: note.user?.name || 'Unknown',
+        createdAt: note.created_at,
+        attachments: note.attachments || [],
+      }))
+    }
+  } catch (error) {
+    console.error('Error fetching notes:', error)
+    // TODO: Show error toast
+  } finally {
+    isLoadingNotes.value = false
+  }
+}
+
+// Fetch notes when component mounts and when leadId changes
+watch(leadId, () => {
+  if (leadId.value) {
+    fetchNotes()
+  }
+}, { immediate: true })
 
 const tabs = [
   { title: 'Overview', value: 'overview', icon: 'tabler-file-text' },
@@ -102,41 +151,128 @@ const confirmDeleteNote = (noteId: number) => {
 const deleteNote = async () => {
   if (noteToDelete.value === null) return
 
-  // TODO: Implement API call
-  const index = notesData.value.findIndex(note => note.id === noteToDelete.value)
-  if (index !== -1)
-    notesData.value.splice(index, 1)
+  try {
+    const response = await $api(`/v1/notes/${noteToDelete.value}`, {
+      method: 'DELETE',
+    })
+
+    if (response.success) {
+      // Refresh notes from API
+      await fetchNotes()
+      console.log('Note deleted successfully')
+      // TODO: Show success toast
+    } else {
+      console.error('Failed to delete note:', response.message)
+      // TODO: Show error toast
+    }
+  } catch (error) {
+    console.error('Error deleting note:', error)
+    // TODO: Show error toast
+  }
 
   isDeleteNoteDialogVisible.value = false
   noteToDelete.value = null
 }
 
-const onNoteUpdated = () => {
-  // TODO: Refresh notes from API
-  console.log('Note updated, refreshing list')
-  isEditNoteModalVisible.value = false
+const onNoteUpdated = async () => {
+  if (!selectedNote.value) return
+
+  try {
+    const response = await $api(`/v1/notes/${selectedNote.value.id}`, {
+      method: 'PUT',
+      body: {
+        title: selectedNote.value.title,
+        description: selectedNote.value.description,
+        lead_id: leadId.value,
+      },
+    })
+
+    if (response.success) {
+      // Refresh notes from API
+      await fetchNotes()
+      isEditNoteModalVisible.value = false
+      console.log('Note updated successfully')
+      // TODO: Show success toast
+    } else {
+      console.error('Failed to update note:', response.message)
+      // TODO: Show error toast
+    }
+  } catch (error) {
+    console.error('Error updating note:', error)
+    // TODO: Show error toast
+  }
 }
 
-const onNoteAdded = () => {
-  // TODO: Refresh notes from API
-  console.log('Note added, refreshing list')
+const onNoteAdded = async () => {
+  // Refresh notes from API
+  await fetchNotes()
+  console.log('Note added successfully')
 }
 
 const toggleEditMode = () => {
   isEditMode.value = !isEditMode.value
 }
 
+const isSavingLead = ref(false)
+
 const saveLead = async () => {
-  // TODO: Implement API call to save lead
-  console.log('Saving lead:', leadData.value)
-  isEditMode.value = false
+  if (!leadData.value) return
+
+  try {
+    isSavingLead.value = true
+
+    // Map frontend data to API format
+    const updateData = {
+      first_name: leadData.value.firstName,
+      last_name: leadData.value.lastName,
+      email: leadData.value.email,
+      phone: leadData.value.phone,
+      company: leadData.value.company,
+      country: leadData.value.country,
+      state: leadData.value.state,
+      city: leadData.value.city,
+      source: leadData.value.source,
+      status: leadData.value.status,
+      notes: leadData.value.note,
+      priority: leadData.value.priority,
+      estimated_investment: leadData.value.estimatedInvestment,
+      franchise_fee_quoted: leadData.value.franchiseFeeQuoted,
+      expected_decision_date: leadData.value.expectedDecisionDate,
+    }
+
+    const response = await $api(`/v1/franchisor/leads/${leadId.value}`, {
+      method: 'PUT',
+      body: updateData,
+    })
+
+    if (response.success) {
+      // Update local data with response
+      await fetchLeadData()
+      isEditMode.value = false
+      // TODO: Show success toast
+      console.log('Lead updated successfully')
+    }
+  } catch (error) {
+    console.error('Error updating lead:', error)
+    // TODO: Show error toast
+  } finally {
+    isSavingLead.value = false
+  }
 }
 </script>
 
 <template>
   <section>
+    <!-- 👉 Loading State -->
+    <VCard v-if="isLoadingLead" class="mb-6">
+      <VCardText class="text-center py-10">
+        <VProgressCircular indeterminate color="primary" />
+        <div class="mt-4">Loading lead data...</div>
+      </VCardText>
+    </VCard>
+
     <!-- 👉 Lead Header -->
-    <VCard class="mb-6">
+    <VCard v-else-if="leadData" class="mb-6">
       <VCardText>
         <div class="d-flex justify-space-between align-center flex-wrap gap-4">
           <div class="d-flex align-center gap-4">
@@ -177,6 +313,8 @@ const saveLead = async () => {
               v-if="isEditMode"
               color="success"
               prepend-icon="tabler-check"
+              :loading="isSavingLead"
+              :disabled="isSavingLead"
               @click="saveLead"
             >
               Save
@@ -195,24 +333,25 @@ const saveLead = async () => {
     </VCard>
 
     <!-- 👉 Tabs -->
-    <VTabs
-      v-model="currentTab"
-      class="mb-6"
-    >
-      <VTab
-        v-for="tab in tabs"
-        :key="tab.value"
-        :value="tab.value"
+    <template v-if="leadData">
+      <VTabs
+        v-model="currentTab"
+        class="mb-6"
       >
-        <VIcon
-          :icon="tab.icon"
-          start
-        />
-        {{ tab.title }}
-      </VTab>
-    </VTabs>
+        <VTab
+          v-for="tab in tabs"
+          :key="tab.value"
+          :value="tab.value"
+        >
+          <VIcon
+            :icon="tab.icon"
+            start
+          />
+          {{ tab.title }}
+        </VTab>
+      </VTabs>
 
-    <VWindow
+      <VWindow
       v-model="currentTab"
       class="disable-tab-transition"
     >
@@ -428,6 +567,7 @@ const saveLead = async () => {
         </VCard>
       </VWindowItem>
     </VWindow>
+    </template>
 
     <!-- 👉 Add Note Modal -->
     <AddNoteModal

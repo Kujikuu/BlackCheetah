@@ -36,26 +36,34 @@ const handleFileUpload = (event: Event) => {
 
 const onSubmit = async () => {
   try {
-    // TODO: Implement API call
-    const noteData = {
-      leadId: props.leadId,
-      title: noteTitle.value,
-      description: noteDescription.value,
-      attachments: attachments.value,
-      createdAt: new Date().toISOString(),
+    const response = await $api('/v1/notes', {
+      method: 'POST',
+      body: {
+        lead_id: props.leadId,
+        title: noteTitle.value,
+        description: noteDescription.value,
+      },
+    })
+
+    if (response.success) {
+      console.log('Note added successfully:', response.data)
+      
+      // Emit event to refresh notes
+      emit('noteAdded')
+
+      // Close dialog and reset form
+      dialogValue.value = false
+      resetForm()
+      
+      // TODO: Show success toast
+    } else {
+      console.error('Failed to add note:', response.message)
+      // TODO: Show error toast
     }
-
-    console.log('Adding note:', noteData)
-
-    // Emit event to refresh notes
-    emit('noteAdded')
-
-    // Close dialog and reset form
-    dialogValue.value = false
-    resetForm()
   }
   catch (error) {
     console.error('Error adding note:', error)
+    // TODO: Show error toast
   }
 }
 

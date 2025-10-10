@@ -1,18 +1,19 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FranchiseController;
 use App\Http\Controllers\Api\FranchisorController;
 use App\Http\Controllers\Api\LeadController;
-use App\Http\Controllers\Api\UnitController;
+use App\Http\Controllers\Api\RevenueController;
+use App\Http\Controllers\Api\RoyaltyController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TechnicalRequestController;
 use App\Http\Controllers\Api\TransactionController;
-use App\Http\Controllers\Api\RoyaltyController;
-use App\Http\Controllers\Api\RevenueController;
+use App\Http\Controllers\Api\UnitController;
+use App\Http\Controllers\NoteController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,6 +67,16 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
         Route::patch('{lead}/mark-lost', [LeadController::class, 'markAsLost']);
         Route::patch('{lead}/assign', [LeadController::class, 'assign']);
         Route::post('{lead}/notes', [LeadController::class, 'addNote']);
+    });
+
+    // Note Management Routes
+    Route::prefix('notes')->group(function () {
+        Route::get('/', [NoteController::class, 'index']); // Get notes for a lead
+        Route::post('/', [NoteController::class, 'store']); // Create new note
+        Route::get('{note}', [NoteController::class, 'show']); // Get specific note
+        Route::put('{note}', [NoteController::class, 'update']); // Update note
+        Route::delete('{note}', [NoteController::class, 'destroy']); // Delete note
+        Route::delete('{note}/attachments', [NoteController::class, 'removeAttachment']); // Remove attachment
     });
 
     // Unit Management Routes
@@ -234,6 +245,8 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
 
     // Lead management for franchisor
     Route::get('leads', [LeadController::class, 'myLeads']);
+    Route::get('leads/statistics', [LeadController::class, 'statistics']);
+    Route::get('leads/{lead}', [LeadController::class, 'show']);
     Route::post('leads', [LeadController::class, 'store']);
     Route::put('leads/{lead}', [LeadController::class, 'update']);
     Route::delete('leads/{lead}', [LeadController::class, 'destroy']);
@@ -259,6 +272,13 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::patch('technical-requests/{technicalRequest}/resolve', [TechnicalRequestController::class, 'resolve']);
     Route::patch('technical-requests/{technicalRequest}/close', [TechnicalRequestController::class, 'close']);
     Route::patch('technical-requests/{technicalRequest}/escalate', [TechnicalRequestController::class, 'escalate']);
+
+    // Sales associates management for franchisor
+    Route::get('sales-associates', [FranchisorController::class, 'salesAssociatesIndex']);
+    Route::post('sales-associates', [FranchisorController::class, 'salesAssociatesStore']);
+    Route::get('sales-associates/{id}', [FranchisorController::class, 'salesAssociatesShow']);
+    Route::put('sales-associates/{id}', [FranchisorController::class, 'salesAssociatesUpdate']);
+    Route::delete('sales-associates/{id}', [FranchisorController::class, 'salesAssociatesDestroy']);
 
     // Financial data for franchisor
     Route::get('transactions', [TransactionController::class, 'myTransactions']);

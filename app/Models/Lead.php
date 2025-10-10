@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lead extends Model
 {
@@ -65,11 +66,19 @@ class Lead extends Model
     }
 
     /**
+     * Get the notes for this lead
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class);
+    }
+
+    /**
      * Get the full name of the lead
      */
     public function getFullNameAttribute(): string
     {
-        return $this->first_name . ' ' . $this->last_name;
+        return $this->first_name.' '.$this->last_name;
     }
 
     /**
@@ -152,6 +161,6 @@ class Lead extends Model
     public function scopeNeedsFollowUp($query)
     {
         return $query->where('next_follow_up_date', '<=', now())
-                    ->whereNotIn('status', ['closed_won', 'closed_lost']);
+            ->whereNotIn('status', ['closed_won', 'closed_lost']);
     }
 }

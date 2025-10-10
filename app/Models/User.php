@@ -13,7 +13,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -31,11 +31,13 @@ class User extends Authenticatable
         'date_of_birth',
         'gender',
         'country',
+        'state',
         'city',
         'address',
         'last_login_at',
         'preferences',
         'profile_completion',
+        'franchise_id',
     ];
 
     /**
@@ -87,6 +89,14 @@ class User extends Authenticatable
     public function franchise(): HasOne
     {
         return $this->hasOne(Franchise::class, 'franchisor_id');
+    }
+
+    /**
+     * Get the franchise this user belongs to (for sales associates and franchisees)
+     */
+    public function belongsToFranchise()
+    {
+        return $this->belongsTo(Franchise::class, 'franchise_id');
     }
 
     /**

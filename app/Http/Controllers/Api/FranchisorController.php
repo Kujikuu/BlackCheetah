@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Franchise;
 use App\Models\Lead;
-use App\Models\Unit;
-use App\Models\Task;
-use App\Models\Transaction;
-use App\Models\Royalty;
 use App\Models\Revenue;
+use App\Models\Royalty;
+use App\Models\Task;
 use App\Models\TechnicalRequest;
-use Illuminate\Http\Request;
+use App\Models\Transaction;
+use App\Models\Unit;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class FranchisorController extends Controller
 {
@@ -27,12 +27,12 @@ class FranchisorController extends Controller
     {
         try {
             $user = Auth::user();
-            $franchise = $user->franchise;
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
-            if (!$franchise) {
+            if (! $franchise) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No franchise found for this user'
+                    'message' => 'No franchise found for this user',
                 ], 404);
             }
 
@@ -64,25 +64,25 @@ class FranchisorController extends Controller
             $currentMonthRevenue = Revenue::whereHas('unit.franchise', function ($query) use ($franchise) {
                 $query->where('franchisor_id', $franchise->id);
             })
-            ->where('month', $currentMonth->format('Y-m'))
-            ->sum('amount');
+                ->where('month', $currentMonth->format('Y-m'))
+                ->sum('amount');
 
             $previousMonthRevenue = Revenue::whereHas('unit.franchise', function ($query) use ($franchise) {
                 $query->where('franchisor_id', $franchise->id);
             })
-            ->where('month', $previousMonth->format('Y-m'))
-            ->sum('amount');
+                ->where('month', $previousMonth->format('Y-m'))
+                ->sum('amount');
 
-            $revenueChange = $previousMonthRevenue > 0 
-                ? (($currentMonthRevenue - $previousMonthRevenue) / $previousMonthRevenue) * 100 
+            $revenueChange = $previousMonthRevenue > 0
+                ? (($currentMonthRevenue - $previousMonthRevenue) / $previousMonthRevenue) * 100
                 : 0;
 
             // Pending royalties
             $pendingRoyalties = Royalty::whereHas('unit.franchise', function ($query) use ($franchise) {
                 $query->where('franchisor_id', $franchise->id);
             })
-            ->where('status', 'pending')
-            ->sum('amount');
+                ->where('status', 'pending')
+                ->sum('amount');
 
             return response()->json([
                 'success' => true,
@@ -94,14 +94,13 @@ class FranchisorController extends Controller
                     'currentMonthRevenue' => $currentMonthRevenue,
                     'revenueChange' => round($revenueChange, 2),
                     'pendingRoyalties' => $pendingRoyalties,
-                ]
+                ],
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch dashboard statistics',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -113,12 +112,12 @@ class FranchisorController extends Controller
     {
         try {
             $user = Auth::user();
-            $franchise = $user->franchise;
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
-            if (!$franchise) {
+            if (! $franchise) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No franchise found for this user'
+                    'message' => 'No franchise found for this user',
                 ], 404);
             }
 
@@ -130,26 +129,26 @@ class FranchisorController extends Controller
 
             // Revenue by month
             $revenueByMonth = Revenue::where('franchise_id', $franchise->id)
-            ->whereIn(DB::raw('CONCAT(period_year, "-", LPAD(period_month, 2, "0"))'), $months)
-            ->groupBy(DB::raw('CONCAT(period_year, "-", LPAD(period_month, 2, "0"))'))
-            ->selectRaw('CONCAT(period_year, "-", LPAD(period_month, 2, "0")) as month, SUM(amount) as total')
-            ->pluck('total', 'month');
+                ->whereIn(DB::raw('CONCAT(period_year, "-", LPAD(period_month, 2, "0"))'), $months)
+                ->groupBy(DB::raw('CONCAT(period_year, "-", LPAD(period_month, 2, "0"))'))
+                ->selectRaw('CONCAT(period_year, "-", LPAD(period_month, 2, "0")) as month, SUM(amount) as total')
+                ->pluck('total', 'month');
 
             // Royalties by month
             $royaltiesByMonth = Royalty::where('franchise_id', $franchise->id)
-            ->where('status', 'paid')
-            ->whereIn(DB::raw('CONCAT(period_year, "-", LPAD(period_month, 2, "0"))'), $months)
-            ->groupBy(DB::raw('CONCAT(period_year, "-", LPAD(period_month, 2, "0"))'))
-            ->selectRaw('CONCAT(period_year, "-", LPAD(period_month, 2, "0")) as month, SUM(total_amount) as total')
-            ->pluck('total', 'month');
+                ->where('status', 'paid')
+                ->whereIn(DB::raw('CONCAT(period_year, "-", LPAD(period_month, 2, "0"))'), $months)
+                ->groupBy(DB::raw('CONCAT(period_year, "-", LPAD(period_month, 2, "0"))'))
+                ->selectRaw('CONCAT(period_year, "-", LPAD(period_month, 2, "0")) as month, SUM(total_amount) as total')
+                ->pluck('total', 'month');
 
             // Expenses by month (from transactions)
             $expensesByMonth = Transaction::where('franchise_id', $franchise->id)
-            ->where('type', 'expense')
-            ->whereIn(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m")'), $months)
-            ->groupBy(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m")'))
-            ->selectRaw('DATE_FORMAT(transaction_date, "%Y-%m") as month, SUM(amount) as total')
-            ->pluck('total', 'month');
+                ->where('type', 'expense')
+                ->whereIn(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m")'), $months)
+                ->groupBy(DB::raw('DATE_FORMAT(transaction_date, "%Y-%m")'))
+                ->selectRaw('DATE_FORMAT(transaction_date, "%Y-%m") as month, SUM(amount) as total')
+                ->pluck('total', 'month');
 
             // Format data for charts
             $chartData = $months->map(function ($month) use ($revenueByMonth, $royaltiesByMonth, $expensesByMonth) {
@@ -164,34 +163,34 @@ class FranchisorController extends Controller
             // Current month totals
             $currentMonth = Carbon::now()->format('Y-m');
             $previousMonth = Carbon::now()->subMonth()->format('Y-m');
-            
+
             $totalSales = $revenueByMonth->get($currentMonth, 0);
             $previousSales = $revenueByMonth->get($previousMonth, 0);
             $salesChange = $previousSales > 0 ? (($totalSales - $previousSales) / $previousSales) * 100 : 0;
-            
+
             $totalExpenses = $expensesByMonth->get($currentMonth, 0);
             $previousExpenses = $expensesByMonth->get($previousMonth, 0);
             $expensesChange = $previousExpenses > 0 ? (($totalExpenses - $previousExpenses) / $previousExpenses) * 100 : 0;
-            
+
             $totalProfit = $totalSales - $totalExpenses;
             $previousProfit = $previousSales - $previousExpenses;
             $profitChange = $previousProfit > 0 ? (($totalProfit - $previousProfit) / $previousProfit) * 100 : 0;
-            
+
             $profitMargin = $totalSales > 0 ? ($totalProfit / $totalSales) * 100 : 0;
             $previousMargin = $previousSales > 0 ? ($previousProfit / $previousSales) * 100 : 0;
             $marginChange = $profitMargin - $previousMargin;
 
             // Top performing units - simplified for now since units might not have direct revenues
             $topUnits = Unit::where('franchise_id', $franchise->id)
-            ->limit(5)
-            ->get()
-            ->map(function ($unit, $index) {
-                return [
-                    'name' => $unit->name,
-                    'sales' => rand(10000, 50000), // Mock data for now
-                    'royalty' => rand(1000, 5000), // Mock data for now
-                ];
-            });
+                ->limit(5)
+                ->get()
+                ->map(function ($unit, $index) {
+                    return [
+                        'name' => $unit->name,
+                        'sales' => rand(10000, 50000), // Mock data for now
+                        'royalty' => rand(1000, 5000), // Mock data for now
+                    ];
+                });
 
             return response()->json([
                 'success' => true,
@@ -211,25 +210,25 @@ class FranchisorController extends Controller
                     'sales_chart' => $chartData->map(function ($item) {
                         return [
                             'month' => $item['month'],
-                            'amount' => $item['revenue']
+                            'amount' => $item['revenue'],
                         ];
                     })->toArray(),
                     'expenses_chart' => $chartData->map(function ($item) {
                         return [
                             'month' => $item['month'],
-                            'amount' => $item['expenses']
+                            'amount' => $item['expenses'],
                         ];
                     })->toArray(),
                     'profit_chart' => $chartData->map(function ($item) {
                         return [
                             'month' => $item['month'],
-                            'amount' => $item['revenue'] - $item['expenses']
+                            'amount' => $item['revenue'] - $item['expenses'],
                         ];
                     })->toArray(),
                     'royalty_chart' => $chartData->map(function ($item) {
                         return [
                             'month' => $item['month'],
-                            'amount' => $item['royalties']
+                            'amount' => $item['royalties'],
                         ];
                     })->toArray(),
                     'monthly_breakdown' => $chartData->map(function ($item) {
@@ -238,17 +237,16 @@ class FranchisorController extends Controller
                             'sales' => $item['revenue'],
                             'expenses' => $item['expenses'],
                             'royalties' => $item['royalties'],
-                            'profit' => $item['revenue'] - $item['expenses']
+                            'profit' => $item['revenue'] - $item['expenses'],
                         ];
                     })->toArray(),
-                ]
+                ],
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch finance statistics',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -260,12 +258,12 @@ class FranchisorController extends Controller
     {
         try {
             $user = Auth::user();
-            $franchise = $user->franchise;
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
-            if (!$franchise) {
+            if (! $franchise) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No franchise found for this user'
+                    'message' => 'No franchise found for this user',
                 ], 404);
             }
 
@@ -284,8 +282,8 @@ class FranchisorController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('phone', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
                 });
             }
 
@@ -352,14 +350,13 @@ class FranchisorController extends Controller
                         'current_page' => $leads->currentPage(),
                         'last_page' => $leads->lastPage(),
                     ],
-                ]
+                ],
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch leads data',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -371,12 +368,12 @@ class FranchisorController extends Controller
     {
         try {
             $user = Auth::user();
-            $franchise = $user->franchise;
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
-            if (!$franchise) {
+            if (! $franchise) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No franchise found for this user'
+                    'message' => 'No franchise found for this user',
                 ], 404);
             }
 
@@ -409,7 +406,7 @@ class FranchisorController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             }
 
@@ -446,14 +443,13 @@ class FranchisorController extends Controller
                         'completed' => $completedTasks,
                     ],
                     'tasksByPriority' => $tasksByPriority,
-                ]
+                ],
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch operations data',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -465,12 +461,12 @@ class FranchisorController extends Controller
     {
         try {
             $user = Auth::user();
-            $franchise = $user->franchise;
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
-            if (!$franchise) {
+            if (! $franchise) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No franchise found for this user'
+                    'message' => 'No franchise found for this user',
                 ], 404);
             }
 
@@ -513,19 +509,19 @@ class FranchisorController extends Controller
             $recentRequests = TechnicalRequest::whereHas('requester.franchise', function ($query) use ($franchise) {
                 $query->where('franchisor_id', $franchise->id);
             })
-            ->where('created_at', '>=', Carbon::now()->subDays(30))
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($request) {
-                return [
-                    'type' => 'technical_request',
-                    'title' => "Technical request: {$request->title}",
-                    'description' => $request->description,
-                    'date' => $request->created_at,
-                    'status' => $request->status,
-                ];
-            });
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get()
+                ->map(function ($request) {
+                    return [
+                        'type' => 'technical_request',
+                        'title' => "Technical request: {$request->title}",
+                        'description' => $request->description,
+                        'date' => $request->created_at,
+                        'status' => $request->status,
+                    ];
+                });
 
             // Merge and sort all activities
             $activities = $recentLeads
@@ -539,14 +535,13 @@ class FranchisorController extends Controller
                 'success' => true,
                 'data' => [
                     'activities' => $activities,
-                ]
+                ],
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch timeline data',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -558,29 +553,28 @@ class FranchisorController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             // Get franchise where this user is the franchisor
             $franchise = Franchise::where('franchisor_id', $user->id)
                 ->with(['units', 'franchisor'])
                 ->first();
 
-            if (!$franchise) {
+            if (! $franchise) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No franchise found for this user'
+                    'message' => 'No franchise found for this user',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $franchise
+                'data' => $franchise,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch franchise information',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -592,12 +586,12 @@ class FranchisorController extends Controller
     {
         try {
             $user = Auth::user();
-            $franchise = $user->franchise;
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
-            if (!$franchise) {
+            if (! $franchise) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No franchise found for this user'
+                    'message' => 'No franchise found for this user',
                 ], 404);
             }
 
@@ -611,7 +605,7 @@ class FranchisorController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             }
 
@@ -631,14 +625,13 @@ class FranchisorController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $franchisees
+                'data' => $franchisees,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch franchisees',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -650,12 +643,12 @@ class FranchisorController extends Controller
     {
         try {
             $user = Auth::user();
-            $franchise = $user->franchise;
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
-            if (!$franchise) {
+            if (! $franchise) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No franchise found for this user'
+                    'message' => 'No franchise found for this user',
                 ], 404);
             }
 
@@ -668,7 +661,7 @@ class FranchisorController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('location', 'like', "%{$search}%");
+                        ->orWhere('location', 'like', "%{$search}%");
                 });
             }
 
@@ -688,14 +681,333 @@ class FranchisorController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $units
+                'data' => $units,
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch units',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get sales associates for the franchisor
+     */
+    public function salesAssociatesIndex(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            $query = User::where('role', 'sales')
+                ->where('franchise_id', $franchise->id)
+                ->withCount('leads'); // Get the count of assigned leads
+
+            // Apply search filter
+            if ($request->has('search') && $request->search) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            }
+
+            // Role filter removed - sales_role field no longer exists
+
+            // Apply status filter
+            if ($request->has('status') && $request->status) {
+                $query->where('status', $request->status);
+            }
+
+            // Apply sorting
+            $sortBy = $request->get('sortBy', 'created_at');
+            $sortOrder = $request->get('sortOrder', 'desc');
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Pagination
+            $perPage = $request->get('perPage', 10);
+            $salesAssociates = $query->paginate($perPage);
+
+            // Transform the data to include assignedLeads count
+            $salesAssociates->getCollection()->transform(function ($associate) {
+                return [
+                    'id' => $associate->id,
+                    'name' => $associate->name,
+                    'email' => $associate->email,
+                    'phone' => $associate->phone,
+                    'status' => $associate->status,
+                    'country' => $associate->country,
+                    'state' => $associate->state,
+                    'city' => $associate->city,
+                    'assignedLeads' => $associate->leads_count,
+                    'avatar' => $associate->avatar,
+                    'avatarText' => $associate->name ? strtoupper(substr($associate->name, 0, 2)) : 'SA',
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $salesAssociates->items(),
+                'total' => $salesAssociates->total(),
+                'per_page' => $salesAssociates->perPage(),
+                'current_page' => $salesAssociates->currentPage(),
+                'last_page' => $salesAssociates->lastPage(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch sales associates',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Store a new sales associate
+     */
+    public function salesAssociatesStore(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'phone' => 'required|string|max:20',
+                'status' => 'required|in:active,inactive',
+                'country' => 'nullable|string|max:100',
+                'state' => 'nullable|string|max:100',
+                'city' => 'nullable|string|max:100',
+                'password' => 'required|string|min:8',
+            ]);
+
+            $validatedData['role'] = 'sales';
+            $validatedData['franchise_id'] = $franchise->id;
+            $validatedData['password'] = bcrypt($validatedData['password']);
+
+            $salesAssociate = User::create($validatedData);
+
+            // Load the leads count
+            $salesAssociate->loadCount('leads');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales associate created successfully',
+                'data' => [
+                    'id' => $salesAssociate->id,
+                    'name' => $salesAssociate->name,
+                    'email' => $salesAssociate->email,
+                    'phone' => $salesAssociate->phone,
+                    'status' => $salesAssociate->status,
+                    'country' => $salesAssociate->country,
+                    'state' => $salesAssociate->state,
+                    'city' => $salesAssociate->city,
+                    'assignedLeads' => $salesAssociate->leads_count,
+                    'avatar' => $salesAssociate->avatar,
+                    'avatarText' => strtoupper(substr($salesAssociate->name, 0, 2)),
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create sales associate',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Show a specific sales associate
+     */
+    public function salesAssociatesShow($id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            $salesAssociate = User::where('role', 'sales')
+                ->where('franchise_id', $franchise->id)
+                ->where('id', $id)
+                ->withCount('leads')
+                ->with(['leads' => function ($query) {
+                    $query->select('id', 'assigned_to', 'first_name', 'last_name', 'email', 'status', 'priority');
+                }])
+                ->first();
+
+            if (! $salesAssociate) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sales associate not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $salesAssociate->id,
+                    'name' => $salesAssociate->name,
+                    'email' => $salesAssociate->email,
+                    'phone' => $salesAssociate->phone,
+                    'status' => $salesAssociate->status,
+                    'country' => $salesAssociate->country,
+                    'state' => $salesAssociate->state,
+                    'city' => $salesAssociate->city,
+                    'assignedLeads' => $salesAssociate->leads_count,
+                    'avatar' => $salesAssociate->avatar,
+                    'avatarText' => strtoupper(substr($salesAssociate->name, 0, 2)),
+                    'leads' => $salesAssociate->leads,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch sales associate',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update a sales associate
+     */
+    public function salesAssociatesUpdate(Request $request, $id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            $salesAssociate = User::where('role', 'sales')
+                ->where('franchise_id', $franchise->id)
+                ->where('id', $id)
+                ->first();
+
+            if (! $salesAssociate) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sales associate not found',
+                ], 404);
+            }
+
+            $validatedData = $request->validate([
+                'name' => 'sometimes|required|string|max:255',
+                'email' => 'sometimes|required|email|unique:users,email,'.$id,
+                'phone' => 'sometimes|required|string|max:20',
+                'status' => 'sometimes|required|in:active,inactive',
+                'country' => 'nullable|string|max:100',
+                'state' => 'nullable|string|max:100',
+                'city' => 'nullable|string|max:100',
+                'password' => 'sometimes|string|min:8',
+            ]);
+
+            if (isset($validatedData['password'])) {
+                $validatedData['password'] = bcrypt($validatedData['password']);
+            }
+
+            $salesAssociate->update($validatedData);
+
+            // Load the leads count
+            $salesAssociate->loadCount('leads');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales associate updated successfully',
+                'data' => [
+                    'id' => $salesAssociate->id,
+                    'name' => $salesAssociate->name,
+                    'email' => $salesAssociate->email,
+                    'phone' => $salesAssociate->phone,
+                    'status' => $salesAssociate->status,
+                    'country' => $salesAssociate->country,
+                    'state' => $salesAssociate->state,
+                    'city' => $salesAssociate->city,
+                    'assignedLeads' => $salesAssociate->leads_count,
+                    'avatar' => $salesAssociate->avatar,
+                    'avatarText' => strtoupper(substr($salesAssociate->name, 0, 2)),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update sales associate',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a sales associate
+     */
+    public function salesAssociatesDestroy($id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            $salesAssociate = User::where('role', 'sales')
+                ->where('franchise_id', $franchise->id)
+                ->where('id', $id)
+                ->first();
+
+            if (! $salesAssociate) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sales associate not found',
+                ], 404);
+            }
+
+            // Unassign leads before deleting the sales associate
+            Lead::where('assigned_to', $id)->update(['assigned_to' => null]);
+
+            $salesAssociate->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales associate deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete sales associate',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

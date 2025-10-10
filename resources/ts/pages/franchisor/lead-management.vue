@@ -1,16 +1,38 @@
 <script setup lang="ts">
+import { avatarText, prefixWithPlus } from '@core/utils/formatters'
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
+import AssignLeadModal from '@/components/dialogs/AssignLeadModal.vue'
+import ConvertLeadModal from '@/components/dialogs/ConvertLeadModal.vue'
+import MarkAsLostModal from '@/components/dialogs/MarkAsLostModal.vue'
+
+// 👉 Types
+interface Lead {
+  id: number
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  company: string
+  country: string
+  state: string
+  city: string
+  source: string
+  status: string
+  owner: string
+  lastContacted: string
+  scheduledMeeting?: string
+}
+
+interface LeadsData {
+  leads: Lead[]
+  total: number
+}
 
 // 👉 Store
 const searchQuery = ref('')
-const selectedStatus = ref()
-const selectedSource = ref()
-const selectedOwner = ref()
-const isAddNoteModalVisible = ref(false)
-const selectedLeadForNote = ref<number | null>(null)
-const isImportDialogVisible = ref(false)
-const isDeleteDialogVisible = ref(false)
-const leadToDelete = ref<number | null>(null)
+const selectedStatus = ref('')
+const selectedSource = ref('')
+const selectedOwner = ref('')
 
 // Data table options
 const itemsPerPage = ref(10)
@@ -18,11 +40,13 @@ const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
 const selectedRows = ref([])
+const isLoading = ref(false)
 
 // Update data table options
 const updateOptions = (options: any) => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
+  fetchLeads()
 }
 
 // Headers
@@ -40,70 +64,113 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Mock data - Replace with actual API call
-const leadsData = ref({
-  leads: [
-    {
-      id: 1,
-      firstName: 'John',
-      lastName: 'Smith',
-      email: 'john.smith@example.com',
-      phone: '+1 234-567-8900',
-      company: 'Tech Corp',
-      country: 'USA',
-      state: 'California',
-      city: 'San Francisco',
-      source: 'Website',
-      status: 'qualified',
-      owner: 'Sarah Johnson',
-      lastContacted: '2024-01-15',
-      scheduledMeeting: '2024-01-20',
-    },
-    {
-      id: 2,
-      firstName: 'Emily',
-      lastName: 'Davis',
-      email: 'emily.d@example.com',
-      phone: '+1 234-567-8901',
-      company: 'Business Inc',
-      country: 'USA',
-      state: 'New York',
-      city: 'New York',
-      source: 'Referral',
-      status: 'unqualified',
-      owner: 'John Smith',
-      lastContacted: '2024-01-14',
-      scheduledMeeting: null,
-    },
-    {
-      id: 3,
-      firstName: 'Michael',
-      lastName: 'Brown',
-      email: 'michael.b@example.com',
-      phone: '+1 234-567-8902',
-      company: 'Solutions LLC',
-      country: 'Canada',
-      state: 'Ontario',
-      city: 'Toronto',
-      source: 'Social Media',
-      status: 'qualified',
-      owner: 'Sarah Johnson',
-      lastContacted: '2024-01-13',
-      scheduledMeeting: '2024-01-18',
-    },
-  ],
-  total: 3,
+// Real data from API
+const leadsData = ref<LeadsData>({
+  leads: [],
+  total: 0,
 })
 
 const leads = computed(() => leadsData.value.leads)
 const totalLeads = computed(() => leadsData.value.total)
 
+// 👉 API Functions
+const fetchLeads = async () => {
+  try {
+    isLoading.value = true
+    const params = new URLSearchParams({
+      page: page.value.toString(),
+      per_page: itemsPerPage.value.toString(),
+    })
+
+    if (searchQuery.value) params.append('search', searchQuery.value)
+    if (selectedStatus.value) params.append('status', selectedStatus.value)
+    if (selectedSource.value) params.append('source', selectedSource.value)
+    if (selectedOwner.value) params.append('owner', selectedOwner.value)
+    if (sortBy.value) params.append('sort_by', sortBy.value)
+    if (orderBy.value) params.append('sort_order', orderBy.value)
+
+    const response = await $api('/v1/franchisor/leads?' + params.toString(), {
+      method: 'GET',
+    })
+
+    if (response.success) {
+      leadsData.value = {
+        leads: response.data || [],
+        total: response.total || 0,
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching leads:', error)
+    // Handle error - show toast notification
+  } finally {
+    isLoading.value = false
+  }
+}
+
 // 👉 Stats
 const statsData = ref([
-  { title: 'Total Leads', value: '1,245', change: 15, icon: 'tabler-users', iconColor: 'primary' },
-  { title: 'Qualified', value: '847', change: 22, icon: 'tabler-user-check', iconColor: 'success' },
-  { title: 'Unqualified', value: '398', change: -8, icon: 'tabler-user-x', iconColor: 'error' },
+  { title: 'Total Leads', value: '0', change: 0, icon: 'tabler-users', iconColor: 'primary' },
+  { title: 'Qualified', value: '0', change: 0, icon: 'tabler-user-check', iconColor: 'success' },
+  { title: 'Unqualified', value: '0', change: 0, icon: 'tabler-user-x', iconColor: 'error' },
 ])
+
+// Fetch stats
+const fetchStats = async () => {
+  try {
+    const response = await $api('/v1/franchisor/dashboard/leads', {
+      method: 'GET',
+    })
+
+    if (response.success) {
+      const stats = response.data.stats
+      statsData.value = [
+        { 
+          title: 'Total Leads', 
+          value: stats.total_leads?.toString() || '0', 
+          change: stats.total_leads_change || 0, 
+          icon: 'tabler-users', 
+          iconColor: 'primary' 
+        },
+        { 
+          title: 'Pending', 
+          value: stats.pending_leads?.toString() || '0', 
+          change: stats.pending_leads_change || 0, 
+          icon: 'tabler-clock', 
+          iconColor: 'warning' 
+        },
+        { 
+          title: 'Won', 
+          value: stats.won_leads?.toString() || '0', 
+          change: stats.won_leads_change || 0, 
+          icon: 'tabler-user-check', 
+          iconColor: 'success' 
+        },
+        { 
+          title: 'Lost', 
+          value: stats.lost_leads?.toString() || '0', 
+          change: stats.lost_leads_change || 0, 
+          icon: 'tabler-user-x', 
+          iconColor: 'error' 
+        },
+      ]
+    }
+  } catch (error) {
+    console.error('Error fetching stats:', error)
+  }
+}
+
+// 👉 Modal states
+const isAddNoteModalVisible = ref(false)
+const selectedLeadForNote = ref<number | null>(null)
+const isImportDialogVisible = ref(false)
+const isDeleteDialogVisible = ref(false)
+const leadToDelete = ref<number | null>(null)
+const isAssignLeadModalVisible = ref(false)
+const selectedLeadForAssign = ref<number | null>(null)
+const isConvertLeadModalVisible = ref(false)
+const selectedLeadForConvert = ref<number | null>(null)
+const isMarkAsLostModalVisible = ref(false)
+const selectedLeadForMarkLost = ref<number | null>(null)
 
 // 👉 search filters
 const sources = [
@@ -118,11 +185,29 @@ const statuses = [
   { title: 'Unqualified', value: 'unqualified' },
 ]
 
-const owners = [
-  { title: 'Sarah Johnson', value: 'sarah_johnson' },
-  { title: 'John Smith', value: 'john_smith' },
-  { title: 'Michael Brown', value: 'michael_brown' },
-]
+// Fetch sales associates for assignment
+const salesAssociates = ref([])
+
+const fetchSalesAssociates = async () => {
+  try {
+    const response = await $api('/v1/franchisor/sales-associates', {
+      method: 'GET',
+    })
+
+    if (response.success) {
+      salesAssociates.value = response.data || []
+    }
+  } catch (error) {
+    console.error('Error fetching sales associates:', error)
+  }
+}
+
+const owners = computed(() => {
+  return salesAssociates.value.map((associate: any) => ({
+    title: `${associate.first_name} ${associate.last_name}`,
+    value: associate.id.toString(),
+  }))
+})
 
 const resolveStatusVariant = (stat: string) => {
   const statLowerCase = stat.toLowerCase()
@@ -132,6 +217,27 @@ const resolveStatusVariant = (stat: string) => {
     return 'error'
 
   return 'primary'
+}
+
+// 👉 Lead Actions
+const openAssignModal = (leadId: number) => {
+  selectedLeadForAssign.value = leadId
+  isAssignLeadModalVisible.value = true
+}
+
+const openConvertModal = (leadId: number) => {
+  selectedLeadForConvert.value = leadId
+  isConvertLeadModalVisible.value = true
+}
+
+const openMarkAsLostModal = (leadId: number) => {
+  selectedLeadForMarkLost.value = leadId
+  isMarkAsLostModalVisible.value = true
+}
+
+const openAddNoteModal = (leadId: number) => {
+  selectedLeadForNote.value = leadId
+  isAddNoteModalVisible.value = true
 }
 
 // 👉 Delete lead
@@ -144,18 +250,51 @@ const deleteLead = async () => {
   if (leadToDelete.value === null)
     return
 
-  // TODO: Implement API call
-  const index = leadsData.value.leads.findIndex(lead => lead.id === leadToDelete.value)
-  if (index !== -1)
-    leadsData.value.leads.splice(index, 1)
+  try {
+    const response = await $api(`/v1/franchisor/leads/${leadToDelete.value}`, {
+      method: 'DELETE',
+    })
 
-  // Delete from selectedRows
-  const selectedIndex = selectedRows.value.findIndex(row => row === leadToDelete.value)
-  if (selectedIndex !== -1)
-    selectedRows.value.splice(selectedIndex, 1)
+    if (response.success) {
+      // Refresh the leads list
+      await fetchLeads()
+      
+      // Remove from selectedRows if it was selected
+      const selectedIndex = selectedRows.value.findIndex(row => row === leadToDelete.value)
+      if (selectedIndex !== -1)
+        selectedRows.value.splice(selectedIndex, 1)
+    }
+  } catch (error) {
+    console.error('Error deleting lead:', error)
+  } finally {
+    isDeleteDialogVisible.value = false
+    leadToDelete.value = null
+  }
+}
 
-  isDeleteDialogVisible.value = false
-  leadToDelete.value = null
+// 👉 Modal event handlers
+const onLeadAssigned = () => {
+  fetchLeads()
+  isAssignLeadModalVisible.value = false
+  selectedLeadForAssign.value = null
+}
+
+const onLeadConverted = () => {
+  fetchLeads()
+  isConvertLeadModalVisible.value = false
+  selectedLeadForConvert.value = null
+}
+
+const onLeadMarkedLost = () => {
+  fetchLeads()
+  isMarkAsLostModalVisible.value = false
+  selectedLeadForMarkLost.value = null
+}
+
+const onNoteAdded = () => {
+  fetchLeads()
+  isAddNoteModalVisible.value = false
+  selectedLeadForNote.value = null
 }
 
 // 👉 Import CSV
@@ -213,23 +352,27 @@ const exportLeads = () => {
   window.URL.revokeObjectURL(url)
 }
 
-// 👉 Add note functionality
-const openAddNoteModal = (leadId: number) => {
-  selectedLeadForNote.value = leadId
-  isAddNoteModalVisible.value = true
-}
-
-const onNoteAdded = () => {
-  // TODO: Refresh notes or show success message
-  console.log('Note added successfully')
-}
-
 // 👉 Navigation
 const router = useRouter()
 
 const navigateToAddLead = () => {
   router.push({ name: 'franchisor-add-lead' })
 }
+
+// 👉 Lifecycle
+onMounted(async () => {
+  await Promise.all([
+    fetchLeads(),
+    fetchStats(),
+    fetchSalesAssociates(),
+  ])
+})
+
+// 👉 Watchers
+watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
+  page.value = 1
+  fetchLeads()
+})
 </script>
 
 <template>
@@ -332,9 +475,19 @@ const navigateToAddLead = () => {
       <VDivider />
 
       <!-- SECTION datatable -->
-      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
-        :items="leads" item-value="id" :items-length="totalLeads" :headers="headers" class="text-no-wrap" show-select
-        @update:options="updateOptions">
+      <VDataTableServer 
+        v-model:items-per-page="itemsPerPage" 
+        v-model:model-value="selectedRows" 
+        v-model:page="page"
+        :items="leads" 
+        item-value="id" 
+        :items-length="totalLeads" 
+        :headers="headers" 
+        :loading="isLoading"
+        class="text-no-wrap" 
+        show-select
+        @update:options="updateOptions"
+      >
         <!-- Index -->
         <template #item.index="{ index }">
           <div class="text-body-1 font-weight-medium">
@@ -388,14 +541,14 @@ const navigateToAddLead = () => {
 
         <!-- Source -->
         <template #item.source="{ item }">
-          <div class="text-body-1 text-capitalize">
+          <VChip size="small" color="primary" variant="tonal">
             {{ item.source }}
-          </div>
+          </VChip>
         </template>
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+          <VChip size="small" :color="resolveStatusVariant(item.status)" variant="tonal">
             {{ item.status }}
           </VChip>
         </template>
@@ -420,11 +573,25 @@ const navigateToAddLead = () => {
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem :to="{ name: 'franchisor-lead-view-id', params: { id: item.id } }">
+                <VListItem @click="openAssignModal(item.id)">
                   <template #prepend>
-                    <VIcon icon="tabler-eye" />
+                    <VIcon icon="tabler-user-plus" />
                   </template>
-                  <VListItemTitle>View & Edit</VListItemTitle>
+                  <VListItemTitle>Assign Lead</VListItemTitle>
+                </VListItem>
+
+                <VListItem @click="openConvertModal(item.id)">
+                  <template #prepend>
+                    <VIcon icon="tabler-check" />
+                  </template>
+                  <VListItemTitle>Convert Lead</VListItemTitle>
+                </VListItem>
+
+                <VListItem @click="openMarkAsLostModal(item.id)">
+                  <template #prepend>
+                    <VIcon icon="tabler-x" />
+                  </template>
+                  <VListItemTitle>Mark as Lost</VListItemTitle>
                 </VListItem>
 
                 <VListItem @click="openAddNoteModal(item.id)">
@@ -512,6 +679,28 @@ const navigateToAddLead = () => {
         </VCardActions>
       </VCard>
     </VDialog>
+
+    <!-- 👉 Assign Lead Modal -->
+    <AssignLeadModal
+      v-model:is-dialog-visible="isAssignLeadModalVisible"
+      :lead-id="selectedLeadForAssign || 0"
+      :sales-associates="salesAssociates"
+      @lead-assigned="onLeadAssigned"
+    />
+
+    <!-- 👉 Convert Lead Modal -->
+    <ConvertLeadModal
+      v-model:is-dialog-visible="isConvertLeadModalVisible"
+      :lead-id="selectedLeadForConvert || 0"
+      @lead-converted="onLeadConverted"
+    />
+
+    <!-- 👉 Mark as Lost Modal -->
+    <MarkAsLostModal
+      v-model:is-dialog-visible="isMarkAsLostModalVisible"
+      :lead-id="selectedLeadForMarkLost || 0"
+      @lead-marked-lost="onLeadMarkedLost"
+    />
 
     <!-- 👉 Add Note Modal -->
     <AddNoteModal

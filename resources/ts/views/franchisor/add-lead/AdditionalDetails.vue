@@ -22,15 +22,20 @@ const leadSources = [
   { title: 'Website', value: 'website' },
   { title: 'Referral', value: 'referral' },
   { title: 'Social Media', value: 'social_media' },
-  { title: 'Email Campaign', value: 'email' },
+  { title: 'Advertisement', value: 'advertisement' },
   { title: 'Cold Call', value: 'cold_call' },
+  { title: 'Event', value: 'event' },
+  { title: 'Other', value: 'other' },
 ]
 
 const leadStatuses = [
   { title: 'New', value: 'new' },
-  { title: 'Qualified', value: 'qualified' },
-  { title: 'Unqualified', value: 'unqualified' },
   { title: 'Contacted', value: 'contacted' },
+  { title: 'Qualified', value: 'qualified' },
+  { title: 'Proposal Sent', value: 'proposal_sent' },
+  { title: 'Negotiating', value: 'negotiating' },
+  { title: 'Closed Won', value: 'closed_won' },
+  { title: 'Closed Lost', value: 'closed_lost' },
 ]
 
 const leadOwners = [
