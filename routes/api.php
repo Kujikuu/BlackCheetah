@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\FranchiseController;
 use App\Http\Controllers\Api\FranchisorController;
 use App\Http\Controllers\Api\LeadController;
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RevenueController;
 use App\Http\Controllers\Api\RoyaltyController;
 use App\Http\Controllers\Api\TaskController;
@@ -57,6 +59,25 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
         Route::get('statistics', [FranchiseController::class, 'statistics']);
         Route::patch('{franchise}/activate', [FranchiseController::class, 'activate']);
         Route::patch('{franchise}/deactivate', [FranchiseController::class, 'deactivate']);
+
+        // Nested franchise documents
+        Route::prefix('{franchise_id}/documents')->group(function () {
+            Route::get('/', [DocumentController::class, 'index']);
+            Route::post('/', [DocumentController::class, 'store']);
+            Route::get('{document_id}', [DocumentController::class, 'show']);
+            Route::put('{document_id}', [DocumentController::class, 'update']);
+            Route::delete('{document_id}', [DocumentController::class, 'destroy']);
+            Route::get('{document_id}/download', [DocumentController::class, 'download']);
+        });
+
+        // Nested franchise products
+        Route::prefix('{franchise_id}/products')->group(function () {
+            Route::get('/', [ProductController::class, 'index']);
+            Route::post('/', [ProductController::class, 'store']);
+            Route::get('{product_id}', [ProductController::class, 'show']);
+            Route::put('{product_id}', [ProductController::class, 'update']);
+            Route::delete('{product_id}', [ProductController::class, 'destroy']);
+        });
     });
 
     // Lead Management Routes
@@ -148,6 +169,19 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
         Route::post('{revenue}/refund', [RevenueController::class, 'refund']);
         Route::post('{revenue}/line-items', [RevenueController::class, 'addLineItem']);
         Route::post('{revenue}/attachments', [RevenueController::class, 'addAttachment']);
+    });
+
+    // Document Management Routes
+    Route::apiResource('documents', DocumentController::class);
+    Route::prefix('documents')->group(function () {
+        Route::get('{document}/download', [DocumentController::class, 'download']);
+    });
+
+    // Product Management Routes
+    Route::apiResource('products', ProductController::class);
+    Route::prefix('products')->group(function () {
+        Route::get('categories', [ProductController::class, 'categories']);
+        Route::patch('{product}/stock', [ProductController::class, 'updateStock']);
     });
 });
 
@@ -245,6 +279,7 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::post('franchise/register', [FranchisorController::class, 'registerFranchise']);
     Route::get('franchise/data', [FranchisorController::class, 'getFranchiseData']);
     Route::put('franchise/update', [FranchisorController::class, 'updateFranchise']);
+    Route::post('franchise/upload-logo', [FranchisorController::class, 'uploadLogo']);
 
     // Franchisor can access their franchise network data
     Route::get('franchise', [FranchisorController::class, 'myFranchise']);

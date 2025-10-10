@@ -75,6 +75,22 @@ class Franchise extends Model
     }
 
     /**
+     * Get all products for this franchise
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    /**
+     * Get all documents for this franchise
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
+    }
+
+    /**
      * Check if franchise is active
      */
     public function isActive(): bool

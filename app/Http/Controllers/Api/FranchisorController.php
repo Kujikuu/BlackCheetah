@@ -1254,6 +1254,7 @@ class FranchisorController extends Controller
 
             // Format the response to match the frontend structure
             $franchiseData = [
+                'id' => $franchise->id,
                 'franchiseDetails' => [
                     'franchiseName' => $franchise->brand_name,
                     'website' => $franchise->website,
@@ -1416,8 +1417,10 @@ class FranchisorController extends Controller
             }
 
             // Update documents if funding info is provided
-            if (isset($validatedData['franchiseDetails']['legalDetails']['fundingAmount']) ||
-                isset($validatedData['franchiseDetails']['legalDetails']['fundingSource'])) {
+            if (
+                isset($validatedData['franchiseDetails']['legalDetails']['fundingAmount']) ||
+                isset($validatedData['franchiseDetails']['legalDetails']['fundingSource'])
+            ) {
                 $documents = $franchise->documents ?? [];
                 if (isset($validatedData['franchiseDetails']['legalDetails']['fundingAmount'])) {
                     $documents['funding_amount'] = $validatedData['franchiseDetails']['legalDetails']['fundingAmount'];
@@ -1470,6 +1473,55 @@ class FranchisorController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update franchise',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload franchise logo
+     */
+    public function uploadLogo(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            $validatedData = $request->validate([
+                'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            ]);
+
+            // Store the logo file
+            $logoPath = $request->file('logo')->store('franchise-logos', 'public');
+            $logoUrl = asset('storage/'.$logoPath);
+
+            // Update franchise with new logo URL
+            $franchise->update(['logo' => $logoUrl]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Logo uploaded successfully',
+                'data' => [
+                    'logo_url' => $logoUrl,
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload logo',
                 'error' => $e->getMessage(),
             ], 500);
         }

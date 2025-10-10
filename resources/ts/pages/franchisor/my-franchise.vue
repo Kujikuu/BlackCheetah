@@ -28,7 +28,8 @@ const showSnackbar = (message: string, color: string = 'success') => {
 }
 
 // 👉 Franchise data (will be populated from API)
-const franchiseData = ref({
+const franchiseData = ref<FranchiseData>({
+  id: 0,
   personalInfo: {
     contactNumber: '',
     country: '',
@@ -60,42 +61,132 @@ const franchiseData = ref({
 })
 
 // 👉 Type definitions
+interface PersonalInfo {
+  contactNumber: string
+  country: string
+  state: string
+  city: string
+  address: string
+}
+
+interface FranchiseDetails {
+  franchiseName: string
+  website: string
+  logo: File | null
+}
+
+interface LegalDetails {
+  legalEntityName: string
+  businessStructure: string
+  taxId: string
+  industry: string
+  fundingAmount: string
+  fundingSource: string
+}
+
+interface ContactDetails {
+  contactNumber: string
+  email: string
+  address: string
+  country: string
+  state: string
+  city: string
+}
+
+interface FranchiseData {
+  id: number
+  personalInfo: PersonalInfo
+  franchiseDetails: FranchiseDetails
+  legalDetails: LegalDetails
+  contactDetails: ContactDetails
+}
+
 interface DocumentData {
   id: number
-  title: string
+  name: string
   description: string
-  fileName: string
-  fileSize: string
-  uploadDate: string
+  file_name: string
+  file_size: number
+  created_at: string
   type: string
+  file_path?: string
+  file_extension?: string
+  mime_type?: string
+  status?: string
+  expiry_date?: string
+  is_confidential?: boolean
+  metadata?: any
 }
 
 interface ProductData {
   id: number
   name: string
   description: string
-  unitPrice: number
+  unit_price: number
   category: string
   status: string
   stock: number
+  sku?: string
+  image?: string
+  cost_price?: number
+  weight?: number
+  dimensions?: string
+  minimum_stock?: number
+  attributes?: any
 }
 
 // 👉 Documents data (will be populated from API)
 const documentsData = ref<DocumentData[]>([])
 
-// 👉 Products data (will be populated from API)
+// // 👉 Products data (will be populated from API)
 const productsData = ref<ProductData[]>([])
 
-// 👉 Load franchise data from API
+// 👉 Logo upload handling
+const logoFile = ref<File | null>(null)
+const isUploadingLogo = ref(false)
+
+// 👉 Load franchise data
 const loadFranchiseData = async () => {
   try {
     isLoading.value = true
     const response = await $api('/v1/franchisor/franchise/data')
 
     if (response.success && response.data) {
-      franchiseData.value = response.data.franchise || franchiseData.value
-      documentsData.value = response.data.documents || []
-      productsData.value = response.data.products || []
+      const apiData = response.data.franchise
+      if (apiData) {
+        // Map the API response structure to the frontend structure
+        franchiseData.value = {
+          id: apiData.id,
+          personalInfo: {
+            contactNumber: apiData.contactDetails?.contactNumber || '',
+            address: apiData.contactDetails?.address || '',
+            city: apiData.contactDetails?.city || '',
+            state: apiData.contactDetails?.state || '',
+            country: apiData.contactDetails?.country || '',
+          },
+          franchiseDetails: {
+            franchiseName: apiData.franchiseDetails?.franchiseName || '',
+            website: apiData.franchiseDetails?.website || '',
+            logo: apiData.franchiseDetails?.logo || null,
+          },
+          legalDetails: {
+            legalEntityName: apiData.legalDetails?.legalEntityName || '',
+            businessStructure: apiData.legalDetails?.businessStructure || '',
+            taxId: apiData.legalDetails?.taxId || '',
+            industry: apiData.legalDetails?.industry || '',
+            fundingAmount: apiData.legalDetails?.fundingAmount || '',
+            fundingSource: apiData.legalDetails?.fundingSource || '',
+          },
+          contactDetails: {
+            contactNumber: apiData.contactDetails?.contactNumber || '',
+            email: apiData.contactDetails?.email || '',
+            address: apiData.contactDetails?.address || '',
+            city: apiData.contactDetails?.city || '',
+            state: apiData.contactDetails?.state || '',
+            country: apiData.contactDetails?.country || '',
+          },
+        }
+      }
     }
   } catch (error: any) {
     console.error('Failed to load franchise data:', error)
@@ -105,17 +196,135 @@ const loadFranchiseData = async () => {
   }
 }
 
+// 👉 Load documents from API
+const loadDocuments = async () => {
+  try {
+    if (!franchiseData.value?.id) {
+      console.warn('No franchise ID available for loading documents')
+      return
+    }
+
+    const response = await $api(`/v1/franchises/${franchiseData.value.id}/documents`)
+    if (response.success && response.data) {
+      documentsData.value = response.data.data || []
+    }
+  } catch (error: any) {
+    console.error('Failed to load documents:', error)
+    showSnackbar('Failed to load documents', 'error')
+  }
+}
+
+// 👉 Load products from API
+const loadProducts = async () => {
+  try {
+    if (!franchiseData.value?.id) {
+      console.warn('No franchise ID available for loading products')
+      return
+    }
+
+    const response = await $api(`/v1/franchises/${franchiseData.value.id}/products`)
+    if (response.success && response.data) {
+      productsData.value = response.data.data || []
+    }
+  } catch (error: any) {
+    console.error('Failed to load products:', error)
+    showSnackbar('Failed to load products', 'error')
+  }
+}
+
+// 👉 Upload logo
+const uploadLogo = async (): Promise<string | null> => {
+  if (!logoFile.value) return null
+
+  isUploadingLogo.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('logo', logoFile.value)
+
+    const response = await $api('/v1/franchisor/franchise/upload-logo', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (response.success) {
+      return response.data.logo_url
+    } else {
+      showSnackbar(response.message || 'Failed to upload logo', 'error')
+      return null
+    }
+  } catch (error: any) {
+    console.error('Failed to upload logo:', error)
+    showSnackbar('Failed to upload logo', 'error')
+    return null
+  } finally {
+    isUploadingLogo.value = false
+  }
+}
+
 // 👉 Update franchise data
 const updateFranchiseData = async () => {
   try {
     isUpdating.value = true
+
+    // Upload logo first if a new one is selected
+    let logoUrl = franchiseData.value.franchiseDetails.logo
+    if (logoFile.value) {
+      const uploadedLogoUrl = await uploadLogo()
+      if (uploadedLogoUrl) {
+        logoUrl = uploadedLogoUrl
+        franchiseData.value.franchiseDetails.logo = logoUrl
+      } else {
+        // If logo upload failed, don't proceed with the update
+        return
+      }
+    }
+
+    // Transform the data to match the backend's expected nested structure
+    const updatePayload = {
+      personalInfo: {
+        contactNumber: franchiseData.value.personalInfo.contactNumber,
+        address: franchiseData.value.personalInfo.address,
+        city: franchiseData.value.personalInfo.city,
+        state: franchiseData.value.personalInfo.state,
+        country: franchiseData.value.personalInfo.country,
+      },
+      franchiseDetails: {
+        franchiseDetails: {
+          franchiseName: franchiseData.value.franchiseDetails.franchiseName,
+          website: franchiseData.value.franchiseDetails.website,
+          logo: franchiseData.value.franchiseDetails.logo,
+        },
+        legalDetails: {
+          legalEntityName: franchiseData.value.legalDetails.legalEntityName,
+          businessStructure: franchiseData.value.legalDetails.businessStructure,
+          taxId: franchiseData.value.legalDetails.taxId,
+          industry: franchiseData.value.legalDetails.industry,
+          fundingAmount: franchiseData.value.legalDetails.fundingAmount,
+          fundingSource: franchiseData.value.legalDetails.fundingSource,
+        },
+        contactDetails: {
+          contactNumber: franchiseData.value.contactDetails.contactNumber,
+          email: franchiseData.value.contactDetails.email,
+          address: franchiseData.value.contactDetails.address,
+          city: franchiseData.value.contactDetails.city,
+          state: franchiseData.value.contactDetails.state,
+          country: franchiseData.value.contactDetails.country,
+        },
+      },
+    }
+
     const response = await $api('/v1/franchisor/franchise/update', {
       method: 'PUT',
-      body: franchiseData.value,
+      body: updatePayload,
     })
 
     if (response.success) {
       showSnackbar('Franchise information updated successfully', 'success')
+      // Clear the logo file after successful update
+      logoFile.value = null
+      // Reload franchise data to get the updated information
+      await loadFranchiseData()
     } else {
       showSnackbar(response.message || 'Failed to update franchise information', 'error')
     }
@@ -162,16 +371,35 @@ const saveChanges = async () => {
 }
 
 // 👉 Load data on component mount
-onMounted(() => {
-  loadFranchiseData()
+onMounted(async () => {
+  await loadFranchiseData()
+  // Only load documents and products after franchise data is loaded
+  if (franchiseData.value?.id) {
+    await Promise.all([
+      loadDocuments(),
+      loadProducts()
+    ])
+  }
 })
 
 // 👉 Modals state
 const isAddDocumentModalVisible = ref(false)
+const isEditDocumentModalVisible = ref(false)
 const isAddProductModalVisible = ref(false)
 const isEditProductModalVisible = ref(false)
 const isDeleteProductModalVisible = ref(false)
 const isDeleteDocumentDialogVisible = ref(false)
+
+// 👉 Computed for document modal visibility
+const isDocumentModalVisible = computed({
+  get: () => isAddDocumentModalVisible.value || isEditDocumentModalVisible.value,
+  set: (value) => {
+    if (!value) {
+      isAddDocumentModalVisible.value = false
+      isEditDocumentModalVisible.value = false
+    }
+  }
+})
 
 // 👉 Computed for product modal visibility
 const isProductModalVisible = computed({
@@ -199,18 +427,20 @@ const selectedProduct = ref<{
   id: number | null
   name: string
   description: string
-  unitPrice: number
+  unit_price: number
   category: string
   status: string
   stock: number
+  sku: string
 }>({
   id: null,
   name: '',
   description: '',
-  unitPrice: 0,
+  unit_price: 0,
   category: '',
   status: 'active',
   stock: 0,
+  sku: '',
 })
 
 const productToDelete = ref<ProductData | null>(null)
@@ -273,31 +503,108 @@ const productStatuses = [
 // 👉 Document functions
 const addDocument = () => {
   selectedDocument.value = {
-    title: '',
+    id: null,
+    name: '',
     description: '',
+    type: 'other',
     file: null,
+    expiry_date: null,
+    is_confidential: false,
+    status: 'active',
   }
   isAddDocumentModalVisible.value = true
 }
 
-const saveDocument = () => {
-  const newDocument = {
-    id: documentsData.value.length + 1,
-    title: selectedDocument.value.title,
-    description: selectedDocument.value.description,
-    fileName: selectedDocument.value.file?.name || 'document.pdf',
-    fileSize: '1.2 MB',
-    uploadDate: new Date().toISOString().split('T')[0],
-    type: 'Custom',
-  }
-
-  documentsData.value.push(newDocument)
-  isAddDocumentModalVisible.value = false
+const editDocument = (document: any) => {
+  selectedDocument.value = { ...document }
+  isEditDocumentModalVisible.value = true
 }
 
-const downloadDocument = (document: any) => {
-  console.log('Downloading document:', document.fileName)
-  // TODO: Implement download functionality
+const saveDocument = async () => {
+  try {
+    if (!franchiseData.value?.id) {
+      showSnackbar('No franchise ID available', 'error')
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('name', selectedDocument.value.name)
+    formData.append('description', selectedDocument.value.description || '')
+    formData.append('type', selectedDocument.value.type)
+    formData.append('status', selectedDocument.value.status)
+    formData.append('is_confidential', selectedDocument.value.is_confidential ? '1' : '0')
+
+    if (selectedDocument.value.expiry_date) {
+      formData.append('expiry_date', selectedDocument.value.expiry_date)
+    }
+
+    if (selectedDocument.value.file) {
+      formData.append('file', selectedDocument.value.file)
+    }
+
+    let response
+    if (selectedDocument.value.id !== null) {
+      // Update existing document (metadata only)
+      response = await $api(`/v1/franchises/${franchiseData.value.id}/documents/${selectedDocument.value.id}`, {
+        method: 'PUT',
+        body: formData,
+      })
+    } else {
+      // Add new document
+      response = await $api(`/v1/franchises/${franchiseData.value.id}/documents`, {
+        method: 'POST',
+        body: formData,
+      })
+    }
+
+    if (response.success) {
+      showSnackbar(
+        selectedDocument.value.id !== null ? 'Document updated successfully' : 'Document uploaded successfully',
+        'success'
+      )
+      isDocumentModalVisible.value = false
+      await loadDocuments() // Reload documents list
+    } else {
+      showSnackbar(response.message || 'Failed to save document', 'error')
+    }
+  } catch (error: any) {
+    console.error('Failed to save document:', error)
+    if (error.status === 422 && error.data?.errors) {
+      const errorMessages = Object.values(error.data.errors).flat()
+      showSnackbar(`Validation failed: ${errorMessages.join(', ')}`, 'error')
+    } else {
+      showSnackbar('Failed to save document', 'error')
+    }
+  }
+}
+
+const downloadDocument = async (document: any) => {
+  try {
+    if (!franchiseData.value?.id) {
+      showSnackbar('No franchise ID available', 'error')
+      return
+    }
+
+    const response = await $api(`/v1/franchises/${franchiseData.value.id}/documents/${document.id}/download`, {
+      method: 'GET',
+    })
+
+    // Create a blob from the response and trigger download
+    const blob = new Blob([response], { type: 'application/octet-stream' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = document.file_name || document.name
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    showSnackbar('Document downloaded successfully', 'success')
+  } catch (error: any) {
+    console.error('Failed to download document:', error)
+    showSnackbar('Failed to download document', 'error')
+  }
 }
 
 const confirmDeleteDocument = (document: any) => {
@@ -305,15 +612,30 @@ const confirmDeleteDocument = (document: any) => {
   isDeleteDocumentDialogVisible.value = true
 }
 
-const deleteDocument = () => {
-  if (documentToDelete.value) {
-    const index = documentsData.value.findIndex(doc => doc.id === documentToDelete.value.id)
-    if (index !== -1) {
-      documentsData.value.splice(index, 1)
+const deleteDocument = async () => {
+  try {
+    if (!franchiseData.value?.id || !documentToDelete.value) {
+      showSnackbar('Invalid request', 'error')
+      return
     }
+
+    const response = await $api(`/v1/franchises/${franchiseData.value.id}/documents/${documentToDelete.value.id}`, {
+      method: 'DELETE',
+    })
+
+    if (response.success) {
+      showSnackbar('Document deleted successfully', 'success')
+      await loadDocuments() // Reload documents list
+    } else {
+      showSnackbar(response.message || 'Failed to delete document', 'error')
+    }
+  } catch (error: any) {
+    console.error('Failed to delete document:', error)
+    showSnackbar('Failed to delete document', 'error')
+  } finally {
+    isDeleteDocumentDialogVisible.value = false
+    documentToDelete.value = null
   }
-  isDeleteDocumentDialogVisible.value = false
-  documentToDelete.value = null
 }
 
 // 👉 Product functions
@@ -322,10 +644,11 @@ const addProduct = () => {
     id: null,
     name: '',
     description: '',
-    unitPrice: 0,
+    unit_price: 0,
     category: '',
     status: 'active',
     stock: 0,
+    sku: '',
   }
   isAddProductModalVisible.value = true
 }
@@ -335,23 +658,56 @@ const editProduct = (product: any) => {
   isEditProductModalVisible.value = true
 }
 
-const saveProduct = () => {
-  if (selectedProduct.value.id === null) {
-    // Add new product
-    const newProduct = {
-      ...selectedProduct.value,
-      id: productsData.value.length + 1,
+const saveProduct = async () => {
+  try {
+    if (!franchiseData.value?.id) {
+      showSnackbar('No franchise ID available', 'error')
+      return
     }
-    productsData.value.push(newProduct)
-  } else {
-    // Update existing product
-    const index = productsData.value.findIndex(p => p.id === selectedProduct.value.id)
-    if (index !== -1) {
-      productsData.value[index] = { ...selectedProduct.value }
+
+    const formData = new FormData()
+    formData.append('name', selectedProduct.value.name)
+    formData.append('description', selectedProduct.value.description)
+    formData.append('category', selectedProduct.value.category)
+    formData.append('unit_price', selectedProduct.value.unit_price.toString())
+    formData.append('stock', selectedProduct.value.stock.toString())
+    formData.append('status', selectedProduct.value.status)
+    formData.append('sku', selectedProduct.value.sku)
+
+    let response
+    if (selectedProduct.value.id !== null) {
+      // Update existing product
+      response = await $api(`/v1/franchises/${franchiseData.value.id}/products/${selectedProduct.value.id}`, {
+        method: 'PUT',
+        body: formData,
+      })
+    } else {
+      // Add new product
+      response = await $api(`/v1/franchises/${franchiseData.value.id}/products`, {
+        method: 'POST',
+        body: formData,
+      })
+    }
+
+    if (response.success) {
+      showSnackbar(
+        selectedProduct.value.id !== null ? 'Product updated successfully' : 'Product created successfully',
+        'success'
+      )
+      isProductModalVisible.value = false
+      await loadProducts() // Reload products list
+    } else {
+      showSnackbar(response.message || 'Failed to save product', 'error')
+    }
+  } catch (error: any) {
+    console.error('Failed to save product:', error)
+    if (error.status === 422 && error.data?.errors) {
+      const errorMessages = Object.values(error.data.errors).flat()
+      showSnackbar(`Validation failed: ${errorMessages.join(', ')}`, 'error')
+    } else {
+      showSnackbar('Failed to save product', 'error')
     }
   }
-
-  isProductModalVisible.value = false
 }
 
 const confirmDeleteProduct = (product: any) => {
@@ -359,15 +715,30 @@ const confirmDeleteProduct = (product: any) => {
   isDeleteProductModalVisible.value = true
 }
 
-const deleteProduct = () => {
-  if (productToDelete.value) {
-    const index = productsData.value.findIndex(p => p.id === productToDelete.value.id)
-    if (index !== -1) {
-      productsData.value.splice(index, 1)
+const deleteProduct = async () => {
+  try {
+    if (!franchiseData.value?.id || !productToDelete.value) {
+      showSnackbar('Invalid request', 'error')
+      return
     }
+
+    const response = await $api(`/v1/franchises/${franchiseData.value.id}/products/${productToDelete.value.id}`, {
+      method: 'DELETE',
+    })
+
+    if (response.success) {
+      showSnackbar('Product deleted successfully', 'success')
+      await loadProducts() // Reload products list
+    } else {
+      showSnackbar(response.message || 'Failed to delete product', 'error')
+    }
+  } catch (error: any) {
+    console.error('Failed to delete product:', error)
+    showSnackbar('Failed to delete product', 'error')
+  } finally {
+    isDeleteProductModalVisible.value = false
+    productToDelete.value = null
   }
-  isDeleteProductModalVisible.value = false
-  productToDelete.value = null
 }
 
 // 👉 Computed
@@ -380,7 +751,7 @@ const productHeaders = [
   { title: 'Product Name', key: 'name' },
   { title: 'Description', key: 'description' },
   { title: 'Category', key: 'category' },
-  { title: 'Unit Price', key: 'unitPrice' },
+  { title: 'Unit Price', key: 'unit_price' },
   { title: 'Stock', key: 'stock' },
   { title: 'Status', key: 'status' },
   { title: 'Actions', key: 'actions', sortable: false },
@@ -587,8 +958,8 @@ const resolveStatusVariant = (status: string) => {
                             </div>
                             <span v-else class="text-disabled">No logo uploaded</span>
                           </div>
-                          <VFileInput v-else v-model="franchiseData.franchiseDetails.logo" label="Franchise Logo"
-                            accept="image/*" prepend-icon="tabler-upload" />
+                          <VFileInput v-else v-model="logoFile" label="Franchise Logo" accept="image/*"
+                            prepend-icon="tabler-upload" :loading="isUploadingLogo" />
                         </div>
                       </VCol>
                     </VRow>
@@ -759,7 +1130,7 @@ const resolveStatusVariant = (status: string) => {
                       <div class="d-flex align-center mb-3">
                         <VIcon icon="tabler-file-text" size="24" color="primary" class="me-3" />
                         <div>
-                          <h6 class="text-h6">{{ document.title }}</h6>
+                          <h6 class="text-h6">{{ document.name }}</h6>
                           <p class="text-body-2 text-disabled mb-0">{{ document.type }}</p>
                         </div>
                       </div>
@@ -767,12 +1138,12 @@ const resolveStatusVariant = (status: string) => {
                       <p class="text-body-2 mb-3">{{ document.description }}</p>
 
                       <div class="d-flex align-center justify-space-between mb-3">
-                        <span class="text-body-2 text-disabled">{{ document.fileName }}</span>
-                        <VChip size="small" color="secondary">{{ document.fileSize }}</VChip>
+                        <span class="text-body-2 text-disabled">{{ document.file_name }}</span>
+                        <VChip size="small" color="secondary">{{ document.file_size }}</VChip>
                       </div>
 
                       <div class="text-body-2 text-disabled mb-3">
-                        Uploaded: {{ document.uploadDate }}
+                        Uploaded: {{ document.created_at }}
                       </div>
                     </VCardText>
 
@@ -833,9 +1204,9 @@ const resolveStatusVariant = (status: string) => {
               </template>
 
               <!-- Unit Price -->
-              <template #item.unitPrice="{ item }">
+              <template #item.unit_price="{ item }">
                 <div class="text-body-1 text-high-emphasis">
-                  {{ item.unitPrice.toFixed(2) }} SAR
+                  {{ Number(item.unit_price).toFixed(2) }} SAR
                 </div>
               </template>
 
@@ -878,7 +1249,7 @@ const resolveStatusVariant = (status: string) => {
           <VForm>
             <VRow>
               <VCol cols="12">
-                <AppTextField v-model="selectedDocument.title" label="Document Title" placeholder="Enter document title"
+                <AppTextField v-model="selectedDocument.name" label="Document Name" placeholder="Enter document name"
                   required />
               </VCol>
               <VCol cols="12">
@@ -918,6 +1289,10 @@ const resolveStatusVariant = (status: string) => {
                   required />
               </VCol>
               <VCol cols="12" md="6">
+                <AppTextField v-model="selectedProduct.sku" label="SKU" placeholder="Enter product SKU"
+                  required />
+              </VCol>
+              <VCol cols="12" md="6">
                 <AppSelect v-model="selectedProduct.category" label="Category" :items="productCategories"
                   placeholder="Select category" />
               </VCol>
@@ -926,7 +1301,7 @@ const resolveStatusVariant = (status: string) => {
                   placeholder="Enter product description" rows="3" />
               </VCol>
               <VCol cols="12" md="4">
-                <AppTextField v-model.number="selectedProduct.unitPrice" label="Unit Price" type="number"
+                <AppTextField v-model.number="selectedProduct.unit_price" label="Unit Price" type="number"
                   placeholder="0.00" prefix="$" step="0.01" />
               </VCol>
               <VCol cols="12" md="4">

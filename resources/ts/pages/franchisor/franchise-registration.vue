@@ -7,6 +7,7 @@ import ReviewComplete from '@/views/wizard-examples/franchise-registration/Revie
 import { useFranchisorDashboard } from '@/composables/useFranchisorDashboard'
 import { $api } from '@/utils/api'
 import type { FranchiseRegistrationData } from '@/views/wizard-examples/franchise-registration/types'
+import { useDisplay } from 'vuetify'
 
 // 👉 Router
 const router = useRouter()
@@ -106,29 +107,99 @@ const franchiseRegistrationData = ref<FranchiseRegistrationData>({
   },
 })
 
+const uploadDocument = async (file: File, name: string, type: string, franchiseId: number) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('name', name)
+  formData.append('description', `${name} uploaded during franchise registration`)
+  formData.append('type', type)
+
+  const response = await $api(`/v1/documents/${franchiseId}`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  return response
+}
+
 const onSubmit = async () => {
   isCompleting.value = true
 
   try {
     console.log('Submitting franchise registration:', franchiseRegistrationData.value)
 
-    // Call the real API endpoint
-    const response = await $api('/v1/franchisor/franchise/register', {
+    // First, register the franchise
+    const registrationResponse = await $api('/v1/franchisor/franchise/register', {
       method: 'POST',
-      body: franchiseRegistrationData.value,
+      body: {
+        personalInfo: franchiseRegistrationData.value.personalInfo,
+        franchiseDetails: franchiseRegistrationData.value.franchiseDetails,
+        reviewComplete: franchiseRegistrationData.value.reviewComplete,
+      },
     })
 
-    if (response.success) {
-      showSnackbar('Franchise registered successfully! Redirecting to dashboard...', 'success')
-
-      // Wait a moment to show the success message
-      await new Promise(resolve => setTimeout(resolve, 1500))
-
-      // Redirect to dashboard
-      router.push('/franchisor')
-    } else {
-      showSnackbar(response.message || 'Failed to register franchise', 'error')
+    if (!registrationResponse.success) {
+      showSnackbar(registrationResponse.message || 'Failed to register franchise', 'error')
+      return
     }
+
+    const franchiseId = registrationResponse.data.franchise_id
+
+    // Upload documents if any are provided
+    const documentUploadPromises = []
+    const documents = franchiseRegistrationData.value.documents
+
+    if (documents.fdd) {
+      documentUploadPromises.push(
+        uploadDocument(documents.fdd, 'Franchise Disclosure Document (FDD)', 'contract', franchiseId)
+      )
+    }
+
+    if (documents.franchiseAgreement) {
+      documentUploadPromises.push(
+        uploadDocument(documents.franchiseAgreement, 'Franchise Agreement', 'agreement', franchiseId)
+      )
+    }
+
+    if (documents.operationsManual) {
+      documentUploadPromises.push(
+        uploadDocument(documents.operationsManual, 'Operations Manual', 'manual', franchiseId)
+      )
+    }
+
+    if (documents.brandGuidelines) {
+      documentUploadPromises.push(
+        uploadDocument(documents.brandGuidelines, 'Brand Guidelines', 'other', franchiseId)
+      )
+    }
+
+    if (documents.legalDocuments && documents.legalDocuments.length > 0) {
+      documents.legalDocuments.forEach((file, index) => {
+        documentUploadPromises.push(
+          uploadDocument(file, `Legal Document ${index + 1}`, 'other', franchiseId)
+        )
+      })
+    }
+
+    // Wait for all document uploads to complete
+    if (documentUploadPromises.length > 0) {
+      try {
+        await Promise.all(documentUploadPromises)
+        showSnackbar('Franchise registered successfully with all documents uploaded! Redirecting to dashboard...', 'success')
+      } catch (documentError) {
+        console.error('Document upload error:', documentError)
+        showSnackbar('Franchise registered successfully, but some documents failed to upload. You can upload them later from your dashboard.', 'warning')
+      }
+    } else {
+      showSnackbar('Franchise registered successfully! Redirecting to dashboard...', 'success')
+    }
+
+    // Wait a moment to show the success message
+    await new Promise(resolve => setTimeout(resolve, 2000))
+
+    // Redirect to dashboard
+    router.push('/franchisor')
+
   } catch (error: any) {
     console.error('Registration error:', error)
 
@@ -150,7 +221,7 @@ const onSubmit = async () => {
 <template>
   <VCard>
     <VRow no-gutters>
-      <VCol cols="12" md="4" lg="3" :class="$vuetify.display.mdAndUp ? 'border-e' : 'border-b'">
+      <VCol cols="12" md="4" lg="3" :class="useDisplay().mdAndUp.value ? 'border-e' : 'border-b'">
         <VCardText>
           <AppStepper v-model:current-step="currentStep" direction="vertical" :items="franchiseRegistrationSteps"
             icon-size="22" class="stepper-icon-step-bg" />
