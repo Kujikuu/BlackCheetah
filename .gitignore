@@ -64,3 +64,8 @@ public/mockServiceWorker.js
 # Env files
 .env*
 !.env.example
+
+# Ignore Mac system files
+.DS_Store
+
+.mcp.json
