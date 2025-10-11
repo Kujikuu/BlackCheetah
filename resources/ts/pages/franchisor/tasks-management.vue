@@ -15,112 +15,106 @@ const isDeleteDialogVisible = ref(false)
 const selectedTask = ref<any>(null)
 const taskToDelete = ref<number | null>(null)
 
-// 👉 Mock franchisee tasks data
-const franchiseeTasksData = ref([
-    {
-        id: 1,
-        title: 'Monthly Inventory Check',
-        description: 'Complete monthly inventory audit and report',
-        category: 'Operations',
-        assignedTo: 'John Smith (Downtown Coffee Hub)',
-        unitName: 'Downtown Coffee Hub',
-        startDate: '2024-01-01',
-        dueDate: '2024-01-31',
-        priority: 'high',
-        status: 'completed',
-    },
-    {
-        id: 2,
-        title: 'Staff Training Session',
-        description: 'Conduct quarterly staff training on new procedures',
-        category: 'Training',
-        assignedTo: 'Sarah Johnson (Uptown Cafe)',
-        unitName: 'Uptown Cafe',
-        startDate: '2024-01-15',
-        dueDate: '2024-01-30',
-        priority: 'medium',
-        status: 'in_progress',
-    },
-    {
-        id: 3,
-        title: 'Equipment Maintenance',
-        description: 'Schedule and complete equipment maintenance',
-        category: 'Maintenance',
-        assignedTo: 'Mike Wilson (Central Plaza)',
-        unitName: 'Central Plaza',
-        startDate: '2024-01-20',
-        dueDate: '2024-02-05',
-        priority: 'high',
-        status: 'pending',
-    },
-    {
-        id: 4,
-        title: 'Marketing Campaign Review',
-        description: 'Review and approve local marketing materials',
-        category: 'Marketing',
-        assignedTo: 'Lisa Brown (Westside Branch)',
-        unitName: 'Westside Branch',
-        startDate: '2024-01-25',
-        dueDate: '2024-02-10',
-        priority: 'medium',
-        status: 'pending',
-    },
-])
+// 👉 Tasks data
+const franchiseeTasksData = ref<any[]>([])
+const salesTasksData = ref<any[]>([])
 
-// 👉 Mock sales tasks data
-const salesTasksData = ref([
-    {
-        id: 5,
-        title: 'Lead Follow-up Campaign',
-        description: 'Follow up with potential franchisees from last quarter',
-        category: 'Lead Management',
-        assignedTo: 'Alex Rodriguez (Sales Associate)',
-        unitName: 'N/A',
-        startDate: '2024-01-10',
-        dueDate: '2024-01-25',
-        priority: 'high',
-        status: 'in_progress',
-    },
-    {
-        id: 6,
-        title: 'Franchise Presentation Prep',
-        description: 'Prepare presentation materials for upcoming franchise expo',
-        category: 'Sales',
-        assignedTo: 'Emma Thompson (Senior Sales)',
-        unitName: 'N/A',
-        startDate: '2024-01-12',
-        dueDate: '2024-02-01',
-        priority: 'high',
-        status: 'pending',
-    },
-    {
-        id: 7,
-        title: 'Territory Analysis',
-        description: 'Analyze potential markets for franchise expansion',
-        category: 'Market Research',
-        assignedTo: 'David Chen (Sales Manager)',
-        unitName: 'N/A',
-        startDate: '2024-01-18',
-        dueDate: '2024-02-15',
-        priority: 'medium',
-        status: 'pending',
-    },
-    {
-        id: 8,
-        title: 'Client Onboarding',
-        description: 'Complete onboarding process for new franchisee',
-        category: 'Onboarding',
-        assignedTo: 'Rachel Green (Sales Associate)',
-        unitName: 'N/A',
-        startDate: '2024-01-05',
-        dueDate: '2024-01-20',
-        priority: 'high',
-        status: 'completed',
-    },
-])
+// 👉 Loading and error states
+const franchiseeLoading = ref(false)
+const salesLoading = ref(false)
+const franchiseeError = ref<string | null>(null)
+const salesError = ref<string | null>(null)
 
 // 👉 Modal states
 const isAddTaskModalVisible = ref(false)
+
+// 👉 API functions
+const loadFranchiseeTasks = async () => {
+  franchiseeLoading.value = true
+  franchiseeError.value = null
+
+  try {
+    const response = await $api<{ success: boolean; data: any }>(`/v1/franchisor/tasks`)
+
+    if (response.success && response.data?.data) {
+      franchiseeTasksData.value = response.data.data.map((task: any) => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        category: task.category || 'other',
+        assignedTo: task.assigned_to_user?.name || 'Unassigned',
+        unitName: task.unit?.unit_name || 'N/A',
+        startDate: task.started_at ? new Date(task.started_at).toISOString().split('T')[0] : null,
+        dueDate: task.due_date || null,
+        priority: task.priority || 'medium',
+        status: task.status || 'pending',
+        estimatedHours: task.estimated_hours || 0,
+        actualHours: task.actual_hours || 0,
+        completionPercentage: task.completion_percentage || 0,
+        createdAt: task.created_at,
+        updatedAt: task.updated_at,
+      }))
+    } else {
+      franchiseeTasksData.value = []
+    }
+  } catch (err: any) {
+    console.error('Failed to load franchisee tasks:', err)
+    franchiseeError.value = err?.data?.message || 'Failed to load franchisee tasks'
+    franchiseeTasksData.value = []
+  } finally {
+    franchiseeLoading.value = false
+  }
+}
+
+const loadSalesTasks = async () => {
+  salesLoading.value = true
+  salesError.value = null
+
+  try {
+    // For now, load all tasks and filter for sales-related categories
+    // In a real implementation, you might have a specific endpoint or filter for sales tasks
+    const response = await $api<{ success: boolean; data: any }>(`/v1/tasks`)
+
+    if (response.success && response.data?.data) {
+      // Filter tasks that are likely sales-related or assigned to sales team
+      const salesTasks = response.data.data.filter((task: any) => {
+        // Check if task category is sales-related or assigned to sales team members
+        const salesCategories = ['sales', 'marketing', 'lead management', 'onboarding', 'market research']
+        return salesCategories.includes(task.category?.toLowerCase()) ||
+               task.assigned_to_user?.role === 'sales' ||
+               task.title?.toLowerCase().includes('sales') ||
+               task.title?.toLowerCase().includes('lead') ||
+               task.title?.toLowerCase().includes('client')
+      })
+
+      salesTasksData.value = salesTasks.map((task: any) => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        category: task.category || 'other',
+        assignedTo: task.assigned_to_user?.name || 'Unassigned',
+        unitName: task.unit?.unit_name || 'N/A',
+        startDate: task.started_at ? new Date(task.started_at).toISOString().split('T')[0] : null,
+        dueDate: task.due_date || null,
+        priority: task.priority || 'medium',
+        status: task.status || 'pending',
+        estimatedHours: task.estimated_hours || 0,
+        actualHours: task.actual_hours || 0,
+        completionPercentage: task.completion_percentage || 0,
+        createdAt: task.created_at,
+        updatedAt: task.updated_at,
+      }))
+    } else {
+      salesTasksData.value = []
+    }
+  } catch (err: any) {
+    console.error('Failed to load sales tasks:', err)
+    salesError.value = err?.data?.message || 'Failed to load sales tasks'
+    salesTasksData.value = []
+  } finally {
+    salesLoading.value = false
+  }
+}
 
 // 👉 Computed stats for franchisee tasks
 const franchiseeTotalTasks = computed(() => franchiseeTasksData.value.length)
@@ -129,6 +123,7 @@ const franchiseeInProgressTasks = computed(() => franchiseeTasksData.value.filte
 const franchiseeDueTasks = computed(() => {
     const today = new Date()
     return franchiseeTasksData.value.filter(task => {
+        if (!task.dueDate) return false
         const dueDate = new Date(task.dueDate)
         return dueDate <= today && task.status !== 'completed'
     }).length
@@ -141,6 +136,7 @@ const salesInProgressTasks = computed(() => salesTasksData.value.filter(task => 
 const salesDueTasks = computed(() => {
     const today = new Date()
     return salesTasksData.value.filter(task => {
+        if (!task.dueDate) return false
         const dueDate = new Date(task.dueDate)
         return dueDate <= today && task.status !== 'completed'
     }).length
@@ -182,18 +178,56 @@ const resolvePriorityVariant = (priority: string) => {
     return 'secondary'
 }
 
-const onTaskCreated = (task: any) => {
-    // Add task to appropriate data array based on current tab
-    if (currentTab.value === 'franchisee') {
-        franchiseeTasksData.value.push({
-            ...task,
-            id: Math.max(...franchiseeTasksData.value.map(t => t.id)) + 1,
+const onTaskCreated = async (task: any) => {
+    try {
+        const response = await $api<{ success: boolean; data: any }>('/v1/tasks', {
+            method: 'POST',
+            body: {
+                title: task.title,
+                description: task.description,
+                category: task.category,
+                priority: task.priority,
+                status: task.status || 'pending',
+                due_date: task.dueDate,
+                estimated_hours: task.estimatedHours,
+                assigned_to: task.assignedToId,
+                franchise_id: task.franchiseId,
+                unit_id: task.unitId,
+            }
         })
-    } else {
-        salesTasksData.value.push({
-            ...task,
-            id: Math.max(...salesTasksData.value.map(t => t.id)) + 1,
-        })
+
+        if (response.success) {
+            const newTask = {
+                id: response.data.id,
+                title: response.data.title,
+                description: response.data.description,
+                category: response.data.category || 'other',
+                assignedTo: response.data.assigned_to_user?.name || 'Unassigned',
+                unitName: response.data.unit?.unit_name || 'N/A',
+                startDate: response.data.started_at ? new Date(response.data.started_at).toISOString().split('T')[0] : null,
+                dueDate: response.data.due_date || null,
+                priority: response.data.priority || 'medium',
+                status: response.data.status || 'pending',
+                estimatedHours: response.data.estimated_hours || 0,
+                actualHours: response.data.actual_hours || 0,
+                completionPercentage: response.data.completion_percentage || 0,
+                createdAt: response.data.created_at,
+                updatedAt: response.data.updated_at,
+            }
+
+            // Add task to appropriate data array based on current tab
+            if (currentTab.value === 'franchisee') {
+                franchiseeTasksData.value.unshift(newTask)
+            } else {
+                salesTasksData.value.unshift(newTask)
+            }
+        } else {
+            console.error('Failed to create task:', response)
+            // Show error message (you could add a toast notification here)
+        }
+    } catch (error) {
+        console.error('Error creating task:', error)
+        // Show error message (you could add a toast notification here)
     }
 }
 
@@ -226,45 +260,108 @@ const confirmDelete = (id: number) => {
     isDeleteDialogVisible.value = true
 }
 
-const deleteTask = () => {
+const deleteTask = async () => {
     if (taskToDelete.value === null) return
 
-    // Remove from appropriate data array based on current tab
-    if (currentTab.value === 'franchisee') {
-        const index = franchiseeTasksData.value.findIndex(task => task.id === taskToDelete.value)
-        if (index !== -1) {
-            franchiseeTasksData.value.splice(index, 1)
+    try {
+        const response = await $api<{ success: boolean }>(`/v1/tasks/${taskToDelete.value}`, {
+            method: 'DELETE'
+        })
+
+        if (response.success) {
+            // Remove from appropriate data array based on current tab
+            if (currentTab.value === 'franchisee') {
+                const index = franchiseeTasksData.value.findIndex(task => task.id === taskToDelete.value)
+                if (index !== -1) {
+                    franchiseeTasksData.value.splice(index, 1)
+                }
+            } else {
+                const index = salesTasksData.value.findIndex(task => task.id === taskToDelete.value)
+                if (index !== -1) {
+                    salesTasksData.value.splice(index, 1)
+                }
+            }
+        } else {
+            console.error('Failed to delete task:', response)
+            // Show error message (you could add a toast notification here)
         }
-    } else {
-        const index = salesTasksData.value.findIndex(task => task.id === taskToDelete.value)
-        if (index !== -1) {
-            salesTasksData.value.splice(index, 1)
-        }
+    } catch (error) {
+        console.error('Error deleting task:', error)
+        // Show error message (you could add a toast notification here)
     }
 
     isDeleteDialogVisible.value = false
     taskToDelete.value = null
 }
 
-const saveTask = () => {
+const saveTask = async () => {
     if (!selectedTask.value) return
 
-    // Update task in appropriate data array based on current tab
-    if (currentTab.value === 'franchisee') {
-        const index = franchiseeTasksData.value.findIndex(task => task.id === selectedTask.value.id)
-        if (index !== -1) {
-            franchiseeTasksData.value[index] = { ...selectedTask.value }
+    try {
+        const response = await $api<{ success: boolean; data: any }>(`/v1/tasks/${selectedTask.value.id}`, {
+            method: 'PUT',
+            body: {
+                title: selectedTask.value.title,
+                description: selectedTask.value.description,
+                category: selectedTask.value.category,
+                priority: selectedTask.value.priority,
+                status: selectedTask.value.status,
+                due_date: selectedTask.value.dueDate,
+                estimated_hours: selectedTask.value.estimatedHours,
+                actual_hours: selectedTask.value.actualHours,
+                completion_percentage: selectedTask.value.completionPercentage,
+            }
+        })
+
+        if (response.success) {
+            const updatedTask = {
+                id: response.data.id,
+                title: response.data.title,
+                description: response.data.description,
+                category: response.data.category || 'other',
+                assignedTo: response.data.assigned_to_user?.name || selectedTask.value.assignedTo,
+                unitName: response.data.unit?.unit_name || selectedTask.value.unitName,
+                startDate: response.data.started_at ? new Date(response.data.started_at).toISOString().split('T')[0] : selectedTask.value.startDate,
+                dueDate: response.data.due_date || selectedTask.value.dueDate,
+                priority: response.data.priority || selectedTask.value.priority,
+                status: response.data.status || selectedTask.value.status,
+                estimatedHours: response.data.estimated_hours || selectedTask.value.estimatedHours,
+                actualHours: response.data.actual_hours || selectedTask.value.actualHours,
+                completionPercentage: response.data.completion_percentage || selectedTask.value.completionPercentage,
+                createdAt: response.data.created_at,
+                updatedAt: response.data.updated_at,
+            }
+
+            // Update task in appropriate data array based on current tab
+            if (currentTab.value === 'franchisee') {
+                const index = franchiseeTasksData.value.findIndex(task => task.id === selectedTask.value.id)
+                if (index !== -1) {
+                    franchiseeTasksData.value[index] = updatedTask
+                }
+            } else {
+                const index = salesTasksData.value.findIndex(task => task.id === selectedTask.value.id)
+                if (index !== -1) {
+                    salesTasksData.value[index] = updatedTask
+                }
+            }
+        } else {
+            console.error('Failed to update task:', response)
+            // Show error message (you could add a toast notification here)
         }
-    } else {
-        const index = salesTasksData.value.findIndex(task => task.id === selectedTask.value.id)
-        if (index !== -1) {
-            salesTasksData.value[index] = { ...selectedTask.value }
-        }
+    } catch (error) {
+        console.error('Error updating task:', error)
+        // Show error message (you could add a toast notification here)
     }
 
     isEditTaskModalVisible.value = false
     selectedTask.value = null
 }
+
+// 👉 Load data on component mount
+onMounted(() => {
+    loadFranchiseeTasks()
+    loadSalesTasks()
+})
 </script>
 
 <template>
@@ -303,259 +400,321 @@ const saveTask = () => {
         <VWindow v-model="currentTab" class="disable-tab-transition">
             <!-- Franchisee Tasks Tab -->
             <VWindowItem value="franchisee">
-                <!-- Stats Cards -->
-                <VRow class="mb-6">
-                    <VCol cols="12" md="3">
-                        <VCard>
-                            <VCardText class="d-flex align-center">
-                                <VAvatar size="44" rounded color="primary" variant="tonal">
-                                    <VIcon icon="tabler-checklist" size="26" />
-                                </VAvatar>
-                                <div class="ms-4">
-                                    <div class="text-body-2 text-disabled">Total Tasks</div>
-                                    <h4 class="text-h4">{{ franchiseeTotalTasks }}</h4>
-                                </div>
-                            </VCardText>
-                        </VCard>
-                    </VCol>
-                    <VCol cols="12" md="3">
-                        <VCard>
-                            <VCardText class="d-flex align-center">
-                                <VAvatar size="44" rounded color="success" variant="tonal">
-                                    <VIcon icon="tabler-check" size="26" />
-                                </VAvatar>
-                                <div class="ms-4">
-                                    <div class="text-body-2 text-disabled">Completed</div>
-                                    <h4 class="text-h4">{{ franchiseeCompletedTasks }}</h4>
-                                </div>
-                            </VCardText>
-                        </VCard>
-                    </VCol>
-                    <VCol cols="12" md="3">
-                        <VCard>
-                            <VCardText class="d-flex align-center">
-                                <VAvatar size="44" rounded color="warning" variant="tonal">
-                                    <VIcon icon="tabler-clock" size="26" />
-                                </VAvatar>
-                                <div class="ms-4">
-                                    <div class="text-body-2 text-disabled">In Progress</div>
-                                    <h4 class="text-h4">{{ franchiseeInProgressTasks }}</h4>
-                                </div>
-                            </VCardText>
-                        </VCard>
-                    </VCol>
-                    <VCol cols="12" md="3">
-                        <VCard>
-                            <VCardText class="d-flex align-center">
-                                <VAvatar size="44" rounded color="error" variant="tonal">
-                                    <VIcon icon="tabler-alert-circle" size="26" />
-                                </VAvatar>
-                                <div class="ms-4">
-                                    <div class="text-body-2 text-disabled">Due</div>
-                                    <h4 class="text-h4">{{ franchiseeDueTasks }}</h4>
-                                </div>
-                            </VCardText>
-                        </VCard>
-                    </VCol>
-                </VRow>
+                <!-- Error Alert -->
+                <VAlert v-if="franchiseeError" type="error" variant="tonal" class="mb-4" closable @click:close="franchiseeError = null">
+                    {{ franchiseeError }}
+                </VAlert>
 
-                <!-- Franchisee Tasks Table -->
-                <VCard>
-                    <VCardItem class="pb-4">
-                        <VCardTitle>Franchisee Tasks</VCardTitle>
-                    </VCardItem>
+                <!-- Loading State -->
+                <div v-if="franchiseeLoading" class="text-center py-12">
+                    <VProgressCircular indeterminate size="64" class="mb-4" />
+                    <h3 class="text-h3 mb-2">Loading Franchisee Tasks...</h3>
+                    <p class="text-body-1 text-medium-emphasis">
+                        Please wait while we fetch the task information.
+                    </p>
+                </div>
 
-                    <VDivider />
+                <!-- Franchisee Tasks Content -->
+                <template v-else>
+                    <!-- Stats Cards -->
+                    <VRow class="mb-6">
+                        <VCol cols="12" md="3">
+                            <VCard>
+                                <VCardText class="d-flex align-center">
+                                    <VAvatar size="44" rounded color="primary" variant="tonal">
+                                        <VIcon icon="tabler-checklist" size="26" />
+                                    </VAvatar>
+                                    <div class="ms-4">
+                                        <div class="text-body-2 text-disabled">Total Tasks</div>
+                                        <h4 class="text-h4">{{ franchiseeTotalTasks }}</h4>
+                                    </div>
+                                </VCardText>
+                            </VCard>
+                        </VCol>
+                        <VCol cols="12" md="3">
+                            <VCard>
+                                <VCardText class="d-flex align-center">
+                                    <VAvatar size="44" rounded color="success" variant="tonal">
+                                        <VIcon icon="tabler-check" size="26" />
+                                    </VAvatar>
+                                    <div class="ms-4">
+                                        <div class="text-body-2 text-disabled">Completed</div>
+                                        <h4 class="text-h4">{{ franchiseeCompletedTasks }}</h4>
+                                    </div>
+                                </VCardText>
+                            </VCard>
+                        </VCol>
+                        <VCol cols="12" md="3">
+                            <VCard>
+                                <VCardText class="d-flex align-center">
+                                    <VAvatar size="44" rounded color="warning" variant="tonal">
+                                        <VIcon icon="tabler-clock" size="26" />
+                                    </VAvatar>
+                                    <div class="ms-4">
+                                        <div class="text-body-2 text-disabled">In Progress</div>
+                                        <h4 class="text-h4">{{ franchiseeInProgressTasks }}</h4>
+                                    </div>
+                                </VCardText>
+                            </VCard>
+                        </VCol>
+                        <VCol cols="12" md="3">
+                            <VCard>
+                                <VCardText class="d-flex align-center">
+                                    <VAvatar size="44" rounded color="error" variant="tonal">
+                                        <VIcon icon="tabler-alert-circle" size="26" />
+                                    </VAvatar>
+                                    <div class="ms-4">
+                                        <div class="text-body-2 text-disabled">Due</div>
+                                        <h4 class="text-h4">{{ franchiseeDueTasks }}</h4>
+                                    </div>
+                                </VCardText>
+                            </VCard>
+                        </VCol>
+                    </VRow>
 
-                    <VDataTable :items="franchiseeTasksData" :headers="taskHeaders" class="text-no-wrap"
-                        item-value="id">
-                        <!-- Task Info -->
-                        <template #item.taskInfo="{ item }">
-                            <div>
-                                <h6 class="text-base font-weight-medium">{{ item.title }}</h6>
-                                <div class="text-body-2 text-disabled">{{ item.description }}</div>
+                    <!-- Franchisee Tasks Table -->
+                    <VCard>
+                        <VCardItem class="pb-4">
+                            <VCardTitle>Franchisee Tasks</VCardTitle>
+                            <VCardSubtitle class="text-body-2 text-disabled">
+                                View and manage tasks assigned to your franchisees
+                            </VCardSubtitle>
+                        </VCardItem>
+
+                        <VDivider />
+
+                        <VDataTable v-if="franchiseeTasksData.length > 0" :items="franchiseeTasksData" :headers="taskHeaders" class="text-no-wrap"
+                            item-value="id">
+                            <!-- Task Info -->
+                            <template #item.taskInfo="{ item }">
+                                <div>
+                                    <h6 class="text-base font-weight-medium">{{ item.title }}</h6>
+                                    <div class="text-body-2 text-disabled">{{ item.description }}</div>
+                                </div>
+                            </template>
+
+                            <!-- Unit -->
+                            <template #item.unitName="{ item }">
+                                <div class="text-body-1">{{ item.unitName }}</div>
+                            </template>
+
+                            <!-- Priority -->
+                            <template #item.priority="{ item }">
+                                <VChip :color="resolvePriorityVariant(item.priority)" size="small" label
+                                    class="text-capitalize">
+                                    {{ item.priority }}
+                                </VChip>
+                            </template>
+
+                            <!-- Status -->
+                            <template #item.status="{ item }">
+                                <VChip :color="resolveStatusVariant(item.status)" size="small" label
+                                    class="text-capitalize">
+                                    {{ item.status }}
+                                </VChip>
+                            </template>
+
+                            <!-- Actions -->
+                            <template #item.actions="{ item }">
+                                <VBtn icon variant="text" color="medium-emphasis" size="small">
+                                    <VIcon icon="tabler-dots-vertical" />
+                                    <VMenu activator="parent">
+                                        <VList>
+                                            <VListItem @click="viewTask(item)">
+                                                <template #prepend>
+                                                    <VIcon icon="tabler-eye" />
+                                                </template>
+                                                <VListItemTitle>View</VListItemTitle>
+                                            </VListItem>
+                                            <VListItem @click="editTask(item)">
+                                                <template #prepend>
+                                                    <VIcon icon="tabler-edit" />
+                                                </template>
+                                                <VListItemTitle>Edit</VListItemTitle>
+                                            </VListItem>
+                                            <VListItem @click="confirmDelete(item.id)">
+                                                <template #prepend>
+                                                    <VIcon icon="tabler-trash" />
+                                                </template>
+                                                <VListItemTitle>Delete</VListItemTitle>
+                                            </VListItem>
+                                        </VList>
+                                    </VMenu>
+                                </VBtn>
+                            </template>
+                        </VDataTable>
+
+                        <!-- Empty State -->
+                        <VCardText v-else class="py-8">
+                            <div class="text-center">
+                                <VIcon icon="tabler-checklist" size="64" class="text-disabled mb-4" />
+                                <h4 class="text-h4 mb-2">No Franchisee Tasks Found</h4>
+                                <p class="text-body-1 text-medium-emphasis">
+                                    There are no tasks assigned to franchisees yet. Create tasks to manage operations across your franchise network.
+                                </p>
                             </div>
-                        </template>
-
-                        <!-- Unit -->
-                        <template #item.unitName="{ item }">
-                            <div class="text-body-1">{{ item.unitName }}</div>
-                        </template>
-
-                        <!-- Priority -->
-                        <template #item.priority="{ item }">
-                            <VChip :color="resolvePriorityVariant(item.priority)" size="small" label
-                                class="text-capitalize">
-                                {{ item.priority }}
-                            </VChip>
-                        </template>
-
-                        <!-- Status -->
-                        <template #item.status="{ item }">
-                            <VChip :color="resolveStatusVariant(item.status)" size="small" label
-                                class="text-capitalize">
-                                {{ item.status }}
-                            </VChip>
-                        </template>
-
-                        <!-- Actions -->
-                        <template #item.actions="{ item }">
-                            <VBtn icon variant="text" color="medium-emphasis" size="small">
-                                <VIcon icon="tabler-dots-vertical" />
-                                <VMenu activator="parent">
-                                    <VList>
-                                        <VListItem @click="viewTask(item)">
-                                            <template #prepend>
-                                                <VIcon icon="tabler-eye" />
-                                            </template>
-                                            <VListItemTitle>View</VListItemTitle>
-                                        </VListItem>
-                                        <VListItem @click="editTask(item)">
-                                            <template #prepend>
-                                                <VIcon icon="tabler-edit" />
-                                            </template>
-                                            <VListItemTitle>Edit</VListItemTitle>
-                                        </VListItem>
-                                        <VListItem @click="confirmDelete(item.id)">
-                                            <template #prepend>
-                                                <VIcon icon="tabler-trash" />
-                                            </template>
-                                            <VListItemTitle>Delete</VListItemTitle>
-                                        </VListItem>
-                                    </VList>
-                                </VMenu>
-                            </VBtn>
-                        </template>
-                    </VDataTable>
-                </VCard>
+                        </VCardText>
+                    </VCard>
+                </template>
             </VWindowItem>
 
             <!-- Sales Tasks Tab -->
             <VWindowItem value="sales">
-                <!-- Stats Cards -->
-                <VRow class="mb-6">
-                    <VCol cols="12" md="3">
-                        <VCard>
-                            <VCardText class="d-flex align-center">
-                                <VAvatar size="44" rounded color="primary" variant="tonal">
-                                    <VIcon icon="tabler-checklist" size="26" />
-                                </VAvatar>
-                                <div class="ms-4">
-                                    <div class="text-body-2 text-disabled">Total Tasks</div>
-                                    <h4 class="text-h4">{{ salesTotalTasks }}</h4>
-                                </div>
-                            </VCardText>
-                        </VCard>
-                    </VCol>
-                    <VCol cols="12" md="3">
-                        <VCard>
-                            <VCardText class="d-flex align-center">
-                                <VAvatar size="44" rounded color="success" variant="tonal">
-                                    <VIcon icon="tabler-check" size="26" />
-                                </VAvatar>
-                                <div class="ms-4">
-                                    <div class="text-body-2 text-disabled">Completed</div>
-                                    <h4 class="text-h4">{{ salesCompletedTasks }}</h4>
-                                </div>
-                            </VCardText>
-                        </VCard>
-                    </VCol>
-                    <VCol cols="12" md="3">
-                        <VCard>
-                            <VCardText class="d-flex align-center">
-                                <VAvatar size="44" rounded color="warning" variant="tonal">
-                                    <VIcon icon="tabler-clock" size="26" />
-                                </VAvatar>
-                                <div class="ms-4">
-                                    <div class="text-body-2 text-disabled">In Progress</div>
-                                    <h4 class="text-h4">{{ salesInProgressTasks }}</h4>
-                                </div>
-                            </VCardText>
-                        </VCard>
-                    </VCol>
-                    <VCol cols="12" md="3">
-                        <VCard>
-                            <VCardText class="d-flex align-center">
-                                <VAvatar size="44" rounded color="error" variant="tonal">
-                                    <VIcon icon="tabler-alert-circle" size="26" />
-                                </VAvatar>
-                                <div class="ms-4">
-                                    <div class="text-body-2 text-disabled">Due</div>
-                                    <h4 class="text-h4">{{ salesDueTasks }}</h4>
-                                </div>
-                            </VCardText>
-                        </VCard>
-                    </VCol>
-                </VRow>
+                <!-- Error Alert -->
+                <VAlert v-if="salesError" type="error" variant="tonal" class="mb-4" closable @click:close="salesError = null">
+                    {{ salesError }}
+                </VAlert>
 
-                <!-- Sales Tasks Table -->
-                <VCard>
-                    <VCardItem class="pb-4">
-                        <VCardTitle>Sales Tasks</VCardTitle>
-                    </VCardItem>
+                <!-- Loading State -->
+                <div v-if="salesLoading" class="text-center py-12">
+                    <VProgressCircular indeterminate size="64" class="mb-4" />
+                    <h3 class="text-h3 mb-2">Loading Sales Tasks...</h3>
+                    <p class="text-body-1 text-medium-emphasis">
+                        Please wait while we fetch the sales team task information.
+                    </p>
+                </div>
 
-                    <VDivider />
+                <!-- Sales Tasks Content -->
+                <template v-else>
+                    <!-- Stats Cards -->
+                    <VRow class="mb-6">
+                        <VCol cols="12" md="3">
+                            <VCard>
+                                <VCardText class="d-flex align-center">
+                                    <VAvatar size="44" rounded color="primary" variant="tonal">
+                                        <VIcon icon="tabler-checklist" size="26" />
+                                    </VAvatar>
+                                    <div class="ms-4">
+                                        <div class="text-body-2 text-disabled">Total Tasks</div>
+                                        <h4 class="text-h4">{{ salesTotalTasks }}</h4>
+                                    </div>
+                                </VCardText>
+                            </VCard>
+                        </VCol>
+                        <VCol cols="12" md="3">
+                            <VCard>
+                                <VCardText class="d-flex align-center">
+                                    <VAvatar size="44" rounded color="success" variant="tonal">
+                                        <VIcon icon="tabler-check" size="26" />
+                                    </VAvatar>
+                                    <div class="ms-4">
+                                        <div class="text-body-2 text-disabled">Completed</div>
+                                        <h4 class="text-h4">{{ salesCompletedTasks }}</h4>
+                                    </div>
+                                </VCardText>
+                            </VCard>
+                        </VCol>
+                        <VCol cols="12" md="3">
+                            <VCard>
+                                <VCardText class="d-flex align-center">
+                                    <VAvatar size="44" rounded color="warning" variant="tonal">
+                                        <VIcon icon="tabler-clock" size="26" />
+                                    </VAvatar>
+                                    <div class="ms-4">
+                                        <div class="text-body-2 text-disabled">In Progress</div>
+                                        <h4 class="text-h4">{{ salesInProgressTasks }}</h4>
+                                    </div>
+                                </VCardText>
+                            </VCard>
+                        </VCol>
+                        <VCol cols="12" md="3">
+                            <VCard>
+                                <VCardText class="d-flex align-center">
+                                    <VAvatar size="44" rounded color="error" variant="tonal">
+                                        <VIcon icon="tabler-alert-circle" size="26" />
+                                    </VAvatar>
+                                    <div class="ms-4">
+                                        <div class="text-body-2 text-disabled">Due</div>
+                                        <h4 class="text-h4">{{ salesDueTasks }}</h4>
+                                    </div>
+                                </VCardText>
+                            </VCard>
+                        </VCol>
+                    </VRow>
 
-                    <VDataTable :items="salesTasksData" :headers="taskHeaders" class="text-no-wrap" item-value="id">
-                        <!-- Task Info -->
-                        <template #item.taskInfo="{ item }">
-                            <div>
-                                <h6 class="text-base font-weight-medium">{{ item.title }}</h6>
-                                <div class="text-body-2 text-disabled">{{ item.description }}</div>
+                    <!-- Sales Tasks Table -->
+                    <VCard>
+                        <VCardItem class="pb-4">
+                            <VCardTitle>Sales Team Tasks</VCardTitle>
+                            <VCardSubtitle class="text-body-2 text-disabled">
+                                View and manage tasks assigned to your sales team
+                            </VCardSubtitle>
+                        </VCardItem>
+
+                        <VDivider />
+
+                        <VDataTable v-if="salesTasksData.length > 0" :items="salesTasksData" :headers="taskHeaders" class="text-no-wrap" item-value="id">
+                            <!-- Task Info -->
+                            <template #item.taskInfo="{ item }">
+                                <div>
+                                    <h6 class="text-base font-weight-medium">{{ item.title }}</h6>
+                                    <div class="text-body-2 text-disabled">{{ item.description }}</div>
+                                </div>
+                            </template>
+
+                            <!-- Unit -->
+                            <template #item.unitName="{ item }">
+                                <div class="text-body-1">{{ item.unitName }}</div>
+                            </template>
+
+                            <!-- Priority -->
+                            <template #item.priority="{ item }">
+                                <VChip :color="resolvePriorityVariant(item.priority)" size="small" label
+                                    class="text-capitalize">
+                                    {{ item.priority }}
+                                </VChip>
+                            </template>
+
+                            <!-- Status -->
+                            <template #item.status="{ item }">
+                                <VChip :color="resolveStatusVariant(item.status)" size="small" label
+                                    class="text-capitalize">
+                                    {{ item.status }}
+                                </VChip>
+                            </template>
+
+                            <!-- Actions -->
+                            <template #item.actions="{ item }">
+                                <VBtn icon variant="text" color="medium-emphasis" size="small">
+                                    <VIcon icon="tabler-dots-vertical" />
+                                    <VMenu activator="parent">
+                                        <VList>
+                                            <VListItem @click="viewTask(item)">
+                                                <template #prepend>
+                                                    <VIcon icon="tabler-eye" />
+                                                </template>
+                                                <VListItemTitle>View</VListItemTitle>
+                                            </VListItem>
+                                            <VListItem @click="editTask(item)">
+                                                <template #prepend>
+                                                    <VIcon icon="tabler-edit" />
+                                                </template>
+                                                <VListItemTitle>Edit</VListItemTitle>
+                                            </VListItem>
+                                            <VListItem @click="confirmDelete(item.id)">
+                                                <template #prepend>
+                                                    <VIcon icon="tabler-trash" />
+                                                </template>
+                                                <VListItemTitle>Delete</VListItemTitle>
+                                            </VListItem>
+                                        </VList>
+                                    </VMenu>
+                                </VBtn>
+                            </template>
+                        </VDataTable>
+
+                        <!-- Empty State -->
+                        <VCardText v-else class="py-8">
+                            <div class="text-center">
+                                <VIcon icon="tabler-user-star" size="64" class="text-disabled mb-4" />
+                                <h4 class="text-h4 mb-2">No Sales Tasks Found</h4>
+                                <p class="text-body-1 text-medium-emphasis">
+                                    There are no tasks assigned to the sales team yet. Create tasks to track sales activities and goals.
+                                </p>
                             </div>
-                        </template>
-
-                        <!-- Unit -->
-                        <template #item.unitName="{ item }">
-                            <div class="text-body-1">{{ item.unitName }}</div>
-                        </template>
-
-                        <!-- Priority -->
-                        <template #item.priority="{ item }">
-                            <VChip :color="resolvePriorityVariant(item.priority)" size="small" label
-                                class="text-capitalize">
-                                {{ item.priority }}
-                            </VChip>
-                        </template>
-
-                        <!-- Status -->
-                        <template #item.status="{ item }">
-                            <VChip :color="resolveStatusVariant(item.status)" size="small" label
-                                class="text-capitalize">
-                                {{ item.status }}
-                            </VChip>
-                        </template>
-
-                        <!-- Actions -->
-                        <template #item.actions="{ item }">
-                            <VBtn icon variant="text" color="medium-emphasis" size="small">
-                                <VIcon icon="tabler-dots-vertical" />
-                                <VMenu activator="parent">
-                                    <VList>
-                                        <VListItem @click="viewTask(item)">
-                                            <template #prepend>
-                                                <VIcon icon="tabler-eye" />
-                                            </template>
-                                            <VListItemTitle>View</VListItemTitle>
-                                        </VListItem>
-                                        <VListItem @click="editTask(item)">
-                                            <template #prepend>
-                                                <VIcon icon="tabler-edit" />
-                                            </template>
-                                            <VListItemTitle>Edit</VListItemTitle>
-                                        </VListItem>
-                                        <VListItem @click="confirmDelete(item.id)">
-                                            <template #prepend>
-                                                <VIcon icon="tabler-trash" />
-                                            </template>
-                                            <VListItemTitle>Delete</VListItemTitle>
-                                        </VListItem>
-                                    </VList>
-                                </VMenu>
-                            </VBtn>
-                        </template>
-                    </VDataTable>
-                </VCard>
+                        </VCardText>
+                    </VCard>
+                </template>
             </VWindowItem>
         </VWindow>
 
