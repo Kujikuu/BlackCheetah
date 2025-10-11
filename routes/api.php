@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TechnicalRequestController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UnitController;
+use App\Http\Controllers\Api\UnitPerformanceController;
 use App\Http\Controllers\NoteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -352,6 +353,14 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::post('royalties/{royalty}/adjustments', [RoyaltyController::class, 'addAdjustment']);
     Route::patch('revenues/{revenue}/verify', [RevenueController::class, 'verify']);
     Route::post('revenues/{revenue}/dispute', [RevenueController::class, 'dispute']);
+
+    // Performance management for franchisor units
+    Route::get('performance/chart-data', [UnitPerformanceController::class, 'chartData']);
+    Route::get('performance/top-performers', [UnitPerformanceController::class, 'topPerformers']);
+    Route::get('performance/customer-satisfaction', [UnitPerformanceController::class, 'customerSatisfaction']);
+    Route::get('performance/ratings', [UnitPerformanceController::class, 'ratings']);
+    Route::get('performance/export', [UnitPerformanceController::class, 'export']);
+    Route::get('performance/units', [UnitPerformanceController::class, 'units']);
 });
 
 // Unit Manager routes (requires franchisee role)
