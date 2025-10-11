@@ -26,7 +26,7 @@ const formData = ref({
   city: '',
   address: '',
   postalCode: '',
-  type: 'other' as const,
+  type: 'store' as const,
   sizeSqft: '',
   capacity: '',
   openingDate: '',
@@ -109,7 +109,7 @@ const resetForm = () => {
     city: '',
     address: '',
     postalCode: '',
-    type: 'other',
+    type: 'store',
     sizeSqft: '',
     capacity: '',
     openingDate: '',
@@ -133,19 +133,18 @@ const submitForm = async () => {
 
     // Prepare unit data
     const unitData = {
-      name: formData.value.name,
+      unit_name: formData.value.name,
       franchise_id: franchiseId,
-      type: formData.value.type,
+      unit_type: formData.value.type,
       address: formData.value.address,
       city: formData.value.city,
-      state: formData.value.state,
+      state_province: formData.value.state,
       postal_code: formData.value.postalCode,
       country: formData.value.country,
       phone: formData.value.phone,
       email: formData.value.email,
-      manager_id: formData.value.managerId,
+      franchisee_id: formData.value.managerId,
       size_sqft: formData.value.sizeSqft ? Number(formData.value.sizeSqft) : null,
-      capacity: formData.value.capacity ? Number(formData.value.capacity) : null,
       opening_date: formData.value.openingDate || null,
       monthly_rent: formData.value.monthlyRent ? Number(formData.value.monthlyRent) : null,
       status: 'planning', // Start as planning until activated
@@ -163,7 +162,7 @@ const submitForm = async () => {
 
       // Transform data for frontend compatibility
       const franchiseeData = {
-        branchName: response.data.name,
+        branchName: response.data.unit_name,
         franchiseeName: selectedManager?.name || 'Unassigned',
         email: formData.value.email,
         contactNumber: formData.value.phone,
