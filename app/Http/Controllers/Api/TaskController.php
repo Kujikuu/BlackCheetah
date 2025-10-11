@@ -113,6 +113,19 @@ class TaskController extends Controller
             // Set the created_by field to the authenticated user
             $validated['created_by'] = $request->user()->id;
 
+            // If franchise_id is not provided, try to set it based on the authenticated user
+            if (! isset($validated['franchise_id'])) {
+                $user = $request->user();
+
+                // If user is a franchisor, set franchise_id to their franchise
+                if ($user->role === 'franchisor') {
+                    $franchise = Franchise::where('franchisor_id', $user->id)->first();
+                    if ($franchise) {
+                        $validated['franchise_id'] = $franchise->id;
+                    }
+                }
+            }
+
             // Map frontend category to database type
             $categoryToTypeMap = [
                 'Operations' => 'operations',

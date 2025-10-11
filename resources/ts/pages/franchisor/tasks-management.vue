@@ -42,11 +42,11 @@ const loadFranchiseeTasks = async () => {
         id: task.id,
         title: task.title,
         description: task.description,
-        category: task.category || 'other',
-        assignedTo: task.assigned_to_user?.name || 'Unassigned',
+        category: task.type || 'other',
+        assignedTo: task.assigned_to?.name || 'Unassigned',
         unitName: task.unit?.unit_name || 'N/A',
         startDate: task.started_at ? new Date(task.started_at).toISOString().split('T')[0] : null,
-        dueDate: task.due_date || null,
+        dueDate: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : null,
         priority: task.priority || 'medium',
         status: task.status || 'pending',
         estimatedHours: task.estimated_hours || 0,
@@ -72,17 +72,16 @@ const loadSalesTasks = async () => {
   salesError.value = null
 
   try {
-    // For now, load all tasks and filter for sales-related categories
-    // In a real implementation, you might have a specific endpoint or filter for sales tasks
-    const response = await $api<{ success: boolean; data: any }>(`/v1/tasks`)
+    // Load franchisor tasks and filter for sales-related categories
+    const response = await $api<{ success: boolean; data: any }>(`/v1/franchisor/tasks`)
 
     if (response.success && response.data?.data) {
-      // Filter tasks that are likely sales-related or assigned to sales team
+      // Filter tasks that are likely sales-related or assigned to sales team members
       const salesTasks = response.data.data.filter((task: any) => {
         // Check if task category is sales-related or assigned to sales team members
-        const salesCategories = ['sales', 'marketing', 'lead management', 'onboarding', 'market research']
-        return salesCategories.includes(task.category?.toLowerCase()) ||
-               task.assigned_to_user?.role === 'sales' ||
+        const salesCategories = ['Marketing', 'Customer Service']
+        return salesCategories.includes(task.type) ||
+               task.assigned_to?.role === 'sales' ||
                task.title?.toLowerCase().includes('sales') ||
                task.title?.toLowerCase().includes('lead') ||
                task.title?.toLowerCase().includes('client')
@@ -92,11 +91,11 @@ const loadSalesTasks = async () => {
         id: task.id,
         title: task.title,
         description: task.description,
-        category: task.category || 'other',
-        assignedTo: task.assigned_to_user?.name || 'Unassigned',
+        category: task.type || 'other',
+        assignedTo: task.assigned_to?.name || 'Unassigned',
         unitName: task.unit?.unit_name || 'N/A',
         startDate: task.started_at ? new Date(task.started_at).toISOString().split('T')[0] : null,
-        dueDate: task.due_date || null,
+        dueDate: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : null,
         priority: task.priority || 'medium',
         status: task.status || 'pending',
         estimatedHours: task.estimated_hours || 0,
@@ -181,7 +180,7 @@ const resolvePriorityVariant = (priority: string) => {
 
 const onTaskCreated = async (task: any) => {
     try {
-        const response = await $api<{ success: boolean; data: any }>('/v1/tasks', {
+        const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/tasks', {
             method: 'POST',
             body: {
                 title: task.title,
@@ -191,9 +190,8 @@ const onTaskCreated = async (task: any) => {
                 status: task.status || 'pending',
                 due_date: task.dueDate,
                 estimated_hours: task.estimatedHours,
-                assigned_to: task.assignedToId,
-                franchise_id: task.franchiseId,
-                unit_id: task.unitId,
+                // Note: assigned_to, franchise_id, and unit_id are not provided by CreateTaskModal
+                // They will be set by the backend based on the authenticated user
             }
         })
 
@@ -202,11 +200,11 @@ const onTaskCreated = async (task: any) => {
                 id: response.data.id,
                 title: response.data.title,
                 description: response.data.description,
-                category: response.data.category || 'other',
-                assignedTo: response.data.assigned_to_user?.name || 'Unassigned',
+                category: response.data.type || 'other',
+                assignedTo: response.data.assigned_to?.name || 'Unassigned',
                 unitName: response.data.unit?.unit_name || 'N/A',
                 startDate: response.data.started_at ? new Date(response.data.started_at).toISOString().split('T')[0] : null,
-                dueDate: response.data.due_date || null,
+                dueDate: response.data.due_date ? new Date(response.data.due_date).toISOString().split('T')[0] : null,
                 priority: response.data.priority || 'medium',
                 status: response.data.status || 'pending',
                 estimatedHours: response.data.estimated_hours || 0,
@@ -255,7 +253,7 @@ const deleteTask = async () => {
     if (taskToDelete.value === null) return
 
     try {
-        const response = await $api<{ success: boolean }>(`/v1/tasks/${taskToDelete.value}`, {
+        const response = await $api<{ success: boolean }>(`/v1/franchisor/tasks/${taskToDelete.value}`, {
             method: 'DELETE'
         })
 
@@ -289,7 +287,7 @@ const saveTask = async () => {
     if (!selectedTask.value) return
 
     try {
-        const response = await $api<{ success: boolean; data: any }>(`/v1/tasks/${selectedTask.value.id}`, {
+        const response = await $api<{ success: boolean; data: any }>(`/v1/franchisor/tasks/${selectedTask.value.id}`, {
             method: 'PUT',
             body: {
                 title: selectedTask.value.title,
@@ -309,11 +307,11 @@ const saveTask = async () => {
                 id: response.data.id,
                 title: response.data.title,
                 description: response.data.description,
-                category: response.data.category || 'other',
-                assignedTo: response.data.assigned_to_user?.name || selectedTask.value.assignedTo,
+                category: response.data.type || 'other',
+                assignedTo: response.data.assigned_to?.name || selectedTask.value.assignedTo,
                 unitName: response.data.unit?.unit_name || selectedTask.value.unitName,
                 startDate: response.data.started_at ? new Date(response.data.started_at).toISOString().split('T')[0] : selectedTask.value.startDate,
-                dueDate: response.data.due_date || selectedTask.value.dueDate,
+                dueDate: response.data.due_date ? new Date(response.data.due_date).toISOString().split('T')[0] : selectedTask.value.dueDate,
                 priority: response.data.priority || selectedTask.value.priority,
                 status: response.data.status || selectedTask.value.status,
                 estimatedHours: response.data.estimated_hours || selectedTask.value.estimatedHours,
