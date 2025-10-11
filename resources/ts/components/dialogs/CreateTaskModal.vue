@@ -17,6 +17,8 @@ interface TaskForm {
   dueDate: string
   priority: string
   status: string
+  estimatedHours: number
+  actualHours: number
 }
 
 const props = defineProps<Props>()

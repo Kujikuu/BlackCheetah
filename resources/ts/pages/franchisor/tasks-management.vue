@@ -800,12 +800,12 @@ onMounted(() => {
                                 placeholder="Enter task description" rows="3" required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VTextField v-model="selectedTask.category" label="Category" placeholder="Enter category"
-                                required />
+                            <VSelect v-model="selectedTask.category" label="Category" placeholder="Select category"
+                                :items="['Operations', 'Training', 'Maintenance', 'Marketing', 'Finance', 'HR', 'Quality Control', 'Customer Service']" required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VTextField v-model="selectedTask.assignedTo" label="Assigned To"
-                                placeholder="Enter assignee" required />
+                            <VSelect v-model="selectedTask.assignedTo" label="Assigned To" placeholder="Select user"
+                                :items="['Store Manager', 'Assistant Manager', 'HR Manager', 'Technician', 'Marketing Coordinator', 'Finance Officer', 'Quality Inspector', 'Customer Service Rep']" required />
                         </VCol>
                         <VCol cols="12" md="6">
                             <VTextField v-model="selectedTask.startDate" label="Start Date" type="date" required />
@@ -826,6 +826,12 @@ onMounted(() => {
                                 { title: 'In Progress', value: 'in_progress' },
                                 { title: 'Completed', value: 'completed' }
                             ]" required />
+                        </VCol>
+                        <VCol cols="12" md="6">
+                            <VTextField v-model="selectedTask.estimatedHours" label="Estimated Hours" type="number" min="0" />
+                        </VCol>
+                        <VCol cols="12" md="6">
+                            <VTextField v-model="selectedTask.actualHours" label="Actual Hours" type="number" min="0" />
                         </VCol>
                     </VRow>
                 </VCardText>
