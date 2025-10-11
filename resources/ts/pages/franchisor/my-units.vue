@@ -8,84 +8,38 @@ const router = useRouter()
 // 👉 Current tab
 const currentTab = ref('overview')
 
-// 👉 Mock units data
-const unitsData = ref([
-    {
-        id: 1,
-        branchName: 'Downtown Coffee Hub',
-        franchiseeName: 'John Smith',
-        email: 'john.smith@email.com',
-        contactNumber: '+1 555-123-4567',
-        address: '123 Main St, Downtown',
-        city: 'Los Angeles',
-        state: 'California',
-        country: 'United States',
-        royaltyPercentage: 8.5,
-        contractStartDate: '2024-01-15',
-        renewalDate: '2027-01-15',
-        status: 'active',
-        totalTasks: 25,
-        completedTasks: 18,
-        totalStaff: 12,
-        totalProducts: 45,
-        avgRating: 4.5,
+// 👉 Units data and loading state
+const unitsData = ref([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+// 👉 Statistics data
+const statisticsData = ref({
+    totalUnits: 0,
+    activeUnits: 0,
+    pendingUnits: 0,
+    inactiveUnits: 0,
+    totalRevenue: 0,
+    monthlyRoyalty: 0,
+    avgRevenuePerUnit: 0,
+    revenueChange: 0,
+    royaltyRate: 8.5,
+    taskStats: {
+        total: 0,
+        completed: 0,
+        pending: 0,
+        completionRate: 0,
     },
-    {
-        id: 2,
-        branchName: 'Westside Cafe',
-        franchiseeName: 'Sarah Johnson',
-        email: 'sarah.johnson@email.com',
-        contactNumber: '+1 555-987-6543',
-        address: '456 West Ave, Westside',
-        city: 'Los Angeles',
-        state: 'California',
-        country: 'United States',
-        royaltyPercentage: 7.5,
-        contractStartDate: '2024-02-01',
-        renewalDate: '2027-02-01',
-        status: 'active',
-        totalTasks: 30,
-        completedTasks: 22,
-        totalStaff: 15,
-        totalProducts: 42,
-        avgRating: 4.2,
-    },
-    {
-        id: 3,
-        branchName: 'Eastside Express',
-        franchiseeName: 'Mike Davis',
-        email: 'mike.davis@email.com',
-        contactNumber: '+1 555-456-7890',
-        address: '789 East Blvd, Eastside',
-        city: 'Los Angeles',
-        state: 'California',
-        country: 'United States',
-        royaltyPercentage: 9.0,
-        contractStartDate: '2023-12-01',
-        renewalDate: '2026-12-01',
-        status: 'pending',
-        totalTasks: 20,
-        completedTasks: 12,
-        totalStaff: 8,
-        totalProducts: 38,
-        avgRating: 4.0,
-    },
-])
+})
 
 // 👉 Modal state
 const isAddFranchiseeModalVisible = ref(false)
 
 // 👉 Computed stats
-const totalUnits = computed(() => unitsData.value.length)
-const activeUnits = computed(() => unitsData.value.filter(unit => unit.status === 'active').length)
-const pendingUnits = computed(() => unitsData.value.filter(unit => unit.status === 'pending').length)
-const totalRevenue = computed(() => {
-    return unitsData.value.reduce((total, unit) => {
-        // Mock calculation: assume average monthly revenue per unit
-        const monthlyRevenue = 50000 // SAR
-        return total + (monthlyRevenue * unit.royaltyPercentage / 100)
-    }, 0)
-})
+const totalUnits = computed(() => statisticsData.value.totalUnits || unitsData.value.length)
+const activeUnits = computed(() => statisticsData.value.activeUnits || unitsData.value.filter(unit => unit.status === 'active').length)
+const pendingUnits = computed(() => statisticsData.value.pendingUnits || unitsData.value.filter(unit => unit.status === 'pending').length)
+const totalRevenue = computed(() => statisticsData.value.monthlyRoyalty)
 
 // 👉 Headers for units table
 const unitHeaders = [
@@ -107,8 +61,85 @@ const resolveStatusVariant = (status: string) => {
 }
 
 // 👉 Functions
+const loadUnitsData = async () => {
+    loading.value = true
+    error.value = null
+
+    try {
+        const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/units')
+
+        if (response.success && response.data.data) {
+            // Transform API data to match frontend structure
+            unitsData.value = response.data.data.map((unit: any) => ({
+                id: unit.id,
+                branchName: unit.unit_name || 'Unnamed Unit',
+                franchiseeName: unit.franchisee?.name || 'Unassigned',
+                email: unit.franchisee?.email || unit.email || 'unassigned@example.com',
+                contactNumber: unit.franchisee?.phone || unit.phone || 'Not available',
+                address: unit.address || 'Address not available',
+                city: unit.city || 'Unknown',
+                state: unit.state_province || 'Unknown',
+                country: unit.country || 'Unknown',
+                royaltyPercentage: 8.5, // Default royalty percentage
+                contractStartDate: unit.lease_start_date || '2024-01-01',
+                renewalDate: unit.lease_end_date || '2027-01-01',
+                status: unit.status || 'inactive',
+                totalTasks: 0, // Would need to be calculated from tasks relationship
+                completedTasks: 0, // Would need to be calculated from tasks relationship
+                totalStaff: unit.employee_count || 0,
+                totalProducts: 0, // Would need to be calculated from products relationship
+                avgRating: 0, // Would need to be calculated from ratings relationship
+            }))
+        } else {
+            unitsData.value = []
+        }
+    } catch (err: any) {
+        console.error('Failed to load units data:', err)
+        error.value = err?.data?.message || 'Failed to load units data'
+        unitsData.value = []
+    } finally {
+        loading.value = false
+    }
+}
+
+const loadStatisticsData = async () => {
+    try {
+        const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/units/statistics')
+
+        if (response.success && response.data) {
+            statisticsData.value = {
+                totalUnits: response.data.totalUnits || 0,
+                activeUnits: response.data.activeUnits || 0,
+                pendingUnits: response.data.pendingUnits || 0,
+                inactiveUnits: response.data.inactiveUnits || 0,
+                totalRevenue: response.data.totalRevenue || 0,
+                monthlyRoyalty: response.data.monthlyRoyalty || 0,
+                avgRevenuePerUnit: response.data.avgRevenuePerUnit || 0,
+                revenueChange: response.data.revenueChange || 0,
+                royaltyRate: response.data.royaltyRate || 8.5,
+                taskStats: {
+                    total: response.data.taskStats?.total || 0,
+                    completed: response.data.taskStats?.completed || 0,
+                    pending: response.data.taskStats?.pending || 0,
+                    completionRate: response.data.taskStats?.completionRate || 0,
+                },
+            }
+        }
+    } catch (err: any) {
+        console.error('Failed to load statistics data:', err)
+        // Don't set error state for statistics, just use defaults
+    }
+}
+
+const loadData = async () => {
+    await Promise.all([
+        loadUnitsData(),
+        loadStatisticsData(),
+    ])
+}
+
 const viewUnit = (unitId: number) => {
-    router.push(`/franchisor/units/${unitId}`)
+    router.push(`/v1/units/${unitId}`)
 }
 
 const addFranchisee = () => {
@@ -118,33 +149,17 @@ const addFranchisee = () => {
 
 
 const onFranchiseeAdded = (franchiseeData: any) => {
-    // Add the new franchisee to the units data
-    const newUnit = {
-        id: unitsData.value.length + 1,
-        branchName: franchiseeData.branchName,
-        franchiseeName: franchiseeData.franchiseeName,
-        email: franchiseeData.email,
-        contactNumber: franchiseeData.contactNumber,
-        address: franchiseeData.address,
-        city: franchiseeData.city,
-        state: franchiseeData.state,
-        country: franchiseeData.country,
-        royaltyPercentage: franchiseeData.royaltyPercentage,
-        contractStartDate: franchiseeData.contractStartDate,
-        renewalDate: franchiseeData.renewalDate,
-        status: 'active',
-        totalTasks: 0,
-        completedTasks: 0,
-        totalStaff: 0,
-        totalProducts: 0,
-        avgRating: 0,
-    }
-
-    unitsData.value.push(newUnit)
+    // Reload both units and statistics data from API to get the latest
+    loadData()
 }
 
+// Load data on component mount
+onMounted(() => {
+    loadData()
+})
+
 const viewUnitDetails = (unit: any) => {
-    router.push(`/franchisor/units/${unit.id}`)
+    router.push(`/v1/units/${unit.id}`)
 }
 </script>
 
@@ -162,12 +177,17 @@ const viewUnitDetails = (unit: any) => {
                             Manage your franchise units and franchisees
                         </p>
                     </div>
-                    <VBtn color="primary" prepend-icon="tabler-plus" @click="addFranchisee">
+                    <VBtn color="primary" prepend-icon="tabler-plus" @click="addFranchisee" :loading="loading">
                         Add Franchisee
                     </VBtn>
                 </div>
             </VCol>
         </VRow>
+
+        <!-- Error Alert -->
+        <VAlert v-if="error" type="error" variant="tonal" class="mb-6" closable @click:close="error = null">
+            {{ error }}
+        </VAlert>
 
         <!-- Tabs -->
         <VTabs v-model="currentTab" class="mb-6">
@@ -197,7 +217,8 @@ const viewUnitDetails = (unit: any) => {
                                         Total Units
                                     </div>
                                     <h4 class="text-h4">
-                                        {{ totalUnits }}
+                                        <VProgressCircular v-if="loading" indeterminate size="20" />
+                                        <span v-else>{{ totalUnits }}</span>
                                     </h4>
                                 </div>
                             </VCardText>
@@ -214,7 +235,8 @@ const viewUnitDetails = (unit: any) => {
                                         Active Units
                                     </div>
                                     <h4 class="text-h4">
-                                        {{ activeUnits }}
+                                        <VProgressCircular v-if="loading" indeterminate size="20" />
+                                        <span v-else>{{ activeUnits }}</span>
                                     </h4>
                                 </div>
                             </VCardText>
@@ -231,7 +253,8 @@ const viewUnitDetails = (unit: any) => {
                                         Pending Units
                                     </div>
                                     <h4 class="text-h4">
-                                        {{ pendingUnits }}
+                                        <VProgressCircular v-if="loading" indeterminate size="20" />
+                                        <span v-else>{{ pendingUnits }}</span>
                                     </h4>
                                 </div>
                             </VCardText>
@@ -248,7 +271,8 @@ const viewUnitDetails = (unit: any) => {
                                         Monthly Royalty
                                     </div>
                                     <h4 class="text-h4">
-                                        {{ formatCurrency(totalRevenue) }}
+                                        <VProgressCircular v-if="loading" indeterminate size="20" />
+                                        <span v-else>{{ formatCurrency(totalRevenue) }}</span>
                                     </h4>
                                 </div>
                             </VCardText>
@@ -267,7 +291,35 @@ const viewUnitDetails = (unit: any) => {
                         </template>
                     </VCardItem>
                     <VCardText>
-                        <VRow>
+                        <VRow v-if="loading">
+                            <VCol cols="12" md="4" v-for="i in 3" :key="i">
+                                <VCard variant="outlined">
+                                    <VCardText>
+                                        <VSkeletonLoader type="text" class="mb-3" />
+                                        <VSkeletonLoader type="text" class="mb-2" />
+                                        <VSkeletonLoader type="text" class="mb-2" />
+                                        <VSkeletonLoader type="text" class="mb-3" />
+                                        <VSkeletonLoader type="button" />
+                                    </VCardText>
+                                </VCard>
+                            </VCol>
+                        </VRow>
+                        <VRow v-else-if="unitsData.length === 0">
+                            <VCol cols="12">
+                                <div class="text-center py-8">
+                                    <VIcon icon="tabler-building-store" size="48" class="text-disabled mb-4" />
+                                    <h4 class="text-h4 mb-2">No Units Found</h4>
+                                    <p class="text-body-1 text-medium-emphasis mb-4">
+                                        You haven't added any franchise units yet. Click "Add Franchisee" to get
+                                        started.
+                                    </p>
+                                    <VBtn color="primary" prepend-icon="tabler-plus" @click="addFranchisee">
+                                        Add Your First Unit
+                                    </VBtn>
+                                </div>
+                            </VCol>
+                        </VRow>
+                        <VRow v-else>
                             <template v-for="unit in unitsData.slice(0, 3)" :key="unit.id">
                                 <VCol cols="12" md="4">
                                     <VCard variant="outlined">
@@ -293,7 +345,7 @@ const viewUnitDetails = (unit: any) => {
                                             <div class="mb-3">
                                                 <div class="text-body-2 text-disabled">Royalty</div>
                                                 <div class="text-body-1 font-weight-medium">{{ unit.royaltyPercentage
-                                                }}%</div>
+                                                    }}%</div>
                                             </div>
                                         </VCardText>
 
@@ -316,7 +368,7 @@ const viewUnitDetails = (unit: any) => {
                     <VCardItem class="pb-4">
                         <VCardTitle>All Franchise Units</VCardTitle>
                         <template #append>
-                            <VBtn color="primary" prepend-icon="tabler-plus" @click="addFranchisee">
+                            <VBtn color="primary" prepend-icon="tabler-plus" @click="addFranchisee" :loading="loading">
                                 Add Franchisee
                             </VBtn>
                         </template>
@@ -324,8 +376,33 @@ const viewUnitDetails = (unit: any) => {
 
                     <VDivider />
 
+                    <!-- Loading State -->
+                    <VCardText v-if="loading" class="py-8">
+                        <div class="text-center">
+                            <VProgressCircular indeterminate size="48" class="mb-4" />
+                            <h4 class="text-h4 mb-2">Loading Units...</h4>
+                            <p class="text-body-1 text-medium-emphasis">
+                                Please wait while we fetch your franchise units.
+                            </p>
+                        </div>
+                    </VCardText>
+
+                    <!-- Empty State -->
+                    <VCardText v-else-if="unitsData.length === 0" class="py-8">
+                        <div class="text-center">
+                            <VIcon icon="tabler-building-store" size="64" class="text-disabled mb-4" />
+                            <h4 class="text-h4 mb-2">No Units Found</h4>
+                            <p class="text-body-1 text-medium-emphasis mb-6">
+                                You haven't added any franchise units yet. Start by adding your first franchise unit.
+                            </p>
+                            <VBtn color="primary" prepend-icon="tabler-plus" @click="addFranchisee" size="large">
+                                Add Your First Unit
+                            </VBtn>
+                        </div>
+                    </VCardText>
+
                     <!-- Units Table -->
-                    <VDataTable :items="unitsData" :headers="unitHeaders" class="text-no-wrap" item-value="id"
+                    <VDataTable v-else :items="unitsData" :headers="unitHeaders" class="text-no-wrap" item-value="id"
                         @click:row="(event: any, { item }: any) => viewUnitDetails(item)" style="cursor: pointer;">
                         <!-- Branch Info -->
                         <template #item.branchInfo="{ item }">

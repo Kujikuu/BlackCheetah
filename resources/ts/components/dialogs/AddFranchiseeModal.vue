@@ -15,33 +15,68 @@ const emit = defineEmits<Emit>()
 
 // Form data
 const currentStep = ref(1)
+const loading = ref(false)
+const error = ref<string | null>(null)
 const formData = ref({
-  franchiseeId: '',
-  branchName: '',
+  name: '',
   email: '',
-  contactNumber: '',
+  phone: '',
   country: '',
   state: '',
   city: '',
   address: '',
-  royaltyPercentage: 0,
-  contractStartDate: '',
-  renewalDate: '',
+  postalCode: '',
+  type: 'other' as const,
+  sizeSqft: '',
+  capacity: '',
+  openingDate: '',
+  monthlyRent: '',
+  managerId: null as string | null,
 })
 
-// Mock data
-const franchisees = [
-  { id: '1', name: 'John Smith', email: 'john@example.com' },
-  { id: '2', name: 'Sarah Johnson', email: 'sarah@example.com' },
-  { id: '3', name: 'Mike Wilson', email: 'mike@example.com' },
-]
-
+// Data
+const franchisees = ref([])
 const countries = [
   { title: 'United States', value: 'US' },
   { title: 'Canada', value: 'CA' },
   { title: 'United Kingdom', value: 'UK' },
   { title: 'Australia', value: 'AU' },
+  { title: 'Saudi Arabia', value: 'SA' },
 ]
+
+const unitTypes = [
+  { title: 'Store', value: 'store' },
+  { title: 'Kiosk', value: 'kiosk' },
+  { title: 'Mobile', value: 'mobile' },
+  { title: 'Online', value: 'online' },
+  { title: 'Warehouse', value: 'warehouse' },
+  { title: 'Office', value: 'office' },
+]
+
+// Load available franchisees (users with franchisee role)
+const loadFranchisees = async () => {
+  try {
+    const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/franchisees')
+    if (response.success && response.data.data) {
+      franchisees.value = response.data.data.map((franchisee: any) => ({
+        id: franchisee.id,
+        name: franchisee.name,
+        email: franchisee.email,
+        phone: franchisee.phone,
+      }))
+    }
+  } catch (err: any) {
+    console.error('Failed to load franchisees:', err)
+  }
+}
+
+// Load franchisees when modal opens
+watch(() => props.isDialogVisible, (visible) => {
+  if (visible) {
+    loadFranchisees()
+    resetForm()
+  }
+})
 
 // Methods
 const updateModelValue = (val: boolean) => {
@@ -51,54 +86,109 @@ const updateModelValue = (val: boolean) => {
 const nextStep = () => {
   if (currentStep.value < 2) {
     currentStep.value++
+    error.value = null
   }
 }
 
 const prevStep = () => {
   if (currentStep.value > 1) {
     currentStep.value--
+    error.value = null
   }
 }
 
 const resetForm = () => {
   currentStep.value = 1
+  error.value = null
   formData.value = {
-    franchiseeId: '',
-    branchName: '',
+    name: '',
     email: '',
-    contactNumber: '',
+    phone: '',
     country: '',
     state: '',
     city: '',
     address: '',
-    royaltyPercentage: 0,
-    contractStartDate: '',
-    renewalDate: '',
+    postalCode: '',
+    type: 'other',
+    sizeSqft: '',
+    capacity: '',
+    openingDate: '',
+    monthlyRent: '',
+    managerId: null,
   }
 }
 
-const submitForm = () => {
-  // Find selected franchisee
-  const selectedFranchisee = franchisees.find(f => f.id === formData.value.franchiseeId)
+const submitForm = async () => {
+  loading.value = true
+  error.value = null
 
-  const franchiseeData = {
-    id: Date.now().toString(),
-    franchisee: selectedFranchisee?.name || '',
-    branchName: formData.value.branchName,
-    email: formData.value.email,
-    contactNumber: formData.value.contactNumber,
-    location: `${formData.value.city}, ${formData.value.state}, ${formData.value.country}`,
-    address: formData.value.address,
-    royaltyPercentage: formData.value.royaltyPercentage,
-    contractStartDate: formData.value.contractStartDate,
-    renewalDate: formData.value.renewalDate,
-    status: 'Active',
-    monthlyRoyalty: Math.floor(Math.random() * 5000) + 1000,
+  try {
+    // Get franchise ID from current user's franchise
+    const franchiseResponse = await $api<{ success: boolean; data: any }>('/v1/franchisor/franchise')
+    if (!franchiseResponse.success || !franchiseResponse.data) {
+      throw new Error('Franchise not found')
+    }
+
+    const franchiseId = franchiseResponse.data.id
+
+    // Prepare unit data
+    const unitData = {
+      name: formData.value.name,
+      franchise_id: franchiseId,
+      type: formData.value.type,
+      address: formData.value.address,
+      city: formData.value.city,
+      state: formData.value.state,
+      postal_code: formData.value.postalCode,
+      country: formData.value.country,
+      phone: formData.value.phone,
+      email: formData.value.email,
+      manager_id: formData.value.managerId,
+      size_sqft: formData.value.sizeSqft ? Number(formData.value.sizeSqft) : null,
+      capacity: formData.value.capacity ? Number(formData.value.capacity) : null,
+      opening_date: formData.value.openingDate || null,
+      monthly_rent: formData.value.monthlyRent ? Number(formData.value.monthlyRent) : null,
+      status: 'planning', // Start as planning until activated
+    }
+
+    // Create the unit
+    const response = await $api<{ success: boolean; data: any }>('/v1/units', {
+      method: 'POST',
+      body: unitData,
+    })
+
+    if (response.success && response.data) {
+      // Find selected manager info
+      const selectedManager = franchisees.value.find(f => f.id === formData.value.managerId)
+
+      // Transform data for frontend compatibility
+      const franchiseeData = {
+        branchName: response.data.name,
+        franchiseeName: selectedManager?.name || 'Unassigned',
+        email: formData.value.email,
+        contactNumber: formData.value.phone,
+        address: formData.value.address,
+        city: formData.value.city,
+        state: formData.value.state,
+        country: formData.value.country,
+        royaltyPercentage: 8.5, // Default - would come from franchise settings
+        contractStartDate: response.data.opening_date || new Date().toISOString().split('T')[0],
+        renewalDate: '', // Would be calculated based on contract terms
+        status: 'planning',
+      }
+
+      emit('franchisee-added', franchiseeData)
+      resetForm()
+      updateModelValue(false)
+    } else {
+      throw new Error('Failed to create unit')
+    }
+  } catch (err: any) {
+    console.error('Failed to create unit:', err)
+    error.value = err?.data?.message || 'Failed to create unit. Please try again.'
+  } finally {
+    loading.value = false
   }
-
-  emit('franchisee-added', franchiseeData)
-  resetForm()
-  updateModelValue(false)
 }
 
 const onDialogModelValueUpdate = (val: boolean) => {
@@ -117,12 +207,17 @@ const onDialogModelValueUpdate = (val: boolean) => {
       </VCardTitle>
 
       <VCardText>
+        <!-- Error Alert -->
+        <VAlert v-if="error" type="error" variant="tonal" class="mb-4" closable @click:close="error = null">
+          {{ error }}
+        </VAlert>
+
         <!-- Stepper -->
         <VStepper v-model="currentStep" alt-labels>
           <VStepperHeader>
             <VStepperItem :complete="currentStep > 1" :value="1" title="Basic Info" />
             <VDivider />
-            <VStepperItem :value="2" title="Franchisee Details" />
+            <VStepperItem :value="2" title="Unit Details" />
           </VStepperHeader>
 
           <VStepperWindow>
@@ -131,12 +226,7 @@ const onDialogModelValueUpdate = (val: boolean) => {
               <VForm>
                 <VRow>
                   <VCol cols="12">
-                    <AppSelect v-model="formData.franchiseeId" :items="franchisees" item-title="name" item-value="id"
-                      label="Select Franchisee" placeholder="Choose a franchisee" :rules="[requiredValidator]" />
-                  </VCol>
-
-                  <VCol cols="12">
-                    <AppTextField v-model="formData.branchName" label="Branch Name" placeholder="Enter branch name"
+                    <AppTextField v-model="formData.name" label="Unit Name" placeholder="Enter unit name"
                       :rules="[requiredValidator]" />
                   </VCol>
 
@@ -146,7 +236,7 @@ const onDialogModelValueUpdate = (val: boolean) => {
                   </VCol>
 
                   <VCol cols="12" md="6">
-                    <AppTextField v-model="formData.contactNumber" label="Contact Number"
+                    <AppTextField v-model="formData.phone" label="Contact Number"
                       placeholder="Enter contact number" :rules="[requiredValidator]" />
                   </VCol>
 
@@ -169,27 +259,46 @@ const onDialogModelValueUpdate = (val: boolean) => {
                     <AppTextarea v-model="formData.address" label="Address" placeholder="Enter full address"
                       :rules="[requiredValidator]" />
                   </VCol>
+
+                  <VCol cols="12" md="6">
+                    <AppSelect v-model="formData.managerId" :items="franchisees" item-title="name" item-value="id"
+                      label="Assign Manager (Franchisee)" placeholder="Choose a manager" clearable />
+                  </VCol>
+
+                  <VCol cols="12" md="6">
+                    <AppTextField v-model="formData.postalCode" label="Postal Code" placeholder="Enter postal code" />
+                  </VCol>
                 </VRow>
               </VForm>
             </VStepperWindowItem>
 
-            <!-- Step 2: Franchisee Details -->
+            <!-- Step 2: Unit Details -->
             <VStepperWindowItem :value="2">
               <VForm>
                 <VRow>
-                  <VCol cols="12">
-                    <AppTextField v-model="formData.royaltyPercentage" label="Royalty Percentage"
-                      placeholder="Enter royalty percentage" type="number" suffix="%" :rules="[requiredValidator]" />
+                  <VCol cols="12" md="6">
+                    <AppSelect v-model="formData.type" :items="unitTypes" label="Unit Type"
+                      placeholder="Select unit type" :rules="[requiredValidator]" />
                   </VCol>
 
                   <VCol cols="12" md="6">
-                    <AppDateTimePicker v-model="formData.contractStartDate" label="Contract Start Date"
-                      placeholder="Select start date" :rules="[requiredValidator]" />
+                    <AppDateTimePicker v-model="formData.openingDate" label="Opening Date"
+                      placeholder="Select opening date" />
                   </VCol>
 
-                  <VCol cols="12" md="6">
-                    <AppDateTimePicker v-model="formData.renewalDate" label="Renewal Date"
-                      placeholder="Select renewal date" :rules="[requiredValidator]" />
+                  <VCol cols="12" md="4">
+                    <AppTextField v-model="formData.sizeSqft" label="Size (sq ft)" placeholder="Enter size in square feet"
+                      type="number" />
+                  </VCol>
+
+                  <VCol cols="12" md="4">
+                    <AppTextField v-model="formData.capacity" label="Capacity" placeholder="Enter capacity"
+                      type="number" />
+                  </VCol>
+
+                  <VCol cols="12" md="4">
+                    <AppTextField v-model="formData.monthlyRent" label="Monthly Rent" placeholder="Enter monthly rent"
+                      type="number" prefix="$" />
                   </VCol>
                 </VRow>
               </VForm>
@@ -199,22 +308,22 @@ const onDialogModelValueUpdate = (val: boolean) => {
       </VCardText>
 
       <VCardActions class="justify-space-between pa-6">
-        <VBtn v-if="currentStep > 1" variant="outlined" @click="prevStep">
+        <VBtn v-if="currentStep > 1" variant="outlined" @click="prevStep" :disabled="loading">
           Previous
         </VBtn>
         <VSpacer v-else />
 
         <div class="d-flex gap-3">
-          <VBtn variant="outlined" @click="updateModelValue(false)">
+          <VBtn variant="outlined" @click="updateModelValue(false)" :disabled="loading">
             Cancel
           </VBtn>
 
-          <VBtn v-if="currentStep < 2" color="primary" @click="nextStep">
+          <VBtn v-if="currentStep < 2" color="primary" @click="nextStep" :disabled="loading">
             Next
           </VBtn>
 
-          <VBtn v-else color="primary" @click="submitForm">
-            Create Franchisee
+          <VBtn v-else color="primary" @click="submitForm" :loading="loading" :disabled="loading">
+            Create Unit
           </VBtn>
         </div>
       </VCardActions>

@@ -285,6 +285,7 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::get('franchise', [FranchisorController::class, 'myFranchise']);
     Route::get('franchisees', [FranchisorController::class, 'myFranchisees']);
     Route::get('units', [FranchisorController::class, 'myUnits']);
+    Route::get('units/statistics', [FranchisorController::class, 'unitsStatistics']);
 
     // Lead management for franchisor
     Route::get('leads', [LeadController::class, 'myLeads']);

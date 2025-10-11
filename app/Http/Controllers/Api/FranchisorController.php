@@ -675,9 +675,9 @@ class FranchisorController extends Controller
                 ], 404);
             }
 
-            $query = Unit::whereHas('franchise', function ($q) use ($franchise) {
-                $q->where('franchisor_id', $franchise->id);
-            })->with(['manager', 'franchise']);
+            $query = Unit::whereHas('franchise', function ($q) use ($user) {
+                $q->where('franchisor_id', $user->id);
+            })->with(['franchisee', 'franchise']);
 
             // Apply search filter
             if ($request->has('search') && $request->search) {
@@ -1486,6 +1486,98 @@ class FranchisorController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update franchise',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get units statistics for the franchisor
+     */
+    public function unitsStatistics(): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            // Get all units for this franchisor
+            $units = Unit::whereHas('franchise', function ($query) use ($user) {
+                $query->where('franchisor_id', $user->id);
+            })->get();
+
+            // Calculate basic statistics
+            $totalUnits = $units->count();
+            $activeUnits = $units->where('status', 'active')->count();
+            $pendingUnits = $units->where('status', 'planning')->count();
+            $inactiveUnits = $units->where('status', 'inactive')->count();
+
+            // Calculate revenue statistics
+            $totalRevenue = 0;
+            $monthlyRoyalty = 0;
+            $royaltyRate = 8.5; // Default royalty rate - could come from franchise settings
+
+            // If franchise has a specific royalty rate, use that
+            if ($franchise->royalty_percentage) {
+                $royaltyRate = $franchise->royalty_percentage;
+            }
+
+            foreach ($units as $unit) {
+                // Mock revenue calculation - in real app, this would come from revenue table
+                $unitRevenue = rand(50000, 200000); // Mock monthly revenue per unit
+                $totalRevenue += $unitRevenue;
+                $monthlyRoyalty += ($unitRevenue * $royaltyRate) / 100;
+            }
+
+            // Calculate task statistics
+            $totalTasks = Task::where('created_by', $user->id)->count();
+            $completedTasks = Task::where('created_by', $user->id)
+                ->where('status', 'completed')
+                ->count();
+            $pendingTasks = Task::where('created_by', $user->id)
+                ->where('status', 'pending')
+                ->count();
+
+            // Calculate performance metrics
+            $avgRevenuePerUnit = $totalUnits > 0 ? $totalRevenue / $totalUnits : 0;
+            $taskCompletionRate = $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0;
+
+            // Previous month statistics for comparison
+            $previousMonthRevenue = $totalRevenue * 0.9; // Mock 10% decrease from previous month
+            $revenueChange = $previousMonthRevenue > 0
+                ? (($totalRevenue - $previousMonthRevenue) / $previousMonthRevenue) * 100
+                : 0;
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'totalUnits' => $totalUnits,
+                    'activeUnits' => $activeUnits,
+                    'pendingUnits' => $pendingUnits,
+                    'inactiveUnits' => $inactiveUnits,
+                    'totalRevenue' => $totalRevenue,
+                    'monthlyRoyalty' => $monthlyRoyalty,
+                    'avgRevenuePerUnit' => $avgRevenuePerUnit,
+                    'revenueChange' => round($revenueChange, 2),
+                    'royaltyRate' => $royaltyRate,
+                    'taskStats' => [
+                        'total' => $totalTasks,
+                        'completed' => $completedTasks,
+                        'pending' => $pendingTasks,
+                        'completionRate' => round($taskCompletionRate, 2),
+                    ],
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch units statistics',
                 'error' => $e->getMessage(),
             ], 500);
         }
