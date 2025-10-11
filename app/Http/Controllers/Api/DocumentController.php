@@ -318,4 +318,120 @@ class DocumentController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Approve a document
+     */
+    public function approve(Request $request, $franchise_id, $document_id): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'comment' => 'required|string|max:500',
+            ]);
+
+            $user = auth()->user();
+
+            // Resolve franchise and document from IDs
+            $franchise = Franchise::findOrFail($franchise_id);
+            $document = Document::findOrFail($document_id);
+
+            // Check if user is the franchisor (owner) of the franchise
+            if ($franchise->franchisor_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only franchisors can approve documents.',
+                ], 403);
+            }
+
+            // Check if the document belongs to the franchise
+            if ($document->franchise_id !== $franchise->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Document not found.',
+                ], 404);
+            }
+
+            // Update document status to approved and add comment to metadata
+            $metadata = $document->metadata ?? [];
+            $metadata['approval_comment'] = $validated['comment'];
+            $metadata['approved_by'] = $user->id;
+            $metadata['approved_at'] = now()->toISOString();
+            $metadata['approved_by_name'] = $user->name;
+
+            $document->update([
+                'status' => 'approved',
+                'metadata' => $metadata,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Document approved successfully.',
+                'data' => $document->fresh(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to approve document.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Reject a document
+     */
+    public function reject(Request $request, $franchise_id, $document_id): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'comment' => 'required|string|max:500',
+            ]);
+
+            $user = auth()->user();
+
+            // Resolve franchise and document from IDs
+            $franchise = Franchise::findOrFail($franchise_id);
+            $document = Document::findOrFail($document_id);
+
+            // Check if user is the franchisor (owner) of the franchise
+            if ($franchise->franchisor_id !== $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only franchisors can reject documents.',
+                ], 403);
+            }
+
+            // Check if the document belongs to the franchise
+            if ($document->franchise_id !== $franchise->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Document not found.',
+                ], 404);
+            }
+
+            // Update document status to rejected and add comment to metadata
+            $metadata = $document->metadata ?? [];
+            $metadata['rejection_comment'] = $validated['comment'];
+            $metadata['rejected_by'] = $user->id;
+            $metadata['rejected_at'] = now()->toISOString();
+            $metadata['rejected_by_name'] = $user->name;
+
+            $document->update([
+                'status' => 'rejected',
+                'metadata' => $metadata,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Document rejected successfully.',
+                'data' => $document->fresh(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reject document.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

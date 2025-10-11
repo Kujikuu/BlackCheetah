@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('file_extension');
             $table->bigInteger('file_size'); // in bytes
             $table->string('mime_type');
-            $table->enum('status', ['active', 'archived', 'deleted'])->default('active');
+            $table->enum('status', ['active', 'approved', 'rejected', 'archived', 'deleted'])->default('active');
             $table->date('expiry_date')->nullable();
             $table->boolean('is_confidential')->default(false);
             $table->json('metadata')->nullable(); // For additional document metadata

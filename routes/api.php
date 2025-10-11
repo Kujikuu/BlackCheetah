@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\FranchisorController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RevenueController;
+use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\RoyaltyController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TechnicalRequestController;
@@ -68,6 +69,8 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
             Route::put('{document_id}', [DocumentController::class, 'update']);
             Route::delete('{document_id}', [DocumentController::class, 'destroy']);
             Route::get('{document_id}/download', [DocumentController::class, 'download']);
+            Route::patch('{document_id}/approve', [DocumentController::class, 'approve']);
+            Route::patch('{document_id}/reject', [DocumentController::class, 'reject']);
         });
 
         // Nested franchise products
@@ -182,6 +185,22 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
     Route::prefix('products')->group(function () {
         Route::get('categories', [ProductController::class, 'categories']);
         Route::patch('{product}/stock', [ProductController::class, 'updateStock']);
+    });
+
+    // Review Management Routes
+    Route::apiResource('reviews', ReviewController::class);
+    Route::prefix('reviews')->group(function () {
+        Route::get('statistics', [ReviewController::class, 'statistics']);
+        Route::patch('{review}/publish', [ReviewController::class, 'publish']);
+        Route::patch('{review}/archive', [ReviewController::class, 'archive']);
+        Route::patch('{review}/notes', [ReviewController::class, 'updateNotes']);
+    });
+
+    // Unit-specific review routes
+    Route::prefix('units/{unit_id}/reviews')->group(function () {
+        Route::get('/', [ReviewController::class, 'index']);
+        Route::post('/', [ReviewController::class, 'store']);
+        Route::get('statistics', [ReviewController::class, 'statistics']);
     });
 });
 

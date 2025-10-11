@@ -81,6 +81,11 @@ class Unit extends Model
         return $this->hasMany(TechnicalRequest::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     // Accessors
     public function getFullAddressAttribute(): string
     {
@@ -157,6 +162,6 @@ class Unit extends Model
     public function scopeNeedsAttention($query)
     {
         return $query->whereIn('status', ['temporarily_closed', 'construction'])
-                    ->orWhereRaw('monthly_revenue < monthly_expenses');
+            ->orWhereRaw('monthly_revenue < monthly_expenses');
     }
 }
