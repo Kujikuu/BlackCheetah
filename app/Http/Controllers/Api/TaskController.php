@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Task;
 use App\Models\Franchise;
+use App\Models\Task;
 use App\Models\Unit;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
@@ -48,8 +47,8 @@ class TaskController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('task_number', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('task_number', 'like', "%{$search}%");
             });
         }
 
@@ -65,7 +64,7 @@ class TaskController extends Controller
         return response()->json([
             'success' => true,
             'data' => $tasks,
-            'message' => 'Tasks retrieved successfully'
+            'message' => 'Tasks retrieved successfully',
         ]);
     }
 
@@ -74,34 +73,46 @@ class TaskController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'category' => 'required|in:maintenance,training,marketing,operations,compliance,finance,hr,other',
-            'priority' => 'required|in:low,medium,high,urgent',
-            'status' => 'required|in:pending,in_progress,completed,cancelled,on_hold',
-            'franchise_id' => 'nullable|exists:franchises,id',
-            'unit_id' => 'nullable|exists:units,id',
-            'assigned_to' => 'nullable|exists:users,id',
-            'due_date' => 'nullable|date|after:today',
-            'estimated_hours' => 'nullable|numeric|min:0',
-            'actual_hours' => 'nullable|numeric|min:0',
-            'completion_percentage' => 'nullable|integer|min:0|max:100',
-            'attachments' => 'nullable|array',
-            'checklist' => 'nullable|array',
-            'dependencies' => 'nullable|array',
-            'tags' => 'nullable|array',
-            'notes' => 'nullable|string'
-        ]);
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'category' => 'required|in:maintenance,training,marketing,operations,compliance,finance,hr,other',
+                'priority' => 'required|in:low,medium,high,urgent',
+                'status' => 'required|in:pending,in_progress,completed,cancelled,on_hold',
+                'franchise_id' => 'nullable|exists:franchises,id',
+                'unit_id' => 'nullable|exists:units,id',
+                'assigned_to' => 'nullable|exists:users,id',
+                'due_date' => 'nullable|date|after_or_equal:today',
+                'estimated_hours' => 'nullable|numeric|min:0',
+                'actual_hours' => 'nullable|numeric|min:0',
+                'completion_percentage' => 'nullable|integer|min:0|max:100',
+                'attachments' => 'nullable|array',
+                'checklist' => 'nullable|array',
+                'dependencies' => 'nullable|array',
+                'tags' => 'nullable|array',
+                'notes' => 'nullable|string',
+            ]);
 
-        $validated['created_by'] = null; // Will be set by the calling context
-        $task = Task::create($validated);
+            // Set the created_by field to the authenticated user
+            $validated['created_by'] = $request->user()->id;
 
-        return response()->json([
-            'success' => true,
-            'data' => $task->load(['franchise', 'unit', 'assignedTo', 'createdBy']),
-            'message' => 'Task created successfully'
-        ], 201);
+            $task = Task::create($validated);
+
+            return response()->json([
+                'success' => true,
+                'data' => $task->load(['franchise', 'unit', 'assignedTo', 'createdBy']),
+                'message' => 'Task created successfully',
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+                'data_received' => $request->all(),
+            ], 422);
+        }
     }
 
     /**
@@ -114,7 +125,7 @@ class TaskController extends Controller
         return response()->json([
             'success' => true,
             'data' => $task,
-            'message' => 'Task retrieved successfully'
+            'message' => 'Task retrieved successfully',
         ]);
     }
 
@@ -140,7 +151,7 @@ class TaskController extends Controller
             'checklist' => 'nullable|array',
             'dependencies' => 'nullable|array',
             'tags' => 'nullable|array',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
         $task->update($validated);
@@ -148,7 +159,7 @@ class TaskController extends Controller
         return response()->json([
             'success' => true,
             'data' => $task->load(['franchise', 'unit', 'assignedTo', 'createdBy']),
-            'message' => 'Task updated successfully'
+            'message' => 'Task updated successfully',
         ]);
     }
 
@@ -161,7 +172,7 @@ class TaskController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Task deleted successfully'
+            'message' => 'Task deleted successfully',
         ]);
     }
 
@@ -172,7 +183,7 @@ class TaskController extends Controller
     {
         $validated = $request->validate([
             'actual_hours' => 'nullable|numeric|min:0',
-            'completion_notes' => 'nullable|string'
+            'completion_notes' => 'nullable|string',
         ]);
 
         $task->update([
@@ -180,15 +191,15 @@ class TaskController extends Controller
             'completion_percentage' => 100,
             'completed_at' => now(),
             'actual_hours' => $validated['actual_hours'] ?? $task->actual_hours,
-            'notes' => $validated['completion_notes'] ? 
-                ($task->notes ? $task->notes . "\n\nCompletion Notes: " . $validated['completion_notes'] : 
-                "Completion Notes: " . $validated['completion_notes']) : $task->notes
+            'notes' => $validated['completion_notes'] ?
+                ($task->notes ? $task->notes."\n\nCompletion Notes: ".$validated['completion_notes'] :
+                'Completion Notes: '.$validated['completion_notes']) : $task->notes,
         ]);
 
         return response()->json([
             'success' => true,
             'data' => $task,
-            'message' => 'Task completed successfully'
+            'message' => 'Task completed successfully',
         ]);
     }
 
@@ -199,13 +210,13 @@ class TaskController extends Controller
     {
         $task->update([
             'status' => 'in_progress',
-            'started_at' => now()
+            'started_at' => now(),
         ]);
 
         return response()->json([
             'success' => true,
             'data' => $task,
-            'message' => 'Task started successfully'
+            'message' => 'Task started successfully',
         ]);
     }
 
@@ -215,7 +226,7 @@ class TaskController extends Controller
     public function assign(Request $request, Task $task): JsonResponse
     {
         $validated = $request->validate([
-            'assigned_to' => 'required|exists:users,id'
+            'assigned_to' => 'required|exists:users,id',
         ]);
 
         $task->update($validated);
@@ -223,7 +234,7 @@ class TaskController extends Controller
         return response()->json([
             'success' => true,
             'data' => $task->load(['assignedTo']),
-            'message' => 'Task assigned successfully'
+            'message' => 'Task assigned successfully',
         ]);
     }
 
@@ -234,17 +245,17 @@ class TaskController extends Controller
     {
         $validated = $request->validate([
             'completion_percentage' => 'required|integer|min:0|max:100',
-            'progress_notes' => 'nullable|string'
+            'progress_notes' => 'nullable|string',
         ]);
 
         $updateData = [
-            'completion_percentage' => $validated['completion_percentage']
+            'completion_percentage' => $validated['completion_percentage'],
         ];
 
         if ($validated['progress_notes']) {
             $currentNotes = $task->notes ?? '';
-            $newNote = "[" . now()->format('Y-m-d H:i:s') . "] Progress Update: " . $validated['progress_notes'];
-            $updateData['notes'] = $currentNotes ? $currentNotes . "\n\n" . $newNote : $newNote;
+            $newNote = '['.now()->format('Y-m-d H:i:s').'] Progress Update: '.$validated['progress_notes'];
+            $updateData['notes'] = $currentNotes ? $currentNotes."\n\n".$newNote : $newNote;
         }
 
         $task->update($updateData);
@@ -252,7 +263,7 @@ class TaskController extends Controller
         return response()->json([
             'success' => true,
             'data' => $task,
-            'message' => 'Task progress updated successfully'
+            'message' => 'Task progress updated successfully',
         ]);
     }
 
@@ -279,7 +290,7 @@ class TaskController extends Controller
             'completed_tasks' => $query->where('status', 'completed')->count(),
             'overdue_tasks' => $query->where('due_date', '<', now())
                 ->whereNotIn('status', ['completed', 'cancelled'])->count(),
-            'completion_rate' => $query->count() > 0 ? 
+            'completion_rate' => $query->count() > 0 ?
                 round(($query->where('status', 'completed')->count() / $query->count()) * 100, 2) : 0,
             'tasks_by_category' => $query->groupBy('category')
                 ->selectRaw('category, count(*) as count')
@@ -290,13 +301,13 @@ class TaskController extends Controller
             'average_completion_time' => $query->whereNotNull('completed_at')
                 ->whereNotNull('started_at')
                 ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, started_at, completed_at)) as avg_hours')
-                ->value('avg_hours')
+                ->value('avg_hours'),
         ];
 
         return response()->json([
             'success' => true,
             'data' => $stats,
-            'message' => 'Task statistics retrieved successfully'
+            'message' => 'Task statistics retrieved successfully',
         ]);
     }
 
@@ -308,10 +319,10 @@ class TaskController extends Controller
         $user = $request->user();
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
-        if (!$franchise) {
+        if (! $franchise) {
             return response()->json([
                 'success' => false,
-                'message' => 'No franchise found for current user'
+                'message' => 'No franchise found for current user',
             ], 404);
         }
 
@@ -322,7 +333,7 @@ class TaskController extends Controller
         return response()->json([
             'success' => true,
             'data' => $tasks,
-            'message' => 'Tasks retrieved successfully'
+            'message' => 'Tasks retrieved successfully',
         ]);
     }
 
@@ -332,12 +343,12 @@ class TaskController extends Controller
     public function myUnitTasks(Request $request): JsonResponse
     {
         $user = $request->user();
-        $unit = Unit::where('manager_id', $user->id)->first();
+        $unit = Unit::where('franchisee_id', $user->id)->first();
 
-        if (!$unit) {
+        if (! $unit) {
             return response()->json([
                 'success' => false,
-                'message' => 'No unit found for current user'
+                'message' => 'No unit found for current user',
             ], 404);
         }
 
@@ -348,7 +359,7 @@ class TaskController extends Controller
         return response()->json([
             'success' => true,
             'data' => $tasks,
-            'message' => 'Unit tasks retrieved successfully'
+            'message' => 'Unit tasks retrieved successfully',
         ]);
     }
 
@@ -365,7 +376,7 @@ class TaskController extends Controller
         return response()->json([
             'success' => true,
             'data' => $tasks,
-            'message' => 'Assigned tasks retrieved successfully'
+            'message' => 'Assigned tasks retrieved successfully',
         ]);
     }
 }

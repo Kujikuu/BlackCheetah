@@ -30,15 +30,15 @@ class UnitController extends Controller
             $query->where('franchise_id', $request->franchise_id);
         }
 
-        if ($request->has('manager_id')) {
-            $query->where('manager_id', $request->manager_id);
+        if ($request->has('franchisee_id')) {
+            $query->where('franchisee_id', $request->franchisee_id);
         }
 
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('unit_number', 'like', "%{$search}%")
+                $q->where('unit_name', 'like', "%{$search}%")
+                    ->orWhere('unit_code', 'like', "%{$search}%")
                     ->orWhere('address', 'like', "%{$search}%")
                     ->orWhere('city', 'like', "%{$search}%");
             });
@@ -127,29 +127,28 @@ class UnitController extends Controller
     public function update(Request $request, Unit $unit): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
+            'unit_name' => 'sometimes|string|max:255',
             'franchise_id' => 'sometimes|exists:franchises,id',
-            'type' => 'sometimes|in:store,kiosk,mobile,online,warehouse,office',
+            'unit_type' => 'sometimes|in:store,kiosk,mobile,online,warehouse,office',
             'address' => 'sometimes|string',
             'city' => 'sometimes|string|max:100',
-            'state' => 'sometimes|string|max:100',
+            'state_province' => 'sometimes|string|max:100',
             'postal_code' => 'sometimes|string|max:20',
             'country' => 'sometimes|string|max:100',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
-            'manager_id' => 'nullable|exists:users,id',
+            'franchisee_id' => 'nullable|exists:users,id',
             'size_sqft' => 'nullable|numeric|min:0',
-            'capacity' => 'nullable|integer|min:0',
+            'initial_investment' => 'nullable|numeric|min:0',
             'opening_date' => 'nullable|date',
-            'closing_date' => 'nullable|date|after:opening_date',
             'status' => 'sometimes|in:planning,construction,training,active,temporarily_closed,permanently_closed',
             'lease_start_date' => 'nullable|date',
             'lease_end_date' => 'nullable|date|after:lease_start_date',
-            'monthly_rent' => 'nullable|numeric|min:0',
-            'security_deposit' => 'nullable|numeric|min:0',
-            'equipment_list' => 'nullable|array',
+            'monthly_revenue' => 'nullable|numeric|min:0',
+            'monthly_expenses' => 'nullable|numeric|min:0',
             'operating_hours' => 'nullable|array',
-            'special_features' => 'nullable|array',
+            'amenities' => 'nullable|array',
+            'equipment' => 'nullable|array',
             'notes' => 'nullable|string',
         ]);
 
