@@ -218,25 +218,25 @@ const loadUnitData = async () => {
   error.value = null
 
   try {
-    const response = await $api<{ success: boolean; data: any }>(`/units/${unitId.value}`)
+    const response = await $api<{ success: boolean; data: any }>(`/v1/units/${unitId.value}`)
 
     if (response.success && response.data) {
       // Transform API data to match frontend structure
       unitData.value = {
         id: response.data.id,
-        branchName: response.data.name || 'Unnamed Unit',
-        franchiseeName: response.data.manager?.name || 'Unassigned',
-        email: response.data.manager?.email || 'unassigned@example.com',
-        contactNumber: response.data.manager?.phone || response.data.phone || 'Not available',
+        branchName: response.data.unit_name || 'Unnamed Unit',
+        franchiseeName: response.data.franchisee?.name || 'Unassigned',
+        email: response.data.franchisee?.email || 'unassigned@example.com',
+        contactNumber: response.data.franchisee?.phone || response.data.phone || 'Not available',
         address: response.data.address || 'Address not available',
         city: response.data.city || 'Unknown',
-        state: response.data.state || 'Unknown',
+        state: response.data.state_province || 'Unknown',
         country: response.data.country || 'Unknown',
         royaltyPercentage: 8.5, // This would come from franchise relationship
         contractStartDate: response.data.lease_start_date || '2024-01-01',
         renewalDate: response.data.lease_end_date || '2027-01-01',
         status: response.data.status || 'inactive',
-        type: response.data.type || 'other',
+        type: response.data.unit_type || 'other',
         sizeSqft: response.data.size_sqft || 0,
         capacity: response.data.capacity || 0,
         openingDate: response.data.opening_date || null,

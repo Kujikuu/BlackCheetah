@@ -139,7 +139,7 @@ const loadData = async () => {
 }
 
 const viewUnit = (unitId: number) => {
-    router.push(`/v1/units/${unitId}`)
+    router.push(`/franchisor/units/${unitId}`)
 }
 
 const addFranchisee = () => {
@@ -159,7 +159,7 @@ onMounted(() => {
 })
 
 const viewUnitDetails = (unit: any) => {
-    router.push(`/v1/units/${unit.id}`)
+    router.push(`/franchisor/units/${unit.id}`)
 }
 </script>
 

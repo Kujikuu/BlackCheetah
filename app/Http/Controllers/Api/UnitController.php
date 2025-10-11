@@ -112,7 +112,7 @@ class UnitController extends Controller
      */
     public function show(Unit $unit): JsonResponse
     {
-        $unit->load(['franchise', 'franchisee', 'tasks', 'transactions', 'revenues']);
+        $unit->load(['franchise', 'franchisee', 'tasks']);
 
         return response()->json([
             'success' => true,
@@ -167,12 +167,11 @@ class UnitController extends Controller
      */
     public function destroy(Unit $unit): JsonResponse
     {
-        // Check if unit has active transactions or tasks
-        if ($unit->transactions()->where('status', 'pending')->exists() ||
-            $unit->tasks()->where('status', 'in_progress')->exists()) {
+        // Check if unit has active tasks
+        if ($unit->tasks()->where('status', 'in_progress')->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot delete unit with active transactions or tasks',
+                'message' => 'Cannot delete unit with active tasks',
             ], 422);
         }
 
@@ -193,14 +192,9 @@ class UnitController extends Controller
             'total_tasks' => $unit->tasks()->count(),
             'completed_tasks' => $unit->tasks()->where('status', 'completed')->count(),
             'pending_tasks' => $unit->tasks()->where('status', 'pending')->count(),
-            'total_revenue' => $unit->revenues()->sum('amount'),
-            'monthly_revenue' => $unit->revenues()
-                ->whereYear('revenue_date', now()->year)
-                ->whereMonth('revenue_date', now()->month)
-                ->sum('amount'),
-            'total_transactions' => $unit->transactions()->count(),
-            'revenue_transactions' => $unit->transactions()->where('type', 'revenue')->sum('amount'),
-            'expense_transactions' => $unit->transactions()->where('type', 'expense')->sum('amount'),
+            'monthly_revenue' => $unit->monthly_revenue ?: 0,
+            'monthly_expenses' => $unit->monthly_expenses ?: 0,
+            'monthly_profit' => $unit->monthly_profit ?: 0,
         ];
 
         return response()->json([
@@ -293,8 +287,8 @@ class UnitController extends Controller
     public function myUnit(Request $request): JsonResponse
     {
         $user = $request->user();
-        $unit = Unit::where('manager_id', $user->id)
-            ->with(['franchise', 'manager', 'tasks', 'transactions'])
+        $unit = Unit::where('franchisee_id', $user->id)
+            ->with(['franchise', 'franchisee', 'tasks'])
             ->first();
 
         if (! $unit) {
@@ -317,7 +311,7 @@ class UnitController extends Controller
     public function myUnitStatistics(Request $request): JsonResponse
     {
         $user = $request->user();
-        $unit = Unit::where('manager_id', $user->id)->first();
+        $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
             return response()->json([
@@ -331,20 +325,9 @@ class UnitController extends Controller
             'completed_tasks' => $unit->tasks()->where('status', 'completed')->count(),
             'pending_tasks' => $unit->tasks()->where('status', 'pending')->count(),
             'in_progress_tasks' => $unit->tasks()->where('status', 'in_progress')->count(),
-            'total_transactions' => $unit->transactions()->count(),
-            'completed_transactions' => $unit->transactions()->where('status', 'completed')->count(),
-            'total_revenue' => $unit->transactions()->where('type', 'revenue')->sum('amount'),
-            'total_expenses' => $unit->transactions()->where('type', 'expense')->sum('amount'),
-            'monthly_revenue' => $unit->transactions()
-                ->where('type', 'revenue')
-                ->whereMonth('transaction_date', now()->month)
-                ->whereYear('transaction_date', now()->year)
-                ->sum('amount'),
-            'monthly_expenses' => $unit->transactions()
-                ->where('type', 'expense')
-                ->whereMonth('transaction_date', now()->month)
-                ->whereYear('transaction_date', now()->year)
-                ->sum('amount'),
+            'monthly_revenue' => $unit->monthly_revenue ?: 0,
+            'monthly_expenses' => $unit->monthly_expenses ?: 0,
+            'monthly_profit' => $unit->monthly_profit ?: 0,
         ];
 
         return response()->json([
