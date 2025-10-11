@@ -28,7 +28,23 @@ class TaskController extends Controller
         }
 
         if ($request->has('category')) {
-            $query->where('category', $request->category);
+            // Map frontend category to database type for filtering
+            $categoryToTypeMap = [
+                'Operations' => 'operations',
+                'Training' => 'training',
+                'Maintenance' => 'maintenance',
+                'Marketing' => 'marketing',
+                'Finance' => 'finance',
+                'HR' => 'other', // Map HR to 'other' since 'hr' is not in database enum
+                'Quality Control' => 'compliance',
+                'Customer Service' => 'support',
+            ];
+
+            $category = $request->category;
+            $type = $categoryToTypeMap[$category] ?? null;
+            if ($type) {
+                $query->where('type', $type);
+            }
         }
 
         if ($request->has('franchise_id')) {
@@ -77,9 +93,9 @@ class TaskController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
-                'category' => 'required|in:maintenance,training,marketing,operations,compliance,finance,hr,other',
-                'priority' => 'required|in:low,medium,high,urgent',
-                'status' => 'required|in:pending,in_progress,completed,cancelled,on_hold',
+                'category' => 'required|in:Operations,Training,Maintenance,Marketing,Finance,HR,Quality Control,Customer Service',
+                'priority' => 'required|in:low,medium,high',
+                'status' => 'required|in:pending,in_progress,completed',
                 'franchise_id' => 'nullable|exists:franchises,id',
                 'unit_id' => 'nullable|exists:units,id',
                 'assigned_to' => 'nullable|exists:users,id',
@@ -96,6 +112,21 @@ class TaskController extends Controller
 
             // Set the created_by field to the authenticated user
             $validated['created_by'] = $request->user()->id;
+
+            // Map frontend category to database type
+            $categoryToTypeMap = [
+                'Operations' => 'operations',
+                'Training' => 'training',
+                'Maintenance' => 'maintenance',
+                'Marketing' => 'marketing',
+                'Finance' => 'finance',
+                'HR' => 'other', // Map HR to 'other' since 'hr' is not in database enum
+                'Quality Control' => 'compliance',
+                'Customer Service' => 'support',
+            ];
+
+            $validated['type'] = $categoryToTypeMap[$validated['category']] ?? 'other';
+            unset($validated['category']); // Remove category as it doesn't exist in database
 
             $task = Task::create($validated);
 
@@ -137,9 +168,9 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
-            'category' => 'sometimes|in:maintenance,training,marketing,operations,compliance,finance,hr,other',
-            'priority' => 'sometimes|in:low,medium,high,urgent',
-            'status' => 'sometimes|in:pending,in_progress,completed,cancelled,on_hold',
+            'category' => 'sometimes|in:Operations,Training,Maintenance,Marketing,Finance,HR,Quality Control,Customer Service',
+            'priority' => 'sometimes|in:low,medium,high',
+            'status' => 'sometimes|in:pending,in_progress,completed',
             'franchise_id' => 'nullable|exists:franchises,id',
             'unit_id' => 'nullable|exists:units,id',
             'assigned_to' => 'nullable|exists:users,id',
@@ -153,6 +184,23 @@ class TaskController extends Controller
             'tags' => 'nullable|array',
             'notes' => 'nullable|string',
         ]);
+
+        // Map frontend category to database type if provided
+        if (isset($validated['category'])) {
+            $categoryToTypeMap = [
+                'Operations' => 'operations',
+                'Training' => 'training',
+                'Maintenance' => 'maintenance',
+                'Marketing' => 'marketing',
+                'Finance' => 'finance',
+                'HR' => 'other', // Map HR to 'other' since 'hr' is not in database enum
+                'Quality Control' => 'compliance',
+                'Customer Service' => 'support',
+            ];
+
+            $validated['type'] = $categoryToTypeMap[$validated['category']] ?? 'other';
+            unset($validated['category']); // Remove category as it doesn't exist in database
+        }
 
         $task->update($validated);
 

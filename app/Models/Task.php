@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class Task extends Model
 {
@@ -87,14 +87,37 @@ class Task extends Model
     // Accessors
     public function getIsOverdueAttribute(): bool
     {
-        return $this->due_date && 
-               $this->due_date->isPast() && 
-               !in_array($this->status, ['completed', 'cancelled']);
+        return $this->due_date &&
+               $this->due_date->isPast() &&
+               ! in_array($this->status, ['completed', 'cancelled']);
+    }
+
+    public function getCategoryAttribute(): string
+    {
+        // Map database type back to frontend category
+        $typeToCategoryMap = [
+            'operations' => 'Operations',
+            'training' => 'Training',
+            'maintenance' => 'Maintenance',
+            'marketing' => 'Marketing',
+            'finance' => 'Finance',
+            'other' => 'HR', // Map 'other' back to HR for frontend
+            'compliance' => 'Quality Control',
+            'support' => 'Customer Service',
+            'onboarding' => 'Training',
+        ];
+
+        return $typeToCategoryMap[$this->type] ?? 'Other';
+    }
+
+    public function getAssignedToUserAttribute()
+    {
+        return $this->assignedTo;
     }
 
     public function getProgressPercentageAttribute(): int
     {
-        if (!$this->checklist || empty($this->checklist)) {
+        if (! $this->checklist || empty($this->checklist)) {
             return $this->status === 'completed' ? 100 : 0;
         }
 
@@ -160,7 +183,7 @@ class Task extends Model
 
     protected function createNextRecurringTask(): void
     {
-        if (!$this->is_recurring || !$this->recurrence_type) {
+        if (! $this->is_recurring || ! $this->recurrence_type) {
             return;
         }
 
@@ -230,19 +253,19 @@ class Task extends Model
     public function scopeOverdue($query)
     {
         return $query->where('due_date', '<', now())
-                    ->whereNotIn('status', ['completed', 'cancelled']);
+            ->whereNotIn('status', ['completed', 'cancelled']);
     }
 
     public function scopeDueToday($query)
     {
         return $query->whereDate('due_date', today())
-                    ->whereNotIn('status', ['completed', 'cancelled']);
+            ->whereNotIn('status', ['completed', 'cancelled']);
     }
 
     public function scopeUpcoming($query, int $days = 7)
     {
         return $query->whereBetween('due_date', [now(), now()->addDays($days)])
-                    ->whereNotIn('status', ['completed', 'cancelled']);
+            ->whereNotIn('status', ['completed', 'cancelled']);
     }
 
     public function scopeRecurring($query)
