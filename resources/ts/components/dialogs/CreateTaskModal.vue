@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { TASK_CATEGORIES, USER_ROLES, PRIORITY_OPTIONS, STATUS_OPTIONS } from '@/constants/taskConstants'
+
 interface Props {
   isDialogVisible: boolean
 }
@@ -19,6 +21,7 @@ interface TaskForm {
   status: string
   estimatedHours: number
   actualHours: number
+  completionPercentage: number
 }
 
 const props = defineProps<Props>()
@@ -34,45 +37,15 @@ const taskForm = ref<TaskForm>({
   dueDate: '',
   priority: 'medium',
   status: 'pending',
+  estimatedHours: 0,
+  actualHours: 0,
+  completionPercentage: 0,
 })
 
 // 👉 Form validation
 const isFormValid = ref(false)
 
-// 👉 Options
-const categoryOptions = [
-  'Operations',
-  'Training',
-  'Maintenance',
-  'Marketing',
-  'Finance',
-  'HR',
-  'Quality Control',
-  'Customer Service',
-]
-
-const userOptions = [
-  'Store Manager',
-  'Assistant Manager',
-  'HR Manager',
-  'Technician',
-  'Marketing Coordinator',
-  'Finance Officer',
-  'Quality Inspector',
-  'Customer Service Rep',
-]
-
-const priorityOptions = [
-  { title: 'Low', value: 'low' },
-  { title: 'Medium', value: 'medium' },
-  { title: 'High', value: 'high' },
-]
-
-const statusOptions = [
-  { title: 'Pending', value: 'pending' },
-  { title: 'In Progress', value: 'in_progress' },
-  { title: 'Completed', value: 'completed' },
-]
+// 👉 Options are now imported from constants
 
 // 👉 Form rules
 const requiredRule = (value: string) => !!value || 'This field is required'
@@ -92,6 +65,9 @@ const resetForm = () => {
     dueDate: '',
     priority: 'medium',
     status: 'pending',
+    estimatedHours: 0,
+    actualHours: 0,
+    completionPercentage: 0,
   }
 }
 
@@ -148,12 +124,12 @@ watch(() => props.isDialogVisible, (newVal) => {
             <!-- Category -->
             <VCol cols="12" md="6">
               <VSelect v-model="taskForm.category" label="Category" placeholder="Select category"
-                :items="categoryOptions" :rules="[requiredRule]" required />
+                :items="TASK_CATEGORIES" :rules="[requiredRule]" required />
             </VCol>
 
             <!-- Assigned To -->
             <VCol cols="12" md="6">
-              <VSelect v-model="taskForm.assignedTo" label="Assigned To" placeholder="Select user" :items="userOptions"
+              <VSelect v-model="taskForm.assignedTo" label="Assigned To" placeholder="Select user" :items="USER_ROLES"
                 :rules="[requiredRule]" required />
             </VCol>
 
@@ -171,13 +147,21 @@ watch(() => props.isDialogVisible, (newVal) => {
             <!-- Priority -->
             <VCol cols="12" md="6">
               <VSelect v-model="taskForm.priority" label="Priority" placeholder="Select priority"
-                :items="priorityOptions" :rules="[requiredRule]" required />
+                :items="PRIORITY_OPTIONS" :rules="[requiredRule]" required />
             </VCol>
 
             <!-- Status -->
             <VCol cols="12" md="6">
-              <VSelect v-model="taskForm.status" label="Status" placeholder="Select status" :items="statusOptions"
+              <VSelect v-model="taskForm.status" label="Status" placeholder="Select status" :items="STATUS_OPTIONS"
                 :rules="[requiredRule]" required />
+            </VCol>
+            <!-- Estimated Hours -->
+            <VCol cols="12" md="6">
+              <VTextField v-model="taskForm.estimatedHours" label="Estimated Hours" type="number" min="0" />
+            </VCol>
+            <!-- Actual Hours -->
+            <VCol cols="12" md="6">
+              <VTextField v-model="taskForm.actualHours" label="Actual Hours" type="number" min="0" />
             </VCol>
           </VRow>
         </VForm>

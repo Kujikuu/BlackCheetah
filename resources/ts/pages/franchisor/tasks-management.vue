@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // 👉 Imports
 import CreateTaskModal from '@/components/dialogs/CreateTaskModal.vue'
+import { TASK_CATEGORIES, USER_ROLES, PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_HEADERS } from '@/constants/taskConstants'
 
 // 👉 Router
 const router = useRouter()
@@ -231,18 +232,8 @@ const onTaskCreated = async (task: any) => {
     }
 }
 
-// 👉 Headers
-const taskHeaders = [
-    { title: 'Task Info', key: 'taskInfo' },
-    { title: 'Category', key: 'category' },
-    { title: 'Assigned To', key: 'assignedTo' },
-    { title: 'Unit', key: 'unitName' },
-    { title: 'Start Date', key: 'startDate' },
-    { title: 'Due Date', key: 'dueDate' },
-    { title: 'Priority', key: 'priority' },
-    { title: 'Status', key: 'status' },
-    { title: 'Actions', key: 'actions', sortable: false },
-]
+// 👉 Headers (using imported constants)
+const taskHeaders = [...TASK_HEADERS]
 
 // 👉 Action handlers
 const viewTask = (task: any) => {
@@ -801,11 +792,11 @@ onMounted(() => {
                         </VCol>
                         <VCol cols="12" md="6">
                             <VSelect v-model="selectedTask.category" label="Category" placeholder="Select category"
-                                :items="['Operations', 'Training', 'Maintenance', 'Marketing', 'Finance', 'HR', 'Quality Control', 'Customer Service']" required />
+                                :items="TASK_CATEGORIES" required />
                         </VCol>
                         <VCol cols="12" md="6">
                             <VSelect v-model="selectedTask.assignedTo" label="Assigned To" placeholder="Select user"
-                                :items="['Store Manager', 'Assistant Manager', 'HR Manager', 'Technician', 'Marketing Coordinator', 'Finance Officer', 'Quality Inspector', 'Customer Service Rep']" required />
+                                :items="USER_ROLES" required />
                         </VCol>
                         <VCol cols="12" md="6">
                             <VTextField v-model="selectedTask.startDate" label="Start Date" type="date" required />
@@ -814,24 +805,19 @@ onMounted(() => {
                             <VTextField v-model="selectedTask.dueDate" label="Due Date" type="date" required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VSelect v-model="selectedTask.priority" label="Priority" :items="[
-                                { title: 'Low', value: 'low' },
-                                { title: 'Medium', value: 'medium' },
-                                { title: 'High', value: 'high' }
-                            ]" required />
+                            <VSelect v-model="selectedTask.priority" label="Priority" :items="PRIORITY_OPTIONS" required />
                         </VCol>
                         <VCol cols="12" md="6">
-                            <VSelect v-model="selectedTask.status" label="Status" :items="[
-                                { title: 'Pending', value: 'pending' },
-                                { title: 'In Progress', value: 'in_progress' },
-                                { title: 'Completed', value: 'completed' }
-                            ]" required />
+                            <VSelect v-model="selectedTask.status" label="Status" :items="STATUS_OPTIONS" required />
                         </VCol>
                         <VCol cols="12" md="6">
                             <VTextField v-model="selectedTask.estimatedHours" label="Estimated Hours" type="number" min="0" />
                         </VCol>
                         <VCol cols="12" md="6">
                             <VTextField v-model="selectedTask.actualHours" label="Actual Hours" type="number" min="0" />
+                        </VCol>
+                        <VCol cols="12" md="6">
+                            <VTextField v-model="selectedTask.completionPercentage" label="Completion %" type="number" min="0" max="100" />
                         </VCol>
                     </VRow>
                 </VCardText>
