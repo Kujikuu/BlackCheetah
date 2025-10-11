@@ -171,7 +171,7 @@ const loadFranchiseData = async () => {
           },
           legalDetails: {
             legalEntityName: apiData.legalDetails?.legalEntityName || '',
-            businessStructure: apiData.legalDetails?.businessStructure || '',
+            businessStructure: apiData.legalDetails?.businessStructure?.toLowerCase() || '',
             taxId: apiData.legalDetails?.taxId || '',
             industry: apiData.legalDetails?.industry || '',
             fundingAmount: apiData.legalDetails?.fundingAmount || '',
@@ -283,33 +283,33 @@ const updateFranchiseData = async () => {
     // Transform the data to match the backend's expected nested structure
     const updatePayload = {
       personalInfo: {
-        contactNumber: franchiseData.value.personalInfo.contactNumber,
-        address: franchiseData.value.personalInfo.address,
-        city: franchiseData.value.personalInfo.city,
-        state: franchiseData.value.personalInfo.state,
-        country: franchiseData.value.personalInfo.country,
+        contactNumber: franchiseData.value.personalInfo.contactNumber || null,
+        address: franchiseData.value.personalInfo.address || null,
+        city: franchiseData.value.personalInfo.city || null,
+        state: franchiseData.value.personalInfo.state || null,
+        country: franchiseData.value.personalInfo.country || null,
       },
       franchiseDetails: {
         franchiseDetails: {
-          franchiseName: franchiseData.value.franchiseDetails.franchiseName,
-          website: franchiseData.value.franchiseDetails.website,
-          logo: franchiseData.value.franchiseDetails.logo,
+          franchiseName: franchiseData.value.franchiseDetails.franchiseName || null,
+          website: franchiseData.value.franchiseDetails.website || null,
+          logo: franchiseData.value.franchiseDetails.logo || null,
         },
         legalDetails: {
-          legalEntityName: franchiseData.value.legalDetails.legalEntityName,
-          businessStructure: franchiseData.value.legalDetails.businessStructure,
-          taxId: franchiseData.value.legalDetails.taxId,
-          industry: franchiseData.value.legalDetails.industry,
-          fundingAmount: franchiseData.value.legalDetails.fundingAmount,
-          fundingSource: franchiseData.value.legalDetails.fundingSource,
+          legalEntityName: franchiseData.value.legalDetails.legalEntityName || null,
+          businessStructure: franchiseData.value.legalDetails.businessStructure, // Keep original case
+          taxId: franchiseData.value.legalDetails.taxId || null,
+          industry: franchiseData.value.legalDetails.industry || null,
+          fundingAmount: franchiseData.value.legalDetails.fundingAmount || null,
+          fundingSource: franchiseData.value.legalDetails.fundingSource || null,
         },
         contactDetails: {
-          contactNumber: franchiseData.value.contactDetails.contactNumber,
-          email: franchiseData.value.contactDetails.email,
-          address: franchiseData.value.contactDetails.address,
-          city: franchiseData.value.contactDetails.city,
-          state: franchiseData.value.contactDetails.state,
-          country: franchiseData.value.contactDetails.country,
+          contactNumber: franchiseData.value.contactDetails.contactNumber || null,
+          email: franchiseData.value.contactDetails.email || null,
+          address: franchiseData.value.contactDetails.address || null,
+          city: franchiseData.value.contactDetails.city || null,
+          state: franchiseData.value.contactDetails.state || null,
+          country: franchiseData.value.contactDetails.country || null,
         },
       },
     }
@@ -675,25 +675,36 @@ const saveProduct = async () => {
       return
     }
 
-    const formData = new FormData()
-    formData.append('name', selectedProduct.value.name)
-    formData.append('description', selectedProduct.value.description)
-    formData.append('category', selectedProduct.value.category)
-    formData.append('unit_price', selectedProduct.value.unit_price.toString())
-    formData.append('stock', selectedProduct.value.stock.toString())
-    formData.append('status', selectedProduct.value.status)
-    formData.append('sku', selectedProduct.value.sku)
+    // Create a simple object with all the fields to ensure we have the right structure
+    const productData = {
+      name: selectedProduct.value.name || '',
+      description: selectedProduct.value.description || '',
+      category: selectedProduct.value.category || '',
+      unit_price: selectedProduct.value.unit_price || 0,
+      stock: selectedProduct.value.stock || 0,
+      status: selectedProduct.value.status || 'active',
+      sku: selectedProduct.value.sku || ''
+    }
 
     let response
+    const apiUrl = selectedProduct.value.id !== null
+      ? `/v1/franchises/${franchiseData.value.id}/products/${selectedProduct.value.id}`
+      : `/v1/franchises/${franchiseData.value.id}/products`
+
     if (selectedProduct.value.id !== null) {
-      // Update existing product
-      response = await $api(`/v1/franchises/${franchiseData.value.id}/products/${selectedProduct.value.id}`, {
+      // Update existing product - send as JSON instead of FormData
+      response = await $api(apiUrl, {
         method: 'PUT',
-        body: formData,
+        body: productData,
       })
     } else {
-      // Add new product
-      response = await $api(`/v1/franchises/${franchiseData.value.id}/products`, {
+      // Add new product - use FormData for file uploads
+      const formData = new FormData()
+      Object.entries(productData).forEach(([key, value]) => {
+        formData.append(key, value.toString())
+      })
+
+      response = await $api(apiUrl, {
         method: 'POST',
         body: formData,
       })
@@ -1299,8 +1310,7 @@ const resolveStatusVariant = (status: string) => {
                   required />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField v-model="selectedProduct.sku" label="SKU" placeholder="Enter product SKU"
-                  required />
+                <AppTextField v-model="selectedProduct.sku" label="SKU" placeholder="Enter product SKU" required />
               </VCol>
               <VCol cols="12" md="6">
                 <AppSelect v-model="selectedProduct.category" label="Category" :items="productCategories"

@@ -15,6 +15,9 @@
       "args": [
         "/Users/afifi/Desktop/BlackCheetah/artisan",
         "boost:mcp"
+      ],
+      "alwaysAllow": [
+        "browser-logs"
       ]
     },
     "herd": {

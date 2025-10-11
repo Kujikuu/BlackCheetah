@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 class ProductApiTest extends TestCase
 {
-    use RefreshDatabase;
+    // use RefreshDatabase;
 
     protected User $user;
 
@@ -163,6 +163,39 @@ class ProductApiTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['name', 'unit_price']);
+    }
+
+    public function test_can_update_product_with_formdata(): void
+    {
+        $product = Product::factory()->create([
+            'franchise_id' => $this->franchise->id,
+            'name' => 'Original Product',
+            'stock' => 10,
+        ]);
+
+        // Simulate FormData request (multipart/form-data)
+        $response = $this->actingAs($this->user)
+            ->call('PUT', "/api/v1/franchises/{$this->franchise->id}/products/{$product->id}", [
+                'name' => 'Updated Product Name',
+                'description' => 'Updated Description',
+                'category' => 'electronics',
+                'unit_price' => '149.99',
+                'stock' => '11', // Update from 10 to 11 as the user mentioned
+                'status' => 'active',
+                'sku' => 'UPD-001',
+            ], [], [], ['HTTP_Content_Type' => 'multipart/form-data']);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Product updated successfully.',
+            ]);
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'name' => 'Updated Product Name',
+            'stock' => 11, // Verify stock actually updated
+        ]);
     }
 
     public function test_validates_numeric_fields(): void

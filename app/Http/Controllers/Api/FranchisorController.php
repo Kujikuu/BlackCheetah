@@ -1348,84 +1348,95 @@ class FranchisorController extends Controller
             // Validate the request data
             $validatedData = $request->validate([
                 // Personal Info
-                'personalInfo.contactNumber' => 'sometimes|string|max:20',
-                'personalInfo.country' => 'sometimes|string|max:100',
-                'personalInfo.state' => 'sometimes|string|max:100',
-                'personalInfo.city' => 'sometimes|string|max:100',
-                'personalInfo.address' => 'sometimes|string|max:500',
+                'personalInfo.contactNumber' => 'sometimes|nullable|string|max:20',
+                'personalInfo.country' => 'sometimes|nullable|string|max:100',
+                'personalInfo.state' => 'sometimes|nullable|string|max:100',
+                'personalInfo.city' => 'sometimes|nullable|string|max:100',
+                'personalInfo.address' => 'sometimes|nullable|string|max:500',
 
                 // Franchise Details
-                'franchiseDetails.franchiseDetails.franchiseName' => 'sometimes|string|max:255',
+                'franchiseDetails.franchiseDetails.franchiseName' => 'sometimes|nullable|string|max:255',
                 'franchiseDetails.franchiseDetails.website' => 'sometimes|nullable|url|max:255',
                 'franchiseDetails.franchiseDetails.logo' => 'sometimes|nullable|string',
 
                 // Legal Details
-                'franchiseDetails.legalDetails.legalEntityName' => 'sometimes|string|max:255',
-                'franchiseDetails.legalDetails.businessStructure' => 'sometimes|in:corporation,llc,partnership,sole_proprietorship',
+                'franchiseDetails.legalDetails.legalEntityName' => 'sometimes|nullable|string|max:255',
+                'franchiseDetails.legalDetails.businessStructure' => 'sometimes|nullable|in:corporation,llc,partnership,sole_proprietorship',
                 'franchiseDetails.legalDetails.taxId' => 'sometimes|nullable|string|max:50',
-                'franchiseDetails.legalDetails.industry' => 'sometimes|string|max:100',
+                'franchiseDetails.legalDetails.industry' => 'sometimes|nullable|string|max:100',
                 'franchiseDetails.legalDetails.fundingAmount' => 'sometimes|nullable|string|max:100',
                 'franchiseDetails.legalDetails.fundingSource' => 'sometimes|nullable|string|max:100',
 
                 // Contact Details
-                'franchiseDetails.contactDetails.contactNumber' => 'sometimes|string|max:20',
-                'franchiseDetails.contactDetails.email' => 'sometimes|email|max:255',
-                'franchiseDetails.contactDetails.address' => 'sometimes|string|max:500',
-                'franchiseDetails.contactDetails.country' => 'sometimes|string|max:100',
-                'franchiseDetails.contactDetails.state' => 'sometimes|string|max:100',
-                'franchiseDetails.contactDetails.city' => 'sometimes|string|max:100',
+                'franchiseDetails.contactDetails.contactNumber' => 'sometimes|nullable|string|max:20',
+                'franchiseDetails.contactDetails.email' => 'sometimes|nullable|email|max:255',
+                'franchiseDetails.contactDetails.address' => 'sometimes|nullable|string|max:500',
+                'franchiseDetails.contactDetails.country' => 'sometimes|nullable|string|max:100',
+                'franchiseDetails.contactDetails.state' => 'sometimes|nullable|string|max:100',
+                'franchiseDetails.contactDetails.city' => 'sometimes|nullable|string|max:100',
             ]);
 
             // Update franchise fields
             $updateData = [];
 
-            if (isset($validatedData['franchiseDetails']['franchiseDetails']['franchiseName'])) {
-                $updateData['brand_name'] = $validatedData['franchiseDetails']['franchiseDetails']['franchiseName'];
-            }
-            if (isset($validatedData['franchiseDetails']['franchiseDetails']['website'])) {
-                $updateData['website'] = $validatedData['franchiseDetails']['franchiseDetails']['website'];
-            }
-            if (isset($validatedData['franchiseDetails']['franchiseDetails']['logo'])) {
-                $updateData['logo'] = $validatedData['franchiseDetails']['franchiseDetails']['logo'];
-            }
-            if (isset($validatedData['franchiseDetails']['legalDetails']['legalEntityName'])) {
-                $updateData['business_name'] = $validatedData['franchiseDetails']['legalDetails']['legalEntityName'];
-            }
-            if (isset($validatedData['franchiseDetails']['legalDetails']['businessStructure'])) {
-                $updateData['business_type'] = $validatedData['franchiseDetails']['legalDetails']['businessStructure'];
-            }
-            if (isset($validatedData['franchiseDetails']['legalDetails']['taxId'])) {
-                $updateData['tax_id'] = $validatedData['franchiseDetails']['legalDetails']['taxId'];
-            }
-            if (isset($validatedData['franchiseDetails']['legalDetails']['industry'])) {
-                $updateData['industry'] = $validatedData['franchiseDetails']['legalDetails']['industry'];
-            }
-            if (isset($validatedData['franchiseDetails']['contactDetails']['contactNumber'])) {
-                $updateData['contact_phone'] = $validatedData['franchiseDetails']['contactDetails']['contactNumber'];
-            }
-            if (isset($validatedData['franchiseDetails']['contactDetails']['email'])) {
-                $updateData['contact_email'] = $validatedData['franchiseDetails']['contactDetails']['email'];
-            }
-            if (isset($validatedData['franchiseDetails']['contactDetails']['address'])) {
-                $updateData['headquarters_address'] = $validatedData['franchiseDetails']['contactDetails']['address'];
-            }
-            if (isset($validatedData['franchiseDetails']['contactDetails']['country'])) {
-                $updateData['headquarters_country'] = $validatedData['franchiseDetails']['contactDetails']['country'];
-            }
-            if (isset($validatedData['franchiseDetails']['contactDetails']['city'])) {
-                $updateData['headquarters_city'] = $validatedData['franchiseDetails']['contactDetails']['city'];
+            // Use array_key_exists to check for null values as well
+            if (array_key_exists('franchiseDetails', $validatedData)) {
+                if (array_key_exists('franchiseDetails', $validatedData['franchiseDetails'])) {
+                    if (array_key_exists('franchiseName', $validatedData['franchiseDetails']['franchiseDetails'])) {
+                        $updateData['brand_name'] = $validatedData['franchiseDetails']['franchiseDetails']['franchiseName'];
+                    }
+                    if (array_key_exists('website', $validatedData['franchiseDetails']['franchiseDetails'])) {
+                        $updateData['website'] = $validatedData['franchiseDetails']['franchiseDetails']['website'];
+                    }
+                    if (array_key_exists('logo', $validatedData['franchiseDetails']['franchiseDetails'])) {
+                        $updateData['logo'] = $validatedData['franchiseDetails']['franchiseDetails']['logo'];
+                    }
+                }
+
+                if (array_key_exists('legalDetails', $validatedData['franchiseDetails'])) {
+                    if (array_key_exists('legalEntityName', $validatedData['franchiseDetails']['legalDetails'])) {
+                        $updateData['business_name'] = $validatedData['franchiseDetails']['legalDetails']['legalEntityName'];
+                    }
+                    if (array_key_exists('businessStructure', $validatedData['franchiseDetails']['legalDetails'])) {
+                        $updateData['business_type'] = $validatedData['franchiseDetails']['legalDetails']['businessStructure'];
+                    }
+                    if (array_key_exists('taxId', $validatedData['franchiseDetails']['legalDetails'])) {
+                        $updateData['tax_id'] = $validatedData['franchiseDetails']['legalDetails']['taxId'];
+                    }
+                    if (array_key_exists('industry', $validatedData['franchiseDetails']['legalDetails'])) {
+                        $updateData['industry'] = $validatedData['franchiseDetails']['legalDetails']['industry'];
+                    }
+                }
+
+                if (array_key_exists('contactDetails', $validatedData['franchiseDetails'])) {
+                    if (array_key_exists('contactNumber', $validatedData['franchiseDetails']['contactDetails'])) {
+                        $updateData['contact_phone'] = $validatedData['franchiseDetails']['contactDetails']['contactNumber'];
+                    }
+                    if (array_key_exists('email', $validatedData['franchiseDetails']['contactDetails'])) {
+                        $updateData['contact_email'] = $validatedData['franchiseDetails']['contactDetails']['email'];
+                    }
+                    if (array_key_exists('address', $validatedData['franchiseDetails']['contactDetails'])) {
+                        $updateData['headquarters_address'] = $validatedData['franchiseDetails']['contactDetails']['address'];
+                    }
+                    if (array_key_exists('country', $validatedData['franchiseDetails']['contactDetails'])) {
+                        $updateData['headquarters_country'] = $validatedData['franchiseDetails']['contactDetails']['country'];
+                    }
+                    if (array_key_exists('city', $validatedData['franchiseDetails']['contactDetails'])) {
+                        $updateData['headquarters_city'] = $validatedData['franchiseDetails']['contactDetails']['city'];
+                    }
+                }
             }
 
             // Update documents if funding info is provided
             if (
-                isset($validatedData['franchiseDetails']['legalDetails']['fundingAmount']) ||
-                isset($validatedData['franchiseDetails']['legalDetails']['fundingSource'])
+                array_key_exists('fundingAmount', $validatedData['franchiseDetails']['legalDetails'] ?? []) ||
+                array_key_exists('fundingSource', $validatedData['franchiseDetails']['legalDetails'] ?? [])
             ) {
                 $documents = $franchise->documents ?? [];
-                if (isset($validatedData['franchiseDetails']['legalDetails']['fundingAmount'])) {
+                if (array_key_exists('fundingAmount', $validatedData['franchiseDetails']['legalDetails'] ?? [])) {
                     $documents['funding_amount'] = $validatedData['franchiseDetails']['legalDetails']['fundingAmount'];
                 }
-                if (isset($validatedData['franchiseDetails']['legalDetails']['fundingSource'])) {
+                if (array_key_exists('fundingSource', $validatedData['franchiseDetails']['legalDetails'] ?? [])) {
                     $documents['funding_source'] = $validatedData['franchiseDetails']['legalDetails']['fundingSource'];
                 }
                 $updateData['documents'] = $documents;
@@ -1436,20 +1447,22 @@ class FranchisorController extends Controller
 
             // Update user's contact information if provided
             $userUpdateData = [];
-            if (isset($validatedData['personalInfo']['contactNumber'])) {
-                $userUpdateData['phone'] = $validatedData['personalInfo']['contactNumber'];
-            }
-            if (isset($validatedData['personalInfo']['address'])) {
-                $userUpdateData['address'] = $validatedData['personalInfo']['address'];
-            }
-            if (isset($validatedData['personalInfo']['city'])) {
-                $userUpdateData['city'] = $validatedData['personalInfo']['city'];
-            }
-            if (isset($validatedData['personalInfo']['state'])) {
-                $userUpdateData['state'] = $validatedData['personalInfo']['state'];
-            }
-            if (isset($validatedData['personalInfo']['country'])) {
-                $userUpdateData['country'] = $validatedData['personalInfo']['country'];
+            if (array_key_exists('personalInfo', $validatedData)) {
+                if (array_key_exists('contactNumber', $validatedData['personalInfo'])) {
+                    $userUpdateData['phone'] = $validatedData['personalInfo']['contactNumber'];
+                }
+                if (array_key_exists('address', $validatedData['personalInfo'])) {
+                    $userUpdateData['address'] = $validatedData['personalInfo']['address'];
+                }
+                if (array_key_exists('city', $validatedData['personalInfo'])) {
+                    $userUpdateData['city'] = $validatedData['personalInfo']['city'];
+                }
+                if (array_key_exists('state', $validatedData['personalInfo'])) {
+                    $userUpdateData['state'] = $validatedData['personalInfo']['state'];
+                }
+                if (array_key_exists('country', $validatedData['personalInfo'])) {
+                    $userUpdateData['country'] = $validatedData['personalInfo']['country'];
+                }
             }
 
             if (! empty($userUpdateData)) {

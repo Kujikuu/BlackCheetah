@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
-use App\Http\Requests\UpdateProductRequest;
 use App\Models\Franchise;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
@@ -151,8 +150,8 @@ class ProductController extends Controller
             $franchise = Franchise::findOrFail($franchise_id);
             $product = Product::findOrFail($product_id);
 
-            // Check if user has access to the franchise
-            if ($user->franchise?->id !== $franchise->id) {
+            // Check if user has access to the franchise (user must be the franchisor)
+            if ($franchise->franchisor_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
 
@@ -174,7 +173,7 @@ class ProductController extends Controller
     /**
      * Update the specified product.
      */
-    public function update(UpdateProductRequest $request, $franchise_id, $product_id): JsonResponse
+    public function update(Request $request, $franchise_id, $product_id): JsonResponse
     {
         try {
             $user = auth()->user();
@@ -183,8 +182,8 @@ class ProductController extends Controller
             $franchise = Franchise::findOrFail($franchise_id);
             $product = Product::findOrFail($product_id);
 
-            // Check if user has access to the franchise
-            if ($user->franchise?->id !== $franchise->id) {
+            // Check if user has access to the franchise (user must be the franchisor)
+            if ($franchise->franchisor_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
 
@@ -193,7 +192,70 @@ class ProductController extends Controller
                 return response()->json(['message' => 'Product not found'], 404);
             }
 
-            $productData = $request->validated();
+            // Handle both regular form data and FormData
+            if ($request->isJson()) {
+                // Handle JSON request
+                $validatedData = $request->validate([
+                    'name' => ['sometimes', 'required', 'string', 'max:255'],
+                    'description' => ['nullable', 'string', 'max:1000'],
+                    'category' => ['sometimes', 'required', 'string', 'max:100'],
+                    'unit_price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:999999.99'],
+                    'cost_price' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+                    'stock' => ['sometimes', 'required', 'integer', 'min:0'],
+                    'minimum_stock' => ['nullable', 'integer', 'min:0'],
+                    'sku' => ['sometimes', 'required', 'string', 'max:100', "unique:products,sku,{$product_id}"],
+                    'status' => ['sometimes', 'required', 'string', 'in:active,inactive,discontinued'],
+                    'weight' => ['nullable', 'numeric', 'min:0'],
+                    'dimensions' => ['nullable', 'array'],
+                    'dimensions.length' => ['nullable', 'numeric', 'min:0'],
+                    'dimensions.width' => ['nullable', 'numeric', 'min:0'],
+                    'dimensions.height' => ['nullable', 'numeric', 'min:0'],
+                    'image' => ['nullable', 'image', 'max:5120'], // 5MB max
+                    'attributes' => ['nullable', 'array'],
+                ]);
+            } else {
+                // Handle FormData (multipart/form-data)
+
+                // Check if FormData is empty
+                if ($request->all() === []) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No data received. Please ensure all required fields are filled.',
+                    ], 422);
+                }
+
+                $validatedData = [
+                    'name' => $request->input('name'),
+                    'description' => $request->input('description'),
+                    'category' => $request->input('category'),
+                    'unit_price' => $request->input('unit_price'),
+                    'stock' => $request->input('stock'),
+                    'status' => $request->input('status'),
+                    'sku' => $request->input('sku'),
+                ];
+
+                // Validate fields if they exist in FormData (allow partial updates)
+                $rules = [
+                    'name' => ['sometimes', 'required', 'string', 'max:255'],
+                    'category' => ['sometimes', 'required', 'string', 'max:100'],
+                    'unit_price' => ['sometimes', 'required', 'numeric', 'min:0'],
+                    'stock' => ['sometimes', 'required', 'integer', 'min:0'],
+                    'status' => ['sometimes', 'required', 'string', 'in:active,inactive,discontinued'],
+                    'sku' => ['sometimes', 'required', 'string', 'max:100', "unique:products,sku,{$product_id}"],
+                ];
+
+                // Only validate fields that are actually present in the request
+                $actualRules = [];
+                foreach ($rules as $field => $rule) {
+                    if ($request->has($field)) {
+                        $actualRules[$field] = $rule;
+                    }
+                }
+
+                if (! empty($actualRules)) {
+                    $request->validate($actualRules);
+                }
+            }
 
             // Handle image upload
             if ($request->hasFile('image')) {
@@ -203,18 +265,24 @@ class ProductController extends Controller
                 }
 
                 $image = $request->file('image');
-                $imageName = time().'_'.Str::slug($productData['name'] ?? $product->name).'.'.$image->getClientOriginalExtension();
+                $imageName = time().'_'.Str::slug($validatedData['name'] ?? $product->name).'.'.$image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('products/'.$product->franchise_id, $imageName, 'public');
-                $productData['image'] = $imagePath;
+                $validatedData['image'] = $imagePath;
             }
 
-            $product->update($productData);
+            $product->update($validatedData);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Product updated successfully.',
                 'data' => $product->fresh(),
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -236,8 +304,8 @@ class ProductController extends Controller
             $franchise = Franchise::findOrFail($franchise_id);
             $product = Product::findOrFail($product_id);
 
-            // Check if user has access to the franchise
-            if ($user->franchise?->id !== $franchise->id) {
+            // Check if user has access to the franchise (user must be the franchisor)
+            if ($franchise->franchisor_id !== $user->id) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
 
@@ -310,8 +378,9 @@ class ProductController extends Controller
         try {
             $user = auth()->user();
 
-            // Check if the product belongs to the user's franchise
-            if ($product->franchise_id !== $user->franchise?->id) {
+            // Check if the product belongs to the user's franchise (user must be the franchisor)
+            $franchise = Franchise::find($product->franchise_id);
+            if (! $franchise || $franchise->franchisor_id !== $user->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Product not found.',
