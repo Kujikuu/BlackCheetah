@@ -27,6 +27,7 @@ class Task extends Model
         'completed_at',
         'estimated_hours',
         'actual_hours',
+        'completion_percentage',
         'checklist',
         'attachments',
         'notes',
@@ -53,7 +54,17 @@ class Task extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    public function assignedTo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
     public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
@@ -121,7 +132,7 @@ class Task extends Model
         ]);
     }
 
-    public function complete(string $completionNotes = null): void
+    public function complete(?string $completionNotes = null): void
     {
         $this->update([
             'status' => 'completed',

@@ -306,7 +306,7 @@ class TaskController extends Controller
     public function myTasks(Request $request): JsonResponse
     {
         $user = $request->user();
-        $franchise = Franchise::where('owner_id', $user->id)->first();
+        $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (!$franchise) {
             return response()->json([

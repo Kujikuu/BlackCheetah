@@ -261,7 +261,7 @@ class UnitController extends Controller
     public function myUnits(Request $request): JsonResponse
     {
         $user = $request->user();
-        $franchise = Franchise::where('owner_id', $user->id)->first();
+        $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
             return response()->json([
@@ -271,7 +271,7 @@ class UnitController extends Controller
         }
 
         $units = $franchise->units()
-            ->with(['franchise', 'manager', 'tasks', 'transactions'])
+            ->with(['franchise', 'franchisee', 'tasks'])
             ->paginate(15);
 
         return response()->json([
