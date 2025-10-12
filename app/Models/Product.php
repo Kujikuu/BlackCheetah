@@ -36,6 +36,17 @@ class Product extends Model
     ];
 
     /**
+     * Units that stock this product.
+     */
+    public function units(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Unit::class, 'unit_product_inventories')
+            ->withPivot(['quantity', 'reorder_level'])
+            ->using(Inventory::class)
+            ->withTimestamps();
+    }
+
+    /**
      * Get the franchise that owns this product
      */
     public function franchise(): BelongsTo

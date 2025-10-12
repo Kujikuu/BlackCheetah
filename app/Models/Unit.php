@@ -86,6 +86,17 @@ class Unit extends Model
         return $this->hasMany(Review::class);
     }
 
+    /**
+     * Products stocked in this unit.
+     */
+    public function products(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'unit_product_inventories')
+            ->withPivot(['quantity', 'reorder_level'])
+            ->using(Inventory::class)
+            ->withTimestamps();
+    }
+
     // Accessors
     public function getFullAddressAttribute(): string
     {

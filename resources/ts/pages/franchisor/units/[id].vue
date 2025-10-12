@@ -230,7 +230,7 @@ const loadProductsData = async () => {
   productsError.value = null
 
   try {
-    const response = await $api<{ success: boolean; data: any }>(`/v1/products?franchise_id=${unitData.value.franchise.id}`)
+    const response = await $api<{ data: any }>(`/v1/units/${unitId.value}/inventory`)
 
     if (response.success && response.data?.data) {
       productsData.value = response.data.data.map((product: any) => ({
@@ -239,10 +239,10 @@ const loadProductsData = async () => {
         description: product.description || '',
         unitPrice: product.unit_price || 0,
         category: product.category || 'General',
-        status: product.status || 'active',
-        stock: product.stock || 0,
-        sku: product.sku || '',
-        minimumStock: product.minimum_stock || 0,
+        status: 'active',
+        stock: product.quantity || 0,
+        sku: '',
+        minimumStock: product.reorder_level || 0,
       }))
     }
     else {

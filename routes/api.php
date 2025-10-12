@@ -126,6 +126,14 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
         Route::patch('{unit}/activate', [UnitController::class, 'activate']);
         Route::patch('{unit}/deactivate', [UnitController::class, 'deactivate']);
         Route::patch('{unit}/close', [UnitController::class, 'close']);
+
+        // Inventory routes for a unit
+        Route::prefix('{unit}/inventory')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\UnitInventoryController::class, 'index']);
+            Route::post('{product}', [\App\Http\Controllers\Api\UnitInventoryController::class, 'store']);
+            Route::put('{product}', [\App\Http\Controllers\Api\UnitInventoryController::class, 'update']);
+            Route::delete('{product}', [\App\Http\Controllers\Api\UnitInventoryController::class, 'destroy']);
+        });
     });
 
     // Task Management Routes
