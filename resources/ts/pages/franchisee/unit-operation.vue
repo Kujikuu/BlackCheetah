@@ -81,7 +81,7 @@ const newInventoryForm = ref({
 
 // 👉 Helper to get the current unit ID safely
 const getUnitId = (): number => {
-  const id = unitData.value?.id || getUnitId()
+  const id = unitData.value?.id || currentUnitId.value
   if (!id) {
     throw new Error('Unit ID is not available')
   }
@@ -101,7 +101,8 @@ const loadUnitData = async () => {
     error.value = null
 
     // unitId is optional - if not provided, API will fetch the franchisee's unit
-    const unitIdParam = getUnitId() || undefined
+    // Use currentUnitId.value directly here (might be null), API accepts optional parameter
+    const unitIdParam = currentUnitId.value || undefined
 
     // Load unit details
     const unitDetailsResponse = await franchiseeDashboardApi.getUnitDetails(unitIdParam)
