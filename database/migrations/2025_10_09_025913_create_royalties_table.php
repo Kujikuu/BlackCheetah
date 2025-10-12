@@ -34,7 +34,7 @@ return new class extends Migration
             $table->enum('status', ['draft', 'pending', 'paid', 'overdue', 'disputed', 'cancelled'])->default('draft');
             $table->date('due_date');
             $table->date('paid_date')->nullable();
-            $table->enum('payment_method', ['bank_transfer', 'check', 'credit_card', 'ach', 'wire', 'other'])->nullable();
+            $table->enum('payment_method', ['bank_transfer', 'check', 'credit_card', 'ach', 'wire', 'mada', 'stc_pay', 'sadad', 'other'])->nullable();
             $table->string('payment_reference')->nullable();
             $table->decimal('late_fee', 10, 2)->default(0);
             $table->json('revenue_breakdown')->nullable(); // Detailed revenue by category

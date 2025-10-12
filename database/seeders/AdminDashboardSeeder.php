@@ -2,14 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\Franchise;
-use App\Models\Unit;
-use App\Models\TechnicalRequest;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class AdminDashboardSeeder extends Seeder
 {
@@ -22,14 +19,14 @@ class AdminDashboardSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'admin@blackcheetah.com'],
             [
-                'name' => 'Admin User',
+                'name' => 'Ahmed Al-Mudeer',
                 'email' => 'admin@blackcheetah.com',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
                 'status' => 'active',
-                'phone' => '+1234567890',
-                'country' => 'USA',
-                'city' => 'New York',
+                'phone' => '+966501234567',
+                'country' => 'Saudi Arabia',
+                'city' => 'Riyadh',
                 'last_login_at' => now(),
                 'email_verified_at' => now(),
             ]
@@ -38,29 +35,29 @@ class AdminDashboardSeeder extends Seeder
         // Create franchisors
         $franchisors = [
             [
-                'name' => 'John Smith',
-                'email' => 'john.smith@example.com',
-                'phone' => '+1234567891',
-                'city' => 'Los Angeles',
-                'franchise_name' => 'Smith Enterprises',
-                'plan' => 'Pro'
+                'name' => 'Mohammed bin Abdullah Al-Ahmed',
+                'email' => 'mohammed.ahmed@example.com',
+                'phone' => '+966501234568',
+                'city' => 'Jeddah',
+                'franchise_name' => 'Al-Ahmed Trading Establishment',
+                'plan' => 'Pro',
             ],
             [
-                'name' => 'Sarah Johnson',
-                'email' => 'sarah.johnson@example.com',
-                'phone' => '+1234567892',
-                'city' => 'Chicago',
-                'franchise_name' => 'Johnson Holdings',
-                'plan' => 'Enterprise'
+                'name' => 'Fatima bint Saad Al-Otaibi',
+                'email' => 'fatima.otaibi@example.com',
+                'phone' => '+966501234569',
+                'city' => 'Dammam',
+                'franchise_name' => 'Al-Otaibi Holding Company',
+                'plan' => 'Enterprise',
             ],
             [
-                'name' => 'Mike Davis',
-                'email' => 'mike.davis@example.com',
-                'phone' => '+1234567893',
-                'city' => 'Houston',
-                'franchise_name' => 'Davis Corp',
-                'plan' => 'Basic'
-            ]
+                'name' => 'Khalid bin Mohammed Al-Qahtani',
+                'email' => 'khalid.qahtani@example.com',
+                'phone' => '+966501234570',
+                'city' => 'Makkah',
+                'franchise_name' => 'Al-Qahtani Group',
+                'plan' => 'Basic',
+            ],
         ];
 
         foreach ($franchisors as $franchiseData) {
@@ -73,7 +70,7 @@ class AdminDashboardSeeder extends Seeder
                     'role' => 'franchisor',
                     'status' => 'active',
                     'phone' => $franchiseData['phone'],
-                    'country' => 'USA',
+                    'country' => 'Saudi Arabia',
                     'city' => $franchiseData['city'],
                     'last_login_at' => Carbon::now()->subDays(rand(1, 30)),
                     'email_verified_at' => now(),
@@ -88,15 +85,15 @@ class AdminDashboardSeeder extends Seeder
                     'business_name' => $franchiseData['franchise_name'],
                     'brand_name' => $franchiseData['franchise_name'],
                     'industry' => 'Food & Beverage',
-                    'description' => 'A successful franchise business',
-                    'business_registration_number' => 'REG' . str_pad($franchisor->id, 6, '0', STR_PAD_LEFT),
-                    'business_type' => 'corporation',
-                    'headquarters_country' => 'USA',
+                    'description' => 'A successful franchise business in the Kingdom of Saudi Arabia',
+                    'business_registration_number' => '700'.str_pad($franchisor->id, 7, '0', STR_PAD_LEFT),
+                    'business_type' => 'llc',
+                    'headquarters_country' => 'Saudi Arabia',
                     'headquarters_city' => $franchiseData['city'],
-                    'headquarters_address' => '123 Business St, ' . $franchiseData['city'],
+                    'headquarters_address' => '123 Business Street, '.$franchiseData['city'].', Kingdom of Saudi Arabia',
                     'contact_phone' => $franchiseData['phone'],
                     'contact_email' => $franchiseData['email'],
-                    'franchise_fee' => 50000.00,
+                    'franchise_fee' => 187500.00,
                     'royalty_percentage' => 5.00,
                     'marketing_fee_percentage' => 2.00,
                     'total_units' => rand(5, 20),
@@ -110,29 +107,29 @@ class AdminDashboardSeeder extends Seeder
         // Create franchisees
         $franchisees = [
             [
-                'name' => 'Alice Brown',
-                'email' => 'alice.brown@example.com',
-                'phone' => '+1234567894',
-                'city' => 'Miami'
+                'name' => 'Aisha bint Ahmed Al-Zahrani',
+                'email' => 'aisha.zahrani@example.com',
+                'phone' => '+966501234571',
+                'city' => 'Taif',
             ],
             [
-                'name' => 'Bob Wilson',
-                'email' => 'bob.wilson@example.com',
-                'phone' => '+1234567895',
-                'city' => 'Seattle'
+                'name' => 'Abdulrahman bin Salem Al-Ghamdi',
+                'email' => 'abdulrahman.ghamdi@example.com',
+                'phone' => '+966501234572',
+                'city' => 'Abha',
             ],
             [
-                'name' => 'Carol Martinez',
-                'email' => 'carol.martinez@example.com',
-                'phone' => '+1234567896',
-                'city' => 'Denver'
+                'name' => 'Nora bint Abdulaziz Al-Shamri',
+                'email' => 'nora.shamri@example.com',
+                'phone' => '+966501234573',
+                'city' => 'Hail',
             ],
             [
-                'name' => 'David Lee',
-                'email' => 'david.lee@example.com',
-                'phone' => '+1234567897',
-                'city' => 'Phoenix'
-            ]
+                'name' => 'Saad bin Mohammed Al-Dosari',
+                'email' => 'saad.dosari@example.com',
+                'phone' => '+966501234574',
+                'city' => 'Khobar',
+            ],
         ];
 
         foreach ($franchisees as $franchiseeData) {
@@ -145,7 +142,7 @@ class AdminDashboardSeeder extends Seeder
                     'role' => 'franchisee',
                     'status' => 'active',
                     'phone' => $franchiseeData['phone'],
-                    'country' => 'USA',
+                    'country' => 'Saudi Arabia',
                     'city' => $franchiseeData['city'],
                     'last_login_at' => Carbon::now()->subDays(rand(1, 15)),
                     'email_verified_at' => now(),
@@ -156,23 +153,23 @@ class AdminDashboardSeeder extends Seeder
         // Create sales users
         $salesUsers = [
             [
-                'name' => 'Emma Thompson',
-                'email' => 'emma.thompson@example.com',
-                'phone' => '+1234567898',
-                'city' => 'Boston'
+                'name' => 'Hind bint Abdullah Al-Mutairi',
+                'email' => 'hind.mutairi@example.com',
+                'phone' => '+966501234575',
+                'city' => 'Madinah',
             ],
             [
-                'name' => 'James Rodriguez',
-                'email' => 'james.rodriguez@example.com',
-                'phone' => '+1234567899',
-                'city' => 'Atlanta'
+                'name' => 'Youssef bin Ibrahim Al-Anzi',
+                'email' => 'youssef.anzi@example.com',
+                'phone' => '+966501234576',
+                'city' => 'Tabuk',
             ],
             [
-                'name' => 'Lisa Chen',
-                'email' => 'lisa.chen@example.com',
-                'phone' => '+1234567800',
-                'city' => 'San Francisco'
-            ]
+                'name' => 'Reem bint Fahd Al-Harbi',
+                'email' => 'reem.harbi@example.com',
+                'phone' => '+966501234577',
+                'city' => 'Buraydah',
+            ],
         ];
 
         foreach ($salesUsers as $salesData) {
@@ -185,7 +182,7 @@ class AdminDashboardSeeder extends Seeder
                     'role' => 'sales',
                     'status' => 'active',
                     'phone' => $salesData['phone'],
-                    'country' => 'USA',
+                    'country' => 'Saudi Arabia',
                     'city' => $salesData['city'],
                     'last_login_at' => Carbon::now()->subDays(rand(1, 7)),
                     'email_verified_at' => now(),

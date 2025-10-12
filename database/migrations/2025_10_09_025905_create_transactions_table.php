@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Who recorded the transaction
             $table->date('transaction_date');
             $table->enum('status', ['pending', 'completed', 'cancelled', 'refunded'])->default('completed');
-            $table->enum('payment_method', ['cash', 'credit_card', 'debit_card', 'bank_transfer', 'check', 'digital_wallet', 'other'])->nullable();
+            $table->enum('payment_method', ['cash', 'credit_card', 'debit_card', 'bank_transfer', 'check', 'digital_wallet', 'mada', 'stc_pay', 'sadad', 'other'])->nullable();
             $table->string('reference_number')->nullable(); // Invoice number, receipt number, etc.
             $table->string('vendor_customer')->nullable(); // Vendor for expenses, customer for revenue
             $table->json('metadata')->nullable(); // Additional transaction details

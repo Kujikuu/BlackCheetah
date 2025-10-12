@@ -168,6 +168,9 @@ const exportDataTypeOptions = [
 const paymentTypeOptions = [
   { title: 'Bank Transfer', value: 'bank_transfer' },
   { title: 'Credit Card', value: 'credit_card' },
+  { title: 'Mada', value: 'mada' },
+  { title: 'STC Pay', value: 'stc_pay' },
+  { title: 'SADAD', value: 'sadad' },
   { title: 'Check', value: 'check' },
   { title: 'Cash', value: 'cash' },
   { title: 'Online Payment', value: 'online_payment' },
