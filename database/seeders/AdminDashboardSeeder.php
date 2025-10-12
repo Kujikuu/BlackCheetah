@@ -36,7 +36,7 @@ class AdminDashboardSeeder extends Seeder
         $franchisors = [
             [
                 'name' => 'Mohammed bin Abdullah Al-Ahmed',
-                'email' => 'mohammed.ahmed@example.com',
+                'email' => 'franchisor@blackcheetah.com',
                 'phone' => '+966501234568',
                 'city' => 'Jeddah',
                 'franchise_name' => 'Al-Ahmed Trading Establishment',
@@ -44,7 +44,7 @@ class AdminDashboardSeeder extends Seeder
             ],
             [
                 'name' => 'Fatima bint Saad Al-Otaibi',
-                'email' => 'fatima.otaibi@example.com',
+                'email' => 'fatima.otaibi@blackcheetah.com',
                 'phone' => '+966501234569',
                 'city' => 'Dammam',
                 'franchise_name' => 'Al-Otaibi Holding Company',
@@ -52,7 +52,7 @@ class AdminDashboardSeeder extends Seeder
             ],
             [
                 'name' => 'Khalid bin Mohammed Al-Qahtani',
-                'email' => 'khalid.qahtani@example.com',
+                'email' => 'khalid.qahtani@blackcheetah.com',
                 'phone' => '+966501234570',
                 'city' => 'Makkah',
                 'franchise_name' => 'Al-Qahtani Group',
@@ -108,25 +108,25 @@ class AdminDashboardSeeder extends Seeder
         $franchisees = [
             [
                 'name' => 'Aisha bint Ahmed Al-Zahrani',
-                'email' => 'aisha.zahrani@example.com',
+                'email' => 'franchisee@blackcheetah.com',
                 'phone' => '+966501234571',
                 'city' => 'Taif',
             ],
             [
                 'name' => 'Abdulrahman bin Salem Al-Ghamdi',
-                'email' => 'abdulrahman.ghamdi@example.com',
+                'email' => 'abdulrahman.ghamdi@blackcheetah.com',
                 'phone' => '+966501234572',
                 'city' => 'Abha',
             ],
             [
                 'name' => 'Nora bint Abdulaziz Al-Shamri',
-                'email' => 'nora.shamri@example.com',
+                'email' => 'nora.shamri@blackcheetah.com',
                 'phone' => '+966501234573',
                 'city' => 'Hail',
             ],
             [
                 'name' => 'Saad bin Mohammed Al-Dosari',
-                'email' => 'saad.dosari@example.com',
+                'email' => 'saad.dosari@blackcheetah.com',
                 'phone' => '+966501234574',
                 'city' => 'Khobar',
             ],
@@ -154,19 +154,19 @@ class AdminDashboardSeeder extends Seeder
         $salesUsers = [
             [
                 'name' => 'Hind bint Abdullah Al-Mutairi',
-                'email' => 'hind.mutairi@example.com',
+                'email' => 'sales@blackcheetah.com',
                 'phone' => '+966501234575',
                 'city' => 'Madinah',
             ],
             [
                 'name' => 'Youssef bin Ibrahim Al-Anzi',
-                'email' => 'youssef.anzi@example.com',
+                'email' => 'youssef.anzi@blackcheetah.com',
                 'phone' => '+966501234576',
                 'city' => 'Tabuk',
             ],
             [
                 'name' => 'Reem bint Fahd Al-Harbi',
-                'email' => 'reem.harbi@example.com',
+                'email' => 'reem.harbi@blackcheetah.com',
                 'phone' => '+966501234577',
                 'city' => 'Buraydah',
             ],

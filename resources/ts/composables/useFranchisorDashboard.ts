@@ -34,14 +34,21 @@ export interface RecentActivity {
 
 export interface Lead {
   id: number
-  name: string
+  firstName: string
+  lastName: string
   email: string
   phone?: string
-  status: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost'
+  company?: string
+  country?: string
+  state?: string
+  city?: string
   source: string
-  assigned_to?: number
-  created_at: string
-  updated_at: string
+  status: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost'
+  owner?: string
+  lastContacted?: string
+  scheduledMeeting?: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface ProfileCompletionStatus {
@@ -179,11 +186,14 @@ export const useFranchisorDashboard = () => {
 
     // Add recent leads
     leads.value.slice(0, 3).forEach(lead => {
+      const fullName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Unknown Lead'
+      const createdAt = lead.created_at || new Date().toISOString()
+      
       activities.push({
         id: lead.id,
         type: 'lead',
-        title: `New lead: ${lead.name}`,
-        time: formatTimeAgo(lead.created_at),
+        title: `New lead: ${fullName}`,
+        time: formatTimeAgo(createdAt),
         icon: 'tabler-user-plus',
         color: 'primary',
       })
@@ -192,11 +202,13 @@ export const useFranchisorDashboard = () => {
     // Add sales associate activities
     salesAssociates.value.slice(0, 2).forEach(associate => {
       if (associate.status === 'active') {
+        const createdAt = associate.created_at || new Date().toISOString()
+        
         activities.push({
           id: associate.id,
           type: 'team',
           title: `${associate.name} is managing ${associate.leads_count} leads`,
-          time: formatTimeAgo(associate.created_at),
+          time: formatTimeAgo(createdAt),
           icon: 'tabler-user-check',
           color: 'info',
         })
@@ -216,8 +228,9 @@ export const useFranchisorDashboard = () => {
     }
 
     // Sort by most recent and limit to 5
+    // Only sort by date if we have valid dates, otherwise keep original order
     recentActivities.value = activities
-      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      .filter(activity => activity.time !== 'Invalid Date')
       .slice(0, 5)
   }
 
@@ -225,9 +238,19 @@ export const useFranchisorDashboard = () => {
    * Format time ago helper
    */
   const formatTimeAgo = (dateString: string): string => {
+    if (!dateString) return 'Unknown'
+    
     const date = new Date(dateString)
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date string:', dateString)
+      return 'Unknown'
+    }
+    
     const now = new Date()
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+    const diffInMs = now.getTime() - date.getTime()
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
 
     if (diffInHours < 1)
       return 'Just now'
@@ -239,6 +262,8 @@ export const useFranchisorDashboard = () => {
       return '1 day ago'
     if (diffInDays < 7)
       return `${diffInDays} days ago`
+    if (diffInDays < 30)
+      return `${Math.floor(diffInDays / 7)} weeks ago`
 
     return date.toLocaleDateString()
   }

@@ -609,48 +609,48 @@ class FranchisorDashboardSeeder extends Seeder
 
         $reviewSources = ['in_person', 'phone', 'email', 'social_media', 'other'];
         $customerNames = [
-            'أحمد محمد', 'فاطمة علي', 'خالد عبدالله', 'نورا سعد', 'عمر الأحمد', 'سارة الزهراني',
-            'محمد القحطاني', 'عائشة الغامدي', 'يوسف العتيبي', 'مريم الدوسري', 'عبدالرحمن الشمري',
-            'هند المطيري', 'سلطان الحربي', 'ريم العنزي', 'فهد الراشد', 'لجين الفيصل',
+            'Ahmed Mohammed', 'Fatima Ali', 'Khalid Abdullah', 'Nora Saad', 'Omar Al-Ahmad', 'Sarah Al-Zahrani',
+            'Mohammed Al-Qahtani', 'Aisha Al-Ghamdi', 'Youssef Al-Otaibi', 'Maryam Al-Dosari', 'Abdulrahman Al-Shammari',
+            'Hind Al-Mutairi', 'Sultan Al-Harbi', 'Reem Al-Anzi', 'Fahd Al-Rashid', 'Lujain Al-Faisal',
         ];
 
         $positiveComments = [
-            'خدمة ممتازة وطعام لذيذ جداً',
-            'المكان نظيف والموظفين ودودين',
-            'سرعة في التحضير وجودة عالية',
-            'أسعار معقولة وطعم رائع',
-            'تجربة رائعة وأنصح بالزيارة',
-            'خدمة العملاء ممتازة',
-            'طعام طازج ولذيذ',
-            'مكان مريح وأجواء جميلة',
-            'تشكيلة متنوعة من الأطباق',
-            'قيمة ممتازة مقابل السعر',
+            'Excellent service and very delicious food',
+            'Clean place and friendly staff',
+            'Fast preparation and high quality',
+            'Reasonable prices and great taste',
+            'Amazing experience, highly recommend visiting',
+            'Excellent customer service',
+            'Fresh and delicious food',
+            'Comfortable place with beautiful atmosphere',
+            'Diverse variety of dishes',
+            'Excellent value for money',
         ];
 
         $neutralComments = [
-            'تجربة جيدة بشكل عام',
-            'الطعام جيد والخدمة مقبولة',
-            'مكان لا بأس به',
-            'خدمة عادية وطعام مقبول',
-            'تجربة متوسطة',
-            'يحتاج لبعض التحسين',
-            'الطعام جيد لكن الخدمة بطيئة',
-            'أسعار مرتفعة قليلاً',
-            'مكان جيد لكن يحتاج تطوير',
-            'تجربة مقبولة',
+            'Good experience overall',
+            'Food is good and service is acceptable',
+            'Decent place',
+            'Average service and acceptable food',
+            'Average experience',
+            'Needs some improvement',
+            'Food is good but service is slow',
+            'Prices are slightly high',
+            'Good place but needs development',
+            'Acceptable experience',
         ];
 
         $negativeComments = [
-            'خدمة بطيئة جداً',
-            'الطعام لم يكن طازجاً',
-            'أسعار مرتفعة مقارنة بالجودة',
-            'المكان يحتاج تنظيف أكثر',
-            'الموظفين غير متعاونين',
-            'انتظار طويل للطلب',
-            'جودة الطعام ضعيفة',
-            'خدمة العملاء سيئة',
-            'تجربة مخيبة للآمال',
-            'لا أنصح بالزيارة',
+            'Very slow service',
+            'Food was not fresh',
+            'High prices compared to quality',
+            'Place needs more cleaning',
+            'Staff are not cooperative',
+            'Long wait for order',
+            'Poor food quality',
+            'Bad customer service',
+            'Disappointing experience',
+            'Do not recommend visiting',
         ];
 
         // Create 200-300 reviews across all units
@@ -698,88 +698,88 @@ class FranchisorDashboardSeeder extends Seeder
     private function createDocuments(int $franchiseId): void
     {
         $documentTypes = [
-            'contract' => 'عقود الامتياز',
-            'manual' => 'دليل العمليات',
-            'certificate' => 'الشهادات والتراخيص',
-            'policy' => 'السياسات والإجراءات',
-            'training' => 'مواد التدريب',
-            'marketing' => 'المواد التسويقية',
-            'financial' => 'التقارير المالية',
-            'legal' => 'الوثائق القانونية',
-            'compliance' => 'وثائق الامتثال',
-            'insurance' => 'وثائق التأمين',
+            'contract' => 'Franchise Contracts',
+            'manual' => 'Operations Manual',
+            'certificate' => 'Certificates and Licenses',
+            'policy' => 'Policies and Procedures',
+            'training' => 'Training Materials',
+            'marketing' => 'Marketing Materials',
+            'financial' => 'Financial Reports',
+            'legal' => 'Legal Documents',
+            'compliance' => 'Compliance Documents',
+            'insurance' => 'Insurance Documents',
         ];
 
         $documentNames = [
             'contract' => [
-                'عقد الامتياز الرئيسي',
-                'اتفاقية الترخيص',
-                'عقد الإيجار',
-                'اتفاقية الخدمات',
-                'عقد التوريد',
+                'Main Franchise Agreement',
+                'Licensing Agreement',
+                'Lease Contract',
+                'Service Agreement',
+                'Supply Contract',
             ],
             'manual' => [
-                'دليل العمليات التشغيلية',
-                'دليل إدارة المخزون',
-                'دليل خدمة العملاء',
-                'دليل الصحة والسلامة',
-                'دليل الجودة',
+                'Operations Manual',
+                'Inventory Management Manual',
+                'Customer Service Manual',
+                'Health and Safety Manual',
+                'Quality Manual',
             ],
             'certificate' => [
-                'رخصة تجارية',
-                'شهادة الأيزو',
-                'شهادة السلامة الغذائية',
-                'رخصة البلدية',
-                'شهادة الدفاع المدني',
+                'Commercial License',
+                'ISO Certificate',
+                'Food Safety Certificate',
+                'Municipal License',
+                'Civil Defense Certificate',
             ],
             'policy' => [
-                'سياسة الموارد البشرية',
-                'سياسة المرتجعات',
-                'سياسة الخصوصية',
-                'سياسة الأمان',
-                'سياسة التدريب',
+                'Human Resources Policy',
+                'Returns Policy',
+                'Privacy Policy',
+                'Security Policy',
+                'Training Policy',
             ],
             'training' => [
-                'برنامج التدريب الأساسي',
-                'تدريب نظام نقاط البيع',
-                'تدريب خدمة العملاء',
-                'تدريب السلامة المهنية',
-                'تدريب إدارة المخزون',
+                'Basic Training Program',
+                'POS System Training',
+                'Customer Service Training',
+                'Occupational Safety Training',
+                'Inventory Management Training',
             ],
             'marketing' => [
-                'دليل الهوية البصرية',
-                'مواد الحملات الإعلانية',
-                'كتالوج المنتجات',
-                'مواد وسائل التواصل الاجتماعي',
-                'قوالب التصميم',
+                'Brand Identity Guide',
+                'Advertising Campaign Materials',
+                'Product Catalog',
+                'Social Media Materials',
+                'Design Templates',
             ],
             'financial' => [
-                'التقرير المالي الشهري',
-                'تقرير الأرباح والخسائر',
-                'تقرير التدفق النقدي',
-                'الميزانية العمومية',
-                'تقرير الرواتب',
+                'Monthly Financial Report',
+                'Profit and Loss Report',
+                'Cash Flow Report',
+                'Balance Sheet',
+                'Payroll Report',
             ],
             'legal' => [
-                'وثيقة التأسيس',
-                'السجل التجاري',
-                'شهادة الزكاة والضريبة',
-                'عقد التأمين',
-                'اتفاقية عدم الإفشاء',
+                'Articles of Incorporation',
+                'Commercial Registration',
+                'Zakat and Tax Certificate',
+                'Insurance Contract',
+                'Non-Disclosure Agreement',
             ],
             'compliance' => [
-                'تقرير الامتثال الشهري',
-                'وثائق التدقيق الداخلي',
-                'تقرير المخاطر',
-                'سجل الحوادث',
-                'تقرير الجودة',
+                'Monthly Compliance Report',
+                'Internal Audit Documents',
+                'Risk Assessment Report',
+                'Incident Log',
+                'Quality Report',
             ],
             'insurance' => [
-                'بوليصة التأمين العام',
-                'تأمين المسؤولية المدنية',
-                'تأمين الممتلكات',
-                'تأمين العمال',
-                'تأمين المنتجات',
+                'General Insurance Policy',
+                'Civil Liability Insurance',
+                'Property Insurance',
+                'Workers Insurance',
+                'Product Insurance',
             ],
         ];
 
@@ -817,36 +817,36 @@ class FranchisorDashboardSeeder extends Seeder
                 case 'contract':
                     $metadata = [
                         'contract_value' => rand(50000, 500000),
-                        'parties' => ['الشركة الأم', 'المرخص له'],
-                        'jurisdiction' => 'المملكة العربية السعودية',
+                        'parties' => ['Parent Company', 'Franchisee'],
+                        'jurisdiction' => 'Kingdom of Saudi Arabia',
                     ];
                     break;
                 case 'financial':
                     $metadata = [
                         'period' => $createdAt->format('Y-m'),
                         'currency' => 'SAR',
-                        'prepared_by' => 'قسم المحاسبة',
+                        'prepared_by' => 'Accounting Department',
                     ];
                     break;
                 case 'certificate':
                     $metadata = [
-                        'issuing_authority' => 'الجهة المختصة',
+                        'issuing_authority' => 'Competent Authority',
                         'certificate_number' => 'CERT-'.rand(100000, 999999),
-                        'validity_period' => '12 شهر',
+                        'validity_period' => '12 months',
                     ];
                     break;
                 default:
                     $metadata = [
                         'version' => '1.'.rand(0, 9),
-                        'language' => 'ar',
-                        'department' => 'الإدارة العامة',
+                        'language' => 'en',
+                        'department' => 'General Management',
                     ];
             }
 
             Document::create([
                 'franchise_id' => $franchiseId,
                 'name' => $name,
-                'description' => 'وصف تفصيلي لـ '.$name,
+                'description' => 'Detailed description for '.$name,
                 'type' => $type,
                 'file_path' => $filePath,
                 'file_name' => $fileName,
@@ -866,30 +866,30 @@ class FranchisorDashboardSeeder extends Seeder
     private function createProducts(int $franchiseId): void
     {
         $categories = [
-            'مشروبات' => [
-                'قهوة عربية', 'قهوة تركية', 'كابتشينو', 'لاتيه', 'إسبريسو', 'موكا',
-                'شاي أحمر', 'شاي أخضر', 'شاي بالنعناع', 'شاي كرك',
-                'عصير برتقال', 'عصير تفاح', 'عصير مانجو', 'عصير فراولة',
-                'مياه معدنية', 'مشروبات غازية', 'عصائر طبيعية',
+            'Beverages' => [
+                'Arabic Coffee', 'Turkish Coffee', 'Cappuccino', 'Latte', 'Espresso', 'Mocha',
+                'Black Tea', 'Green Tea', 'Mint Tea', 'Karak Tea',
+                'Orange Juice', 'Apple Juice', 'Mango Juice', 'Strawberry Juice',
+                'Mineral Water', 'Soft Drinks', 'Natural Juices',
             ],
-            'مأكولات رئيسية' => [
-                'برجر لحم', 'برجر دجاج', 'برجر سمك', 'شاورما لحم', 'شاورما دجاج',
-                'كباب', 'تكا دجاج', 'فلافل', 'حمص', 'فتوش', 'تبولة',
-                'مندي لحم', 'مندي دجاج', 'كبسة', 'مظبي', 'برياني',
+            'Main Dishes' => [
+                'Beef Burger', 'Chicken Burger', 'Fish Burger', 'Beef Shawarma', 'Chicken Shawarma',
+                'Kebab', 'Chicken Tikka', 'Falafel', 'Hummus', 'Fattoush', 'Tabbouleh',
+                'Beef Mandi', 'Chicken Mandi', 'Kabsa', 'Madfoon', 'Biryani',
             ],
-            'حلويات' => [
-                'كنافة', 'بقلاوة', 'معمول', 'غريبة', 'كيك شوكولاتة', 'تيراميسو',
-                'آيس كريم فانيليا', 'آيس كريم شوكولاتة', 'مهلبية', 'أم علي',
-                'حلاوة طحينية', 'تمر محشي', 'قطايف',
+            'Desserts' => [
+                'Kunafa', 'Baklava', 'Maamoul', 'Ghraybeh', 'Chocolate Cake', 'Tiramisu',
+                'Vanilla Ice Cream', 'Chocolate Ice Cream', 'Muhallabia', 'Om Ali',
+                'Tahini Halva', 'Stuffed Dates', 'Qatayef',
             ],
-            'مقبلات' => [
-                'حمص بالطحينة', 'بابا غنوج', 'متبل', 'فتة', 'كبة',
-                'سمبوسة لحم', 'سمبوسة جبن', 'أقراص كبة', 'فطائر زعتر',
-                'فطائر جبن', 'مناقيش', 'لحم بعجين',
+            'Appetizers' => [
+                'Hummus with Tahini', 'Baba Ghanouj', 'Mutabal', 'Fatteh', 'Kibbeh',
+                'Meat Sambosa', 'Cheese Sambosa', 'Kibbeh Discs', 'Zaatar Pies',
+                'Cheese Pies', 'Manakish', 'Meat with Dough',
             ],
-            'سلطات' => [
-                'سلطة خضراء', 'سلطة يونانية', 'سلطة قيصر', 'سلطة تونة',
-                'سلطة فتوش', 'سلطة تبولة', 'سلطة روكا', 'سلطة خيار بلبن',
+            'Salads' => [
+                'Green Salad', 'Greek Salad', 'Caesar Salad', 'Tuna Salad',
+                'Fattoush Salad', 'Tabbouleh Salad', 'Arugula Salad', 'Cucumber Yogurt Salad',
             ],
         ];
 
@@ -900,11 +900,11 @@ class FranchisorDashboardSeeder extends Seeder
 
                 // Generate realistic pricing based on category
                 $basePrice = match ($category) {
-                    'مشروبات' => rand(5, 25),
-                    'مأكولات رئيسية' => rand(15, 65),
-                    'حلويات' => rand(8, 35),
-                    'مقبلات' => rand(10, 30),
-                    'سلطات' => rand(12, 28),
+                    'Beverages' => rand(5, 25),
+                    'Main Dishes' => rand(15, 65),
+                    'Desserts' => rand(8, 35),
+                    'Appetizers' => rand(10, 30),
+                    'Salads' => rand(12, 28),
                     default => rand(10, 40)
                 };
 
@@ -912,37 +912,37 @@ class FranchisorDashboardSeeder extends Seeder
                 $stock = rand(0, 200);
                 $minimumStock = rand(5, 20);
                 $weight = rand(100, 1500) / 100; // 1-15 kg
-                $dimensions = rand(10, 50).'x'.rand(10, 50).'x'.rand(5, 20).' سم';
+                $dimensions = rand(10, 50).'x'.rand(10, 50).'x'.rand(5, 20).' cm';
 
                 // Generate attributes based on category
                 $attributes = [];
                 switch ($category) {
-                    case 'مشروبات':
+                    case 'Beverages':
                         $attributes = [
-                            'حجم' => ['صغير', 'متوسط', 'كبير'][array_rand(['صغير', 'متوسط', 'كبير'])],
-                            'نوع' => ['بارد', 'ساخن'][array_rand(['بارد', 'ساخن'])],
-                            'سعرات_حرارية' => rand(50, 300),
+                            'size' => ['Small', 'Medium', 'Large'][array_rand(['Small', 'Medium', 'Large'])],
+                            'type' => ['Cold', 'Hot'][array_rand(['Cold', 'Hot'])],
+                            'calories' => rand(50, 300),
                         ];
                         break;
-                    case 'مأكولات رئيسية':
+                    case 'Main Dishes':
                         $attributes = [
-                            'حجم_الحصة' => ['صغير', 'متوسط', 'كبير', 'عائلي'][array_rand(['صغير', 'متوسط', 'كبير', 'عائلي'])],
-                            'حار' => ['خفيف', 'متوسط', 'حار'][array_rand(['خفيف', 'متوسط', 'حار'])],
-                            'وقت_التحضير' => rand(10, 45).' دقيقة',
+                            'portion_size' => ['Small', 'Medium', 'Large', 'Family'][array_rand(['Small', 'Medium', 'Large', 'Family'])],
+                            'spice_level' => ['Mild', 'Medium', 'Spicy'][array_rand(['Mild', 'Medium', 'Spicy'])],
+                            'preparation_time' => rand(10, 45).' minutes',
                         ];
                         break;
-                    case 'حلويات':
+                    case 'Desserts':
                         $attributes = [
-                            'نوع_السكر' => ['عادي', 'قليل السكر', 'بدون سكر'][array_rand(['عادي', 'قليل السكر', 'بدون سكر'])],
-                            'مناسب_للأطفال' => rand(0, 1) == 1,
-                            'يحتوي_على_مكسرات' => rand(0, 1) == 1,
+                            'sugar_type' => ['Regular', 'Low Sugar', 'Sugar Free'][array_rand(['Regular', 'Low Sugar', 'Sugar Free'])],
+                            'kid_friendly' => rand(0, 1) == 1,
+                            'contains_nuts' => rand(0, 1) == 1,
                         ];
                         break;
                     default:
                         $attributes = [
-                            'نباتي' => rand(0, 1) == 1,
-                            'خالي_من_الجلوتين' => rand(0, 1) == 1,
-                            'مستوى_الملوحة' => ['خفيف', 'متوسط', 'مالح'][array_rand(['خفيف', 'متوسط', 'مالح'])],
+                            'vegetarian' => rand(0, 1) == 1,
+                            'gluten_free' => rand(0, 1) == 1,
+                            'salt_level' => ['Light', 'Medium', 'Salty'][array_rand(['Light', 'Medium', 'Salty'])],
                         ];
                 }
 
@@ -951,7 +951,7 @@ class FranchisorDashboardSeeder extends Seeder
                 Product::create([
                     'franchise_id' => $franchiseId,
                     'name' => $productName,
-                    'description' => 'وصف تفصيلي لـ '.$productName.' المحضر بأجود المكونات وأفضل الطرق التقليدية',
+                    'description' => 'Detailed description for '.$productName.' prepared with the finest ingredients and best traditional methods',
                     'category' => $category,
                     'unit_price' => $basePrice,
                     'stock' => $stock,

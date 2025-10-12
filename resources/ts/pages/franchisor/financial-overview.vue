@@ -469,15 +469,18 @@ const submitAddData = async () => {
     if (addDataCategory.value === 'sales') {
       await financialApi.createSale({
         product: addDataForm.value.product,
-        unitPrice: addDataForm.value.unitPrice,
+        unit_price: addDataForm.value.unitPrice,
         quantity: addDataForm.value.quantitySold,
-        sale: addDataForm.value.unitPrice * addDataForm.value.quantitySold,
         date: addDataForm.value.dateOfSale,
+        customer_name: 'Walk-in Customer', // Default value for now
+        customer_email: 'customer@example.com', // Default value for now
+        franchise_id: 1, // TODO: Get from user context
+        unit_id: 1, // TODO: Get from user context or form
       })
     }
     else {
       await financialApi.createExpense({
-        expenseCategory: addDataForm.value.expenseCategory,
+        expense_category: addDataForm.value.expenseCategory,
         amount: addDataForm.value.amount,
         description: addDataForm.value.description,
         date: addDataForm.value.dateOfExpense,
