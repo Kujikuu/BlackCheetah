@@ -24,6 +24,18 @@ const currentTab = ref('overview')
 // 👉 Unit ID from route
 const unitId = computed(() => route.params.id as string)
 
+// 👉 Safely parsed unit ID (number)
+const currentUnitId = computed(() => {
+  // Try route params first
+  if (unitId.value) {
+    const parsed = currentUnitId.value
+    if (!isNaN(parsed)) return parsed
+  }
+  
+  // Fallback to loaded unit data
+  return unitData.value?.id || null
+})
+
 // 👉 Loading and error states
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -230,7 +242,7 @@ const openEditUnitModal = () => {
 
 const saveUnitDetails = async () => {
   try {
-    const response = await franchiseeDashboardApi.updateUnitDetails(parseInt(unitId.value), editUnitForm.value)
+    const response = await franchiseeDashboardApi.updateUnitDetails(currentUnitId.value, editUnitForm.value)
     if (response.success) {
       unitData.value = response.data
       isEditUnitModalVisible.value = false
@@ -243,7 +255,7 @@ const saveUnitDetails = async () => {
 
 const onTaskCreated = async (task: any) => {
   try {
-    const response = await franchiseeDashboardApi.createTask(parseInt(unitId.value), task)
+    const response = await franchiseeDashboardApi.createTask(currentUnitId.value, task)
     if (response.success) {
       tasksData.value.push(response.data)
     }
@@ -255,7 +267,7 @@ const onTaskCreated = async (task: any) => {
 
 const onDocumentAdded = async (document: any) => {
   try {
-    const response = await franchiseeDashboardApi.createDocument(parseInt(unitId.value), document)
+    const response = await franchiseeDashboardApi.createDocument(currentUnitId.value, document)
     if (response.success) {
       documentsData.value.push(response.data)
     }
@@ -286,7 +298,7 @@ const deleteStaff = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.deleteStaff(parseInt(unitId.value), staffToDelete.value)
+    const response = await franchiseeDashboardApi.deleteStaff(currentUnitId.value, staffToDelete.value)
     if (response.success) {
       const index = staffData.value.findIndex(staff => staff.id === staffToDelete.value)
       if (index !== -1)
@@ -307,7 +319,7 @@ const saveStaff = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateStaff(parseInt(unitId.value), selectedStaff.value.id, selectedStaff.value)
+    const response = await franchiseeDashboardApi.updateStaff(currentUnitId.value, selectedStaff.value.id, selectedStaff.value)
     if (response.success) {
       const index = staffData.value.findIndex(staff => staff.id === selectedStaff.value.id)
       if (index !== -1)
@@ -325,7 +337,7 @@ const saveStaff = async () => {
 
 const onStaffCreated = async (staff: any) => {
   try {
-    const response = await franchiseeDashboardApi.createStaff(parseInt(unitId.value), staff)
+    const response = await franchiseeDashboardApi.createStaff(currentUnitId.value, staff)
     if (response.success) {
       staffData.value.push(response.data)
     }
@@ -356,7 +368,7 @@ const deleteProduct = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.removeProductFromInventory(parseInt(unitId.value), productToDelete.value)
+    const response = await franchiseeDashboardApi.removeProductFromInventory(currentUnitId.value, productToDelete.value)
     if (response.success) {
       const index = productsData.value.findIndex(product => product.id === productToDelete.value)
       if (index !== -1)
@@ -377,7 +389,7 @@ const saveProduct = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateProduct(parseInt(unitId.value), selectedProduct.value.id, selectedProduct.value)
+    const response = await franchiseeDashboardApi.updateProduct(currentUnitId.value, selectedProduct.value.id, selectedProduct.value)
     if (response.success) {
       const index = productsData.value.findIndex(product => product.id === selectedProduct.value.id)
       if (index !== -1)
@@ -396,17 +408,14 @@ const saveProduct = async () => {
 // 👉 Load available franchise products for inventory
 const loadAvailableFranchiseProducts = async () => {
   try {
-    // Get unit ID - if no route param, use the unit ID from loaded unit data
-    const currentUnitId = unitId.value ? parseInt(unitId.value) : unitData.value?.id
-    
-    if (!currentUnitId || isNaN(currentUnitId)) {
+    if (!currentUnitId.value || isNaN(currentUnitId.value)) {
       console.error('Invalid unit ID for loading products')
       availableFranchiseProducts.value = []
       return
     }
 
     // This would call an API to get franchise products not yet in this unit's inventory
-    const response = await franchiseeDashboardApi.getAvailableFranchiseProducts(currentUnitId)
+    const response = await franchiseeDashboardApi.getAvailableFranchiseProducts(currentUnitId.value)
     if (response.success) {
       availableFranchiseProducts.value = response.data
     }
@@ -423,13 +432,18 @@ const addProductToInventory = async () => {
   if (!selectedFranchiseProduct.value) return
 
   try {
+    if (!currentUnitId.value || isNaN(currentUnitId.value)) {
+      console.error('Invalid unit ID for adding product')
+      return
+    }
+
     const inventoryData = {
       productId: selectedFranchiseProduct.value,
       quantity: parseInt(newInventoryForm.value.quantity.toString()),
       reorderLevel: parseInt(newInventoryForm.value.reorderLevel.toString()),
     }
 
-    const response = await franchiseeDashboardApi.addProductToInventory(parseInt(unitId.value), inventoryData)
+    const response = await franchiseeDashboardApi.addProductToInventory(currentUnitId.value, inventoryData)
     if (response.success) {
       // Add the product with inventory data to our products list
       const selectedProduct = availableFranchiseProducts.value.find(p => p.id === selectedFranchiseProduct.value)
@@ -484,7 +498,7 @@ const deleteReview = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.deleteReview(parseInt(unitId.value), reviewToDelete.value)
+    const response = await franchiseeDashboardApi.deleteReview(currentUnitId.value, reviewToDelete.value)
     if (response.success) {
       const index = reviewsData.value.findIndex(review => review.id === reviewToDelete.value)
       if (index !== -1)
@@ -505,7 +519,7 @@ const saveReview = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateReview(parseInt(unitId.value), selectedReview.value.id, selectedReview.value)
+    const response = await franchiseeDashboardApi.updateReview(currentUnitId.value, selectedReview.value.id, selectedReview.value)
     if (response.success) {
       const index = reviewsData.value.findIndex(review => review.id === selectedReview.value.id)
       if (index !== -1)
@@ -523,7 +537,7 @@ const saveReview = async () => {
 
 const onReviewCreated = async (review: any) => {
   try {
-    const response = await franchiseeDashboardApi.createReview(parseInt(unitId.value), review)
+    const response = await franchiseeDashboardApi.createReview(currentUnitId.value, review)
     if (response.success) {
       reviewsData.value.push(response.data)
     }
@@ -552,7 +566,7 @@ const confirmDelete = (id: number) => {
 const deleteTask = async () => {
   if (taskToDelete.value !== null) {
     try {
-      const response = await franchiseeDashboardApi.deleteTask(parseInt(unitId.value), taskToDelete.value)
+      const response = await franchiseeDashboardApi.deleteTask(currentUnitId.value, taskToDelete.value)
       if (response.success) {
         const index = tasksData.value.findIndex(task => task.id === taskToDelete.value)
         if (index !== -1)
@@ -588,7 +602,7 @@ const saveTask = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateTask(parseInt(unitId.value), selectedTask.value.id, selectedTask.value)
+    const response = await franchiseeDashboardApi.updateTask(currentUnitId.value, selectedTask.value.id, selectedTask.value)
     if (response.success) {
       const index = tasksData.value.findIndex(task => task.id === selectedTask.value.id)
       if (index !== -1)
