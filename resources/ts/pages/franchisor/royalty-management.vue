@@ -1,20 +1,54 @@
 <script setup lang="ts">
+import { royaltyApi, type PaymentData, type RoyaltyRecord, type RoyaltyStatistics } from '@/services/api/royalty'
+import { $api } from '@/utils/api'
 import { computed, onMounted, ref } from 'vue'
-import { royaltyApi, type RoyaltyRecord, type PaymentData, type RoyaltyStatistics } from '@/services/api/royalty'
 
 // Loading states
 const isLoading = ref(false)
 const isLoadingStats = ref(false)
+const isCreating = ref(false)
 
 // Reactive data
-const selectedPeriod = ref('monthly')
+const selectedPeriod = ref<'monthly' | 'quarterly' | 'annual' | 'special'>('monthly')
 const isExportDialogVisible = ref(false)
 const isMarkCompletedModalVisible = ref(false)
 const isViewRoyaltyDialogVisible = ref(false)
+const isCreateRoyaltyModalVisible = ref(false)
 const selectedRoyalty = ref<RoyaltyRecord | null>(null)
 const viewedRoyalty = ref<RoyaltyRecord | null>(null)
 const exportFormat = ref('csv')
 const exportDataType = ref('all')
+
+// Create royalty form data
+const createRoyaltyData = ref({
+  franchise_id: null as number | null,
+  unit_id: null as number | null,
+  franchisee_id: null as number | null,
+  type: 'monthly' as 'monthly' | 'quarterly',
+  period_year: new Date().getFullYear(),
+  period_month: new Date().getMonth() + 1,
+  period_quarter: null,
+  base_revenue: 0,
+  royalty_rate: 8.5,
+  royalty_amount: 0,
+  marketing_fee_rate: 2.0,
+  marketing_fee_amount: 0,
+  technology_fee_rate: 0,
+  technology_fee_amount: 50,
+  other_fees: 0,
+  adjustments: 0,
+  total_amount: 0,
+  due_date: '',
+  status: 'pending' as 'pending' | 'paid' | 'overdue',
+  description: '',
+  notes: '',
+  is_auto_generated: false,
+})
+
+// Dropdown options
+const franchises = ref([])
+const units = ref([])
+const franchisees = ref([])
 
 // Payment form data
 const paymentData = ref<PaymentData>({
@@ -37,14 +71,15 @@ const statistics = ref<RoyaltyStatistics>({
 })
 
 // Computed values for stat cards
-const royaltyCollectedTillDate = computed(() => statistics.value.royalty_collected_till_date)
-const upcomingRoyalties = computed(() => statistics.value.upcoming_royalties)
+const royaltyCollectedTillDate = computed(() => statistics.value?.royalty_collected_till_date || 0)
+const upcomingRoyalties = computed(() => statistics.value?.upcoming_royalties || 0)
 
 // Period options
 const periodOptions = [
-  { title: 'Daily', value: 'daily' },
   { title: 'Monthly', value: 'monthly' },
-  { title: 'Yearly', value: 'yearly' },
+  { title: 'Quarterly', value: 'quarterly' },
+  { title: 'Annual', value: 'annual' },
+  { title: 'Special', value: 'special' },
 ]
 
 // Export options
@@ -213,11 +248,298 @@ const formatDate = (dateString: string) => {
   })
 }
 
+// Fetch dropdown data
+const fetchFranchises = async () => {
+  try {
+    const response = await $api('/api/v1/franchisor/franchise')
+    console.log('Franchises response:', response)
+    if (response.success && response.data) {
+      // myFranchise returns a single franchise object, so wrap it in an array
+      franchises.value = [response.data]
+      console.log('Franchises loaded:', franchises.value)
+    }
+  } catch (error) {
+    console.error('Error fetching franchises:', error)
+  }
+}
+
+const fetchUnits = async () => {
+  try {
+    const response = await $api('/api/v1/franchisor/units')
+    console.log('Units response:', response)
+    if (response.success && response.data) {
+      // myUnits returns paginated data, extract the actual units from data.data
+      units.value = response.data.data || []
+      console.log('Units loaded:', units.value)
+    }
+  } catch (error) {
+    console.error('Error fetching units:', error)
+  }
+}
+
+const fetchFranchisees = async () => {
+  try {
+    const response = await $api('/api/v1/franchisor/franchisees')
+    console.log('Franchisees response:', response)
+    console.log('Franchisees response.data:', response.data)
+    console.log('Franchisees response.data.data:', response.data?.data)
+    if (response.success && response.data) {
+      // myFranchisees returns paginated data, extract the actual franchisees from data.data
+      franchisees.value = response.data.data || []
+      console.log('Franchisees loaded:', franchisees.value)
+      console.log('Franchisees count:', franchisees.value.length)
+    }
+  } catch (error) {
+    console.error('Error fetching franchisees:', error)
+  }
+}
+
+// Calculate amounts based on base revenue
+const calculateAmounts = () => {
+  const baseRevenue = createRoyaltyData.value.base_revenue
+
+  // Calculate royalty amount
+  createRoyaltyData.value.royalty_amount = (baseRevenue * createRoyaltyData.value.royalty_rate) / 100
+
+  // Calculate marketing fee amount
+  createRoyaltyData.value.marketing_fee_amount = (baseRevenue * createRoyaltyData.value.marketing_fee_rate) / 100
+
+  // Calculate technology fee amount (if rate-based)
+  if (createRoyaltyData.value.technology_fee_rate > 0) {
+    createRoyaltyData.value.technology_fee_amount = (baseRevenue * createRoyaltyData.value.technology_fee_rate) / 100
+  }
+
+  // Calculate total amount
+  createRoyaltyData.value.total_amount =
+    createRoyaltyData.value.royalty_amount +
+    createRoyaltyData.value.marketing_fee_amount +
+    createRoyaltyData.value.technology_fee_amount +
+    createRoyaltyData.value.other_fees +
+    createRoyaltyData.value.adjustments
+}
+
+// Create royalty function
+const createRoyalty = async () => {
+  try {
+    isCreating.value = true
+
+    // Clear previous validation errors
+    clearValidationErrors()
+
+    // Validate form before submission
+    const isValid = await validateForm()
+    if (!isValid) {
+      console.error('Form validation failed')
+      return
+    }
+
+    // Calculate amounts before submitting
+    calculateAmounts()
+
+    // Debug: Log the data being sent
+    console.log('Creating royalty with data:', createRoyaltyData.value)
+
+    // Prepare data for API - convert null to undefined for optional fields
+    const apiData = {
+      ...createRoyaltyData.value,
+      franchise_id: createRoyaltyData.value.franchise_id || undefined,
+      unit_id: createRoyaltyData.value.unit_id || undefined,
+      franchisee_id: createRoyaltyData.value.franchisee_id || undefined,
+    }
+
+    const response = await royaltyApi.createRoyalty(apiData)
+
+    if (response.success) {
+      // Reset form
+      resetCreateForm()
+
+      // Close modal
+      isCreateRoyaltyModalVisible.value = false
+
+      // Refresh data
+      await fetchRoyalties()
+      await fetchStatistics()
+
+      // Show success message (you might want to add a toast notification here)
+      console.log('Royalty created successfully')
+    }
+  } catch (error) {
+    console.error('Error creating royalty:', error)
+    // Handle error (you might want to add error notification here)
+  } finally {
+    isCreating.value = false
+  }
+}
+
+// Reset create form
+const resetCreateForm = () => {
+  createRoyaltyData.value = {
+    franchise_id: null,
+    unit_id: null,
+    franchisee_id: null,
+    type: 'monthly' as 'monthly' | 'quarterly',
+    period_year: new Date().getFullYear(),
+    period_month: new Date().getMonth() + 1,
+    period_quarter: null,
+    base_revenue: 0,
+    royalty_rate: 8.5,
+    royalty_amount: 0,
+    marketing_fee_rate: 2.0,
+    marketing_fee_amount: 0,
+    technology_fee_rate: 0,
+    technology_fee_amount: 50,
+    other_fees: 0,
+    adjustments: 0,
+    total_amount: 0,
+    due_date: '',
+    status: 'pending' as 'pending' | 'paid' | 'overdue',
+    description: '',
+    notes: '',
+    is_auto_generated: false,
+  }
+}
+
+// Open create royalty modal
+const openCreateRoyaltyModal = () => {
+  resetCreateForm()
+  isCreateRoyaltyModalVisible.value = true
+}
+
 // Lifecycle hooks
 onMounted(() => {
   fetchRoyalties()
   fetchStatistics()
+  fetchFranchises()
+  fetchUnits()
+  fetchFranchisees()
 })
+
+// Validation errors
+const validationErrors = ref<Record<string, string[]>>({})
+
+// Validation rules
+const validationRules = {
+  franchise_id: [
+    (v: any) => !!v || 'Franchise selection is required',
+  ],
+  franchisee_id: [
+    (v: any) => !!v || 'Franchisee selection is required',
+  ],
+  type: [
+    (v: any) => !!v || 'Royalty type is required',
+    (v: any) => ['monthly', 'quarterly'].includes(v) || 'Invalid royalty type',
+  ],
+  period_year: [
+    (v: any) => !!v || 'Period year is required',
+    (v: any) => v >= 2020 || 'Period year must be at least 2020',
+    (v: any) => v <= new Date().getFullYear() + 1 || 'Period year cannot be more than next year',
+  ],
+  period_month: [
+    (v: any) => {
+      if (createRoyaltyData.value.type === 'monthly') {
+        return !!v || 'Period month is required for monthly royalties'
+      }
+      return true
+    },
+    (v: any) => {
+      if (v && (v < 1 || v > 12)) {
+        return 'Period month must be between 1 and 12'
+      }
+      return true
+    },
+  ],
+  period_quarter: [
+    (v: any) => {
+      if (createRoyaltyData.value.type === 'quarterly') {
+        return !!v || 'Period quarter is required for quarterly royalties'
+      }
+      return true
+    },
+    (v: any) => {
+      if (v && (v < 1 || v > 4)) {
+        return 'Period quarter must be between 1 and 4'
+      }
+      return true
+    },
+  ],
+  base_revenue: [
+    (v: any) => v !== null && v !== undefined && v !== '' || 'Base revenue is required',
+    (v: any) => v >= 0 || 'Base revenue cannot be negative',
+    (v: any) => v <= 999999999.99 || 'Base revenue is too large',
+  ],
+  royalty_rate: [
+    (v: any) => v !== null && v !== undefined && v !== '' || 'Royalty rate is required',
+    (v: any) => v >= 0 || 'Royalty rate cannot be negative',
+    (v: any) => v <= 100 || 'Royalty rate cannot exceed 100%',
+  ],
+  marketing_fee_rate: [
+    (v: any) => v !== null && v !== undefined && v !== '' || 'Marketing fee rate is required',
+    (v: any) => v >= 0 || 'Marketing fee rate cannot be negative',
+    (v: any) => v <= 100 || 'Marketing fee rate cannot exceed 100%',
+  ],
+  due_date: [
+    (v: any) => !!v || 'Due date is required',
+    (v: any) => {
+      if (v) {
+        const today = new Date().toISOString().split('T')[0]
+        return v >= today || 'Due date cannot be in the past'
+      }
+      return true
+    },
+  ],
+  technology_fee_amount: [
+    (v: any) => v === null || v === undefined || v === '' || v >= 0 || 'Technology fee cannot be negative',
+    (v: any) => v === null || v === undefined || v === '' || v <= 999999999.99 || 'Technology fee is too large',
+  ],
+  other_fees: [
+    (v: any) => v === null || v === undefined || v === '' || v >= 0 || 'Other fees cannot be negative',
+    (v: any) => v === null || v === undefined || v === '' || v <= 999999999.99 || 'Other fees is too large',
+  ],
+  adjustments: [
+    (v: any) => v === null || v === undefined || v === '' || v >= -999999999.99 || 'Adjustments value is too low',
+    (v: any) => v === null || v === undefined || v === '' || v <= 999999999.99 || 'Adjustments value is too high',
+  ],
+  description: [
+    (v: any) => !v || v.length <= 1000 || 'Description cannot exceed 1000 characters',
+  ],
+  notes: [
+    (v: any) => !v || v.length <= 2000 || 'Notes cannot exceed 2000 characters',
+  ],
+}
+
+// Form validation
+const isFormValid = ref(false)
+const formRef = ref()
+
+// Validate form function
+const validateForm = async () => {
+  if (formRef.value) {
+    const { valid } = await formRef.value.validate()
+    isFormValid.value = valid
+    return valid
+  }
+  return false
+}
+
+// Clear validation errors
+const clearValidationErrors = () => {
+  validationErrors.value = {}
+  if (formRef.value) {
+    formRef.value.resetValidation()
+  }
+}
+
+// Handle API validation errors
+const handleValidationErrors = (errors: Record<string, string[]>) => {
+  validationErrors.value = errors
+  
+  // Show first error in a snackbar or alert
+  const firstError = Object.values(errors)[0]?.[0]
+  if (firstError) {
+    // You can replace this with your preferred notification method
+    console.error('Validation Error:', firstError)
+  }
+}
 </script>
 
 <template>
@@ -238,26 +560,18 @@ onMounted(() => {
           <!-- Header Actions -->
           <div class="d-flex gap-3 align-center flex-wrap">
             <!-- Period Selector -->
-            <VSelect
-              v-model="selectedPeriod"
-              :items="periodOptions"
-              item-title="title"
-              item-value="value"
-              density="compact"
-              style="min-width: 120px;"
-              variant="outlined"
-            />
+            <VSelect v-model="selectedPeriod" :items="periodOptions" item-title="title" item-value="value"
+              density="compact" style="min-width: 120px;" variant="outlined" />
+
+            <!-- Create Royalty Button -->
+            <VBtn color="success" variant="elevated" @click="openCreateRoyaltyModal">
+              <VIcon icon="tabler-plus" class="me-2" />
+              Create Royalty
+            </VBtn>
 
             <!-- Export Button -->
-            <VBtn
-              color="primary"
-              variant="elevated"
-              @click="openExportDialog"
-            >
-              <VIcon
-                icon="tabler-download"
-                class="me-2"
-              />
+            <VBtn color="primary" variant="elevated" @click="openExportDialog">
+              <VIcon icon="tabler-download" class="me-2" />
               Export
             </VBtn>
           </div>
@@ -268,10 +582,7 @@ onMounted(() => {
     <!-- Stat Cards -->
     <VRow class="mb-6">
       <!-- Royalty Collected Till Date -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
           <VCardText>
             <div class="d-flex align-center justify-space-between">
@@ -286,15 +597,8 @@ onMounted(() => {
                   {{ royaltyCollectedTillDate.toLocaleString() }} SAR
                 </h4>
               </div>
-              <VAvatar
-                color="success"
-                variant="tonal"
-                size="56"
-              >
-                <VIcon
-                  icon="tabler-currency-dollar"
-                  size="28"
-                />
+              <VAvatar color="success" variant="tonal" size="56">
+                <VIcon icon="tabler-currency-dollar" size="28" />
               </VAvatar>
             </div>
           </VCardText>
@@ -302,10 +606,7 @@ onMounted(() => {
       </VCol>
 
       <!-- Upcoming Royalties -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
           <VCardText>
             <div class="d-flex align-center justify-space-between">
@@ -320,15 +621,8 @@ onMounted(() => {
                   {{ upcomingRoyalties.toLocaleString() }} SAR
                 </h4>
               </div>
-              <VAvatar
-                color="warning"
-                variant="tonal"
-                size="56"
-              >
-                <VIcon
-                  icon="tabler-clock"
-                  size="28"
-                />
+              <VAvatar color="warning" variant="tonal" size="56">
+                <VIcon icon="tabler-clock" size="28" />
               </VAvatar>
             </div>
           </VCardText>
@@ -351,12 +645,7 @@ onMounted(() => {
 
           <VDivider />
 
-          <VDataTable
-            :headers="tableHeaders"
-            :items="royaltyRecords"
-            :items-per-page="10"
-            class="text-no-wrap"
-          >
+          <VDataTable :headers="tableHeaders" :items="royaltyRecords" :items-per-page="10" class="text-no-wrap">
             <!-- Billing Period Column -->
             <template #item.billingPeriod="{ item }">
               <div class="font-weight-medium">
@@ -388,17 +677,13 @@ onMounted(() => {
             <!-- Gross Sales Column -->
             <template #item.grossSales="{ item }">
               <div class="font-weight-medium text-info">
-                {{ item.gross_sales.toLocaleString() }}
+                {{ (item.gross_sales || 0).toLocaleString() }}
               </div>
             </template>
 
             <!-- Royalty Percentage Column -->
             <template #item.royaltyPercentage="{ item }">
-              <VChip
-                size="small"
-                variant="tonal"
-                color="primary"
-              >
+              <VChip size="small" variant="tonal" color="primary">
                 {{ item.royalty_percentage }}%
               </VChip>
             </template>
@@ -406,18 +691,13 @@ onMounted(() => {
             <!-- Amount Column -->
             <template #item.amount="{ item }">
               <div class="font-weight-medium text-success">
-                {{ item.amount.toLocaleString() }}
+                {{ (item.amount || 0).toLocaleString() }}
               </div>
             </template>
 
             <!-- Status Column -->
             <template #item.status="{ item }">
-              <VChip
-                :color="getStatusColor(item.status)"
-                size="small"
-                variant="tonal"
-                class="text-capitalize"
-              >
+              <VChip :color="getStatusColor(item.status)" size="small" variant="tonal" class="text-capitalize">
                 {{ item.status }}
               </VChip>
             </template>
@@ -425,41 +705,17 @@ onMounted(() => {
             <!-- Actions Column -->
             <template #item.actions="{ item }">
               <div class="d-flex gap-2">
-                <VBtn
-                  icon
-                  size="small"
-                  color="info"
-                  variant="text"
-                  @click="viewRoyalty(item)"
-                >
-                  <VIcon
-                    icon="tabler-eye"
-                    size="20"
-                  />
-                  <VTooltip
-                    activator="parent"
-                    location="top"
-                  >
+                <VBtn icon size="small" color="info" variant="text" @click="viewRoyalty(item)">
+                  <VIcon icon="tabler-eye" size="20" />
+                  <VTooltip activator="parent" location="top">
                     View Details
                   </VTooltip>
                 </VBtn>
 
-                <VBtn
-                  v-if="item.status !== 'paid'"
-                  icon
-                  size="small"
-                  color="success"
-                  variant="text"
-                  @click="markAsCompleted(item)"
-                >
-                  <VIcon
-                    icon="tabler-check"
-                    size="20"
-                  />
-                  <VTooltip
-                    activator="parent"
-                    location="top"
-                  >
+                <VBtn v-if="item.status !== 'paid'" icon size="small" color="success" variant="text"
+                  @click="markAsCompleted(item)">
+                  <VIcon icon="tabler-check" size="20" />
+                  <VTooltip activator="parent" location="top">
                     Mark as Completed
                   </VTooltip>
                 </VBtn>
@@ -471,141 +727,199 @@ onMounted(() => {
     </VRow>
 
     <!-- Export Dialog -->
-    <VDialog
-      v-model="isExportDialogVisible"
-      max-width="500"
-    >
-      <VCard class="text-center px-6 py-6">
-        <VCardItem class="pb-4">
-          <VCardTitle class="text-h6">
-            Export Royalty Data
-          </VCardTitle>
-          <VCardSubtitle>Choose export format and data type</VCardSubtitle>
+    <VDialog v-model="isExportDialogVisible" max-width="500">
+      <VCard>
+        <VCardItem>
+          <VCardTitle>Export Royalty Data</VCardTitle>
         </VCardItem>
 
         <VCardText>
           <VRow>
             <VCol cols="12">
-              <VSelect
-                v-model="exportDataType"
-                :items="exportDataTypeOptions"
-                item-title="title"
-                item-value="value"
-                label="Data Type"
-                variant="outlined"
-                density="compact"
-              />
+              <VSelect v-model="exportDataType" :items="exportDataTypeOptions" item-title="title" item-value="value"
+                label="Data Type" variant="outlined" density="compact" />
             </VCol>
             <VCol cols="12">
-              <VSelect
-                v-model="exportFormat"
-                :items="exportFormatOptions"
-                item-title="title"
-                item-value="value"
-                label="Export Format"
-                variant="outlined"
-                density="compact"
-              />
+              <VSelect v-model="exportFormat" :items="exportFormatOptions" item-title="title" item-value="value"
+                label="Export Format" variant="outlined" density="compact" />
             </VCol>
           </VRow>
 
-          <VAlert
-            type="info"
-            variant="tonal"
-            class="mt-4"
-          >
+          <VAlert type="info" variant="tonal" class="mt-4">
             <div class="text-body-2">
               <strong>Current Selection:</strong><br>
               Period: {{ selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1) }}<br>
-              Data Type: {{ exportDataTypeOptions.find(opt => opt.value === exportDataType)?.title }}<br>
+              Data Type: {{exportDataTypeOptions.find(opt => opt.value === exportDataType)?.title}}<br>
               Format: {{ exportFormat.toUpperCase() }}
             </div>
           </VAlert>
         </VCardText>
 
-        <VCardText class="d-flex align-center justify-center gap-4">
-          <VBtn
-            color="error"
-            variant="outlined"
-            @click="isExportDialogVisible = false"
-          >
+        <VCardActions>
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isExportDialogVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            variant="elevated"
-            @click="performExport"
-          >
+          <VBtn color="primary" @click="performExport">
             Export Data
           </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Create Royalty Modal -->
+    <VDialog v-model="isCreateRoyaltyModalVisible" max-width="800" persistent>
+      <VCard>
+        <VCardItem>
+          <VCardTitle>Create New Royalty Record</VCardTitle>
+        </VCardItem>
+
+        <VCardText>
+          <VForm ref="formRef" v-model="isFormValid" @submit.prevent="createRoyalty">
+            <VRow>
+              <!-- Franchise Selection -->
+              <VCol cols="12" md="6">
+                <VSelect v-model="createRoyaltyData.franchise_id" :items="franchises" item-title="business_name"
+                  item-value="id" label="Franchise *" variant="outlined" density="compact" required clearable 
+                  :rules="validationRules.franchise_id" :error-messages="validationErrors.franchise_id" />
+              </VCol>
+
+              <!-- Unit Selection -->
+              <VCol cols="12" md="6">
+                <VSelect v-model="createRoyaltyData.unit_id" :items="units" item-title="unit_name" item-value="id"
+                  label="Unit" variant="outlined" density="compact" clearable />
+              </VCol>
+
+              <!-- Franchisee Selection -->
+              <VCol cols="12" md="6">
+                <VSelect v-model="createRoyaltyData.franchisee_id" :items="franchisees" item-title="name"
+                  item-value="id" label="Franchisee *" variant="outlined" density="compact" required clearable 
+                  :rules="validationRules.franchisee_id" :error-messages="validationErrors.franchisee_id" />
+              </VCol>
+
+              <!-- Royalty Type -->
+              <VCol cols="12" md="6">
+                <VSelect v-model="createRoyaltyData.type" :items="periodOptions" item-title="title" item-value="value"
+                  label="Royalty Type *" variant="outlined" density="compact" required 
+                  :rules="validationRules.type" :error-messages="validationErrors.type" />
+              </VCol>
+
+              <!-- Period Year -->
+              <VCol cols="12" md="4">
+                <VTextField v-model.number="createRoyaltyData.period_year" label="Period Year *" type="number"
+                  variant="outlined" density="compact" required 
+                  :rules="validationRules.period_year" :error-messages="validationErrors.period_year" />
+              </VCol>
+
+              <!-- Period Month (for monthly type) -->
+              <VCol cols="12" md="4" v-if="createRoyaltyData.type === 'monthly'">
+                <VTextField v-model.number="createRoyaltyData.period_month" label="Period Month *" type="number" min="1"
+                  max="12" variant="outlined" density="compact" required 
+                  :rules="validationRules.period_month" :error-messages="validationErrors.period_month" />
+              </VCol>
+
+              <!-- Due Date -->
+              <VCol cols="12" md="4">
+                <VTextField v-model="createRoyaltyData.due_date" label="Due Date *" type="date" variant="outlined"
+                  density="compact" required 
+                  :rules="validationRules.due_date" :error-messages="validationErrors.due_date" />
+              </VCol>
+
+              <!-- Base Revenue -->
+              <VCol cols="12" md="6">
+                <VTextField v-model.number="createRoyaltyData.base_revenue" label="Base Revenue (SAR) *" type="number"
+                  step="0.01" variant="outlined" density="compact" required @input="calculateAmounts" 
+                  :rules="validationRules.base_revenue" :error-messages="validationErrors.base_revenue" />
+              </VCol>
+
+              <!-- Royalty Rate -->
+              <VCol cols="12" md="6">
+                <VTextField v-model.number="createRoyaltyData.royalty_rate" label="Royalty Rate (%)" type="number"
+                  step="0.1" variant="outlined" density="compact" @input="calculateAmounts" 
+                  :rules="validationRules.royalty_rate" :error-messages="validationErrors.royalty_rate" />
+              </VCol>
+
+              <!-- Marketing Fee Rate -->
+              <VCol cols="12" md="6">
+                <VTextField v-model.number="createRoyaltyData.marketing_fee_rate" label="Marketing Fee Rate (%)"
+                  type="number" step="0.1" variant="outlined" density="compact" @input="calculateAmounts" 
+                  :rules="validationRules.marketing_fee_rate" :error-messages="validationErrors.marketing_fee_rate" />
+              </VCol>
+
+              <!-- Technology Fee Amount -->
+              <VCol cols="12" md="6">
+                <VTextField v-model.number="createRoyaltyData.technology_fee_amount" label="Technology Fee (SAR)"
+                  type="number" step="0.01" variant="outlined" density="compact" @input="calculateAmounts" 
+                  :rules="validationRules.technology_fee_amount" :error-messages="validationErrors.technology_fee_amount" />
+              </VCol>
+
+              <!-- Other Fees -->
+              <VCol cols="12" md="6">
+                <VTextField v-model.number="createRoyaltyData.other_fees" label="Other Fees (SAR)" type="number"
+                  step="0.01" variant="outlined" density="compact" @input="calculateAmounts" 
+                  :rules="validationRules.other_fees" :error-messages="validationErrors.other_fees" />
+              </VCol>
+
+              <!-- Adjustments -->
+              <VCol cols="12" md="6">
+                <VTextField v-model.number="createRoyaltyData.adjustments" label="Adjustments (SAR)" type="number"
+                  step="0.01" variant="outlined" density="compact" @input="calculateAmounts" 
+                  :rules="validationRules.adjustments" :error-messages="validationErrors.adjustments" />
+              </VCol>
+
+              <!-- Description -->
+              <VCol cols="12">
+                <VTextarea v-model="createRoyaltyData.description" label="Description" variant="outlined"
+                  density="compact" rows="2" />
+              </VCol>
+
+              <!-- Notes -->
+              <VCol cols="12">
+                <VTextarea v-model="createRoyaltyData.notes" label="Notes" variant="outlined" density="compact"
+                  rows="2" />
+              </VCol>
+            </VRow>
+          </VForm>
         </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" :disabled="isCreating" @click="isCreateRoyaltyModalVisible = false">
+            Cancel
+          </VBtn>
+          <VBtn color="primary" :loading="isCreating" @click="createRoyalty">
+            Create Royalty
+          </VBtn>
+        </VCardActions>
       </VCard>
     </VDialog>
 
     <!-- Mark as Completed Modal -->
-    <VDialog
-      v-model="isMarkCompletedModalVisible"
-      max-width="600"
-    >
-      <VCard class="px-6 py-6">
-        <VCardItem class="pb-4">
-          <VCardTitle class="text-h6">
-            Mark Royalty as Completed
-          </VCardTitle>
-          <VCardSubtitle v-if="selectedRoyalty">
-            {{ selectedRoyalty.franchisee_name }} - {{ selectedRoyalty.billing_period }}
-          </VCardSubtitle>
+    <VDialog v-model="isMarkCompletedModalVisible" max-width="600">
+      <VCard>
+        <VCardItem>
+          <VCardTitle>Mark Royalty as Completed</VCardTitle>
         </VCardItem>
 
         <VCardText>
           <VForm @submit.prevent="submitPayment">
             <VRow>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <VTextField
-                  v-model.number="paymentData.amount_paid"
-                  label="Amount Paid (SAR)"
-                  type="number"
-                  variant="outlined"
-                  density="compact"
-                  :rules="[v => !!v || 'Amount is required']"
-                />
+              <VCol cols="12" md="6">
+                <VTextField v-model.number="paymentData.amount_paid" label="Amount Paid (SAR)" type="number"
+                  variant="outlined" density="compact" :rules="[v => !!v || 'Amount is required']" />
               </VCol>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <VTextField
-                  v-model="paymentData.payment_date"
-                  label="Payment Date"
-                  type="date"
-                  variant="outlined"
-                  density="compact"
-                  :rules="[v => !!v || 'Payment date is required']"
-                />
+              <VCol cols="12" md="6">
+                <VTextField v-model="paymentData.payment_date" label="Payment Date" type="date" variant="outlined"
+                  density="compact" :rules="[v => !!v || 'Payment date is required']" />
               </VCol>
               <VCol cols="12">
-                <VSelect
-                  v-model="paymentData.payment_type"
-                  :items="paymentTypeOptions"
-                  item-title="title"
-                  item-value="value"
-                  label="Payment Type"
-                  variant="outlined"
-                  density="compact"
-                  :rules="[v => !!v || 'Payment type is required']"
-                />
+                <VSelect v-model="paymentData.payment_type" :items="paymentTypeOptions" item-title="title"
+                  item-value="value" label="Payment Type" variant="outlined" density="compact"
+                  :rules="[v => !!v || 'Payment type is required']" />
               </VCol>
               <VCol cols="12">
-                <VFileInput
-                  label="Attachment (Optional)"
-                  variant="outlined"
-                  density="compact"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  @change="handleFileUpload"
-                />
+                <VFileInput label="Attachment (Optional)" variant="outlined" density="compact"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" @change="handleFileUpload" />
                 <div class="text-caption text-medium-emphasis mt-1">
                   Supported formats: PDF, JPG, PNG, DOC, DOCX
                 </div>
@@ -614,45 +928,23 @@ onMounted(() => {
           </VForm>
         </VCardText>
 
-        <VCardText class="d-flex align-center justify-end gap-4">
-          <VBtn
-            color="error"
-            variant="outlined"
-            @click="isMarkCompletedModalVisible = false"
-          >
+        <VCardActions>
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isMarkCompletedModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="success"
-            variant="elevated"
-            @click="submitPayment"
-          >
+          <VBtn color="primary" @click="submitPayment">
             Mark as Completed
           </VBtn>
-        </VCardText>
+        </VCardActions>
       </VCard>
     </VDialog>
 
     <!-- View Royalty Details Dialog -->
-    <VDialog
-      v-model="isViewRoyaltyDialogVisible"
-      max-width="700"
-    >
-      <VCard
-        v-if="viewedRoyalty"
-        class="px-6 py-6"
-      >
-        <VCardItem class="pb-4">
-          <VCardTitle class="text-h6 d-flex align-center gap-3">
-            <VIcon
-              icon="tabler-eye"
-              color="primary"
-            />
-            Royalty Details
-          </VCardTitle>
-          <VCardSubtitle>
-            {{ viewedRoyalty.franchisee_name }} - {{ viewedRoyalty.billing_period }}
-          </VCardSubtitle>
+    <VDialog v-model="isViewRoyaltyDialogVisible" max-width="700">
+      <VCard v-if="viewedRoyalty">
+        <VCardItem>
+          <VCardTitle>Royalty Details</VCardTitle>
         </VCardItem>
 
         <VDivider class="mb-4" />
@@ -666,10 +958,7 @@ onMounted(() => {
               </h6>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Billing Period
@@ -680,10 +969,7 @@ onMounted(() => {
               </div>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Due Date
@@ -694,10 +980,7 @@ onMounted(() => {
               </div>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Franchisee Name
@@ -708,10 +991,7 @@ onMounted(() => {
               </div>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Store Location
@@ -730,46 +1010,24 @@ onMounted(() => {
               </h6>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="4"
-            >
-              <VCard
-                variant="tonal"
-                color="info"
-                class="pa-4"
-              >
+            <VCol cols="12" md="4">
+              <VCard variant="tonal" color="info" class="pa-4">
                 <div class="text-center">
-                  <VIcon
-                    icon="tabler-chart-line"
-                    size="32"
-                    class="mb-2"
-                  />
+                  <VIcon icon="tabler-chart-line" size="32" class="mb-2" />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Gross Sales
                   </div>
                   <div class="text-h6 font-weight-bold">
-                    {{ viewedRoyalty.gross_sales.toLocaleString() }} SAR
+                    {{ (viewedRoyalty.gross_sales || 0).toLocaleString() }} SAR
                   </div>
                 </div>
               </VCard>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="4"
-            >
-              <VCard
-                variant="tonal"
-                color="primary"
-                class="pa-4"
-              >
+            <VCol cols="12" md="4">
+              <VCard variant="tonal" color="primary" class="pa-4">
                 <div class="text-center">
-                  <VIcon
-                    icon="tabler-percentage"
-                    size="32"
-                    class="mb-2"
-                  />
+                  <VIcon icon="tabler-percentage" size="32" class="mb-2" />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Royalty Rate
                   </div>
@@ -780,26 +1038,15 @@ onMounted(() => {
               </VCard>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="4"
-            >
-              <VCard
-                variant="tonal"
-                color="success"
-                class="pa-4"
-              >
+            <VCol cols="12" md="4">
+              <VCard variant="tonal" color="success" class="pa-4">
                 <div class="text-center">
-                  <VIcon
-                    icon="tabler-coins"
-                    size="32"
-                    class="mb-2"
-                  />
+                  <VIcon icon="tabler-coins" size="32" class="mb-2" />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Royalty Amount
                   </div>
                   <div class="text-h6 font-weight-bold">
-                    {{ viewedRoyalty.amount.toLocaleString() }} SAR
+                    {{ (viewedRoyalty.amount || 0).toLocaleString() }} SAR
                   </div>
                 </div>
               </VCard>
@@ -813,34 +1060,21 @@ onMounted(() => {
               </h6>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-2">
                   Payment Status
                 </div>
-                <VChip
-                  :color="getStatusColor(viewedRoyalty.status)"
-                  size="large"
-                  variant="tonal"
-                  class="text-capitalize"
-                >
-                  <VIcon
-                    :icon="viewedRoyalty.status === 'paid' ? 'tabler-check'
-                      : viewedRoyalty.status === 'pending' ? 'tabler-clock' : 'tabler-alert-triangle'"
-                    class="me-2"
-                  />
+                <VChip :color="getStatusColor(viewedRoyalty.status)" size="large" variant="tonal"
+                  class="text-capitalize">
+                  <VIcon :icon="viewedRoyalty.status === 'paid' ? 'tabler-check'
+                    : viewedRoyalty.status === 'pending' ? 'tabler-clock' : 'tabler-alert-triangle'" class="me-2" />
                   {{ viewedRoyalty.status }}
                 </VChip>
               </div>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-2">
                   Days Until Due
@@ -869,7 +1103,7 @@ onMounted(() => {
                       Gross Sales:
                     </td>
                     <td class="text-end">
-                      {{ viewedRoyalty.gross_sales.toLocaleString() }} SAR
+                      {{ (viewedRoyalty.gross_sales || 0).toLocaleString() }} SAR
                     </td>
                   </tr>
                   <tr>
@@ -885,7 +1119,7 @@ onMounted(() => {
                       Calculation:
                     </td>
                     <td class="text-end">
-                      {{ viewedRoyalty.gross_sales.toLocaleString() }} × {{
+                      {{ (viewedRoyalty.gross_sales || 0).toLocaleString() }} × {{
                         viewedRoyalty.royalty_percentage }}%
                     </td>
                   </tr>
@@ -895,7 +1129,7 @@ onMounted(() => {
                     </td>
                     <td class="text-end font-weight-bold text-primary">
                       {{
-                        viewedRoyalty.amount.toLocaleString() }} SAR
+                        (viewedRoyalty.amount || 0).toLocaleString() }} SAR
                     </td>
                   </tr>
                 </tbody>
@@ -904,27 +1138,17 @@ onMounted(() => {
           </VRow>
         </VCardText>
 
-        <VCardText class="d-flex align-center justify-end gap-4 pt-4">
-          <VBtn
-            color="primary"
-            variant="outlined"
-            @click="isViewRoyaltyDialogVisible = false"
-          >
+        <VCardActions>
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isViewRoyaltyDialogVisible = false">
             Close
           </VBtn>
-          <VBtn
-            v-if="viewedRoyalty.status !== 'paid'"
-            color="success"
-            variant="elevated"
-            @click="markAsCompleted(viewedRoyalty); isViewRoyaltyDialogVisible = false"
-          >
-            <VIcon
-              icon="tabler-check"
-              class="me-2"
-            />
+          <VBtn v-if="viewedRoyalty.status !== 'paid'" color="primary"
+            @click="markAsCompleted(viewedRoyalty); isViewRoyaltyDialogVisible = false">
+            <VIcon icon="tabler-check" class="me-2" />
             Mark as Completed
           </VBtn>
-        </VCardText>
+        </VCardActions>
       </VCard>
     </VDialog>
   </section>

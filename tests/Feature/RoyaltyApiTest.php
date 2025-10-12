@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 class RoyaltyApiTest extends TestCase
 {
-    // use RefreshDatabase;
+    use RefreshDatabase;
 
     private User $franchisor;
 

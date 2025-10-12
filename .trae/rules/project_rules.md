@@ -216,4 +216,40 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 - Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
 - Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test` with a specific filename or filter.
+
+
+=== jest/frontend rules ===
+
+## Jest Frontend Testing
+
+- This application uses Jest for frontend testing with TypeScript support. All frontend tests must be written as Jest test files.
+- Frontend tests are located in `resources/ts/__tests__/` directory and follow the naming pattern `*.spec.ts`.
+- Every frontend component, composable, service, or utility function must have corresponding Jest tests.
+- After making any changes to frontend code or creating new frontend components, you MUST run the relevant Jest tests to ensure functionality.
+- When creating new frontend features, always create comprehensive Jest tests that cover:
+  - Component rendering and behavior
+  - User interactions and event handling
+  - API calls and data handling
+  - Edge cases and error scenarios
+  - Accessibility requirements
+
+### Running Frontend Tests
+- To run all frontend tests: `npm test`
+- To run tests in watch mode during development: `npm test -- --watch`
+- To run a specific test file: `npm test -- admin-technical-requests.spec.ts`
+- To run tests with coverage: `npm test -- --coverage`
+
+### Test Structure
+- Follow existing test patterns in `resources/ts/__tests__/` directory
+- Use Vue Test Utils (`@vue/test-utils`) for component testing
+- Mock external dependencies and API calls appropriately
+- Ensure tests are isolated and don't depend on external state
+- Use descriptive test names that clearly explain what is being tested
+
+### Test Requirements
+- All new Vue components must have corresponding `.spec.ts` test files
+- All new composables and services must be tested
+- Tests should achieve good code coverage (aim for >80%)
+- Tests must pass before any frontend changes are considered complete
+- Update existing tests when modifying existing frontend code
 </laravel-boost-guidelines>

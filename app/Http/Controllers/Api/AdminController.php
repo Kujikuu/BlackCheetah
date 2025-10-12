@@ -3,21 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Franchise;
-use App\Models\Unit;
-use App\Models\Lead;
-use App\Models\Task;
-use App\Models\TechnicalRequest;
-use App\Models\Transaction;
 use App\Models\Revenue;
-use App\Models\Royalty;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
+use App\Models\TechnicalRequest;
+use App\Models\Unit;
+use App\Models\User;
+use App\Notifications\NewFranchiseeCredentials;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
@@ -35,7 +34,7 @@ class AdminController extends Controller
 
             // Calculate growth percentages (compared to last month)
             $lastMonth = Carbon::now()->subMonth();
-            
+
             $totalUsersLastMonth = User::where('created_at', '<=', $lastMonth)->count();
             $franchisorsLastMonth = User::where('role', 'franchisor')->where('created_at', '<=', $lastMonth)->count();
             $franchiseesLastMonth = User::where('role', 'franchisee')->where('created_at', '<=', $lastMonth)->count();
@@ -53,7 +52,7 @@ class AdminController extends Controller
                     'change' => round($totalUsersGrowth, 1),
                     'desc' => 'All registered users',
                     'icon' => 'tabler-users',
-                    'iconColor' => 'primary'
+                    'iconColor' => 'primary',
                 ],
                 [
                     'title' => 'Franchisors',
@@ -61,7 +60,7 @@ class AdminController extends Controller
                     'change' => round($franchisorsGrowth, 1),
                     'desc' => 'Active franchisors',
                     'icon' => 'tabler-building-store',
-                    'iconColor' => 'success'
+                    'iconColor' => 'success',
                 ],
                 [
                     'title' => 'Franchisees',
@@ -69,7 +68,7 @@ class AdminController extends Controller
                     'change' => round($franchiseesGrowth, 1),
                     'desc' => 'Active franchisees',
                     'icon' => 'tabler-user-check',
-                    'iconColor' => 'info'
+                    'iconColor' => 'info',
                 ],
                 [
                     'title' => 'Sales Users',
@@ -77,19 +76,19 @@ class AdminController extends Controller
                     'change' => round($salesUsersGrowth, 1),
                     'desc' => 'Sales team members',
                     'icon' => 'tabler-chart-line',
-                    'iconColor' => 'warning'
-                ]
+                    'iconColor' => 'warning',
+                ],
             ];
 
             return response()->json([
                 'success' => true,
-                'data' => $stats
+                'data' => $stats,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch dashboard statistics',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -133,13 +132,13 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $recentUsers
+                'data' => $recentUsers,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch recent users',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -157,10 +156,10 @@ class AdminController extends Controller
                 $count = User::whereYear('created_at', $month->year)
                     ->whereMonth('created_at', $month->month)
                     ->count();
-                
+
                 $userChartData[] = [
                     'month' => $month->format('M Y'),
-                    'users' => $count
+                    'users' => $count,
                 ];
             }
 
@@ -171,10 +170,10 @@ class AdminController extends Controller
                 $revenue = Revenue::whereYear('created_at', $month->year)
                     ->whereMonth('created_at', $month->month)
                     ->sum('amount');
-                
+
                 $revenueChartData[] = [
                     'month' => $month->format('M Y'),
-                    'revenue' => $revenue
+                    'revenue' => $revenue,
                 ];
             }
 
@@ -185,10 +184,10 @@ class AdminController extends Controller
                 $requests = TechnicalRequest::whereYear('created_at', $month->year)
                     ->whereMonth('created_at', $month->month)
                     ->count();
-                
+
                 $requestsChartData[] = [
                     'month' => $month->format('M Y'),
-                    'requests' => $requests
+                    'requests' => $requests,
                 ];
             }
 
@@ -197,14 +196,14 @@ class AdminController extends Controller
                 'data' => [
                     'users' => $userChartData,
                     'revenue' => $revenueChartData,
-                    'requests' => $requestsChartData
-                ]
+                    'requests' => $requestsChartData,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch chart data',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -223,10 +222,10 @@ class AdminController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhereHas('franchise', function ($fq) use ($search) {
-                          $fq->where('name', 'like', "%{$search}%");
-                      });
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHas('franchise', function ($fq) use ($search) {
+                            $fq->where('name', 'like', "%{$search}%");
+                        });
                 });
             }
 
@@ -261,13 +260,13 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $franchisors
+                'data' => $franchisors,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch franchisors',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -285,8 +284,8 @@ class AdminController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('city', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('city', 'like', "%{$search}%");
                 });
             }
 
@@ -320,13 +319,13 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $franchisees
+                'data' => $franchisees,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch franchisees',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -344,8 +343,8 @@ class AdminController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('city', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('city', 'like', "%{$search}%");
                 });
             }
 
@@ -379,13 +378,13 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $salesUsers
+                'data' => $salesUsers,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch sales users',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -411,7 +410,7 @@ class AdminController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -450,14 +449,15 @@ class AdminController extends Controller
                     'role' => $user->role,
                     'status' => $user->status,
                     'joinedDate' => $user->created_at->format('Y-m-d'),
-                ]
+                ],
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create user',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -472,7 +472,7 @@ class AdminController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'fullName' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email,' . $id,
+                'email' => 'required|email|unique:users,email,'.$id,
                 'phone' => 'nullable|string|max:20',
                 'city' => 'nullable|string|max:100',
                 'status' => 'required|in:active,pending,inactive',
@@ -484,7 +484,7 @@ class AdminController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -518,14 +518,15 @@ class AdminController extends Controller
                     'email' => $user->email,
                     'role' => $user->role,
                     'status' => $user->status,
-                ]
+                ],
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update user',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -552,14 +553,15 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'User deleted successfully'
+                'message' => 'User deleted successfully',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete user',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -580,7 +582,7 @@ class AdminController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -590,13 +592,13 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password reset successfully'
+                'message' => 'Password reset successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to reset password',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -614,12 +616,12 @@ class AdminController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhere('category', 'like', "%{$search}%")
-                      ->orWhereHas('requester', function ($uq) use ($search) {
-                          $uq->where('name', 'like', "%{$search}%")
-                             ->orWhere('email', 'like', "%{$search}%");
-                      });
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('category', 'like', "%{$search}%")
+                        ->orWhereHas('requester', function ($uq) use ($search) {
+                            $uq->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
                 });
             }
 
@@ -646,7 +648,7 @@ class AdminController extends Controller
             $requests->getCollection()->transform(function ($request) {
                 return [
                     'id' => $request->id,
-                    'requestId' => 'TR-' . date('Y') . '-' . str_pad($request->id, 3, '0', STR_PAD_LEFT),
+                    'requestId' => 'TR-'.date('Y').'-'.str_pad($request->id, 3, '0', STR_PAD_LEFT),
                     'userName' => $request->requester ? $request->requester->name : 'Unknown User',
                     'userEmail' => $request->requester ? $request->requester->email : 'Unknown Email',
                     'userAvatar' => $request->requester ? $request->requester->avatar : '',
@@ -662,13 +664,13 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $requests
+                'data' => $requests,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch technical requests',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -689,7 +691,7 @@ class AdminController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -700,13 +702,13 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Technical request status updated successfully'
+                'message' => 'Technical request status updated successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update technical request status',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -722,13 +724,13 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Technical request deleted successfully'
+                'message' => 'Technical request deleted successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete technical request',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -740,7 +742,7 @@ class AdminController extends Controller
     {
         try {
             $lastMonth = Carbon::now()->subMonth();
-            
+
             // Current counts
             $totalFranchisors = User::where('role', 'franchisor')->count();
             $basicPlan = User::where('role', 'franchisor')
@@ -767,15 +769,12 @@ class AdminController extends Controller
                 })->count();
 
             // Calculate growth percentages
-            $totalGrowth = $totalFranchisorsLastMonth > 0 ? 
-                round((($totalFranchisors - $totalFranchisorsLastMonth) / $totalFranchisorsLastMonth) * 100, 1) : 
-                ($totalFranchisors > 0 ? 100 : 0);
-            $basicGrowth = $basicPlanLastMonth > 0 ? 
-                round((($basicPlan - $basicPlanLastMonth) / $basicPlanLastMonth) * 100, 1) : 
-                ($basicPlan > 0 ? 100 : 0);
-            $proGrowth = $proPlanLastMonth > 0 ? 
-                round((($proPlan - $proPlanLastMonth) / $proPlanLastMonth) * 100, 1) : 
-                ($proPlan > 0 ? 100 : 0);
+            $totalGrowth = $totalFranchisorsLastMonth > 0 ?
+                round((($totalFranchisors - $totalFranchisorsLastMonth) / $totalFranchisorsLastMonth) * 100, 1) : ($totalFranchisors > 0 ? 100 : 0);
+            $basicGrowth = $basicPlanLastMonth > 0 ?
+                round((($basicPlan - $basicPlanLastMonth) / $basicPlanLastMonth) * 100, 1) : ($basicPlan > 0 ? 100 : 0);
+            $proGrowth = $proPlanLastMonth > 0 ?
+                round((($proPlan - $proPlanLastMonth) / $proPlanLastMonth) * 100, 1) : ($proPlan > 0 ? 100 : 0);
 
             $stats = [
                 [
@@ -784,7 +783,7 @@ class AdminController extends Controller
                     'change' => $totalGrowth,
                     'desc' => 'All registered franchisors',
                     'icon' => 'tabler-building-store',
-                    'iconColor' => 'primary'
+                    'iconColor' => 'primary',
                 ],
                 [
                     'title' => 'Basic Plan',
@@ -792,7 +791,7 @@ class AdminController extends Controller
                     'change' => $basicGrowth,
                     'desc' => 'Basic plan subscribers',
                     'icon' => 'tabler-user-check',
-                    'iconColor' => 'success'
+                    'iconColor' => 'success',
                 ],
                 [
                     'title' => 'Pro Plan',
@@ -800,19 +799,19 @@ class AdminController extends Controller
                     'change' => $proGrowth,
                     'desc' => 'Pro plan subscribers',
                     'icon' => 'tabler-crown',
-                    'iconColor' => 'warning'
-                ]
+                    'iconColor' => 'warning',
+                ],
             ];
 
             return response()->json([
                 'success' => true,
-                'data' => $stats
+                'data' => $stats,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch franchisor stats',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -824,7 +823,7 @@ class AdminController extends Controller
     {
         try {
             $lastMonth = Carbon::now()->subMonth();
-            
+
             // Current counts
             $totalFranchisees = User::where('role', 'franchisee')->count();
             $activeFranchisees = User::where('role', 'franchisee')
@@ -843,15 +842,12 @@ class AdminController extends Controller
                 ->where('created_at', '<=', $lastMonth)->count();
 
             // Calculate growth percentages
-            $totalGrowth = $totalFranchiseesLastMonth > 0 ? 
-                round((($totalFranchisees - $totalFranchiseesLastMonth) / $totalFranchiseesLastMonth) * 100, 1) : 
-                ($totalFranchisees > 0 ? 100 : 0);
-            $activeGrowth = $activeFranchiseesLastMonth > 0 ? 
-                round((($activeFranchisees - $activeFranchiseesLastMonth) / $activeFranchiseesLastMonth) * 100, 1) : 
-                ($activeFranchisees > 0 ? 100 : 0);
-            $pendingGrowth = $pendingApprovalLastMonth > 0 ? 
-                round((($pendingApproval - $pendingApprovalLastMonth) / $pendingApprovalLastMonth) * 100, 1) : 
-                ($pendingApproval > 0 ? 100 : 0);
+            $totalGrowth = $totalFranchiseesLastMonth > 0 ?
+                round((($totalFranchisees - $totalFranchiseesLastMonth) / $totalFranchiseesLastMonth) * 100, 1) : ($totalFranchisees > 0 ? 100 : 0);
+            $activeGrowth = $activeFranchiseesLastMonth > 0 ?
+                round((($activeFranchisees - $activeFranchiseesLastMonth) / $activeFranchiseesLastMonth) * 100, 1) : ($activeFranchisees > 0 ? 100 : 0);
+            $pendingGrowth = $pendingApprovalLastMonth > 0 ?
+                round((($pendingApproval - $pendingApprovalLastMonth) / $pendingApprovalLastMonth) * 100, 1) : ($pendingApproval > 0 ? 100 : 0);
 
             $stats = [
                 [
@@ -860,7 +856,7 @@ class AdminController extends Controller
                     'change' => $totalGrowth,
                     'desc' => 'All registered franchisees',
                     'icon' => 'tabler-users',
-                    'iconColor' => 'primary'
+                    'iconColor' => 'primary',
                 ],
                 [
                     'title' => 'Active Franchisees',
@@ -868,7 +864,7 @@ class AdminController extends Controller
                     'change' => $activeGrowth,
                     'desc' => 'Currently active',
                     'icon' => 'tabler-user-check',
-                    'iconColor' => 'success'
+                    'iconColor' => 'success',
                 ],
                 [
                     'title' => 'Pending Approval',
@@ -876,19 +872,19 @@ class AdminController extends Controller
                     'change' => $pendingGrowth,
                     'desc' => 'Awaiting verification',
                     'icon' => 'tabler-clock',
-                    'iconColor' => 'warning'
-                ]
+                    'iconColor' => 'warning',
+                ],
             ];
 
             return response()->json([
                 'success' => true,
-                'data' => $stats
+                'data' => $stats,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch franchisee stats',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -900,7 +896,7 @@ class AdminController extends Controller
     {
         try {
             $lastMonth = Carbon::now()->subMonth();
-            
+
             // Current counts
             $totalSalesUsers = User::where('role', 'sales')->count();
             $activeSales = User::where('role', 'sales')
@@ -919,15 +915,12 @@ class AdminController extends Controller
                 ->where('created_at', '<=', $lastMonth)->count();
 
             // Calculate growth percentages
-            $totalGrowth = $totalSalesUsersLastMonth > 0 ? 
-                round((($totalSalesUsers - $totalSalesUsersLastMonth) / $totalSalesUsersLastMonth) * 100, 1) : 
-                ($totalSalesUsers > 0 ? 100 : 0);
-            $activeGrowth = $activeSalesLastMonth > 0 ? 
-                round((($activeSales - $activeSalesLastMonth) / $activeSalesLastMonth) * 100, 1) : 
-                ($activeSales > 0 ? 100 : 0);
-            $pendingGrowth = $pendingApprovalLastMonth > 0 ? 
-                round((($pendingApproval - $pendingApprovalLastMonth) / $pendingApprovalLastMonth) * 100, 1) : 
-                ($pendingApproval > 0 ? 100 : 0);
+            $totalGrowth = $totalSalesUsersLastMonth > 0 ?
+                round((($totalSalesUsers - $totalSalesUsersLastMonth) / $totalSalesUsersLastMonth) * 100, 1) : ($totalSalesUsers > 0 ? 100 : 0);
+            $activeGrowth = $activeSalesLastMonth > 0 ?
+                round((($activeSales - $activeSalesLastMonth) / $activeSalesLastMonth) * 100, 1) : ($activeSales > 0 ? 100 : 0);
+            $pendingGrowth = $pendingApprovalLastMonth > 0 ?
+                round((($pendingApproval - $pendingApprovalLastMonth) / $pendingApprovalLastMonth) * 100, 1) : ($pendingApproval > 0 ? 100 : 0);
 
             $stats = [
                 [
@@ -936,7 +929,7 @@ class AdminController extends Controller
                     'change' => $totalGrowth,
                     'desc' => 'All sales team members',
                     'icon' => 'tabler-chart-line',
-                    'iconColor' => 'primary'
+                    'iconColor' => 'primary',
                 ],
                 [
                     'title' => 'Active Sales',
@@ -944,7 +937,7 @@ class AdminController extends Controller
                     'change' => $activeGrowth,
                     'desc' => 'Currently active',
                     'icon' => 'tabler-user-check',
-                    'iconColor' => 'success'
+                    'iconColor' => 'success',
                 ],
                 [
                     'title' => 'Pending Approval',
@@ -952,19 +945,156 @@ class AdminController extends Controller
                     'change' => $pendingGrowth,
                     'desc' => 'Awaiting verification',
                     'icon' => 'tabler-clock',
-                    'iconColor' => 'warning'
-                ]
+                    'iconColor' => 'warning',
+                ],
             ];
 
             return response()->json([
                 'success' => true,
-                'data' => $stats
+                'data' => $stats,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch sales stats',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Create a franchisee user with an associated unit
+     */
+    public function createFranchiseeWithUnit(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                // Franchisee details
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'phone' => 'nullable|string|max:20',
+
+                // Unit details
+                'unit_name' => 'required|string|max:255',
+                'franchise_id' => 'required|exists:franchises,id',
+                'unit_type' => 'required|in:store,kiosk,mobile,online,warehouse,office',
+                'address' => 'required|string',
+                'city' => 'required|string|max:100',
+                'state_province' => 'required|string|max:100',
+                'postal_code' => 'required|string|max:20',
+                'country' => 'required|string|max:100',
+                'size_sqft' => 'nullable|numeric|min:0',
+                'monthly_rent' => 'nullable|numeric|min:0',
+                'opening_date' => 'nullable|date',
+                'status' => 'required|in:planning,construction,training,active,temporarily_closed,permanently_closed',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            // Generate random password for franchisee
+            $temporaryPassword = Str::random(12);
+
+            // Create franchisee user
+            $franchisee = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($temporaryPassword),
+                'role' => 'franchisee',
+                'status' => 'active',
+                'phone' => $request->phone,
+                'city' => $request->city,
+                'profile_completed' => false, // Require onboarding
+            ]);
+
+            // Generate unit code
+            $franchise = Franchise::find($request->franchise_id);
+            $prefix = $franchise ? strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $franchise->name), 0, 3)) : 'UNI';
+            if (empty($prefix)) {
+                $prefix = 'UNI';
+            }
+
+            $baseCode = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $request->unit_name), 0, 6));
+            if (empty($baseCode)) {
+                $baseCode = 'UNIT';
+            }
+
+            $unitCode = $prefix.'-'.$baseCode;
+            $counter = 1;
+
+            // Ensure uniqueness
+            while (Unit::where('unit_code', $unitCode)->exists()) {
+                $unitCode = $prefix.'-'.$baseCode.$counter;
+                $counter++;
+            }
+
+            // Create associated unit with franchisee as manager
+            $unit = Unit::create([
+                'unit_name' => $request->unit_name,
+                'unit_code' => $unitCode,
+                'franchise_id' => $request->franchise_id,
+                'franchisee_id' => $franchisee->id, // Assign the new franchisee as unit manager
+                'unit_type' => $request->unit_type,
+                'address' => $request->address,
+                'city' => $request->city,
+                'state_province' => $request->state_province,
+                'postal_code' => $request->postal_code,
+                'country' => $request->country,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'size_sqft' => $request->size_sqft,
+                'monthly_rent' => $request->monthly_rent,
+                'opening_date' => $request->opening_date,
+                'status' => $request->status,
+                'employee_count' => 0,
+            ]);
+
+            // Send email notification with login credentials
+            $loginUrl = env('APP_URL').'/login';
+            $franchisee->notify(new NewFranchiseeCredentials($temporaryPassword, $unitCode, $loginUrl));
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Franchisee and unit created successfully',
+                'data' => [
+                    'franchisee' => [
+                        'id' => $franchisee->id,
+                        'name' => $franchisee->name,
+                        'email' => $franchisee->email,
+                        'role' => $franchisee->role,
+                        'status' => $franchisee->status,
+                        'phone' => $franchisee->phone,
+                        'city' => $franchisee->city,
+                    ],
+                    'unit' => [
+                        'id' => $unit->id,
+                        'unit_name' => $unit->unit_name,
+                        'unit_code' => $unit->unit_code,
+                        'unit_type' => $unit->unit_type,
+                        'address' => $unit->address,
+                        'city' => $unit->city,
+                        'state_province' => $unit->state_province,
+                        'status' => $unit->status,
+                        'franchisee_id' => $unit->franchisee_id,
+                    ],
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create franchisee and unit',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

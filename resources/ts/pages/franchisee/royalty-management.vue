@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { royaltyApi, type RoyaltyRecord, type PaymentData, type RoyaltyStatistics } from '@/services/api/royalty'
+import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api/royalty'
 
 // Loading states
 const isLoading = ref(false)
@@ -26,6 +26,7 @@ const paymentData = ref<PaymentData>({
 
 // Data from API
 const royaltyRecords = ref<RoyaltyRecord[]>([])
+
 const statistics = ref<RoyaltyStatistics>({
   royalty_collected_till_date: 0,
   upcoming_royalties: 0,
@@ -89,9 +90,11 @@ const tableHeaders = [
 const fetchRoyalties = async () => {
   try {
     isLoading.value = true
+
     const response = await royaltyApi.getRoyalties({
       period: selectedPeriod.value,
     })
+
     royaltyRecords.value = response.data.data
   }
   catch (error) {
@@ -105,9 +108,11 @@ const fetchRoyalties = async () => {
 const fetchStatistics = async () => {
   try {
     isLoadingStats.value = true
+
     const response = await royaltyApi.getStatistics({
       period: selectedPeriod.value,
     })
+
     statistics.value = response.data
   }
   catch (error) {
@@ -134,6 +139,7 @@ const performExport = async () => {
     // Create download link
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
+
     link.href = url
     link.download = `royalty-data-${selectedPeriod.value}-${new Date().toISOString().split('T')[0]}.${exportFormat.value === 'csv' ? 'csv' : 'xlsx'}`
     document.body.appendChild(link)
@@ -283,7 +289,7 @@ onMounted(() => {
                   Total payments received
                 </div>
                 <h4 class="text-h4 text-success">
-                  {{ royaltyCollectedTillDate.toLocaleString() }} SAR
+                  {{ (royaltyCollectedTillDate || 0).toLocaleString() }} SAR
                 </h4>
               </div>
               <VAvatar
@@ -317,7 +323,7 @@ onMounted(() => {
                   Pending payments due
                 </div>
                 <h4 class="text-h4 text-warning">
-                  {{ upcomingRoyalties.toLocaleString() }} SAR
+                  {{ (upcomingRoyalties || 0).toLocaleString() }} SAR
                 </h4>
               </div>
               <VAvatar
@@ -388,7 +394,7 @@ onMounted(() => {
             <!-- Gross Sales Column -->
             <template #item.grossSales="{ item }">
               <div class="font-weight-medium text-info">
-                {{ item.gross_sales.toLocaleString() }}
+                {{ (item.gross_sales || 0).toLocaleString() }}
               </div>
             </template>
 
@@ -406,7 +412,7 @@ onMounted(() => {
             <!-- Amount Column -->
             <template #item.amount="{ item }">
               <div class="font-weight-medium text-success">
-                {{ item.amount.toLocaleString() }}
+                {{ (item.amount || 0).toLocaleString() }}
               </div>
             </template>
 
@@ -749,7 +755,7 @@ onMounted(() => {
                     Gross Sales
                   </div>
                   <div class="text-h6 font-weight-bold">
-                    {{ viewedRoyalty.gross_sales.toLocaleString() }} SAR
+                    {{ (viewedRoyalty?.gross_sales || 0).toLocaleString() }} SAR
                   </div>
                 </div>
               </VCard>
@@ -799,7 +805,7 @@ onMounted(() => {
                     Royalty Amount
                   </div>
                   <div class="text-h6 font-weight-bold">
-                    {{ viewedRoyalty.amount.toLocaleString() }} SAR
+                    {{ (viewedRoyalty?.amount || 0).toLocaleString() }} SAR
                   </div>
                 </div>
               </VCard>
@@ -869,7 +875,7 @@ onMounted(() => {
                       Gross Sales:
                     </td>
                     <td class="text-end">
-                      {{ viewedRoyalty.gross_sales.toLocaleString() }} SAR
+                      {{ (viewedRoyalty?.gross_sales || 0).toLocaleString() }} SAR
                     </td>
                   </tr>
                   <tr>
@@ -885,8 +891,8 @@ onMounted(() => {
                       Calculation:
                     </td>
                     <td class="text-end">
-                      {{ viewedRoyalty.gross_sales.toLocaleString() }} × {{
-                        viewedRoyalty.royalty_percentage }}%
+                      {{ (viewedRoyalty?.gross_sales || 0).toLocaleString() }} × {{
+                        viewedRoyalty?.royalty_percentage || 0 }}%
                     </td>
                   </tr>
                   <tr class="bg-primary-lighten-5">
@@ -895,7 +901,7 @@ onMounted(() => {
                     </td>
                     <td class="text-end font-weight-bold text-primary">
                       {{
-                        viewedRoyalty.amount.toLocaleString() }} SAR
+                        (viewedRoyalty?.amount || 0).toLocaleString() }} SAR
                     </td>
                   </tr>
                 </tbody>

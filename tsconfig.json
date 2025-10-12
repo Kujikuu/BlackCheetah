@@ -62,7 +62,8 @@
       "vite/client",
       "unplugin-vue-router/client",
       "vite-plugin-vue-meta-layouts/client",
-      "node"
+      "node",
+      "jest"
     ]
   },
   "include": [

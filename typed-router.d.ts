@@ -102,6 +102,7 @@ declare module 'vue-router/auto-routes' {
     'front-pages-pricing': RouteRecordInfo<'front-pages-pricing', '/front-pages/pricing', Record<never, never>, Record<never, never>>,
     'login': RouteRecordInfo<'login', '/login', Record<never, never>, Record<never, never>>,
     'not-authorized': RouteRecordInfo<'not-authorized', '/not-authorized', Record<never, never>, Record<never, never>>,
+    'onboarding': RouteRecordInfo<'onboarding', '/onboarding', Record<never, never>, Record<never, never>>,
     'register': RouteRecordInfo<'register', '/register', Record<never, never>, Record<never, never>>,
     'reset-password': RouteRecordInfo<'reset-password', '/reset-password', Record<never, never>, Record<never, never>>,
     'sales-lead-management': RouteRecordInfo<'sales-lead-management', '/sales/lead-management', Record<never, never>, Record<never, never>>,

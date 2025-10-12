@@ -1,10 +1,11 @@
-import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
+import { $api } from '@/utils/api'
 import { canNavigate } from '@layouts/plugins/casl'
+import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
 
 export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]: any }>) => {
   // 👉 router.beforeEach
   // Docs: https://router.vuejs.org/guide/advanced/navigation-guards.html#global-before-guards
-  router.beforeEach(to => {
+  router.beforeEach(async to => {
     /*
      * If it's a public route, continue navigation. This kind of pages are allowed to visited by login & non-login users. Basically, without any restrictions.
      * Examples of public routes are, 404, under maintenance, etc.
@@ -30,17 +31,35 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
         return undefined
     }
 
+    // Check onboarding status for franchisees
+    if (isLoggedIn && to.name !== 'onboarding' && to.name !== 'logout') {
+      const userData = useCookie('userData').value as any
+
+      if (userData?.role === 'franchisee') {
+        try {
+          const response = await $api('/v1/onboarding/status')
+
+          if (!response.profile_completed) {
+            return { name: 'onboarding' }
+          }
+        } catch (error) {
+          // If we can't check onboarding status, allow navigation
+          console.warn('Failed to check onboarding status:', error)
+        }
+      }
+    }
+
     if (!canNavigate(to) && to.matched.length) {
       /* eslint-disable indent */
       return isLoggedIn
-        ? { name: 'not-authorized' }
+        ? { to: to.fullPath !== '/' ? to.path : undefined }
         : {
-            name: 'login',
-            query: {
-              ...to.query,
-              to: to.fullPath !== '/' ? to.path : undefined,
-            },
-          }
+          name: 'login',
+          query: {
+            ...to.query,
+            to: to.fullPath !== '/' ? to.path : undefined,
+          },
+        }
       /* eslint-enable indent */
     }
   })

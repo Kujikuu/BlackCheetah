@@ -44,7 +44,7 @@ const totalRevenue = computed(() => statisticsData.value.monthlyRoyalty)
 // 👉 Headers for units table
 const unitHeaders = [
   { title: 'Branch Info', key: 'branchInfo' },
-  { title: 'Franchisee', key: 'franchisee' },
+  { title: 'Unit Manager (Franchisee)', key: 'franchisee' },
   { title: 'Location', key: 'location' },
   { title: 'Royalty %', key: 'royaltyPercentage' },
   { title: 'Contract Period', key: 'contractPeriod' },
@@ -181,7 +181,7 @@ const viewUnitDetails = (unit: any) => {
               My Units
             </h2>
             <p class="text-body-1 text-medium-emphasis">
-              Manage your franchise units and franchisees
+              Manage your franchise units and their franchisee managers
             </p>
           </div>
           <VBtn
@@ -190,7 +190,7 @@ const viewUnitDetails = (unit: any) => {
             :loading="loading"
             @click="addFranchisee"
           >
-            Add Franchisee
+            Add Franchisee & Unit
           </VBtn>
         </div>
       </VCol>
@@ -524,7 +524,7 @@ const viewUnitDetails = (unit: any) => {
                 :loading="loading"
                 @click="addFranchisee"
               >
-                Add Franchisee
+                Add Franchisee & Unit
               </VBtn>
             </template>
           </VCardItem>
@@ -566,7 +566,7 @@ const viewUnitDetails = (unit: any) => {
                 No Units Found
               </h4>
               <p class="text-body-1 text-medium-emphasis mb-6">
-                You haven't added any franchise units yet. Start by adding your first franchise unit.
+                You haven't added any franchise units yet. Start by adding your first franchisee and their unit.
               </p>
               <VBtn
                 color="primary"
@@ -574,7 +574,7 @@ const viewUnitDetails = (unit: any) => {
                 size="large"
                 @click="addFranchisee"
               >
-                Add Your First Unit
+                Add Your First Franchisee & Unit
               </VBtn>
             </div>
           </VCardText>
@@ -613,14 +613,19 @@ const viewUnitDetails = (unit: any) => {
               </div>
             </template>
 
-            <!-- Franchisee -->
+            <!-- Unit Manager (Franchisee) -->
             <template #item.franchisee="{ item }">
               <div>
                 <div class="text-body-1 font-weight-medium">
                   {{ item.franchiseeName }}
                 </div>
                 <div class="text-body-2 text-disabled">
-                  {{ item.contactNumber }}
+                  <VIcon 
+                    icon="tabler-user-check" 
+                    size="14" 
+                    class="me-1"
+                  />
+                  Unit Manager • {{ item.contactNumber }}
                 </div>
               </div>
             </template>

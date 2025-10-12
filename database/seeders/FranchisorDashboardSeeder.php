@@ -38,7 +38,7 @@ class FranchisorDashboardSeeder extends Seeder
         $franchise = Franchise::where('franchisor_id', $franchisor->id)->first();
 
         // Create franchise if it doesn't exist
-        if (!$franchise) {
+        if (! $franchise) {
             $franchise = Franchise::create([
                 'franchisor_id' => $franchisor->id,
                 'business_name' => 'Black Cheetah Saudi Arabia LLC',
@@ -61,8 +61,8 @@ class FranchisorDashboardSeeder extends Seeder
                 'total_units' => 0,
                 'active_units' => 0,
                 'established_date' => now()->subYears(5),
-                'business_registration_number' => 'CR-' . rand(1000000000, 9999999999),
-                'tax_id' => 'VAT-' . rand(100000000, 999999999),
+                'business_registration_number' => 'CR-'.rand(1000000000, 9999999999),
+                'tax_id' => 'VAT-'.rand(100000000, 999999999),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -116,7 +116,8 @@ class FranchisorDashboardSeeder extends Seeder
 
         // Check if leads already exist for this franchise
         if (Lead::where('franchise_id', $franchise->id)->exists()) {
-            $this->command->info('Leads already exist for franchise ID: ' . $franchise->id . '. Skipping lead creation.');
+            $this->command->info('Leads already exist for franchise ID: '.$franchise->id.'. Skipping lead creation.');
+
             return;
         }
 
@@ -264,8 +265,8 @@ class FranchisorDashboardSeeder extends Seeder
         for ($i = 1; $i <= 15; $i++) {
             $email = 'franchisee'.$i.'@blackcheetah.sa';
             $franchisee = User::where('email', $email)->first();
-            
-            if (!$franchisee) {
+
+            if (! $franchisee) {
                 $franchisee = User::create([
                     'name' => $this->getRandomSaudiName(),
                     'email' => $email,
@@ -274,10 +275,11 @@ class FranchisorDashboardSeeder extends Seeder
                     'role' => 'franchisee',
                     'phone' => '+966'.rand(500000000, 599999999),
                     'city' => $saudiCities[array_rand($saudiCities)],
+                    'profile_completed' => false,
                     'created_at' => now()->subDays(rand(30, 365)),
                 ]);
             }
-            
+
             $franchisees[] = $franchisee;
         }
 
@@ -558,8 +560,8 @@ class FranchisorDashboardSeeder extends Seeder
             $requester = $franchisees->random();
 
             TechnicalRequest::create([
-                'ticket_number' => 'TR' . date('Y') . str_pad($i, 6, '0', STR_PAD_LEFT),
-                'title' => 'Technical Support Request - ' . ucfirst($category),
+                'ticket_number' => 'TR'.date('Y').str_pad($i, 6, '0', STR_PAD_LEFT),
+                'title' => 'Technical Support Request - '.ucfirst($category),
                 'description' => $issueDescriptions[$category][array_rand($issueDescriptions[$category])],
                 'category' => $category,
                 'priority' => $priorities[array_rand($priorities)],
@@ -674,7 +676,7 @@ class FranchisorDashboardSeeder extends Seeder
 
             // Determine sentiment based on rating
             $sentiment = $rating >= 4 ? 'positive' : ($rating == 3 ? 'neutral' : 'negative');
-            
+
             Review::create([
                 'unit_id' => $unit->id,
                 'franchisee_id' => $franchisee->id,

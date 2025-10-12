@@ -32,12 +32,9 @@ const formData = ref({
   capacity: '',
   openingDate: '',
   monthlyRent: '',
-  managerId: null as string | null,
 })
 
 // Data
-const franchisees = ref([])
-
 const countries = [
   { title: 'United States', value: 'US' },
   { title: 'Canada', value: 'CA' },
@@ -55,28 +52,9 @@ const unitTypes = [
   { title: 'Office', value: 'office' },
 ]
 
-// Load available franchisees (users with franchisee role)
-const loadFranchisees = async () => {
-  try {
-    const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/franchisees')
-    if (response.success && response.data.data) {
-      franchisees.value = response.data.data.map((franchisee: any) => ({
-        id: franchisee.id,
-        name: franchisee.name,
-        email: franchisee.email,
-        phone: franchisee.phone,
-      }))
-    }
-  }
-  catch (err: any) {
-    console.error('Failed to load franchisees:', err)
-  }
-}
-
-// Load franchisees when modal opens
+// Reset form when modal opens
 watch(() => props.isDialogVisible, visible => {
   if (visible) {
-    loadFranchisees()
     resetForm()
   }
 })
@@ -117,78 +95,80 @@ const resetForm = () => {
     capacity: '',
     openingDate: '',
     monthlyRent: '',
-    managerId: null,
   }
 }
 
 const submitForm = async () => {
+  if (!formData.value.name || !formData.value.email || !formData.value.phone) {
+    error.value = 'Please fill in all required fields'
+    return
+  }
+
   loading.value = true
   error.value = null
 
   try {
-    // Get franchise ID from current user's franchise
-    const franchiseResponse = await $api<{ success: boolean; data: any }>('/v1/franchisor/franchise')
-    if (!franchiseResponse.success || !franchiseResponse.data)
-      throw new Error('Franchise not found')
+    // Get the franchisor's franchise ID
+    const franchiseResponse = await $api('/v1/franchisor/franchise')
+    const franchiseId = franchiseResponse.data.data.id
 
-    const franchiseId = franchiseResponse.data.id
-
-    // Prepare unit data
-    const unitData = {
-      unit_name: formData.value.name,
+    // Prepare franchisee and unit data
+    const franchiseeUnitData = {
+      // Franchisee details
+      name: formData.value.name,
+      email: formData.value.email,
+      phone: formData.value.phone,
+      
+      // Unit details
+      unit_name: formData.value.name, // Use same name for unit
       franchise_id: franchiseId,
-      unit_type: formData.value.type,
+      unit_type: formData.value.type || 'store',
       address: formData.value.address,
       city: formData.value.city,
       state_province: formData.value.state,
       postal_code: formData.value.postalCode,
       country: formData.value.country,
-      phone: formData.value.phone,
-      email: formData.value.email,
-      franchisee_id: formData.value.managerId,
-      size_sqft: formData.value.sizeSqft ? Number(formData.value.sizeSqft) : null,
-      opening_date: formData.value.openingDate || null,
-      monthly_rent: formData.value.monthlyRent ? Number(formData.value.monthlyRent) : null,
-      status: 'planning', // Start as planning until activated
+      size_sqft: formData.value.sizeSqft,
+      monthly_rent: formData.value.monthlyRent,
+      opening_date: formData.value.openingDate,
+      status: 'planning',
     }
 
-    // Create the unit
-    const response = await $api<{ success: boolean; data: any }>('/v1/units', {
+    // Create franchisee with unit
+    const response = await $api('/v1/admin/franchisees-with-unit', {
       method: 'POST',
-      body: unitData,
+      body: franchiseeUnitData,
     })
 
-    if (response.success && response.data) {
-      // Find selected manager info
-      const selectedManager = franchisees.value.find(f => f.id === formData.value.managerId)
-
-      // Transform data for frontend compatibility
-      const franchiseeData = {
-        branchName: response.data.unit_name,
-        franchiseeName: selectedManager?.name || 'Unassigned',
-        email: formData.value.email,
-        contactNumber: formData.value.phone,
-        address: formData.value.address,
-        city: formData.value.city,
-        state: formData.value.state,
-        country: formData.value.country,
-        royaltyPercentage: 8.5, // Default - would come from franchise settings
-        contractStartDate: response.data.opening_date || new Date().toISOString().split('T')[0],
-        renewalDate: '', // Would be calculated based on contract terms
-        status: 'planning',
+    if (response.data.success) {
+      // Transform the response to match expected format
+      const transformedData = {
+        id: response.data.data.unit.id,
+        name: response.data.data.unit.unit_name,
+        email: response.data.data.franchisee.email,
+        phone: response.data.data.franchisee.phone,
+        type: response.data.data.unit.unit_type,
+        sizeSqft: response.data.data.unit.size_sqft,
+        capacity: null, // Not available in unit response
+        openingDate: response.data.data.unit.opening_date,
+        monthlyRent: response.data.data.unit.monthly_rent,
+        managerId: response.data.data.unit.franchisee_id,
+        managerName: response.data.data.franchisee.name,
+        country: response.data.data.unit.country,
+        state: response.data.data.unit.state_province,
+        city: response.data.data.unit.city,
+        address: response.data.data.unit.address,
+        postalCode: response.data.data.unit.postal_code,
       }
 
-      emit('franchisee-added', franchiseeData)
-      resetForm()
+      emit('franchisee-added', transformedData)
       updateModelValue(false)
-    }
-    else {
-      throw new Error('Failed to create unit')
+      resetForm()
     }
   }
   catch (err: any) {
-    console.error('Failed to create unit:', err)
-    error.value = err?.data?.message || 'Failed to create unit. Please try again.'
+    console.error('Error creating franchisee with unit:', err)
+    error.value = err.response?.data?.message || 'Failed to create franchisee and unit. Please try again.'
   }
   finally {
     loading.value = false
@@ -328,19 +308,14 @@ const onDialogModelValueUpdate = (val: boolean) => {
                     />
                   </VCol>
 
-                  <VCol
-                    cols="12"
-                    md="6"
-                  >
-                    <AppSelect
-                      v-model="formData.managerId"
-                      :items="franchisees"
-                      item-title="name"
-                      item-value="id"
-                      label="Assign Manager (Franchisee)"
-                      placeholder="Choose a manager"
-                      clearable
-                    />
+                  <VCol cols="12">
+                    <VAlert
+                      type="info"
+                      variant="tonal"
+                      class="mb-0"
+                    >
+                      <strong>{{ formData.name || 'New franchisee' }}</strong> will be automatically assigned as the unit manager.
+                    </VAlert>
                   </VCol>
 
                   <VCol

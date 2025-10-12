@@ -1,7 +1,16 @@
 import { $api } from '@/utils/api'
 
-// Base API URL
-const API_URL = '/v1/franchisor/royalties'
+// Base API URLs for different roles
+const FRANCHISOR_API_URL = '/v1/franchisor/royalties'
+const FRANCHISEE_API_URL = '/v1/unit-manager/royalties'
+
+// Helper function to get the appropriate API URL based on user role
+const getApiUrl = (): string => {
+  const userData = useCookie<any>('userData')
+  const userRole = userData.value?.role
+
+  return userRole === 'franchisor' ? FRANCHISOR_API_URL : FRANCHISEE_API_URL
+}
 
 // Type definitions
 export interface RoyaltyRecord {
@@ -81,19 +90,19 @@ interface ApiResponse<T> {
 export const royaltyApi = {
   // Get all royalties with filters
   async getRoyalties(filters?: RoyaltyFilters): Promise<ApiResponse<PaginatedResponse<RoyaltyRecord>>> {
-    return await $api<ApiResponse<PaginatedResponse<RoyaltyRecord>>>(API_URL, {
+    return await $api<ApiResponse<PaginatedResponse<RoyaltyRecord>>>(getApiUrl(), {
       params: filters,
     })
   },
 
   // Get single royalty by ID
   async getRoyalty(id: string | number): Promise<ApiResponse<RoyaltyRecord>> {
-    return await $api<ApiResponse<RoyaltyRecord>>(`${API_URL}/${id}`)
+    return await $api<ApiResponse<RoyaltyRecord>>(`${getApiUrl()}/${id}`)
   },
 
   // Get royalty statistics
   async getStatistics(filters?: RoyaltyFilters): Promise<ApiResponse<RoyaltyStatistics>> {
-    return await $api<ApiResponse<RoyaltyStatistics>>(`${API_URL}/statistics`, {
+    return await $api<ApiResponse<RoyaltyStatistics>>(`${getApiUrl()}/statistics`, {
       params: filters,
     })
   },
@@ -101,24 +110,24 @@ export const royaltyApi = {
   // Mark royalty as paid/completed
   async markAsPaid(id: string | number, paymentData: PaymentData): Promise<ApiResponse<RoyaltyRecord>> {
     const formData = new FormData()
-    
-    formData.append('amount_paid', paymentData.amount_paid.toString())
-    formData.append('payment_date', paymentData.payment_date)
-    formData.append('payment_method', paymentData.payment_type)
-    
+
+    formData.append('amount_paid', (paymentData.amount_paid || 0).toString())
+    formData.append('payment_date', paymentData.payment_date || '')
+    formData.append('payment_method', paymentData.payment_type || '')
+
     if (paymentData.payment_reference) {
       formData.append('payment_reference', paymentData.payment_reference)
     }
-    
+
     if (paymentData.notes) {
       formData.append('notes', paymentData.notes)
     }
-    
+
     if (paymentData.attachment) {
       formData.append('attachment', paymentData.attachment)
     }
 
-    return await $api<ApiResponse<RoyaltyRecord>>(`${API_URL}/${id}/mark-paid`, {
+    return await $api<ApiResponse<RoyaltyRecord>>(`${getApiUrl()}/${id}/mark-paid`, {
       method: 'PATCH',
       body: formData,
     })
@@ -126,7 +135,7 @@ export const royaltyApi = {
 
   // Export royalty data
   async exportRoyalties(options: ExportOptions): Promise<Blob> {
-    return await $api<Blob>(`${API_URL}/export`, {
+    return await $api<Blob>(`${getApiUrl()}/export`, {
       params: options,
       parseResponse: data => data,
     })
@@ -134,7 +143,7 @@ export const royaltyApi = {
 
   // Create new royalty
   async createRoyalty(data: Partial<RoyaltyRecord>): Promise<ApiResponse<RoyaltyRecord>> {
-    return await $api<ApiResponse<RoyaltyRecord>>(API_URL, {
+    return await $api<ApiResponse<RoyaltyRecord>>('/api/v1/royalties', {
       method: 'POST',
       body: data,
     })
@@ -142,7 +151,7 @@ export const royaltyApi = {
 
   // Update royalty
   async updateRoyalty(id: string | number, data: Partial<RoyaltyRecord>): Promise<ApiResponse<RoyaltyRecord>> {
-    return await $api<ApiResponse<RoyaltyRecord>>(`${API_URL}/${id}`, {
+    return await $api<ApiResponse<RoyaltyRecord>>(`${getApiUrl()}/${id}`, {
       method: 'PUT',
       body: data,
     })
@@ -150,14 +159,14 @@ export const royaltyApi = {
 
   // Delete royalty
   async deleteRoyalty(id: string | number): Promise<void> {
-    await $api(`${API_URL}/${id}`, {
+    await $api(`${getApiUrl()}/${id}`, {
       method: 'DELETE',
     })
   },
 
   // Add adjustment to royalty
   async addAdjustment(id: string | number, amount: number, reason: string): Promise<ApiResponse<RoyaltyRecord>> {
-    return await $api<ApiResponse<RoyaltyRecord>>(`${API_URL}/${id}/adjustments`, {
+    return await $api<ApiResponse<RoyaltyRecord>>(`${getApiUrl()}/${id}/adjustments`, {
       method: 'POST',
       body: {
         adjustment_amount: amount,
@@ -168,7 +177,7 @@ export const royaltyApi = {
 
   // Calculate late fee
   async calculateLateFee(id: string | number): Promise<ApiResponse<{ royalty: RoyaltyRecord; late_fee: number; days_overdue: number }>> {
-    return await $api<ApiResponse<{ royalty: RoyaltyRecord; late_fee: number; days_overdue: number }>>(`${API_URL}/${id}/late-fee`, {
+    return await $api<ApiResponse<{ royalty: RoyaltyRecord; late_fee: number; days_overdue: number }>>(`${getApiUrl()}/${id}/late-fee`, {
       method: 'POST',
     })
   },

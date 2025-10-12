@@ -5,9 +5,11 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\FinancialController;
 use App\Http\Controllers\Api\FranchiseController;
+use App\Http\Controllers\Api\FranchiseeDashboardController;
 use App\Http\Controllers\Api\FranchisorController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RevenueController;
 use App\Http\Controllers\Api\ReviewController;
@@ -52,6 +54,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+    });
+
+    // Onboarding routes (for franchisees)
+    Route::prefix('v1/onboarding')->group(function () {
+        Route::get('/status', [OnboardingController::class, 'checkOnboardingStatus']);
+        Route::post('/complete', [OnboardingController::class, 'completeProfile']);
     });
 });
 
@@ -423,9 +431,19 @@ Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('v1/unit-manager'
     Route::get('transactions', [TransactionController::class, 'myUnitTransactions']);
     Route::get('revenues', [RevenueController::class, 'myUnitRevenues']);
     Route::get('technical-requests', [TechnicalRequestController::class, 'myUnitRequests']);
+    Route::get('royalties', [RoyaltyController::class, 'myUnitRoyalties']);
+    Route::patch('royalties/{royalty}/mark-paid', [RoyaltyController::class, 'markAsPaid']);
+    Route::get('royalties/statistics', [RoyaltyController::class, 'myUnitRoyaltyStatistics']);
 
     // Statistics for unit manager
     Route::get('statistics', [UnitController::class, 'myUnitStatistics']);
+
+    // Franchisee Dashboard routes
+    Route::prefix('dashboard')->group(function () {
+        Route::get('sales-statistics', [FranchiseeDashboardController::class, 'salesStatistics']);
+        Route::get('product-sales', [FranchiseeDashboardController::class, 'productSales']);
+        Route::get('monthly-performance', [FranchiseeDashboardController::class, 'monthlyPerformance']);
+    });
 });
 
 // Employee routes (requires sales role)
@@ -467,6 +485,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(fun
     Route::put('users/{id}', [AdminController::class, 'updateUser']);
     Route::delete('users/{id}', [AdminController::class, 'deleteUser']);
     Route::post('users/{id}/reset-password', [AdminController::class, 'resetPassword']);
+
+    // Franchisee with unit creation
+    Route::post('franchisees-with-unit', [AdminController::class, 'createFranchiseeWithUnit']);
 
     // Technical requests management routes moved to earlier in file to avoid conflicts
 });

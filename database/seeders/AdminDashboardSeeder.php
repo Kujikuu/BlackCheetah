@@ -144,6 +144,7 @@ class AdminDashboardSeeder extends Seeder
                     'phone' => $franchiseeData['phone'],
                     'country' => 'Saudi Arabia',
                     'city' => $franchiseeData['city'],
+                    'profile_completed' => false,
                     'last_login_at' => Carbon::now()->subDays(rand(1, 15)),
                     'email_verified_at' => now(),
                 ]

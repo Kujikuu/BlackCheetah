@@ -37,6 +37,7 @@ class User extends Authenticatable
         'last_login_at',
         'preferences',
         'profile_completion',
+        'profile_completed',
         'franchise_id',
     ];
 
@@ -64,6 +65,7 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'preferences' => 'array',
             'profile_completion' => 'array',
+            'profile_completed' => 'boolean',
         ];
     }
 
