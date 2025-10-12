@@ -30,6 +30,7 @@ declare module 'vue' {
     AppTextarea: typeof import('./resources/ts/@core/components/app-form-elements/AppTextarea.vue')['default']
     AppTextField: typeof import('./resources/ts/@core/components/app-form-elements/AppTextField.vue')['default']
     AssignLeadModal: typeof import('./resources/ts/components/dialogs/AssignLeadModal.vue')['default']
+    BulkActionsToolbar: typeof import('./resources/ts/components/BulkActionsToolbar.vue')['default']
     BuyNow: typeof import('./resources/ts/@core/components/BuyNow.vue')['default']
     CardAddEditDialog: typeof import('./resources/ts/components/dialogs/CardAddEditDialog.vue')['default']
     CardStatisticsHorizontal: typeof import('./resources/ts/@core/components/cards/CardStatisticsHorizontal.vue')['default']

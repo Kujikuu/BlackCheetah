@@ -8,4 +8,6 @@ module.exports = {
   transform: {
     '^.+\\.(t|j)sx?$': 'ts-jest',
   },
+  testMatch: ['**/__tests__/**/*.spec.ts'],
+  testPathIgnorePatterns: ['/node_modules/', 'setup.ts'],
 };

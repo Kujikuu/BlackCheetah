@@ -56,6 +56,7 @@ class AuthController extends Controller
                 $userAbilityRules = [
                     ['action' => 'read', 'subject' => 'FranchisorDashboard'],
                     ['action' => 'read', 'subject' => 'Lead'],
+                    ['action' => 'manage', 'subject' => 'Lead'],
                     ['action' => 'manage', 'subject' => 'User'],
                     ['action' => 'read', 'subject' => 'Franchise'],
                     ['action' => 'read', 'subject' => 'Unit'],
