@@ -2,6 +2,7 @@ import { config } from '@vue/test-utils'
 
 // Configure Vue Test Utils
 config.global.stubs = {
+  // Kebab-case versions
   'v-icon': true,
   'v-btn': true,
   'v-card': true,
@@ -34,6 +35,40 @@ config.global.stubs = {
   'v-tooltip': true,
   'v-spacer': true,
   'transition': true,
+  // PascalCase versions
+  'VIcon': true,
+  'VBtn': true,
+  'VCard': true,
+  'VCardText': true,
+  'VCardTitle': true,
+  'VCardSubtitle': true,
+  'VCardItem': true,
+  'VCardActions': true,
+  'VRow': true,
+  'VCol': true,
+  'VChip': true,
+  'VAvatar': true,
+  'VProgressCircular': true,
+  'VAlert': true,
+  'VDivider': true,
+  'VDataTable': true,
+  'VTabs': true,
+  'VTab': true,
+  'VWindow': true,
+  'VWindowItem': true,
+  'VForm': true,
+  'VTextField': true,
+  'VSelect': true,
+  'VTextarea': true,
+  'VDialog': true,
+  'VList': true,
+  'VListItem': true,
+  'VListItemTitle': true,
+  'VListItemSubtitle': true,
+  'VMenu': true,
+  'VTooltip': true,
+  'VSpacer': true,
+  'VueApexCharts': true,
 }
 
 config.global.mocks = {

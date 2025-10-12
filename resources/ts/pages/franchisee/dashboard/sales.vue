@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
 import type { ProductSalesItem, SalesWidgetData } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 import { getAreaChartSplineConfig } from '@core/libs/apex-chart/apexCharConfig'
