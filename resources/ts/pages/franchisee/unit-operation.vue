@@ -396,8 +396,17 @@ const saveProduct = async () => {
 // 👉 Load available franchise products for inventory
 const loadAvailableFranchiseProducts = async () => {
   try {
+    // Get unit ID - if no route param, use the unit ID from loaded unit data
+    const currentUnitId = unitId.value ? parseInt(unitId.value) : unitData.value?.id
+    
+    if (!currentUnitId || isNaN(currentUnitId)) {
+      console.error('Invalid unit ID for loading products')
+      availableFranchiseProducts.value = []
+      return
+    }
+
     // This would call an API to get franchise products not yet in this unit's inventory
-    const response = await franchiseeDashboardApi.getAvailableFranchiseProducts(parseInt(unitId.value))
+    const response = await franchiseeDashboardApi.getAvailableFranchiseProducts(currentUnitId)
     if (response.success) {
       availableFranchiseProducts.value = response.data
     }
