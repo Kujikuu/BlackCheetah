@@ -33,7 +33,7 @@ const currentUnitId = computed<number | null>(() => {
     const parsed = parseInt(unitId.value)
     if (!isNaN(parsed)) return parsed
   }
-  
+
   return null
 })
 
@@ -79,6 +79,15 @@ const newInventoryForm = ref({
   reorderLevel: 5,
 })
 
+// 👉 Helper to get the current unit ID safely
+const getUnitId = (): number => {
+  const id = unitData.value?.id || getUnitId()
+  if (!id) {
+    throw new Error('Unit ID is not available')
+  }
+  return id
+}
+
 // 👉 Computed selected product preview
 const selectedProductPreview = computed(() => {
   if (!selectedFranchiseProduct.value) return null
@@ -92,7 +101,7 @@ const loadUnitData = async () => {
     error.value = null
 
     // unitId is optional - if not provided, API will fetch the franchisee's unit
-    const unitIdParam = currentUnitId.value || undefined
+    const unitIdParam = getUnitId() || undefined
 
     // Load unit details
     const unitDetailsResponse = await franchiseeDashboardApi.getUnitDetails(unitIdParam)
@@ -246,7 +255,7 @@ const openEditUnitModal = () => {
 
 const saveUnitDetails = async () => {
   try {
-    const response = await franchiseeDashboardApi.updateUnitDetails(currentUnitId.value, editUnitForm.value)
+    const response = await franchiseeDashboardApi.updateUnitDetails(getUnitId(), editUnitForm.value)
     if (response.success) {
       unitData.value = response.data
       isEditUnitModalVisible.value = false
@@ -259,7 +268,7 @@ const saveUnitDetails = async () => {
 
 const onTaskCreated = async (task: any) => {
   try {
-    const response = await franchiseeDashboardApi.createTask(currentUnitId.value, task)
+    const response = await franchiseeDashboardApi.createTask(getUnitId(), task)
     if (response.success) {
       tasksData.value.push(response.data)
     }
@@ -271,7 +280,7 @@ const onTaskCreated = async (task: any) => {
 
 const onDocumentAdded = async (document: any) => {
   try {
-    const response = await franchiseeDashboardApi.createDocument(currentUnitId.value, document)
+    const response = await franchiseeDashboardApi.createDocument(getUnitId(), document)
     if (response.success) {
       documentsData.value.push(response.data)
     }
@@ -302,7 +311,7 @@ const deleteStaff = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.deleteStaff(currentUnitId.value, staffToDelete.value)
+    const response = await franchiseeDashboardApi.deleteStaff(getUnitId(), staffToDelete.value)
     if (response.success) {
       const index = staffData.value.findIndex(staff => staff.id === staffToDelete.value)
       if (index !== -1)
@@ -323,7 +332,7 @@ const saveStaff = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateStaff(currentUnitId.value, selectedStaff.value.id, selectedStaff.value)
+    const response = await franchiseeDashboardApi.updateStaff(getUnitId(), selectedStaff.value.id, selectedStaff.value)
     if (response.success) {
       const index = staffData.value.findIndex(staff => staff.id === selectedStaff.value.id)
       if (index !== -1)
@@ -341,7 +350,7 @@ const saveStaff = async () => {
 
 const onStaffCreated = async (staff: any) => {
   try {
-    const response = await franchiseeDashboardApi.createStaff(currentUnitId.value, staff)
+    const response = await franchiseeDashboardApi.createStaff(getUnitId(), staff)
     if (response.success) {
       staffData.value.push(response.data)
     }
@@ -372,7 +381,7 @@ const deleteProduct = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.removeProductFromInventory(currentUnitId.value, productToDelete.value)
+    const response = await franchiseeDashboardApi.removeProductFromInventory(getUnitId(), productToDelete.value)
     if (response.success) {
       const index = productsData.value.findIndex(product => product.id === productToDelete.value)
       if (index !== -1)
@@ -393,7 +402,7 @@ const saveProduct = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateProduct(currentUnitId.value, selectedProduct.value.id, selectedProduct.value)
+    const response = await franchiseeDashboardApi.updateProduct(getUnitId(), selectedProduct.value.id, selectedProduct.value)
     if (response.success) {
       const index = productsData.value.findIndex(product => product.id === selectedProduct.value.id)
       if (index !== -1)
@@ -413,8 +422,8 @@ const saveProduct = async () => {
 const loadAvailableFranchiseProducts = async () => {
   try {
     // Get unit ID from loaded data or route params
-    const unitIdToUse = unitData.value?.id || currentUnitId.value
-    
+    const unitIdToUse = unitData.value?.id || getUnitId()
+
     if (!unitIdToUse) {
       console.error('Unit ID not available yet. Please wait for unit data to load.')
       availableFranchiseProducts.value = []
@@ -438,8 +447,11 @@ const addProductToInventory = async () => {
   if (!selectedFranchiseProduct.value) return
 
   try {
-    if (!currentUnitId.value || isNaN(currentUnitId.value)) {
-      console.error('Invalid unit ID for adding product')
+    // Get unit ID from loaded data or route params
+    const unitIdToUse = unitData.value?.id || getUnitId()
+
+    if (!unitIdToUse) {
+      console.error('Unit ID not available for adding product')
       return
     }
 
@@ -449,7 +461,7 @@ const addProductToInventory = async () => {
       reorderLevel: parseInt(newInventoryForm.value.reorderLevel.toString()),
     }
 
-    const response = await franchiseeDashboardApi.addProductToInventory(currentUnitId.value, inventoryData)
+    const response = await franchiseeDashboardApi.addProductToInventory(unitIdToUse, inventoryData)
     if (response.success) {
       // Add the product with inventory data to our products list
       const selectedProduct = availableFranchiseProducts.value.find(p => p.id === selectedFranchiseProduct.value)
@@ -504,7 +516,7 @@ const deleteReview = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.deleteReview(currentUnitId.value, reviewToDelete.value)
+    const response = await franchiseeDashboardApi.deleteReview(getUnitId(), reviewToDelete.value)
     if (response.success) {
       const index = reviewsData.value.findIndex(review => review.id === reviewToDelete.value)
       if (index !== -1)
@@ -525,7 +537,7 @@ const saveReview = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateReview(currentUnitId.value, selectedReview.value.id, selectedReview.value)
+    const response = await franchiseeDashboardApi.updateReview(getUnitId(), selectedReview.value.id, selectedReview.value)
     if (response.success) {
       const index = reviewsData.value.findIndex(review => review.id === selectedReview.value.id)
       if (index !== -1)
@@ -543,7 +555,7 @@ const saveReview = async () => {
 
 const onReviewCreated = async (review: any) => {
   try {
-    const response = await franchiseeDashboardApi.createReview(currentUnitId.value, review)
+    const response = await franchiseeDashboardApi.createReview(getUnitId(), review)
     if (response.success) {
       reviewsData.value.push(response.data)
     }
@@ -572,7 +584,7 @@ const confirmDelete = (id: number) => {
 const deleteTask = async () => {
   if (taskToDelete.value !== null) {
     try {
-      const response = await franchiseeDashboardApi.deleteTask(currentUnitId.value, taskToDelete.value)
+      const response = await franchiseeDashboardApi.deleteTask(getUnitId(), taskToDelete.value)
       if (response.success) {
         const index = tasksData.value.findIndex(task => task.id === taskToDelete.value)
         if (index !== -1)
@@ -608,7 +620,7 @@ const saveTask = async () => {
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateTask(currentUnitId.value, selectedTask.value.id, selectedTask.value)
+    const response = await franchiseeDashboardApi.updateTask(getUnitId(), selectedTask.value.id, selectedTask.value)
     if (response.success) {
       const index = tasksData.value.findIndex(task => task.id === selectedTask.value.id)
       if (index !== -1)
