@@ -395,15 +395,8 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
     <!-- 👉 Stats Cards -->
     <div class="d-flex mb-6">
       <VRow>
-        <template
-          v-for="(data, id) in statsData"
-          :key="id"
-        >
-          <VCol
-            cols="12"
-            md="4"
-            sm="6"
-          >
+        <template v-for="(data, id) in statsData" :key="id">
+          <VCol cols="12" md="4" sm="6">
             <VCard>
               <VCardText>
                 <div class="d-flex justify-space-between">
@@ -415,24 +408,13 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
                       <h4 class="text-h4">
                         {{ data.value }}
                       </h4>
-                      <div
-                        class="text-base"
-                        :class="data.change > 0 ? 'text-success' : 'text-error'"
-                      >
+                      <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
                         ({{ prefixWithPlus(data.change) }}%)
                       </div>
                     </div>
                   </div>
-                  <VAvatar
-                    :color="data.iconColor"
-                    variant="tonal"
-                    rounded
-                    size="42"
-                  >
-                    <VIcon
-                      :icon="data.icon"
-                      size="26"
-                    />
+                  <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
+                    <VIcon :icon="data.icon" size="26" />
                   </VAvatar>
                 </div>
               </VCardText>
@@ -450,43 +432,19 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
       <VCardText>
         <VRow>
           <!-- 👉 Select Source -->
-          <VCol
-            cols="12"
-            sm="4"
-          >
-            <AppSelect
-              v-model="selectedSource"
-              placeholder="Select Source"
-              :items="sources"
-              clearable
-              clear-icon="tabler-x"
-            />
+          <VCol cols="12" sm="4">
+            <AppSelect v-model="selectedSource" placeholder="Select Source" :items="sources" clearable
+              clear-icon="tabler-x" />
           </VCol>
           <!-- 👉 Select Status -->
-          <VCol
-            cols="12"
-            sm="4"
-          >
-            <AppSelect
-              v-model="selectedStatus"
-              placeholder="Select Status"
-              :items="statuses"
-              clearable
-              clear-icon="tabler-x"
-            />
+          <VCol cols="12" sm="4">
+            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statuses" clearable
+              clear-icon="tabler-x" />
           </VCol>
           <!-- 👉 Select Owner -->
-          <VCol
-            cols="12"
-            sm="4"
-          >
-            <AppSelect
-              v-model="selectedOwner"
-              placeholder="Select Owner"
-              :items="owners"
-              clearable
-              clear-icon="tabler-x"
-            />
+          <VCol cols="12" sm="4">
+            <AppSelect v-model="selectedOwner" placeholder="Select Owner" :items="owners" clearable
+              clear-icon="tabler-x" />
           </VCol>
         </VRow>
       </VCardText>
@@ -495,55 +453,41 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect
-            :model-value="itemsPerPage"
-            :items="[
-              { value: 10, title: '10' },
-              { value: 25, title: '25' },
-              { value: 50, title: '50' },
-              { value: 100, title: '100' },
-              { value: -1, title: 'All' },
-            ]"
-            style="inline-size: 6.25rem;"
-            @update:model-value="itemsPerPage = parseInt($event, 10)"
-          />
+          <AppSelect :model-value="itemsPerPage" :items="[
+            { value: 10, title: '10' },
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+            { value: -1, title: 'All' },
+          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+
+          <!-- Bulk Actions -->
+          <VBtn v-if="selectedRows.length > 0" variant="tonal" color="error" @click="bulkDelete">
+            <VIcon icon="tabler-trash" class="me-2" />
+            Delete Selected ({{ selectedRows.length }})
+          </VBtn>
         </div>
         <VSpacer />
 
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- 👉 Search  -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField
-              v-model="searchQuery"
-              placeholder="Search Lead"
-            />
+            <AppTextField v-model="searchQuery" placeholder="Search Lead" />
           </div>
 
           <!-- 👉 Import button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-file-import"
-            @click="isImportDialogVisible = true"
-          >
+          <VBtn variant="tonal" color="secondary" prepend-icon="tabler-file-import"
+            @click="isImportDialogVisible = true">
             Import
           </VBtn>
 
           <!-- 👉 Export button -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-            prepend-icon="tabler-upload"
-            @click="exportLeads"
-          >
+          <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload" @click="exportLeads">
             Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
           </VBtn>
 
           <!-- 👉 Add lead button -->
-          <VBtn
-            prepend-icon="tabler-plus"
-            @click="navigateToAddLead"
-          >
+          <VBtn prepend-icon="tabler-plus" @click="navigateToAddLead">
             Add Lead
           </VBtn>
         </div>
@@ -552,19 +496,9 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
       <VDivider />
 
       <!-- SECTION datatable -->
-      <VDataTableServer
-        v-model:items-per-page="itemsPerPage"
-        v-model:model-value="selectedRows"
-        v-model:page="page"
-        :items="leads"
-        item-value="id"
-        :items-length="totalLeads"
-        :headers="headers"
-        :loading="isLoading"
-        class="text-no-wrap"
-        show-select
-        @update:options="updateOptions"
-      >
+      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
+        :items="leads" item-value="id" :items-length="totalLeads" :headers="headers" :loading="isLoading"
+        class="text-no-wrap" show-select @update:options="updateOptions">
         <!-- Index -->
         <template #item.index="{ index }">
           <div class="text-body-1 font-weight-medium">
@@ -575,19 +509,12 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
         <!-- Lead Name -->
         <template #item.name="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <VAvatar
-              size="34"
-              variant="tonal"
-              color="primary"
-            >
+            <VAvatar size="34" variant="tonal" color="primary">
               <span>{{ avatarText(`${item.firstName} ${item.lastName}`) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
               <h6 class="text-base font-weight-medium">
-                <RouterLink
-                  :to="{ name: 'franchisor-leads-id', params: { id: item.id } }"
-                  class="text-link"
-                >
+                <RouterLink :to="{ name: 'franchisor-leads-id', params: { id: item.id } }" class="text-link">
                   {{ item.firstName }} {{ item.lastName }}
                 </RouterLink>
               </h6>
@@ -625,22 +552,14 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
 
         <!-- Source -->
         <template #item.source="{ item }">
-          <VChip
-            size="small"
-            color="primary"
-            variant="tonal"
-          >
+          <VChip size="small" color="primary" variant="tonal">
             {{ item.source }}
           </VChip>
         </template>
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip
-            size="small"
-            :color="resolveStatusVariant(item.status)"
-            variant="tonal"
-          >
+          <VChip size="small" :color="resolveStatusVariant(item.status)" variant="tonal">
             {{ item.status }}
           </VChip>
         </template>
@@ -661,11 +580,7 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <VBtn
-            icon
-            variant="text"
-            color="medium-emphasis"
-          >
+          <VBtn icon variant="text" color="medium-emphasis">
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
@@ -710,21 +625,14 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
 
         <!-- pagination -->
         <template #bottom>
-          <TablePagination
-            v-model:page="page"
-            :items-per-page="itemsPerPage"
-            :total-items="totalLeads"
-          />
+          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalLeads" />
         </template>
       </VDataTableServer>
       <!-- SECTION -->
     </VCard>
 
     <!-- 👉 Import Dialog -->
-    <VDialog
-      v-model="isImportDialogVisible"
-      max-width="600"
-    >
+    <VDialog v-model="isImportDialogVisible" max-width="600">
       <VCard>
         <VCardItem>
           <VCardTitle>Import Leads from CSV</VCardTitle>
@@ -732,40 +640,22 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
 
         <VCardText>
           <div class="mb-4">
-            <VBtn
-              variant="tonal"
-              color="secondary"
-              size="small"
-              prepend-icon="tabler-download"
-              @click="downloadExampleCSV"
-            >
+            <VBtn variant="tonal" color="secondary" size="small" prepend-icon="tabler-download"
+              @click="downloadExampleCSV">
               Download Example CSV
             </VBtn>
           </div>
 
-          <VFileInput
-            v-model="csvFile"
-            label="Select CSV File"
-            accept=".csv"
-            prepend-icon="tabler-file-upload"
-            show-size
-            @change="handleFileUpload"
-          />
+          <VFileInput v-model="csvFile" label="Select CSV File" accept=".csv" prepend-icon="tabler-file-upload"
+            show-size @change="handleFileUpload" />
         </VCardText>
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isImportDialogVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isImportDialogVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="importCSV"
-          >
+          <VBtn color="primary" @click="importCSV">
             Import
           </VBtn>
         </VCardActions>
@@ -773,10 +663,7 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
     </VDialog>
 
     <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isDeleteDialogVisible"
-      max-width="500"
-    >
+    <VDialog v-model="isDeleteDialogVisible" max-width="500">
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -788,17 +675,10 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDialogVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteLead"
-          >
+          <VBtn color="error" @click="deleteLead">
             Delete
           </VBtn>
         </VCardActions>
@@ -806,32 +686,19 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
     </VDialog>
 
     <!-- 👉 Assign Lead Modal -->
-    <AssignLeadModal
-      v-model:is-dialog-visible="isAssignLeadModalVisible"
-      :lead-id="selectedLeadForAssign || 0"
-      :sales-associates="salesAssociates"
-      @lead-assigned="onLeadAssigned"
-    />
+    <AssignLeadModal v-model:is-dialog-visible="isAssignLeadModalVisible" :lead-id="selectedLeadForAssign || 0"
+      :sales-associates="salesAssociates" @lead-assigned="onLeadAssigned" />
 
     <!-- 👉 Convert Lead Modal -->
-    <ConvertLeadModal
-      v-model:is-dialog-visible="isConvertLeadModalVisible"
-      :lead-id="selectedLeadForConvert || 0"
-      @lead-converted="onLeadConverted"
-    />
+    <ConvertLeadModal v-model:is-dialog-visible="isConvertLeadModalVisible" :lead-id="selectedLeadForConvert || 0"
+      @lead-converted="onLeadConverted" />
 
     <!-- 👉 Mark as Lost Modal -->
-    <MarkAsLostModal
-      v-model:is-dialog-visible="isMarkAsLostModalVisible"
-      :lead-id="selectedLeadForMarkLost || 0"
-      @lead-marked-lost="onLeadMarkedLost"
-    />
+    <MarkAsLostModal v-model:is-dialog-visible="isMarkAsLostModalVisible" :lead-id="selectedLeadForMarkLost || 0"
+      @lead-marked-lost="onLeadMarkedLost" />
 
     <!-- 👉 Add Note Modal -->
-    <AddNoteModal
-      v-model:is-dialog-visible="isAddNoteModalVisible"
-      :lead-id="selectedLeadForNote || 0"
-      @note-added="onNoteAdded"
-    />
+    <AddNoteModal v-model:is-dialog-visible="isAddNoteModalVisible" :lead-id="selectedLeadForNote || 0"
+      @note-added="onNoteAdded" />
   </section>
 </template>

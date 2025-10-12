@@ -621,6 +621,12 @@ onMounted(() => {
             { value: 100, title: '100' },
             { value: -1, title: 'All' },
           ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+
+          <!-- Bulk Actions -->
+          <VBtn v-if="selectedRows.length > 0" variant="tonal" color="error" @click="bulkDelete">
+            <VIcon icon="tabler-trash" class="me-2" />
+            Delete Selected ({{ selectedRows.length }})
+          </VBtn>
         </div>
         <VSpacer />
 
