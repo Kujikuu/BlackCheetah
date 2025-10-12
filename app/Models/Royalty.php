@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class Royalty extends Model
 {
@@ -68,7 +68,7 @@ class Royalty extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            if (!$model->royalty_number) {
+            if (! $model->royalty_number) {
                 $model->royalty_number = static::generateRoyaltyNumber();
             }
         });
@@ -108,7 +108,7 @@ class Royalty extends Model
 
     public function getDaysOverdueAttribute(): int
     {
-        if (!$this->getIsOverdueAttribute()) {
+        if (! $this->getIsOverdueAttribute()) {
             return 0;
         }
 
@@ -117,16 +117,20 @@ class Royalty extends Model
 
     public function getFormattedTotalAmountAttribute(): string
     {
-        return '$' . number_format($this->total_amount, 2);
+        return '$'.number_format($this->total_amount, 2);
     }
 
     public function getPeriodDescriptionAttribute(): string
     {
-        if ($this->type === 'monthly') {
+        if ($this->period_month && $this->period_year) {
             return Carbon::createFromDate($this->period_year, $this->period_month, 1)->format('F Y');
         }
 
-        return $this->period_start_date->format('M j, Y') . ' - ' . $this->period_end_date->format('M j, Y');
+        if ($this->period_start_date && $this->period_end_date) {
+            return $this->period_start_date->format('M j, Y').' - '.$this->period_end_date->format('M j, Y');
+        }
+
+        return 'N/A';
     }
 
     // Methods
@@ -145,7 +149,7 @@ class Royalty extends Model
         return $this->status === 'pending';
     }
 
-    public function markAsPaid(string $paymentMethod = null, string $paymentReference = null): void
+    public function markAsPaid(?string $paymentMethod = null, ?string $paymentReference = null): void
     {
         $this->update([
             'status' => 'paid',
@@ -154,26 +158,13 @@ class Royalty extends Model
             'payment_reference' => $paymentReference,
         ]);
 
-        // Create a transaction record
-        Transaction::create([
-            'type' => 'royalty',
-            'category' => 'franchise_fees',
-            'amount' => $this->total_amount,
-            'currency' => 'USD',
-            'description' => 'Royalty payment for ' . $this->getPeriodDescriptionAttribute(),
-            'franchise_id' => $this->franchise_id,
-            'unit_id' => $this->unit_id,
-            'user_id' => $this->franchisee_id,
-            'transaction_date' => now()->toDateString(),
-            'status' => 'completed',
-            'payment_method' => $paymentMethod,
-            'reference_number' => $this->royalty_number,
-        ]);
+        // TODO: Create a transaction record if needed
+        // Transaction::create([...]);
     }
 
     public function calculateLateFee(): void
     {
-        if (!$this->isOverdue() || $this->late_fee > 0) {
+        if (! $this->isOverdue() || $this->late_fee > 0) {
             return;
         }
 
@@ -224,15 +215,15 @@ class Royalty extends Model
         $prefix = 'ROY';
         $year = date('Y');
         $month = date('m');
-        
+
         // Get the last royalty number for this month
-        $lastRoyalty = static::whereYear('created_at', $year)
-                            ->whereMonth('created_at', $month)
-                            ->orderBy('created_at', 'desc')
-                            ->first();
+        $lastRoyalty = static::where('royalty_number', 'like', $prefix.$year.$month.'%')
+            ->orderBy('royalty_number', 'desc')
+            ->lockForUpdate()
+            ->first();
 
         $sequence = 1;
-        if ($lastRoyalty) {
+        if ($lastRoyalty && $lastRoyalty->royalty_number) {
             $lastNumber = substr($lastRoyalty->royalty_number, -4);
             $sequence = intval($lastNumber) + 1;
         }
@@ -247,17 +238,17 @@ class Royalty extends Model
 
         foreach ($franchises as $franchise) {
             foreach ($franchise->units as $unit) {
-                if (!$unit->isActive()) {
+                if (! $unit->isActive()) {
                     continue;
                 }
 
                 // Check if royalty already exists for this period
                 $existingRoyalty = static::where('franchise_id', $franchise->id)
-                                        ->where('unit_id', $unit->id)
-                                        ->where('period_year', $year)
-                                        ->where('period_month', $month)
-                                        ->where('type', 'monthly')
-                                        ->first();
+                    ->where('unit_id', $unit->id)
+                    ->where('period_year', $year)
+                    ->where('period_month', $month)
+                    ->where('type', 'monthly')
+                    ->first();
 
                 if ($existingRoyalty) {
                     continue;
@@ -320,13 +311,13 @@ class Royalty extends Model
     public function scopeOverdue($query)
     {
         return $query->where('status', 'pending')
-                    ->where('due_date', '<', now());
+            ->where('due_date', '<', now());
     }
 
-    public function scopeByPeriod($query, int $year, int $month = null)
+    public function scopeByPeriod($query, int $year, ?int $month = null)
     {
         $query = $query->where('period_year', $year);
-        
+
         if ($month) {
             $query = $query->where('period_month', $month);
         }

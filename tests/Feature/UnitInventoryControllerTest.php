@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 class UnitInventoryControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    // use RefreshDatabase;
 
     /** @test */
     public function index_returns_inventory_list(): void

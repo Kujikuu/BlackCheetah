@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 class TechnicalRequestStatusTest extends TestCase
 {
-    use RefreshDatabase;
+    // use RefreshDatabase;
 
     public function test_admin_can_update_technical_request_status_with_patch(): void
     {

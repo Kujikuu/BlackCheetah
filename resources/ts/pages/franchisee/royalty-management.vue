@@ -1,25 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { royaltyApi, type RoyaltyRecord, type PaymentData, type RoyaltyStatistics } from '@/services/api/royalty'
 
-// Type definitions
-interface RoyaltyRecord {
-  id: string
-  billingPeriod: string
-  franchiseeName: string
-  storeLocation: string
-  dueDate: string
-  grossSales: number
-  royaltyPercentage: number
-  amount: number
-  status: 'pending' | 'paid' | 'overdue'
-}
-
-interface PaymentData {
-  amountPaid: number
-  paymentDate: string
-  paymentType: string
-  attachment: File | null
-}
+// Loading states
+const isLoading = ref(false)
+const isLoadingStats = ref(false)
 
 // Reactive data
 const selectedPeriod = ref('monthly')
@@ -33,116 +18,27 @@ const exportDataType = ref('all')
 
 // Payment form data
 const paymentData = ref<PaymentData>({
-  amountPaid: 0,
-  paymentDate: '',
-  paymentType: '',
+  amount_paid: 0,
+  payment_date: '',
+  payment_type: '',
   attachment: null,
 })
 
-// Mock royalty data
-const royaltyRecords = ref<RoyaltyRecord[]>([
-  {
-    id: '1',
-    billingPeriod: 'January 2024',
-    franchiseeName: 'Downtown Branch',
-    storeLocation: 'New York, NY',
-    dueDate: '2024-02-15',
-    grossSales: 125000,
-    royaltyPercentage: 8,
-    amount: 10000,
-    status: 'paid',
-  },
-  {
-    id: '2',
-    billingPeriod: 'February 2024',
-    franchiseeName: 'Mall Location',
-    storeLocation: 'Los Angeles, CA',
-    dueDate: '2024-03-15',
-    grossSales: 110000,
-    royaltyPercentage: 8,
-    amount: 8800,
-    status: 'paid',
-  },
-  {
-    id: '3',
-    billingPeriod: 'March 2024',
-    franchiseeName: 'Airport Store',
-    storeLocation: 'Chicago, IL',
-    dueDate: '2024-04-15',
-    grossSales: 135000,
-    royaltyPercentage: 8,
-    amount: 10800,
-    status: 'pending',
-  },
-  {
-    id: '4',
-    billingPeriod: 'March 2024',
-    franchiseeName: 'Suburban Center',
-    storeLocation: 'Houston, TX',
-    dueDate: '2024-04-15',
-    grossSales: 98000,
-    royaltyPercentage: 8,
-    amount: 7840,
-    status: 'pending',
-  },
-  {
-    id: '5',
-    billingPeriod: 'February 2024',
-    franchiseeName: 'City Plaza',
-    storeLocation: 'Phoenix, AZ',
-    dueDate: '2024-03-15',
-    grossSales: 105000,
-    royaltyPercentage: 8,
-    amount: 8400,
-    status: 'overdue',
-  },
-  {
-    id: '6',
-    billingPeriod: 'April 2024',
-    franchiseeName: 'Downtown Branch',
-    storeLocation: 'New York, NY',
-    dueDate: '2024-05-15',
-    grossSales: 142000,
-    royaltyPercentage: 8,
-    amount: 11360,
-    status: 'pending',
-  },
-  {
-    id: '7',
-    billingPeriod: 'April 2024',
-    franchiseeName: 'Mall Location',
-    storeLocation: 'Los Angeles, CA',
-    dueDate: '2024-05-15',
-    grossSales: 118000,
-    royaltyPercentage: 8,
-    amount: 9440,
-    status: 'pending',
-  },
-  {
-    id: '8',
-    billingPeriod: 'January 2024',
-    franchiseeName: 'City Plaza',
-    storeLocation: 'Phoenix, AZ',
-    dueDate: '2024-02-15',
-    grossSales: 89000,
-    royaltyPercentage: 8,
-    amount: 7120,
-    status: 'overdue',
-  },
-])
+// Data from API
+const royaltyRecords = ref<RoyaltyRecord[]>([])
+const statistics = ref<RoyaltyStatistics>({
+  royalty_collected_till_date: 0,
+  upcoming_royalties: 0,
+  total_royalties: 0,
+  pending_amount: 0,
+  paid_amount: 0,
+  overdue_amount: 0,
+  overdue_count: 0,
+})
 
 // Computed values for stat cards
-const royaltyCollectedTillDate = computed(() => {
-  return royaltyRecords.value
-    .filter(record => record.status === 'paid')
-    .reduce((sum, record) => sum + record.amount, 0)
-})
-
-const upcomingRoyalties = computed(() => {
-  return royaltyRecords.value
-    .filter(record => record.status === 'pending')
-    .reduce((sum, record) => sum + record.amount, 0)
-})
+const royaltyCollectedTillDate = computed(() => statistics.value.royalty_collected_till_date)
+const upcomingRoyalties = computed(() => statistics.value.upcoming_royalties)
 
 // Period options
 const periodOptions = [
@@ -189,75 +85,67 @@ const tableHeaders = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
+// API Functions
+const fetchRoyalties = async () => {
+  try {
+    isLoading.value = true
+    const response = await royaltyApi.getRoyalties({
+      period: selectedPeriod.value,
+    })
+    royaltyRecords.value = response.data.data
+  }
+  catch (error) {
+    console.error('Error fetching royalties:', error)
+  }
+  finally {
+    isLoading.value = false
+  }
+}
+
+const fetchStatistics = async () => {
+  try {
+    isLoadingStats.value = true
+    const response = await royaltyApi.getStatistics({
+      period: selectedPeriod.value,
+    })
+    statistics.value = response.data
+  }
+  catch (error) {
+    console.error('Error fetching statistics:', error)
+  }
+  finally {
+    isLoadingStats.value = false
+  }
+}
+
 // Functions
 const openExportDialog = () => {
   isExportDialogVisible.value = true
 }
 
-const performExport = () => {
-  let dataToExport = royaltyRecords.value
+const performExport = async () => {
+  try {
+    const blob = await royaltyApi.exportRoyalties({
+      format: exportFormat.value as 'csv' | 'excel',
+      data_type: exportDataType.value as 'all' | 'paid' | 'pending' | 'overdue',
+      period: selectedPeriod.value as 'daily' | 'monthly' | 'yearly',
+    })
 
-  // Filter data based on export type
-  if (exportDataType.value !== 'all')
-    dataToExport = royaltyRecords.value.filter(record => record.status === exportDataType.value)
+    // Create download link
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `royalty-data-${selectedPeriod.value}-${new Date().toISOString().split('T')[0]}.${exportFormat.value === 'csv' ? 'csv' : 'xlsx'}`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
 
-  const exportData = {
-    period: selectedPeriod.value,
-    format: exportFormat.value,
-    dataType: exportDataType.value,
-    records: dataToExport.length,
-    currency: 'SAR',
-    exportedAt: new Date().toISOString(),
-    data: dataToExport,
+    isExportDialogVisible.value = false
   }
-
-  console.log('Exporting royalty data:', exportData)
-
-  // Here you would implement actual export logic
-  if (exportFormat.value === 'csv')
-    exportToCSV(dataToExport)
-  else
-    exportToExcel(dataToExport)
-
-  isExportDialogVisible.value = false
-}
-
-const exportToCSV = (data: RoyaltyRecord[]) => {
-  const headers = ['Billing Period', 'Franchisee Name', 'Store Location', 'Due Date', 'Gross Sales (SAR)', 'Royalty %', 'Amount (SAR)', 'Status']
-
-  const csvContent = [
-    headers.join(','),
-    ...data.map(record => [
-      record.billingPeriod,
-      record.franchiseeName,
-      record.storeLocation,
-      record.dueDate,
-      record.grossSales,
-      record.royaltyPercentage,
-      record.amount,
-      record.status,
-    ].join(',')),
-  ].join('\n')
-
-  downloadFile(csvContent, `royalty-data-${selectedPeriod.value}.csv`, 'text/csv')
-}
-
-const exportToExcel = (data: RoyaltyRecord[]) => {
-  // Placeholder for Excel export
-  console.log('Excel export would be implemented here', data)
-}
-
-const downloadFile = (content: string, fileName: string, contentType: string) => {
-  const blob = new Blob([content], { type: contentType })
-  const url = window.URL.createObjectURL(blob)
-  const link = document.createElement('a')
-
-  link.href = url
-  link.download = fileName
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  window.URL.revokeObjectURL(url)
+  catch (error) {
+    console.error('Error exporting royalties:', error)
+  }
 }
 
 const viewRoyalty = (royalty: RoyaltyRecord) => {
@@ -268,36 +156,37 @@ const viewRoyalty = (royalty: RoyaltyRecord) => {
 const markAsCompleted = (royalty: RoyaltyRecord) => {
   selectedRoyalty.value = royalty
   paymentData.value = {
-    amountPaid: royalty.amount,
-    paymentDate: new Date().toISOString().split('T')[0],
-    paymentType: '',
+    amount_paid: royalty.amount,
+    payment_date: new Date().toISOString().split('T')[0],
+    payment_type: '',
     attachment: null,
   }
   isMarkCompletedModalVisible.value = true
 }
 
-const submitPayment = () => {
+const submitPayment = async () => {
   if (!selectedRoyalty.value)
     return
 
-  // Update the royalty status
-  const index = royaltyRecords.value.findIndex(r => r.id === selectedRoyalty.value?.id)
-  if (index !== -1)
-    royaltyRecords.value[index].status = 'paid'
+  try {
+    await royaltyApi.markAsPaid(selectedRoyalty.value.id, paymentData.value)
 
-  console.log('Payment submitted:', {
-    royaltyId: selectedRoyalty.value.id,
-    paymentData: paymentData.value,
-  })
+    // Refresh data
+    await fetchRoyalties()
+    await fetchStatistics()
 
-  // Reset form and close modal
-  isMarkCompletedModalVisible.value = false
-  selectedRoyalty.value = null
-  paymentData.value = {
-    amountPaid: 0,
-    paymentDate: '',
-    paymentType: '',
-    attachment: null,
+    // Reset form and close modal
+    isMarkCompletedModalVisible.value = false
+    selectedRoyalty.value = null
+    paymentData.value = {
+      amount_paid: 0,
+      payment_date: '',
+      payment_type: '',
+      attachment: null,
+    }
+  }
+  catch (error) {
+    console.error('Error marking royalty as paid:', error)
   }
 }
 
@@ -323,6 +212,12 @@ const formatDate = (dateString: string) => {
     day: 'numeric',
   })
 }
+
+// Lifecycle hooks
+onMounted(() => {
+  fetchRoyalties()
+  fetchStatistics()
+})
 </script>
 
 <template>
@@ -465,35 +360,35 @@ const formatDate = (dateString: string) => {
             <!-- Billing Period Column -->
             <template #item.billingPeriod="{ item }">
               <div class="font-weight-medium">
-                {{ item.billingPeriod }}
+                {{ item.billing_period }}
               </div>
             </template>
 
             <!-- Franchisee Name Column -->
             <template #item.franchiseeName="{ item }">
               <div class="font-weight-medium text-primary">
-                {{ item.franchiseeName }}
+                {{ item.franchisee_name }}
               </div>
             </template>
 
             <!-- Store Location Column -->
             <template #item.storeLocation="{ item }">
               <div class="text-body-2 text-medium-emphasis">
-                {{ item.storeLocation }}
+                {{ item.store_location }}
               </div>
             </template>
 
             <!-- Due Date Column -->
             <template #item.dueDate="{ item }">
               <div class="text-body-2">
-                {{ formatDate(item.dueDate) }}
+                {{ formatDate(item.due_date) }}
               </div>
             </template>
 
             <!-- Gross Sales Column -->
             <template #item.grossSales="{ item }">
               <div class="font-weight-medium text-info">
-                {{ item.grossSales.toLocaleString() }}
+                {{ item.gross_sales.toLocaleString() }}
               </div>
             </template>
 
@@ -504,7 +399,7 @@ const formatDate = (dateString: string) => {
                 variant="tonal"
                 color="primary"
               >
-                {{ item.royaltyPercentage }}%
+                {{ item.royalty_percentage }}%
               </VChip>
             </template>
 
@@ -658,7 +553,7 @@ const formatDate = (dateString: string) => {
             Mark Royalty as Completed
           </VCardTitle>
           <VCardSubtitle v-if="selectedRoyalty">
-            {{ selectedRoyalty.franchiseeName }} - {{ selectedRoyalty.billingPeriod }}
+            {{ selectedRoyalty.franchisee_name }} - {{ selectedRoyalty.billing_period }}
           </VCardSubtitle>
         </VCardItem>
 
@@ -670,7 +565,7 @@ const formatDate = (dateString: string) => {
                 md="6"
               >
                 <VTextField
-                  v-model.number="paymentData.amountPaid"
+                  v-model.number="paymentData.amount_paid"
                   label="Amount Paid (SAR)"
                   type="number"
                   variant="outlined"
@@ -683,7 +578,7 @@ const formatDate = (dateString: string) => {
                 md="6"
               >
                 <VTextField
-                  v-model="paymentData.paymentDate"
+                  v-model="paymentData.payment_date"
                   label="Payment Date"
                   type="date"
                   variant="outlined"
@@ -693,7 +588,7 @@ const formatDate = (dateString: string) => {
               </VCol>
               <VCol cols="12">
                 <VSelect
-                  v-model="paymentData.paymentType"
+                  v-model="paymentData.payment_type"
                   :items="paymentTypeOptions"
                   item-title="title"
                   item-value="value"
@@ -756,7 +651,7 @@ const formatDate = (dateString: string) => {
             Royalty Details
           </VCardTitle>
           <VCardSubtitle>
-            {{ viewedRoyalty.franchiseeName }} - {{ viewedRoyalty.billingPeriod }}
+            {{ viewedRoyalty.franchisee_name }} - {{ viewedRoyalty.billing_period }}
           </VCardSubtitle>
         </VCardItem>
 
@@ -780,7 +675,7 @@ const formatDate = (dateString: string) => {
                   Billing Period
                 </div>
                 <div class="font-weight-medium">
-                  {{ viewedRoyalty.billingPeriod }}
+                  {{ viewedRoyalty.billing_period }}
                 </div>
               </div>
             </VCol>
@@ -794,7 +689,7 @@ const formatDate = (dateString: string) => {
                   Due Date
                 </div>
                 <div class="font-weight-medium">
-                  {{ formatDate(viewedRoyalty.dueDate) }}
+                  {{ formatDate(viewedRoyalty.due_date) }}
                 </div>
               </div>
             </VCol>
@@ -808,7 +703,7 @@ const formatDate = (dateString: string) => {
                   Franchisee Name
                 </div>
                 <div class="font-weight-medium text-primary">
-                  {{ viewedRoyalty.franchiseeName }}
+                  {{ viewedRoyalty.franchisee_name }}
                 </div>
               </div>
             </VCol>
@@ -822,7 +717,7 @@ const formatDate = (dateString: string) => {
                   Store Location
                 </div>
                 <div class="font-weight-medium">
-                  {{ viewedRoyalty.storeLocation }}
+                  {{ viewedRoyalty.store_location }}
                 </div>
               </div>
             </VCol>
@@ -854,7 +749,7 @@ const formatDate = (dateString: string) => {
                     Gross Sales
                   </div>
                   <div class="text-h6 font-weight-bold">
-                    {{ viewedRoyalty.grossSales.toLocaleString() }} SAR
+                    {{ viewedRoyalty.gross_sales.toLocaleString() }} SAR
                   </div>
                 </div>
               </VCard>
@@ -879,7 +774,7 @@ const formatDate = (dateString: string) => {
                     Royalty Rate
                   </div>
                   <div class="text-h6 font-weight-bold">
-                    {{ viewedRoyalty.royaltyPercentage }}%
+                    {{ viewedRoyalty.royalty_percentage }}%
                   </div>
                 </div>
               </VCard>
@@ -951,7 +846,7 @@ const formatDate = (dateString: string) => {
                   Days Until Due
                 </div>
                 <div class="font-weight-medium">
-                  {{ Math.ceil((new Date(viewedRoyalty.dueDate).getTime() - new Date().getTime())
+                  {{ Math.ceil((new Date(viewedRoyalty.due_date).getTime() - new Date().getTime())
                     / (1000 * 60
                       * 60 * 24)) }} days
                 </div>
@@ -974,7 +869,7 @@ const formatDate = (dateString: string) => {
                       Gross Sales:
                     </td>
                     <td class="text-end">
-                      {{ viewedRoyalty.grossSales.toLocaleString() }} SAR
+                      {{ viewedRoyalty.gross_sales.toLocaleString() }} SAR
                     </td>
                   </tr>
                   <tr>
@@ -982,7 +877,7 @@ const formatDate = (dateString: string) => {
                       Royalty Rate:
                     </td>
                     <td class="text-end">
-                      {{ viewedRoyalty.royaltyPercentage }}%
+                      {{ viewedRoyalty.royalty_percentage }}%
                     </td>
                   </tr>
                   <tr>
@@ -990,8 +885,8 @@ const formatDate = (dateString: string) => {
                       Calculation:
                     </td>
                     <td class="text-end">
-                      {{ viewedRoyalty.grossSales.toLocaleString() }} × {{
-                        viewedRoyalty.royaltyPercentage }}%
+                      {{ viewedRoyalty.gross_sales.toLocaleString() }} × {{
+                        viewedRoyalty.royalty_percentage }}%
                     </td>
                   </tr>
                   <tr class="bg-primary-lighten-5">

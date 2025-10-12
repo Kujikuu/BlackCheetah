@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Royalty;
+use App\Http\Resources\RoyaltyResource;
 use App\Models\Franchise;
+use App\Models\Royalty;
 use App\Models\Unit;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 
 class RoyaltyController extends Controller
 {
@@ -20,7 +20,7 @@ class RoyaltyController extends Controller
         $query = Royalty::with(['franchise', 'unit', 'franchisee', 'generatedBy']);
 
         // Apply filters
-        if ($request->has('status')) {
+        if ($request->has('status') && $request->status !== 'all') {
             $query->byStatus($request->status);
         }
 
@@ -56,7 +56,10 @@ class RoyaltyController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('royalty_number', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('franchisee', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -71,8 +74,14 @@ class RoyaltyController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $royalties,
-            'message' => 'Royalties retrieved successfully'
+            'data' => [
+                'data' => RoyaltyResource::collection($royalties->items()),
+                'current_page' => $royalties->currentPage(),
+                'last_page' => $royalties->lastPage(),
+                'per_page' => $royalties->perPage(),
+                'total' => $royalties->total(),
+            ],
+            'message' => 'Royalties retrieved successfully',
         ]);
     }
 
@@ -105,7 +114,7 @@ class RoyaltyController extends Controller
             'notes' => 'nullable|string',
             'metadata' => 'nullable|array',
             'attachments' => 'nullable|array',
-            'is_auto_generated' => 'boolean'
+            'is_auto_generated' => 'boolean',
         ]);
 
         $royalty = Royalty::create($validated);
@@ -113,7 +122,7 @@ class RoyaltyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $royalty->load(['franchise', 'unit', 'franchisee']),
-            'message' => 'Royalty created successfully'
+            'message' => 'Royalty created successfully',
         ], 201);
     }
 
@@ -127,7 +136,7 @@ class RoyaltyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $royalty,
-            'message' => 'Royalty retrieved successfully'
+            'message' => 'Royalty retrieved successfully',
         ]);
     }
 
@@ -159,7 +168,7 @@ class RoyaltyController extends Controller
             'description' => 'nullable|string|max:500',
             'notes' => 'nullable|string',
             'metadata' => 'nullable|array',
-            'attachments' => 'nullable|array'
+            'attachments' => 'nullable|array',
         ]);
 
         $royalty->update($validated);
@@ -167,7 +176,7 @@ class RoyaltyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $royalty->load(['franchise', 'unit', 'franchisee']),
-            'message' => 'Royalty updated successfully'
+            'message' => 'Royalty updated successfully',
         ]);
     }
 
@@ -180,7 +189,7 @@ class RoyaltyController extends Controller
         if ($royalty->status === 'paid') {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot delete paid royalty'
+                'message' => 'Cannot delete paid royalty',
             ], 422);
         }
 
@@ -188,7 +197,7 @@ class RoyaltyController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Royalty deleted successfully'
+            'message' => 'Royalty deleted successfully',
         ]);
     }
 
@@ -198,23 +207,41 @@ class RoyaltyController extends Controller
     public function markAsPaid(Request $request, Royalty $royalty): JsonResponse
     {
         $validated = $request->validate([
-            'payment_date' => 'nullable|date',
-            'payment_method' => 'nullable|string|max:100',
+            'amount_paid' => 'required|numeric|min:0',
+            'payment_date' => 'required|date',
+            'payment_method' => 'required|string|max:100',
             'payment_reference' => 'nullable|string|max:255',
-            'payment_notes' => 'nullable|string'
+            'notes' => 'nullable|string',
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240',
         ]);
 
+        // Handle file upload if present
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $path = $file->store('royalty-attachments', 'public');
+            $royalty->addAttachment($path);
+        }
+
+        // Mark as paid
         $royalty->markAsPaid(
-            $validated['payment_date'] ?? now(),
-            $validated['payment_method'] ?? null,
-            $validated['payment_reference'] ?? null,
-            $validated['payment_notes'] ?? null
+            $validated['payment_method'],
+            $validated['payment_reference'] ?? null
         );
+
+        // Update payment date if different from default
+        if (isset($validated['payment_date'])) {
+            $royalty->update(['paid_date' => $validated['payment_date']]);
+        }
+
+        // Add notes if provided
+        if (isset($validated['notes'])) {
+            $royalty->update(['notes' => $validated['notes']]);
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $royalty,
-            'message' => 'Royalty marked as paid successfully'
+            'data' => $royalty->fresh(['franchise', 'unit', 'franchisee']),
+            'message' => 'Royalty marked as paid successfully',
         ]);
     }
 
@@ -230,9 +257,9 @@ class RoyaltyController extends Controller
             'data' => [
                 'royalty' => $royalty,
                 'late_fee' => $lateFee,
-                'days_overdue' => $royalty->days_overdue
+                'days_overdue' => $royalty->days_overdue,
             ],
-            'message' => 'Late fee calculated successfully'
+            'message' => 'Late fee calculated successfully',
         ]);
     }
 
@@ -243,7 +270,7 @@ class RoyaltyController extends Controller
     {
         $validated = $request->validate([
             'adjustment_amount' => 'required|numeric',
-            'adjustment_reason' => 'required|string|max:500'
+            'adjustment_reason' => 'required|string|max:500',
         ]);
 
         $royalty->addAdjustment($validated['adjustment_amount'], $validated['adjustment_reason']);
@@ -251,7 +278,7 @@ class RoyaltyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $royalty,
-            'message' => 'Adjustment added successfully'
+            'message' => 'Adjustment added successfully',
         ]);
     }
 
@@ -262,7 +289,7 @@ class RoyaltyController extends Controller
     {
         $validated = $request->validate([
             'attachment_url' => 'required|string|max:500',
-            'attachment_name' => 'required|string|max:255'
+            'attachment_name' => 'required|string|max:255',
         ]);
 
         $royalty->addAttachment($validated['attachment_url'], $validated['attachment_name']);
@@ -270,7 +297,7 @@ class RoyaltyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $royalty,
-            'message' => 'Attachment added successfully'
+            'message' => 'Attachment added successfully',
         ]);
     }
 
@@ -282,7 +309,7 @@ class RoyaltyController extends Controller
         $validated = $request->validate([
             'year' => 'required|integer|min:2020|max:2030',
             'month' => 'required|integer|min:1|max:12',
-            'franchise_id' => 'nullable|exists:franchises,id'
+            'franchise_id' => 'nullable|exists:franchises,id',
         ]);
 
         $royalties = Royalty::generateMonthlyRoyalties(
@@ -294,7 +321,7 @@ class RoyaltyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $royalties,
-            'message' => 'Monthly royalties generated successfully'
+            'message' => 'Monthly royalties generated successfully',
         ]);
     }
 
@@ -320,7 +347,7 @@ class RoyaltyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $royalties,
-            'message' => 'Pending royalties retrieved successfully'
+            'message' => 'Pending royalties retrieved successfully',
         ]);
     }
 
@@ -346,7 +373,7 @@ class RoyaltyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $royalties,
-            'message' => 'Overdue royalties retrieved successfully'
+            'message' => 'Overdue royalties retrieved successfully',
         ]);
     }
 
@@ -355,9 +382,13 @@ class RoyaltyController extends Controller
      */
     public function statistics(Request $request): JsonResponse
     {
-        $query = Royalty::query();
+        // For franchisor routes, filter by their franchises
+        $user = $request->user();
+        $franchiseIds = Franchise::where('franchisor_id', $user->id)->pluck('id');
 
-        // Apply filters
+        $query = Royalty::whereIn('franchise_id', $franchiseIds);
+
+        // Apply additional filters
         if ($request->has('franchise_id')) {
             $query->byFranchise($request->franchise_id);
         }
@@ -371,65 +402,183 @@ class RoyaltyController extends Controller
         }
 
         $stats = [
-            'total_royalties' => $query->count(),
-            'total_amount' => $query->sum('total_amount'),
-            'pending_royalties' => $query->pending()->count(),
-            'pending_amount' => $query->pending()->sum('total_amount'),
-            'paid_royalties' => $query->paid()->count(),
-            'paid_amount' => $query->paid()->sum('total_amount'),
-            'overdue_royalties' => $query->overdue()->count(),
-            'overdue_amount' => $query->overdue()->sum('total_amount'),
-            'auto_generated_royalties' => $query->autoGenerated()->count(),
-            'royalties_by_type' => $query->groupBy('type')
+            'royalty_collected_till_date' => (clone $query)->paid()->sum('total_amount'),
+            'upcoming_royalties' => (clone $query)->pending()->sum('total_amount'),
+            'total_royalties' => (clone $query)->count(),
+            'total_amount' => (clone $query)->sum('total_amount'),
+            'pending_royalties' => (clone $query)->pending()->count(),
+            'pending_amount' => (clone $query)->pending()->sum('total_amount'),
+            'paid_royalties' => (clone $query)->paid()->count(),
+            'paid_amount' => (clone $query)->paid()->sum('total_amount'),
+            'overdue_royalties' => (clone $query)->overdue()->count(),
+            'overdue_amount' => (clone $query)->overdue()->sum('total_amount'),
+            'auto_generated_royalties' => (clone $query)->autoGenerated()->count(),
+            'royalties_by_type' => (clone $query)->groupBy('type')
                 ->selectRaw('type, count(*) as count, sum(total_amount) as total_amount')
                 ->get()
                 ->keyBy('type'),
-            'royalties_by_status' => $query->groupBy('status')
+            'royalties_by_status' => (clone $query)->groupBy('status')
                 ->selectRaw('status, count(*) as count, sum(total_amount) as total_amount')
                 ->get()
                 ->keyBy('status'),
-            'monthly_royalties' => $query->where('type', 'monthly')
+            'monthly_royalties' => (clone $query)->where('type', 'royalty')
                 ->selectRaw('period_year, period_month, count(*) as count, sum(total_amount) as total_amount')
                 ->groupBy('period_year', 'period_month')
                 ->orderBy('period_year', 'desc')
                 ->orderBy('period_month', 'desc')
                 ->limit(12)
                 ->get(),
-            'average_royalty_amount' => $query->avg('total_amount'),
-            'collection_rate' => $query->count() > 0 ? 
-                ($query->paid()->count() / $query->count()) * 100 : 0
+            'average_royalty_amount' => (clone $query)->avg('total_amount'),
+            'collection_rate' => (clone $query)->count() > 0 ?
+                ((clone $query)->paid()->count() / (clone $query)->count()) * 100 : 0,
         ];
 
         return response()->json([
             'success' => true,
             'data' => $stats,
-            'message' => 'Royalty statistics retrieved successfully'
+            'message' => 'Royalty statistics retrieved successfully',
         ]);
     }
 
     /**
-     * Get current user's royalties (for franchise owners)
+     * Export royalty data
+     */
+    public function export(Request $request)
+    {
+        $validated = $request->validate([
+            'format' => 'required|in:csv,excel',
+            'data_type' => 'required|in:all,paid,pending,overdue',
+            'period' => 'nullable|in:daily,monthly,yearly',
+        ]);
+
+        $query = Royalty::with(['franchise', 'unit', 'franchisee']);
+
+        // Filter by data type
+        if ($validated['data_type'] !== 'all') {
+            $query->byStatus($validated['data_type']);
+        }
+
+        $royalties = $query->get();
+
+        if ($validated['format'] === 'csv') {
+            return $this->exportToCsv($royalties);
+        }
+
+        return $this->exportToExcel($royalties);
+    }
+
+    /**
+     * Export royalties to CSV
+     */
+    protected function exportToCsv($royalties)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="royalties-'.now()->format('Y-m-d').'.csv"',
+        ];
+
+        $callback = function () use ($royalties) {
+            $file = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($file, [
+                'Royalty Number',
+                'Billing Period',
+                'Franchisee Name',
+                'Store Location',
+                'Due Date',
+                'Gross Sales (SAR)',
+                'Royalty %',
+                'Amount (SAR)',
+                'Status',
+                'Paid Date',
+            ]);
+
+            // Add data rows
+            foreach ($royalties as $royalty) {
+                fputcsv($file, [
+                    $royalty->royalty_number,
+                    $royalty->period_description,
+                    $royalty->franchisee->name ?? 'N/A',
+                    $royalty->unit->location ?? 'N/A',
+                    $royalty->due_date?->format('Y-m-d'),
+                    $royalty->gross_revenue,
+                    $royalty->royalty_percentage,
+                    $royalty->total_amount,
+                    $royalty->status,
+                    $royalty->paid_date?->format('Y-m-d') ?? 'N/A',
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export royalties to Excel
+     */
+    protected function exportToExcel($royalties)
+    {
+        // For now, return CSV format
+        // In production, you would use a package like PhpSpreadsheet
+        return $this->exportToCsv($royalties);
+    }
+
+    /**
+     * Get current user's royalties (for franchisors)
      */
     public function myRoyalties(Request $request): JsonResponse
     {
         $user = $request->user();
-        $franchise = Franchise::where('owner_id', $user->id)->first();
 
-        if (!$franchise) {
+        // Get all franchises owned by this franchisor
+        $franchiseIds = Franchise::where('franchisor_id', $user->id)->pluck('id');
+
+        if ($franchiseIds->isEmpty()) {
             return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user'
-            ], 404);
+                'success' => true,
+                'data' => [
+                    'data' => [],
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => 15,
+                    'total' => 0,
+                ],
+                'message' => 'No franchises found for current user',
+            ]);
         }
 
-        $royalties = Royalty::where('franchise_id', $franchise->id)
-            ->with(['franchise', 'unit'])
-            ->paginate(15);
+        $query = Royalty::whereIn('franchise_id', $franchiseIds)
+            ->with(['franchise', 'unit', 'franchisee']);
+
+        // Apply filters
+        if ($request->has('status') && $request->status !== 'all') {
+            $query->byStatus($request->status);
+        }
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('royalty_number', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = $request->get('per_page', 15);
+        $royalties = $query->paginate($perPage);
 
         return response()->json([
             'success' => true,
-            'data' => $royalties,
-            'message' => 'Royalties retrieved successfully'
+            'data' => [
+                'data' => RoyaltyResource::collection($royalties->items()),
+                'current_page' => $royalties->currentPage(),
+                'last_page' => $royalties->lastPage(),
+                'per_page' => $royalties->perPage(),
+                'total' => $royalties->total(),
+            ],
+            'message' => 'Royalties retrieved successfully',
         ]);
     }
 
@@ -441,10 +590,10 @@ class RoyaltyController extends Controller
         $user = $request->user();
         $unit = Unit::where('manager_id', $user->id)->first();
 
-        if (!$unit) {
+        if (! $unit) {
             return response()->json([
                 'success' => false,
-                'message' => 'No unit found for current user'
+                'message' => 'No unit found for current user',
             ], 404);
         }
 
@@ -455,7 +604,7 @@ class RoyaltyController extends Controller
         return response()->json([
             'success' => true,
             'data' => $royalties,
-            'message' => 'Unit royalties retrieved successfully'
+            'message' => 'Unit royalties retrieved successfully',
         ]);
     }
 }

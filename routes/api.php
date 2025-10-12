@@ -153,10 +153,13 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
         Route::delete('technical-requests/{id}', [AdminController::class, 'deleteTechnicalRequest']);
     });
 
-    // Technical Request Routes
-    Route::apiResource('technical-requests', TechnicalRequestController::class);
+    // Technical Request Routes (specific routes before resource routes)
     Route::prefix('technical-requests')->group(function () {
         Route::get('statistics', [TechnicalRequestController::class, 'statistics']);
+        Route::post('bulk-delete', [TechnicalRequestController::class, 'bulkDelete']);
+    });
+    Route::apiResource('technical-requests', TechnicalRequestController::class);
+    Route::prefix('technical-requests')->group(function () {
         Route::patch('{technicalRequest}/assign', [TechnicalRequestController::class, 'assign']);
         Route::post('{technicalRequest}/respond', [TechnicalRequestController::class, 'respond']);
         Route::patch('{technicalRequest}/resolve', [TechnicalRequestController::class, 'resolve']);
@@ -377,6 +380,8 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     // Financial data for franchisor
     Route::get('transactions', [TransactionController::class, 'myTransactions']);
     Route::get('royalties', [RoyaltyController::class, 'myRoyalties']);
+    Route::get('royalties/statistics', [RoyaltyController::class, 'statistics']);
+    Route::get('royalties/export', [RoyaltyController::class, 'export']);
     Route::get('revenues', [RevenueController::class, 'myRevenues']);
     Route::patch('royalties/{royalty}/mark-paid', [RoyaltyController::class, 'markAsPaid']);
     Route::post('royalties/{royalty}/late-fee', [RoyaltyController::class, 'calculateLateFee']);

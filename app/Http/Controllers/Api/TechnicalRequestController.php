@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\TechnicalRequest;
+use App\Http\Resources\TechnicalRequestResource;
 use App\Models\Franchise;
+use App\Models\TechnicalRequest;
 use App\Models\Unit;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 
 class TechnicalRequestController extends Controller
 {
@@ -48,8 +48,8 @@ class TechnicalRequestController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('ticket_number', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('ticket_number', 'like', "%{$search}%");
             });
         }
 
@@ -65,7 +65,7 @@ class TechnicalRequestController extends Controller
         return response()->json([
             'success' => true,
             'data' => $requests,
-            'message' => 'Technical requests retrieved successfully'
+            'message' => 'Technical requests retrieved successfully',
         ]);
     }
 
@@ -77,7 +77,7 @@ class TechnicalRequestController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'category' => 'required|in:bug,feature_request,technical_issue,system_error,performance,security,integration,other',
+            'category' => 'required|in:hardware,software,network,pos_system,website,mobile_app,training,other',
             'priority' => 'required|in:low,medium,high,urgent',
             'status' => 'required|in:open,in_progress,resolved,closed,cancelled',
             'requester_id' => 'required|exists:users,id',
@@ -92,15 +92,15 @@ class TechnicalRequestController extends Controller
             'operating_system' => 'nullable|string|max:100',
             'device_type' => 'nullable|string|max:100',
             'attachments' => 'nullable|array',
-            'internal_notes' => 'nullable|string'
+            'internal_notes' => 'nullable|string',
         ]);
 
         $technicalRequest = TechnicalRequest::create($validated);
 
         return response()->json([
             'success' => true,
-            'data' => $technicalRequest->load(['requester', 'assignedUser', 'franchise', 'unit']),
-            'message' => 'Technical request created successfully'
+            'data' => new TechnicalRequestResource($technicalRequest->load(['requester', 'assignedUser', 'franchise', 'unit'])),
+            'message' => 'Technical request created successfully',
         ], 201);
     }
 
@@ -113,8 +113,8 @@ class TechnicalRequestController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $technicalRequest,
-            'message' => 'Technical request retrieved successfully'
+            'data' => new TechnicalRequestResource($technicalRequest),
+            'message' => 'Technical request retrieved successfully',
         ]);
     }
 
@@ -126,7 +126,7 @@ class TechnicalRequestController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
-            'category' => 'sometimes|in:bug,feature_request,technical_issue,system_error,performance,security,integration,other',
+            'category' => 'sometimes|in:hardware,software,network,pos_system,website,mobile_app,training,other',
             'priority' => 'sometimes|in:low,medium,high,urgent',
             'status' => 'sometimes|in:open,in_progress,resolved,closed,cancelled',
             'assigned_to' => 'nullable|exists:users,id',
@@ -141,15 +141,15 @@ class TechnicalRequestController extends Controller
             'device_type' => 'nullable|string|max:100',
             'attachments' => 'nullable|array',
             'internal_notes' => 'nullable|string',
-            'resolution_notes' => 'nullable|string'
+            'resolution_notes' => 'nullable|string',
         ]);
 
         $technicalRequest->update($validated);
 
         return response()->json([
             'success' => true,
-            'data' => $technicalRequest->load(['requester', 'assignedUser', 'franchise', 'unit']),
-            'message' => 'Technical request updated successfully'
+            'data' => new TechnicalRequestResource($technicalRequest->load(['requester', 'assignedUser', 'franchise', 'unit'])),
+            'message' => 'Technical request updated successfully',
         ]);
     }
 
@@ -162,7 +162,26 @@ class TechnicalRequestController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Technical request deleted successfully'
+            'message' => 'Technical request deleted successfully',
+        ]);
+    }
+
+    /**
+     * Bulk delete technical requests
+     */
+    public function bulkDelete(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|exists:technical_requests,id',
+        ]);
+
+        $count = TechnicalRequest::whereIn('id', $validated['ids'])->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} technical request(s) deleted successfully",
+            'count' => $count,
         ]);
     }
 
@@ -172,7 +191,7 @@ class TechnicalRequestController extends Controller
     public function assign(Request $request, TechnicalRequest $technicalRequest): JsonResponse
     {
         $validated = $request->validate([
-            'assigned_to' => 'required|exists:users,id'
+            'assigned_to' => 'required|exists:users,id',
         ]);
 
         $technicalRequest->assignTo($validated['assigned_to']);
@@ -180,7 +199,7 @@ class TechnicalRequestController extends Controller
         return response()->json([
             'success' => true,
             'data' => $technicalRequest->load(['assignedUser']),
-            'message' => 'Technical request assigned successfully'
+            'message' => 'Technical request assigned successfully',
         ]);
     }
 
@@ -190,7 +209,7 @@ class TechnicalRequestController extends Controller
     public function respond(Request $request, TechnicalRequest $technicalRequest): JsonResponse
     {
         $validated = $request->validate([
-            'response_notes' => 'required|string'
+            'response_notes' => 'required|string',
         ]);
 
         $technicalRequest->respond($validated['response_notes']);
@@ -198,7 +217,7 @@ class TechnicalRequestController extends Controller
         return response()->json([
             'success' => true,
             'data' => $technicalRequest,
-            'message' => 'Response added successfully'
+            'message' => 'Response added successfully',
         ]);
     }
 
@@ -208,7 +227,7 @@ class TechnicalRequestController extends Controller
     public function resolve(Request $request, TechnicalRequest $technicalRequest): JsonResponse
     {
         $validated = $request->validate([
-            'resolution_notes' => 'required|string'
+            'resolution_notes' => 'required|string',
         ]);
 
         $technicalRequest->resolve($validated['resolution_notes']);
@@ -216,7 +235,7 @@ class TechnicalRequestController extends Controller
         return response()->json([
             'success' => true,
             'data' => $technicalRequest,
-            'message' => 'Technical request resolved successfully'
+            'message' => 'Technical request resolved successfully',
         ]);
     }
 
@@ -227,7 +246,7 @@ class TechnicalRequestController extends Controller
     {
         $validated = $request->validate([
             'satisfaction_rating' => 'nullable|integer|min:1|max:5',
-            'satisfaction_feedback' => 'nullable|string'
+            'satisfaction_feedback' => 'nullable|string',
         ]);
 
         $technicalRequest->close(
@@ -238,7 +257,7 @@ class TechnicalRequestController extends Controller
         return response()->json([
             'success' => true,
             'data' => $technicalRequest,
-            'message' => 'Technical request closed successfully'
+            'message' => 'Technical request closed successfully',
         ]);
     }
 
@@ -252,7 +271,7 @@ class TechnicalRequestController extends Controller
         return response()->json([
             'success' => true,
             'data' => $technicalRequest,
-            'message' => 'Technical request escalated successfully'
+            'message' => 'Technical request escalated successfully',
         ]);
     }
 
@@ -263,7 +282,7 @@ class TechnicalRequestController extends Controller
     {
         $validated = $request->validate([
             'attachment_url' => 'required|string|max:500',
-            'attachment_name' => 'required|string|max:255'
+            'attachment_name' => 'required|string|max:255',
         ]);
 
         $technicalRequest->addAttachment($validated['attachment_url'], $validated['attachment_name']);
@@ -271,7 +290,7 @@ class TechnicalRequestController extends Controller
         return response()->json([
             'success' => true,
             'data' => $technicalRequest,
-            'message' => 'Attachment added successfully'
+            'message' => 'Attachment added successfully',
         ]);
     }
 
@@ -311,39 +330,75 @@ class TechnicalRequestController extends Controller
             'satisfaction_ratings' => $query->whereNotNull('satisfaction_rating')
                 ->groupBy('satisfaction_rating')
                 ->selectRaw('satisfaction_rating, count(*) as count')
-                ->pluck('count', 'satisfaction_rating')
+                ->pluck('count', 'satisfaction_rating'),
         ];
 
         return response()->json([
             'success' => true,
             'data' => $stats,
-            'message' => 'Technical request statistics retrieved successfully'
+            'message' => 'Technical request statistics retrieved successfully',
         ]);
     }
 
     /**
-     * Get current user's technical requests (for franchise owners)
+     * Get current user's technical requests (for franchise owners/franchisor)
      */
     public function myRequests(Request $request): JsonResponse
     {
         $user = $request->user();
-        $franchise = Franchise::where('owner_id', $user->id)->first();
 
-        if (!$franchise) {
+        // Get all franchises owned by this franchisor
+        $franchiseIds = Franchise::where('franchisor_id', $user->id)->pluck('id');
+
+        if ($franchiseIds->isEmpty()) {
             return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user'
-            ], 404);
+                'success' => true,
+                'data' => [
+                    'data' => [],
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => 15,
+                    'total' => 0,
+                ],
+                'message' => 'No franchises found for current user',
+            ]);
         }
 
-        $requests = TechnicalRequest::where('franchise_id', $franchise->id)
-            ->with(['franchise', 'unit', 'assignedTo', 'createdBy'])
-            ->paginate(15);
+        $query = TechnicalRequest::whereIn('franchise_id', $franchiseIds)
+            ->with(['requester', 'assignedUser', 'franchise', 'unit']);
+
+        // Apply filters
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('ticket_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Pagination
+        $perPage = $request->get('per_page', 15);
+        $requests = $query->paginate($perPage);
 
         return response()->json([
             'success' => true,
-            'data' => $requests,
-            'message' => 'Technical requests retrieved successfully'
+            'data' => [
+                'data' => TechnicalRequestResource::collection($requests->items()),
+                'current_page' => $requests->currentPage(),
+                'last_page' => $requests->lastPage(),
+                'per_page' => $requests->perPage(),
+                'total' => $requests->total(),
+            ],
+            'message' => 'Technical requests retrieved successfully',
         ]);
     }
 
@@ -355,10 +410,10 @@ class TechnicalRequestController extends Controller
         $user = $request->user();
         $unit = Unit::where('manager_id', $user->id)->first();
 
-        if (!$unit) {
+        if (! $unit) {
             return response()->json([
                 'success' => false,
-                'message' => 'No unit found for current user'
+                'message' => 'No unit found for current user',
             ], 404);
         }
 
@@ -369,7 +424,7 @@ class TechnicalRequestController extends Controller
         return response()->json([
             'success' => true,
             'data' => $requests,
-            'message' => 'Unit technical requests retrieved successfully'
+            'message' => 'Unit technical requests retrieved successfully',
         ]);
     }
 
@@ -386,7 +441,7 @@ class TechnicalRequestController extends Controller
         return response()->json([
             'success' => true,
             'data' => $requests,
-            'message' => 'Assigned technical requests retrieved successfully'
+            'message' => 'Assigned technical requests retrieved successfully',
         ]);
     }
 }

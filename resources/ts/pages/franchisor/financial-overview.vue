@@ -42,6 +42,14 @@ const selectedSalesRows = ref([])
 const selectedExpensesRows = ref([])
 const selectedProfitRows = ref([])
 
+// Computed property for current selected rows based on active tab
+const selectedRows = computed(() => {
+  if (activeTab.value === 'sales') return selectedSalesRows.value
+  if (activeTab.value === 'expenses') return selectedExpensesRows.value
+  if (activeTab.value === 'profit') return selectedProfitRows.value
+  return []
+})
+
 // Loading states
 const isLoading = ref(false)
 const isChartLoading = ref(false)
@@ -386,6 +394,20 @@ const loadData = async () => {
   finally {
     isLoading.value = false
   }
+}
+
+// Bulk delete function
+const bulkDelete = () => {
+  if (selectedRows.value.length === 0)
+    return
+  
+  // TODO: Implement bulk delete functionality
+  console.log('Bulk delete:', selectedRows.value)
+  
+  // Clear selection after delete
+  if (activeTab.value === 'sales') selectedSalesRows.value = []
+  else if (activeTab.value === 'expenses') selectedExpensesRows.value = []
+  else if (activeTab.value === 'profit') selectedProfitRows.value = []
 }
 
 // Functions

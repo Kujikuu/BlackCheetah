@@ -1,4 +1,25 @@
 <script setup lang="ts">
+import { onMounted, ref, computed, watch } from 'vue'
+import { technicalRequestApi, type TechnicalRequest } from '@/services/api/technical-request'
+
+// Local display interface
+interface DisplayRequest {
+  id: number | string
+  requestId: string
+  userName: string
+  userEmail: string
+  userAvatar: string
+  subject: string
+  description: string
+  priority: string
+  status: string
+  date: string
+  category: string
+  attachments: any[]
+}
+
+// Loading states
+const isLoading = ref(false)
 
 // Store
 const searchQuery = ref('')
@@ -18,6 +39,9 @@ const isSubmitRequestDialogVisible = ref(false)
 // Delete Confirmation Modal
 const isDeleteConfirmDialogVisible = ref(false)
 const requestToDelete = ref<any>(null)
+
+// Bulk Delete Confirmation Modal
+const isBulkDeleteConfirmDialogVisible = ref(false)
 
 const submitRequestForm = ref({
   subject: '',
@@ -60,8 +84,64 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Mock data - Replace with API call
-const technicalRequests = ref([
+// Real data from API
+const technicalRequests = ref<DisplayRequest[]>([])
+const totalRequests = ref(0)
+
+// Map API response to display format
+const mapToDisplayRequest = (apiRequest: TechnicalRequest): DisplayRequest => {
+  // Handle attachments - could be array, string, or null
+  let attachments: any[] = []
+  if (apiRequest.attachments) {
+    if (Array.isArray(apiRequest.attachments)) {
+      attachments = apiRequest.attachments.map((url: string, index: number) => ({
+        name: url.split('/').pop() || `attachment-${index}`,
+        size: 'Unknown',
+        url,
+      }))
+    }
+  }
+
+  return {
+    id: apiRequest.id,
+    requestId: apiRequest.ticket_number,
+    userName: apiRequest.requester?.name || 'Unknown',
+    userEmail: apiRequest.requester?.email || '',
+    userAvatar: '',
+    subject: apiRequest.title,
+    description: apiRequest.description,
+    priority: apiRequest.priority,
+    status: apiRequest.status.replace('_', '-'),
+    date: new Date(apiRequest.created_at).toISOString().split('T')[0],
+    category: apiRequest.category,
+    attachments,
+  }
+}
+
+// Fetch technical requests
+const fetchRequests = async () => {
+  try {
+    isLoading.value = true
+    const response = await technicalRequestApi.getTechnicalRequests({
+      status: selectedStatus.value?.replace('-', '_'),
+      priority: selectedPriority.value,
+      search: searchQuery.value,
+      per_page: itemsPerPage.value,
+      page: page.value,
+    })
+    technicalRequests.value = response.data.data.map(mapToDisplayRequest)
+    totalRequests.value = response.data.total
+  }
+  catch (error) {
+    console.error('Error fetching technical requests:', error)
+  }
+  finally {
+    isLoading.value = false
+  }
+}
+
+// Mock data for initial display (will be replaced by API)
+const mockRequests = ref([
   {
     id: 1,
     requestId: 'TR-2024-001',
@@ -141,29 +221,13 @@ const technicalRequests = ref([
   },
 ])
 
-const totalRequests = computed(() => technicalRequests.value.length)
+// Use mock data initially, will be replaced by API data
+if (technicalRequests.value.length === 0) {
+  technicalRequests.value = mockRequests.value as any
+}
 
-// Filtered data
-const filteredRequests = computed(() => {
-  let filtered = technicalRequests.value
-
-  if (searchQuery.value) {
-    filtered = filtered.filter(request =>
-      request.requestId.toLowerCase().includes(searchQuery.value.toLowerCase())
-      || request.userName.toLowerCase().includes(searchQuery.value.toLowerCase())
-      || request.subject.toLowerCase().includes(searchQuery.value.toLowerCase())
-      || request.category.toLowerCase().includes(searchQuery.value.toLowerCase()),
-    )
-  }
-
-  if (selectedStatus.value)
-    filtered = filtered.filter(request => request.status === selectedStatus.value)
-
-  if (selectedPriority.value)
-    filtered = filtered.filter(request => request.priority === selectedPriority.value)
-
-  return filtered
-})
+// Filtered data - API handles filtering, but keep for local mock data
+const filteredRequests = computed(() => technicalRequests.value)
 
 // Status options
 const statusOptions = [
@@ -243,16 +307,41 @@ const confirmDelete = () => {
   isDeleteConfirmDialogVisible.value = false
 }
 
-// Bulk delete
-const bulkDelete = () => {
+// Show bulk delete confirmation
+const showBulkDeleteConfirmation = () => {
   if (selectedRows.value.length === 0)
     return
-
-  technicalRequests.value = technicalRequests.value.filter(
-    request => !selectedRows.value.includes(request.id),
-  )
-  selectedRows.value = []
+  
+  isBulkDeleteConfirmDialogVisible.value = true
 }
+
+// Confirm bulk delete
+const confirmBulkDelete = async () => {
+  try {
+    isLoading.value = true
+    await technicalRequestApi.bulkDelete(selectedRows.value)
+    
+    // Refresh the list after deletion
+    await fetchRequests()
+    
+    // Clear selection
+    selectedRows.value = []
+    
+    // Close dialog
+    isBulkDeleteConfirmDialogVisible.value = false
+    
+    console.log('Bulk delete successful')
+  }
+  catch (error) {
+    console.error('Error bulk deleting requests:', error)
+  }
+  finally {
+    isLoading.value = false
+  }
+}
+
+// Legacy function for backward compatibility
+const bulkDelete = showBulkDeleteConfirmation
 
 // Download attachment
 const downloadAttachment = (attachment: any) => {
@@ -282,51 +371,55 @@ const getFileIcon = (fileName: string) => {
   return 'tabler-file'
 }
 
-// Category options
+// Category options (matching database enum)
 const categoryOptions = [
-  { title: 'Authentication', value: 'Authentication' },
-  { title: 'Payment', value: 'Payment' },
-  { title: 'Dashboard', value: 'Dashboard' },
-  { title: 'Notifications', value: 'Notifications' },
-  { title: 'Reports', value: 'Reports' },
-  { title: 'Mobile App', value: 'Mobile App' },
-  { title: 'API', value: 'API' },
-  { title: 'Other', value: 'Other' },
+  { title: 'Hardware', value: 'hardware' },
+  { title: 'Software', value: 'software' },
+  { title: 'Network', value: 'network' },
+  { title: 'POS System', value: 'pos_system' },
+  { title: 'Website', value: 'website' },
+  { title: 'Mobile App', value: 'mobile_app' },
+  { title: 'Training', value: 'training' },
+  { title: 'Other', value: 'other' },
 ]
 
 // Submit request function
-const submitRequest = () => {
+const submitRequest = async () => {
   if (!isFormValid.value)
     return
 
-  // Generate new request ID
-  const newRequestId = `TR-2024-${String(technicalRequests.value.length + 1).padStart(3, '0')}`
+  try {
+    isLoading.value = true
+    
+    // Get current user ID (you should get this from auth store)
+    const currentUserId = 1 // TODO: Get from auth store
+    
+    // Create request via API
+    const response = await technicalRequestApi.createTechnicalRequest({
+      title: submitRequestForm.value.subject,
+      description: submitRequestForm.value.description,
+      category: submitRequestForm.value.category as any,
+      priority: submitRequestForm.value.priority as any,
+      status: 'open',
+      requester_id: currentUserId,
+    })
 
-  // Create new request object
-  const newRequest = {
-    id: technicalRequests.value.length + 1,
-    requestId: newRequestId,
-    userName: 'Current User', // In production, get from auth
-    userEmail: 'current.user@example.com', // In production, get from auth
-    userAvatar: '',
-    subject: submitRequestForm.value.subject,
-    description: submitRequestForm.value.description,
-    priority: submitRequestForm.value.priority,
-    status: 'open',
-    date: new Date().toISOString().split('T')[0],
-    category: submitRequestForm.value.category,
-    attachments: [], // Handle file uploads in production
+    // Refresh the list
+    await fetchRequests()
+
+    // Reset form and close modal
+    resetSubmitForm()
+    isSubmitRequestDialogVisible.value = false
+
+    // Show success message
+    console.log('Request submitted successfully:', response.data)
   }
-
-  // Add to requests list
-  technicalRequests.value.unshift(newRequest)
-
-  // Reset form and close modal
-  resetSubmitForm()
-  isSubmitRequestDialogVisible.value = false
-
-  // Show success message (you can implement toast notification)
-  console.log('Request submitted successfully:', newRequest)
+  catch (error) {
+    console.error('Error submitting request:', error)
+  }
+  finally {
+    isLoading.value = false
+  }
 }
 
 // Reset submit form
@@ -352,6 +445,16 @@ const handleFileUpload = (event: Event) => {
 const removeAttachment = (index: number) => {
   submitRequestForm.value.attachments.splice(index, 1)
 }
+
+// Lifecycle hooks
+onMounted(() => {
+  fetchRequests()
+})
+
+// Watch for filter changes
+watch([selectedStatus, selectedPriority, searchQuery], () => {
+  fetchRequests()
+})
 </script>
 
 <template>
@@ -957,6 +1060,55 @@ const removeAttachment = (index: number) => {
             @click="confirmDelete"
           >
             Delete Request
+          </VBtn>
+        </VCardText>
+      </VCard>
+    </VDialog>
+
+    <!-- Bulk Delete Confirmation Dialog -->
+    <VDialog
+      v-model="isBulkDeleteConfirmDialogVisible"
+      max-width="500"
+    >
+      <VCard class="text-center px-10 py-6">
+        <VCardText>
+          <VIcon
+            icon="tabler-alert-triangle"
+            size="64"
+            color="warning"
+            class="mb-4"
+          />
+          <h3 class="text-h5 mb-2">
+            Confirm Bulk Delete
+          </h3>
+          <p class="text-body-1 text-medium-emphasis mb-4">
+            Are you sure you want to delete {{ selectedRows.length }} technical request(s)?
+          </p>
+          <div class="text-start pa-4 bg-surface rounded">
+            <div class="text-body-2 text-medium-emphasis mb-1">
+              Selected Requests
+            </div>
+            <div class="text-body-1 font-weight-medium">
+              {{ selectedRows.length }} request(s) will be permanently deleted
+            </div>
+          </div>
+          <p class="text-body-2 text-error mt-4 mb-0">
+            This action cannot be undone.
+          </p>
+        </VCardText>
+        <VCardText class="d-flex align-center justify-center gap-2">
+          <VBtn
+            variant="outlined"
+            @click="isBulkDeleteConfirmDialogVisible = false"
+          >
+            Cancel
+          </VBtn>
+          <VBtn
+            color="error"
+            :loading="isLoading"
+            @click="confirmBulkDelete"
+          >
+            Delete {{ selectedRows.length }} Request(s)
           </VBtn>
         </VCardText>
       </VCard>

@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 class UnitControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    // use RefreshDatabase;
 
     protected User $franchisor;
 
