@@ -22,18 +22,19 @@ const route = useRoute()
 const currentTab = ref('overview')
 
 // 👉 Unit ID from route
-const unitId = computed(() => route.params.id as string)
+const unitId = computed<string>(() => {
+  const id = route.params.id
+  return typeof id === 'string' ? id : ''
+})
 
 // 👉 Safely parsed unit ID (number)
-const currentUnitId = computed(() => {
-  // Try route params first
+const currentUnitId = computed<number | null>(() => {
   if (unitId.value) {
-    const parsed = currentUnitId.value
+    const parsed = parseInt(unitId.value)
     if (!isNaN(parsed)) return parsed
   }
   
-  // Fallback to loaded unit data
-  return unitData.value?.id || null
+  return null
 })
 
 // 👉 Loading and error states
@@ -90,38 +91,41 @@ const loadUnitData = async () => {
     loading.value = true
     error.value = null
 
+    // unitId is optional - if not provided, API will fetch the franchisee's unit
+    const unitIdParam = currentUnitId.value || undefined
+
     // Load unit details
-    const unitDetailsResponse = await franchiseeDashboardApi.getUnitDetails(unitId.value)
+    const unitDetailsResponse = await franchiseeDashboardApi.getUnitDetails(unitIdParam)
     if (unitDetailsResponse.success) {
       unitData.value = unitDetailsResponse.data
     }
 
     // Load tasks
-    const tasksResponse = await franchiseeDashboardApi.getUnitTasks(unitId.value)
+    const tasksResponse = await franchiseeDashboardApi.getUnitTasks(unitIdParam)
     if (tasksResponse.success) {
       tasksData.value = tasksResponse.data
     }
 
     // Load staff
-    const staffResponse = await franchiseeDashboardApi.getUnitStaff(unitId.value)
+    const staffResponse = await franchiseeDashboardApi.getUnitStaff(unitIdParam)
     if (staffResponse.success) {
       staffData.value = staffResponse.data
     }
 
     // Load products
-    const productsResponse = await franchiseeDashboardApi.getUnitProducts(unitId.value)
+    const productsResponse = await franchiseeDashboardApi.getUnitProducts(unitIdParam)
     if (productsResponse.success) {
       productsData.value = productsResponse.data
     }
 
     // Load reviews
-    const reviewsResponse = await franchiseeDashboardApi.getUnitReviews(unitId.value)
+    const reviewsResponse = await franchiseeDashboardApi.getUnitReviews(unitIdParam)
     if (reviewsResponse.success) {
       reviewsData.value = reviewsResponse.data
     }
 
     // Load documents
-    const documentsResponse = await franchiseeDashboardApi.getUnitDocuments(unitId.value)
+    const documentsResponse = await franchiseeDashboardApi.getUnitDocuments(unitIdParam)
     if (documentsResponse.success) {
       documentsData.value = documentsResponse.data
     }
@@ -408,21 +412,23 @@ const saveProduct = async () => {
 // 👉 Load available franchise products for inventory
 const loadAvailableFranchiseProducts = async () => {
   try {
-    if (!currentUnitId.value || isNaN(currentUnitId.value)) {
-      console.error('Invalid unit ID for loading products')
+    // Get unit ID from loaded data or route params
+    const unitIdToUse = unitData.value?.id || currentUnitId.value
+    
+    if (!unitIdToUse) {
+      console.error('Unit ID not available yet. Please wait for unit data to load.')
       availableFranchiseProducts.value = []
       return
     }
 
     // This would call an API to get franchise products not yet in this unit's inventory
-    const response = await franchiseeDashboardApi.getAvailableFranchiseProducts(currentUnitId.value)
+    const response = await franchiseeDashboardApi.getAvailableFranchiseProducts(unitIdToUse)
     if (response.success) {
       availableFranchiseProducts.value = response.data
     }
   }
   catch (error) {
     console.error('Error loading franchise products:', error)
-    // For now, we'll simulate some available products
     availableFranchiseProducts.value = []
   }
 }
