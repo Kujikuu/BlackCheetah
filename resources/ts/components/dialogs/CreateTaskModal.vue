@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES, USER_ROLES } from '@/constants/taskConstants'
+import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES } from '@/constants/taskConstants'
+import { useTaskUsers } from '@/composables/useTaskUsers'
 
 interface Props {
   isDialogVisible: boolean
+  currentTab?: 'franchisee' | 'sales'
 }
 
 interface Emit {
@@ -27,6 +29,9 @@ interface TaskForm {
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
+// 👉 Task users composable
+const { getUsersForSelect, initializeUsers, loading: usersLoading } = useTaskUsers()
+
 // 👉 Form data
 const taskForm = ref<TaskForm>({
   title: '',
@@ -45,7 +50,11 @@ const taskForm = ref<TaskForm>({
 // 👉 Form validation
 const isFormValid = ref(false)
 
-// 👉 Options are now imported from constants
+// 👉 Computed user options based on current tab
+const userOptions = computed(() => {
+  const tabType = props.currentTab || 'franchisee'
+  return getUsersForSelect(tabType)
+})
 
 // 👉 Form rules
 const requiredRule = (value: string) => !!value || 'This field is required'
@@ -90,9 +99,23 @@ const onCancel = () => {
 }
 
 // 👉 Watch for dialog visibility changes
-watch(() => props.isDialogVisible, newVal => {
-  if (!newVal)
+watch(() => props.isDialogVisible, async newVal => {
+  if (newVal) {
+    // Initialize users when dialog opens
+    const tabType = props.currentTab || 'franchisee'
+    await initializeUsers(tabType)
+  } else {
     resetForm()
+  }
+})
+
+// 👉 Watch for tab changes
+watch(() => props.currentTab, async newTab => {
+  if (props.isDialogVisible && newTab) {
+    await initializeUsers(newTab)
+    // Reset assigned to when tab changes
+    taskForm.value.assignedTo = ''
+  }
 })
 </script>
 
@@ -163,8 +186,11 @@ watch(() => props.isDialogVisible, newVal => {
                 v-model="taskForm.assignedTo"
                 label="Assigned To"
                 placeholder="Select user"
-                :items="USER_ROLES"
+                :items="userOptions"
+                :loading="usersLoading"
                 :rules="[requiredRule]"
+                item-title="title"
+                item-value="value"
                 required
               />
             </VCol>

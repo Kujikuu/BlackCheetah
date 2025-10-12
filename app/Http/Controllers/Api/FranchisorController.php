@@ -646,6 +646,22 @@ class FranchisorController extends Controller
             $perPage = $request->get('perPage', 10);
             $franchisees = $query->paginate($perPage);
 
+            // Transform the data to include a proper name field
+            $franchisees->getCollection()->transform(function ($franchisee) {
+                return [
+                    'id' => $franchisee->id,
+                    'name' => $franchisee->name,
+                    'email' => $franchisee->email,
+                    'role' => $franchisee->role,
+                    'status' => $franchisee->status ?? 'active',
+                    'avatar' => $franchisee->avatar,
+                    'phone' => $franchisee->phone,
+                    'city' => $franchisee->city,
+                    'country' => $franchisee->country,
+                    'created_at' => $franchisee->created_at,
+                ];
+            });
+
             return response()->json([
                 'success' => true,
                 'data' => $franchisees,
@@ -763,18 +779,18 @@ class FranchisorController extends Controller
 
             // Transform the data to include assignedLeads count
             $salesAssociates->getCollection()->transform(function ($associate) {
+                $name = $associate->name;
                 return [
                     'id' => $associate->id,
-                    'name' => $associate->name,
+                    'name' => $name,
                     'email' => $associate->email,
                     'phone' => $associate->phone,
-                    'status' => $associate->status,
+                    'status' => $associate->status ?? 'active',
                     'country' => $associate->country,
-                    'state' => $associate->state,
                     'city' => $associate->city,
                     'assignedLeads' => $associate->leads_count,
                     'avatar' => $associate->avatar,
-                    'avatarText' => $associate->name ? strtoupper(substr($associate->name, 0, 2)) : 'SA',
+                    'avatarText' => $name ? strtoupper(substr($name, 0, 2)) : 'SA',
                 ];
             });
 

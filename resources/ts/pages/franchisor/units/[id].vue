@@ -1947,6 +1947,7 @@ watch(() => unitId.value, () => {
       <!-- Modals -->
       <CreateTaskModal
         v-model:is-dialog-visible="isAddTaskModalVisible"
+        current-tab="franchisee"
         @task-created="onTaskCreated"
       />
 

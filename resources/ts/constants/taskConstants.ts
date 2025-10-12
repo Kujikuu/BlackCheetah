@@ -11,6 +11,9 @@ export const TASK_CATEGORIES = [
   'Customer Service',
 ] as const
 
+// @deprecated - This constant is no longer used for task assignment.
+// Task assignment now uses actual user data from the useTaskUsers composable.
+// Kept for potential future reference or other use cases.
 export const USER_ROLES = [
   'Store Manager',
   'Assistant Manager',

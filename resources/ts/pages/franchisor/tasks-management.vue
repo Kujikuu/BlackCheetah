@@ -1,10 +1,14 @@
 <script setup lang="ts">
 // 👉 Imports
 import CreateTaskModal from '@/components/dialogs/CreateTaskModal.vue'
-import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES, TASK_HEADERS, USER_ROLES } from '@/constants/taskConstants'
+import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES, TASK_HEADERS } from '@/constants/taskConstants'
+import { useTaskUsers } from '@/composables/useTaskUsers'
 
 // 👉 Router
 const router = useRouter()
+
+// 👉 Task users composable
+const { getUsersForSelect, initializeUsers, loading: usersLoading } = useTaskUsers()
 
 // 👉 Current tab
 const currentTab = ref('franchisee')
@@ -176,6 +180,11 @@ const currentInProgressTasks = computed(() => {
 
 const currentDueTasks = computed(() => {
   return currentTab.value === 'franchisee' ? franchiseeDueTasks.value : salesDueTasks.value
+})
+
+// 👉 Computed user options based on current tab
+const userOptions = computed(() => {
+  return getUsersForSelect(currentTab.value as 'franchisee' | 'sales')
 })
 
 // 👉 Functions
@@ -381,10 +390,24 @@ const saveTask = async () => {
   selectedTask.value = null
 }
 
+// 👉 Watch for tab changes to initialize users
+watch(currentTab, async (newTab) => {
+  await initializeUsers(newTab as 'franchisee' | 'sales')
+})
+
+// 👉 Watch for edit modal visibility to initialize users
+watch(isEditTaskModalVisible, async (isVisible) => {
+  if (isVisible) {
+    await initializeUsers(currentTab.value as 'franchisee' | 'sales')
+  }
+})
+
 // 👉 Load data on component mount
-onMounted(() => {
+onMounted(async () => {
   loadFranchiseeTasks()
   loadSalesTasks()
+  // Initialize users for the default tab
+  await initializeUsers(currentTab.value as 'franchisee' | 'sales')
 })
 </script>
 
@@ -980,6 +1003,7 @@ onMounted(() => {
     <!-- Create Task Modal -->
     <CreateTaskModal
       v-model:is-dialog-visible="isAddTaskModalVisible"
+      :current-tab="currentTab"
       @task-created="onTaskCreated"
     />
 
@@ -1157,7 +1181,10 @@ onMounted(() => {
                 v-model="selectedTask.assignedTo"
                 label="Assigned To"
                 placeholder="Select user"
-                :items="USER_ROLES"
+                :items="userOptions"
+                :loading="usersLoading"
+                item-title="title"
+                item-value="value"
                 required
               />
             </VCol>
