@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\FinancialController;
 use App\Http\Controllers\Api\FranchiseController;
 use App\Http\Controllers\Api\FranchisorController;
 use App\Http\Controllers\Api\LeadController;
@@ -36,7 +37,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Public routes (no authentication required)
 Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register']);
 });
 
@@ -353,6 +354,22 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::post('royalties/{royalty}/adjustments', [RoyaltyController::class, 'addAdjustment']);
     Route::patch('revenues/{revenue}/verify', [RevenueController::class, 'verify']);
     Route::post('revenues/{revenue}/dispute', [RevenueController::class, 'dispute']);
+
+    // Financial overview endpoints
+    Route::get('financial/charts', [FinancialController::class, 'charts']);
+    Route::get('financial/statistics', [FinancialController::class, 'statistics']);
+    Route::get('financial/sales', [FinancialController::class, 'sales']);
+    Route::post('financial/sales', [FinancialController::class, 'storeSale']);
+    Route::put('financial/sales/{id}', [FinancialController::class, 'updateSale']);
+    Route::delete('financial/sales/{id}', [FinancialController::class, 'deleteSale']);
+    Route::get('financial/expenses', [FinancialController::class, 'expenses']);
+    Route::post('financial/expenses', [FinancialController::class, 'storeExpense']);
+    Route::put('financial/expenses/{id}', [FinancialController::class, 'updateExpense']);
+    Route::delete('financial/expenses/{id}', [FinancialController::class, 'deleteExpense']);
+    Route::get('financial/profit', [FinancialController::class, 'profit']);
+    Route::get('financial/unit-performance', [FinancialController::class, 'unitPerformance']);
+    Route::post('financial/import', [FinancialController::class, 'import']);
+    Route::get('financial/export', [FinancialController::class, 'export']);
 
     // Performance management for franchisor units
     Route::get('performance/chart-data', [UnitPerformanceController::class, 'chartData']);

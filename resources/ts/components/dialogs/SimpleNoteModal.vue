@@ -17,30 +17,32 @@ const isLoading = ref(false)
 
 const updateModelValue = (val: boolean) => {
   emit('update:isDialogVisible', val)
-  if (!val) {
+  if (!val)
     note.value = ''
-  }
 }
 
 const addNote = async () => {
-  if (!props.leadId || !note.value.trim()) return
+  if (!props.leadId || !note.value.trim())
+    return
 
   isLoading.value = true
-  
+
   try {
     // API call to add note
     await $api(`/v1/franchisor/leads/${props.leadId}/notes`, {
       method: 'POST',
       body: {
-        note: note.value.trim()
-      }
+        note: note.value.trim(),
+      },
     })
 
     emit('noteAdded')
     updateModelValue(false)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error adding note:', error)
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
@@ -72,8 +74,8 @@ const addNote = async () => {
         <VBtn
           color="secondary"
           variant="tonal"
-          @click="updateModelValue(false)"
           :disabled="isLoading"
+          @click="updateModelValue(false)"
         >
           Cancel
         </VBtn>
@@ -81,9 +83,9 @@ const addNote = async () => {
         <VBtn
           color="primary"
           variant="elevated"
-          @click="addNote"
           :loading="isLoading"
           :disabled="!note.trim()"
+          @click="addNote"
         >
           Add Note
         </VBtn>

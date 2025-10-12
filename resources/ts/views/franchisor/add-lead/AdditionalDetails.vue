@@ -46,9 +46,8 @@ const leadOwners = [
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
-  if (target.files) {
+  if (target.files)
     localFormData.value.attachments = Array.from(target.files)
-  }
 }
 </script>
 

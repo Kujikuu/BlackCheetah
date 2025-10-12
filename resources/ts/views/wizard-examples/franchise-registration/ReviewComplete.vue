@@ -53,7 +53,7 @@ const localFormData = computed({
           </VRow>
         </VExpansionPanelText>
       </VExpansionPanel>
-      
+
       <VExpansionPanel title="Franchise Details">
         <VExpansionPanelText>
           <VRow>
@@ -78,22 +78,22 @@ const localFormData = computed({
           </VRow>
         </VExpansionPanelText>
       </VExpansionPanel>
-      
+
       <VExpansionPanel title="Documents">
         <VExpansionPanelText>
           <VList>
             <VListItem>
               <VListItemTitle>
-                <VIcon 
-                  :icon="allFormData.documents.fdd ? 'tabler-check' : 'tabler-x'" 
+                <VIcon
+                  :icon="allFormData.documents.fdd ? 'tabler-check' : 'tabler-x'"
                   :color="allFormData.documents.fdd ? 'success' : 'error'"
                   class="me-2"
                 />
                 Franchise Disclosure Document (FDD)
-                <VChip 
-                  v-if="!allFormData.documents.fdd" 
-                  color="error" 
-                  size="small" 
+                <VChip
+                  v-if="!allFormData.documents.fdd"
+                  color="error"
+                  size="small"
                   class="ms-2"
                 >
                   Required
@@ -102,16 +102,16 @@ const localFormData = computed({
             </VListItem>
             <VListItem>
               <VListItemTitle>
-                <VIcon 
-                  :icon="allFormData.documents.franchiseAgreement ? 'tabler-check' : 'tabler-x'" 
+                <VIcon
+                  :icon="allFormData.documents.franchiseAgreement ? 'tabler-check' : 'tabler-x'"
                   :color="allFormData.documents.franchiseAgreement ? 'success' : 'error'"
                   class="me-2"
                 />
                 Franchise Agreement
-                <VChip 
-                  v-if="!allFormData.documents.franchiseAgreement" 
-                  color="error" 
-                  size="small" 
+                <VChip
+                  v-if="!allFormData.documents.franchiseAgreement"
+                  color="error"
+                  size="small"
                   class="ms-2"
                 >
                   Required
@@ -120,15 +120,15 @@ const localFormData = computed({
             </VListItem>
             <VListItem>
               <VListItemTitle>
-                <VIcon 
-                  :icon="allFormData.documents.operationsManual ? 'tabler-check' : 'tabler-minus'" 
+                <VIcon
+                  :icon="allFormData.documents.operationsManual ? 'tabler-check' : 'tabler-minus'"
                   :color="allFormData.documents.operationsManual ? 'success' : 'secondary'"
                   class="me-2"
                 />
                 Operations Manual
-                <VChip 
-                  color="secondary" 
-                  size="small" 
+                <VChip
+                  color="secondary"
+                  size="small"
                   class="ms-2"
                 >
                   Optional
@@ -137,15 +137,15 @@ const localFormData = computed({
             </VListItem>
             <VListItem>
               <VListItemTitle>
-                <VIcon 
-                  :icon="allFormData.documents.brandGuidelines ? 'tabler-check' : 'tabler-minus'" 
+                <VIcon
+                  :icon="allFormData.documents.brandGuidelines ? 'tabler-check' : 'tabler-minus'"
                   :color="allFormData.documents.brandGuidelines ? 'success' : 'secondary'"
                   class="me-2"
                 />
                 Brand Guidelines
-                <VChip 
-                  color="secondary" 
-                  size="small" 
+                <VChip
+                  color="secondary"
+                  size="small"
                   class="ms-2"
                 >
                   Optional
@@ -154,15 +154,15 @@ const localFormData = computed({
             </VListItem>
             <VListItem>
               <VListItemTitle>
-                <VIcon 
-                  :icon="allFormData.documents.legalDocuments ? 'tabler-check' : 'tabler-minus'" 
+                <VIcon
+                  :icon="allFormData.documents.legalDocuments ? 'tabler-check' : 'tabler-minus'"
                   :color="allFormData.documents.legalDocuments ? 'success' : 'secondary'"
                   class="me-2"
                 />
                 Additional Legal Documents
-                <VChip 
-                  color="secondary" 
-                  size="small" 
+                <VChip
+                  color="secondary"
+                  size="small"
                   class="ms-2"
                 >
                   Optional
@@ -175,9 +175,17 @@ const localFormData = computed({
     </VExpansionPanels>
 
     <!-- Terms & Conditions -->
-    <VCard variant="outlined" class="mb-4">
-      <VCardText class="pa-4" style="max-height: 300px; overflow-y: auto;">
-        <h4 class="text-h6 mb-3">Franchise Registration Terms & Conditions</h4>
+    <VCard
+      variant="outlined"
+      class="mb-4"
+    >
+      <VCardText
+        class="pa-4"
+        style="max-height: 300px; overflow-y: auto;"
+      >
+        <h4 class="text-h6 mb-3">
+          Franchise Registration Terms & Conditions
+        </h4>
         <p class="mb-3">
           By completing this registration, you agree to the following terms and conditions:
         </p>
@@ -191,12 +199,12 @@ const localFormData = computed({
           <li>You agree to maintain confidentiality of proprietary information</li>
         </ul>
         <p class="mb-0">
-          <strong>Important:</strong> This registration does not constitute a binding franchise agreement. 
+          <strong>Important:</strong> This registration does not constitute a binding franchise agreement.
           Final agreements will be executed separately following review and approval by our franchise team.
         </p>
       </VCardText>
     </VCard>
-    
+
     <VCheckbox
       v-model="localFormData.termsAccepted"
       label="I have read and agree to the terms and conditions"

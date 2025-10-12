@@ -83,7 +83,10 @@ const resolveUserPlanVariant = (plan: string) => {
                   v-if="props.user.avatar"
                   :src="props.user.avatar"
                 />
-                <span v-else class="text-h4">{{ avatarText(props.user.fullName) }}</span>
+                <span
+                  v-else
+                  class="text-h4"
+                >{{ avatarText(props.user.fullName) }}</span>
               </VAvatar>
               <div>
                 <h6 class="text-h6 mb-1">

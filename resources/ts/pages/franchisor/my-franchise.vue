@@ -149,6 +149,7 @@ const isUploadingLogo = ref(false)
 const loadFranchiseData = async () => {
   try {
     isLoading.value = true
+
     const response = await $api('/v1/franchisor/franchise/data')
 
     if (response.success && response.data) {
@@ -188,10 +189,12 @@ const loadFranchiseData = async () => {
         }
       }
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to load franchise data:', error)
     showSnackbar('Failed to load franchise data', 'error')
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
@@ -201,14 +204,15 @@ const loadDocuments = async () => {
   try {
     if (!franchiseData.value?.id) {
       console.warn('No franchise ID available for loading documents')
+
       return
     }
 
     const response = await $api(`/v1/franchises/${franchiseData.value.id}/documents`)
-    if (response.success && response.data) {
+    if (response.success && response.data)
       documentsData.value = response.data.data || []
-    }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to load documents:', error)
     showSnackbar('Failed to load documents', 'error')
   }
@@ -219,14 +223,15 @@ const loadProducts = async () => {
   try {
     if (!franchiseData.value?.id) {
       console.warn('No franchise ID available for loading products')
+
       return
     }
 
     const response = await $api(`/v1/franchises/${franchiseData.value.id}/products`)
-    if (response.success && response.data) {
+    if (response.success && response.data)
       productsData.value = response.data.data || []
-    }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to load products:', error)
     showSnackbar('Failed to load products', 'error')
   }
@@ -234,12 +239,14 @@ const loadProducts = async () => {
 
 // 👉 Upload logo
 const uploadLogo = async (): Promise<string | null> => {
-  if (!logoFile.value) return null
+  if (!logoFile.value)
+    return null
 
   isUploadingLogo.value = true
 
   try {
     const formData = new FormData()
+
     formData.append('logo', logoFile.value)
 
     const response = await $api('/v1/franchisor/franchise/upload-logo', {
@@ -249,15 +256,20 @@ const uploadLogo = async (): Promise<string | null> => {
 
     if (response.success) {
       return response.data.logo_url
-    } else {
+    }
+    else {
       showSnackbar(response.message || 'Failed to upload logo', 'error')
+
       return null
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to upload logo:', error)
     showSnackbar('Failed to upload logo', 'error')
+
     return null
-  } finally {
+  }
+  finally {
     isUploadingLogo.value = false
   }
 }
@@ -274,7 +286,8 @@ const updateFranchiseData = async () => {
       if (uploadedLogoUrl) {
         logoUrl = uploadedLogoUrl
         franchiseData.value.franchiseDetails.logo = logoUrl
-      } else {
+      }
+      else {
         // If logo upload failed, don't proceed with the update
         return
       }
@@ -321,23 +334,30 @@ const updateFranchiseData = async () => {
 
     if (response.success) {
       showSnackbar('Franchise information updated successfully', 'success')
+
       // Clear the logo file after successful update
       logoFile.value = null
+
       // Reload franchise data to get the updated information
       await loadFranchiseData()
-    } else {
+    }
+    else {
       showSnackbar(response.message || 'Failed to update franchise information', 'error')
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to update franchise data:', error)
 
     if (error.status === 422 && error.data?.errors) {
       const errorMessages = Object.values(error.data.errors).flat()
+
       showSnackbar(`Validation failed: ${errorMessages.join(', ')}`, 'error')
-    } else {
+    }
+    else {
       showSnackbar('Failed to update franchise information', 'error')
     }
-  } finally {
+  }
+  finally {
     isUpdating.value = false
   }
 }
@@ -355,9 +375,9 @@ const toggleEditMode = () => {
 
 const cancelEdit = () => {
   // Restore original data
-  if (originalData.value) {
+  if (originalData.value)
     franchiseData.value = JSON.parse(JSON.stringify(originalData.value))
-  }
+
   isEditMode.value = false
   originalData.value = null
 }
@@ -373,11 +393,12 @@ const saveChanges = async () => {
 // 👉 Load data on component mount
 onMounted(async () => {
   await loadFranchiseData()
+
   // Only load documents and products after franchise data is loaded
   if (franchiseData.value?.id) {
     await Promise.all([
       loadDocuments(),
-      loadProducts()
+      loadProducts(),
     ])
   }
 })
@@ -393,23 +414,23 @@ const isDeleteDocumentDialogVisible = ref(false)
 // 👉 Computed for document modal visibility
 const isDocumentModalVisible = computed({
   get: () => isAddDocumentModalVisible.value || isEditDocumentModalVisible.value,
-  set: (value) => {
+  set: value => {
     if (!value) {
       isAddDocumentModalVisible.value = false
       isEditDocumentModalVisible.value = false
     }
-  }
+  },
 })
 
 // 👉 Computed for product modal visibility
 const isProductModalVisible = computed({
   get: () => isAddProductModalVisible.value || isEditProductModalVisible.value,
-  set: (value) => {
+  set: value => {
     if (!value) {
       isAddProductModalVisible.value = false
       isEditProductModalVisible.value = false
     }
-  }
+  },
 })
 
 // 👉 Selected items
@@ -534,23 +555,23 @@ const saveDocument = async () => {
   try {
     if (!franchiseData.value?.id) {
       showSnackbar('No franchise ID available', 'error')
+
       return
     }
 
     const formData = new FormData()
+
     formData.append('name', selectedDocument.value.name)
     formData.append('description', selectedDocument.value.description || '')
     formData.append('type', selectedDocument.value.type)
     formData.append('status', selectedDocument.value.status)
     formData.append('is_confidential', selectedDocument.value.is_confidential ? '1' : '0')
 
-    if (selectedDocument.value.expiry_date) {
+    if (selectedDocument.value.expiry_date)
       formData.append('expiry_date', selectedDocument.value.expiry_date)
-    }
 
-    if (selectedDocument.value.file) {
+    if (selectedDocument.value.file)
       formData.append('file', selectedDocument.value.file)
-    }
 
     let response
     if (selectedDocument.value.id !== null) {
@@ -559,7 +580,8 @@ const saveDocument = async () => {
         method: 'PUT',
         body: formData,
       })
-    } else {
+    }
+    else {
       // Add new document
       response = await $api(`/v1/franchises/${franchiseData.value.id}/documents`, {
         method: 'POST',
@@ -570,19 +592,23 @@ const saveDocument = async () => {
     if (response.success) {
       showSnackbar(
         selectedDocument.value.id !== null ? 'Document updated successfully' : 'Document uploaded successfully',
-        'success'
+        'success',
       )
       isDocumentModalVisible.value = false
       await loadDocuments() // Reload documents list
-    } else {
+    }
+    else {
       showSnackbar(response.message || 'Failed to save document', 'error')
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to save document:', error)
     if (error.status === 422 && error.data?.errors) {
       const errorMessages = Object.values(error.data.errors).flat()
+
       showSnackbar(`Validation failed: ${errorMessages.join(', ')}`, 'error')
-    } else {
+    }
+    else {
       showSnackbar('Failed to save document', 'error')
     }
   }
@@ -592,6 +618,7 @@ const downloadDocument = async (document: any) => {
   try {
     if (!franchiseData.value?.id) {
       showSnackbar('No franchise ID available', 'error')
+
       return
     }
 
@@ -603,6 +630,7 @@ const downloadDocument = async (document: any) => {
     const blob = new Blob([response], { type: 'application/octet-stream' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
+
     link.href = url
     link.download = document.file_name || document.name
     document.body.appendChild(link)
@@ -611,7 +639,8 @@ const downloadDocument = async (document: any) => {
     window.URL.revokeObjectURL(url)
 
     showSnackbar('Document downloaded successfully', 'success')
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to download document:', error)
     showSnackbar('Failed to download document', 'error')
   }
@@ -626,6 +655,7 @@ const deleteDocument = async () => {
   try {
     if (!franchiseData.value?.id || !documentToDelete.value) {
       showSnackbar('Invalid request', 'error')
+
       return
     }
 
@@ -636,13 +666,16 @@ const deleteDocument = async () => {
     if (response.success) {
       showSnackbar('Document deleted successfully', 'success')
       await loadDocuments() // Reload documents list
-    } else {
+    }
+    else {
       showSnackbar(response.message || 'Failed to delete document', 'error')
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to delete document:', error)
     showSnackbar('Failed to delete document', 'error')
-  } finally {
+  }
+  finally {
     isDeleteDocumentDialogVisible.value = false
     documentToDelete.value = null
   }
@@ -672,6 +705,7 @@ const saveProduct = async () => {
   try {
     if (!franchiseData.value?.id) {
       showSnackbar('No franchise ID available', 'error')
+
       return
     }
 
@@ -683,10 +717,11 @@ const saveProduct = async () => {
       unit_price: selectedProduct.value.unit_price || 0,
       stock: selectedProduct.value.stock || 0,
       status: selectedProduct.value.status || 'active',
-      sku: selectedProduct.value.sku || ''
+      sku: selectedProduct.value.sku || '',
     }
 
     let response
+
     const apiUrl = selectedProduct.value.id !== null
       ? `/v1/franchises/${franchiseData.value.id}/products/${selectedProduct.value.id}`
       : `/v1/franchises/${franchiseData.value.id}/products`
@@ -697,9 +732,11 @@ const saveProduct = async () => {
         method: 'PUT',
         body: productData,
       })
-    } else {
+    }
+    else {
       // Add new product - use FormData for file uploads
       const formData = new FormData()
+
       Object.entries(productData).forEach(([key, value]) => {
         formData.append(key, value.toString())
       })
@@ -713,19 +750,23 @@ const saveProduct = async () => {
     if (response.success) {
       showSnackbar(
         selectedProduct.value.id !== null ? 'Product updated successfully' : 'Product created successfully',
-        'success'
+        'success',
       )
       isProductModalVisible.value = false
       await loadProducts() // Reload products list
-    } else {
+    }
+    else {
       showSnackbar(response.message || 'Failed to save product', 'error')
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to save product:', error)
     if (error.status === 422 && error.data?.errors) {
       const errorMessages = Object.values(error.data.errors).flat()
+
       showSnackbar(`Validation failed: ${errorMessages.join(', ')}`, 'error')
-    } else {
+    }
+    else {
       showSnackbar('Failed to save product', 'error')
     }
   }
@@ -740,6 +781,7 @@ const deleteProduct = async () => {
   try {
     if (!franchiseData.value?.id || !productToDelete.value) {
       showSnackbar('Invalid request', 'error')
+
       return
     }
 
@@ -750,13 +792,16 @@ const deleteProduct = async () => {
     if (response.success) {
       showSnackbar('Product deleted successfully', 'success')
       await loadProducts() // Reload products list
-    } else {
+    }
+    else {
       showSnackbar(response.message || 'Failed to delete product', 'error')
     }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     console.error('Failed to delete product:', error)
     showSnackbar('Failed to delete product', 'error')
-  } finally {
+  }
+  finally {
     isDeleteProductModalVisible.value = false
     productToDelete.value = null
   }
@@ -780,9 +825,13 @@ const productHeaders = [
 
 // 👉 Status variant resolver
 const resolveStatusVariant = (status: string) => {
-  if (status === 'active') return 'success'
-  if (status === 'inactive') return 'warning'
-  if (status === 'discontinued') return 'error'
+  if (status === 'active')
+    return 'success'
+  if (status === 'inactive')
+    return 'warning'
+  if (status === 'discontinued')
+    return 'error'
+
   return 'secondary'
 }
 </script>
@@ -790,8 +839,15 @@ const resolveStatusVariant = (status: string) => {
 <template>
   <section>
     <!-- Loading Overlay -->
-    <VOverlay v-model="isLoading" class="align-center justify-center">
-      <VProgressCircular color="primary" indeterminate size="64" />
+    <VOverlay
+      v-model="isLoading"
+      class="align-center justify-center"
+    >
+      <VProgressCircular
+        color="primary"
+        indeterminate
+        size="64"
+      />
     </VOverlay>
     <!-- Page Header -->
     <VRow class="mb-6">
@@ -805,8 +861,11 @@ const resolveStatusVariant = (status: string) => {
               Manage your franchise details, documents, and products
             </p>
           </div>
-          <VBtn :color="isEditMode ? 'secondary' : 'primary'" :prepend-icon="isEditMode ? 'tabler-x' : 'tabler-edit'"
-            @click="isEditMode = !isEditMode">
+          <VBtn
+            :color="isEditMode ? 'secondary' : 'primary'"
+            :prepend-icon="isEditMode ? 'tabler-x' : 'tabler-edit'"
+            @click="isEditMode = !isEditMode"
+          >
             {{ isEditMode ? 'Cancel Edit' : 'Edit Franchise Details' }}
           </VBtn>
         </div>
@@ -815,11 +874,22 @@ const resolveStatusVariant = (status: string) => {
 
     <!-- Stats Cards -->
     <VRow class="mb-6">
-      <VCol cols="12" md="4">
+      <VCol
+        cols="12"
+        md="4"
+      >
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar size="44" rounded color="primary" variant="tonal">
-              <VIcon icon="tabler-building-store" size="26" />
+            <VAvatar
+              size="44"
+              rounded
+              color="primary"
+              variant="tonal"
+            >
+              <VIcon
+                icon="tabler-building-store"
+                size="26"
+              />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -832,11 +902,22 @@ const resolveStatusVariant = (status: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol cols="12" md="4">
+      <VCol
+        cols="12"
+        md="4"
+      >
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar size="44" rounded color="success" variant="tonal">
-              <VIcon icon="tabler-files" size="26" />
+            <VAvatar
+              size="44"
+              rounded
+              color="success"
+              variant="tonal"
+            >
+              <VIcon
+                icon="tabler-files"
+                size="26"
+              />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -849,11 +930,22 @@ const resolveStatusVariant = (status: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol cols="12" md="4">
+      <VCol
+        cols="12"
+        md="4"
+      >
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar size="44" rounded color="info" variant="tonal">
-              <VIcon icon="tabler-package" size="26" />
+            <VAvatar
+              size="44"
+              rounded
+              color="info"
+              variant="tonal"
+            >
+              <VIcon
+                icon="tabler-package"
+                size="26"
+              />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -869,118 +961,190 @@ const resolveStatusVariant = (status: string) => {
     </VRow>
 
     <!-- Tabs -->
-    <VTabs v-model="currentTab" class="mb-6">
+    <VTabs
+      v-model="currentTab"
+      class="mb-6"
+    >
       <VTab value="overview">
-        <VIcon icon="tabler-info-circle" start />
+        <VIcon
+          icon="tabler-info-circle"
+          start
+        />
         Overview
       </VTab>
       <VTab value="documents">
-        <VIcon icon="tabler-files" start />
+        <VIcon
+          icon="tabler-files"
+          start
+        />
         Documents
       </VTab>
       <VTab value="products">
-        <VIcon icon="tabler-package" start />
+        <VIcon
+          icon="tabler-package"
+          start
+        />
         Products
       </VTab>
     </VTabs>
 
-    <VWindow v-model="currentTab" class="disable-tab-transition">
+    <VWindow
+      v-model="currentTab"
+      class="disable-tab-transition"
+    >
       <VWindowItem value="overview">
         <VCard>
           <VCardText>
             <VRow>
               <!-- Personal Information -->
-              <!-- <VCol cols="12">
+              <!--
+                <VCol cols="12">
                 <h4 class="text-h6 mb-4">Personal Information</h4>
                 <VCard variant="outlined">
-                  <VCardText>
-                    <VRow>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Personal Contact Number</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.contactNumber }}</div>
-                          <AppTextField v-else v-model="franchiseData.personalInfo.contactNumber"
-                            label="Personal Contact Number" placeholder="Enter your contact number" />
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Personal Country</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.country }}</div>
-                          <AppSelect v-else v-model="franchiseData.personalInfo.country" label="Personal Country"
-                            placeholder="Select country" :items="countries" />
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Personal State</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.state }}</div>
-                          <AppTextField v-else v-model="franchiseData.personalInfo.state" label="Personal State"
-                            placeholder="Enter state" />
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Personal City</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.city }}</div>
-                          <AppTextField v-else v-model="franchiseData.personalInfo.city" label="Personal City"
-                            placeholder="Enter city" />
-                        </div>
-                      </VCol>
-                      <VCol cols="12">
-                        <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Personal Address</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.address }}</div>
-                          <AppTextarea v-else v-model="franchiseData.personalInfo.address" label="Personal Address"
-                            placeholder="Enter your full address" rows="2" />
-                        </div>
-                      </VCol>
-                    </VRow>
-                  </VCardText>
+                <VCardText>
+                <VRow>
+                <VCol cols="12" md="6">
+                <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Personal Contact Number</div>
+                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.contactNumber }}</div>
+                <AppTextField v-else v-model="franchiseData.personalInfo.contactNumber"
+                label="Personal Contact Number" placeholder="Enter your contact number" />
+                </div>
+                </VCol>
+                <VCol cols="12" md="6">
+                <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Personal Country</div>
+                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.country }}</div>
+                <AppSelect v-else v-model="franchiseData.personalInfo.country" label="Personal Country"
+                placeholder="Select country" :items="countries" />
+                </div>
+                </VCol>
+                <VCol cols="12" md="6">
+                <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Personal State</div>
+                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.state }}</div>
+                <AppTextField v-else v-model="franchiseData.personalInfo.state" label="Personal State"
+                placeholder="Enter state" />
+                </div>
+                </VCol>
+                <VCol cols="12" md="6">
+                <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Personal City</div>
+                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.city }}</div>
+                <AppTextField v-else v-model="franchiseData.personalInfo.city" label="Personal City"
+                placeholder="Enter city" />
+                </div>
+                </VCol>
+                <VCol cols="12">
+                <div class="mb-4">
+                <div class="text-sm text-disabled mb-1">Personal Address</div>
+                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.address }}</div>
+                <AppTextarea v-else v-model="franchiseData.personalInfo.address" label="Personal Address"
+                placeholder="Enter your full address" rows="2" />
+                </div>
+                </VCol>
+                </VRow>
+                </VCardText>
                 </VCard>
-              </VCol> -->
+                </VCol>
+              -->
 
               <!-- Franchise Details -->
               <VCol cols="12">
-                <h4 class="text-h6 mb-4">Franchise Information</h4>
+                <h4 class="text-h6 mb-4">
+                  Franchise Information
+                </h4>
                 <VCard variant="outlined">
                   <VCardText>
                     <VRow>
-                      <VCol cols="12" md="6">
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Franchise Name</div>
-                          <div v-if="!isEditMode" class="text-body-1 font-weight-medium">{{
-                            franchiseData.franchiseDetails.franchiseName }}</div>
-                          <AppTextField v-else v-model="franchiseData.franchiseDetails.franchiseName"
-                            label="Franchise Name" placeholder="Enter franchise name" />
+                          <div class="text-sm text-disabled mb-1">
+                            Franchise Name
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1 font-weight-medium"
+                          >
+                            {{
+                              franchiseData.franchiseDetails.franchiseName }}
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.franchiseDetails.franchiseName"
+                            label="Franchise Name"
+                            placeholder="Enter franchise name"
+                          />
                         </div>
                       </VCol>
-                      <VCol cols="12" md="6">
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Website</div>
-                          <div v-if="!isEditMode" class="text-body-1">
-                            <a :href="franchiseData.franchiseDetails.website" target="_blank" class="text-primary">
+                          <div class="text-sm text-disabled mb-1">
+                            Website
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            <a
+                              :href="franchiseData.franchiseDetails.website"
+                              target="_blank"
+                              class="text-primary"
+                            >
                               {{ franchiseData.franchiseDetails.website }}
                             </a>
                           </div>
-                          <AppTextField v-else v-model="franchiseData.franchiseDetails.website" label="Website"
-                            placeholder="https://example.com" />
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.franchiseDetails.website"
+                            label="Website"
+                            placeholder="https://example.com"
+                          />
                         </div>
                       </VCol>
                       <VCol cols="12">
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Franchise Logo</div>
-                          <div v-if="!isEditMode" class="text-body-1">
-                            <div v-if="franchiseData.franchiseDetails.logo" class="d-flex align-center">
-                              <VAvatar size="40" class="me-3">
-                                <VImg :src="franchiseData.franchiseDetails.logo" alt="Franchise Logo" />
+                          <div class="text-sm text-disabled mb-1">
+                            Franchise Logo
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            <div
+                              v-if="franchiseData.franchiseDetails.logo"
+                              class="d-flex align-center"
+                            >
+                              <VAvatar
+                                size="40"
+                                class="me-3"
+                              >
+                                <VImg
+                                  :src="franchiseData.franchiseDetails.logo"
+                                  alt="Franchise Logo"
+                                />
                               </VAvatar>
                               <span>Logo uploaded</span>
                             </div>
-                            <span v-else class="text-disabled">No logo uploaded</span>
+                            <span
+                              v-else
+                              class="text-disabled"
+                            >No logo uploaded</span>
                           </div>
-                          <VFileInput v-else v-model="logoFile" label="Franchise Logo" accept="image/*"
-                            prepend-icon="tabler-upload" :loading="isUploadingLogo" />
+                          <VFileInput
+                            v-else
+                            v-model="logoFile"
+                            label="Franchise Logo"
+                            accept="image/*"
+                            prepend-icon="tabler-upload"
+                            :loading="isUploadingLogo"
+                          />
                         </div>
                       </VCol>
                     </VRow>
@@ -990,61 +1154,147 @@ const resolveStatusVariant = (status: string) => {
 
               <!-- Legal Details -->
               <VCol cols="12">
-                <h4 class="text-h6 mb-4">Legal Information</h4>
+                <h4 class="text-h6 mb-4">
+                  Legal Information
+                </h4>
                 <VCard variant="outlined">
                   <VCardText>
                     <VRow>
-                      <VCol cols="12" md="6">
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Legal Entity Name</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.legalEntityName }}
+                          <div class="text-sm text-disabled mb-1">
+                            Legal Entity Name
                           </div>
-                          <AppTextField v-else v-model="franchiseData.legalDetails.legalEntityName"
-                            label="Legal Entity Name" placeholder="Enter legal entity name" />
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Business Structure</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.businessStructure }}
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.legalDetails.legalEntityName }}
                           </div>
-                          <AppSelect v-else v-model="franchiseData.legalDetails.businessStructure"
-                            label="Business Structure" placeholder="Select business structure"
-                            :items="businessStructures" />
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.legalDetails.legalEntityName"
+                            label="Legal Entity Name"
+                            placeholder="Enter legal entity name"
+                          />
                         </div>
                       </VCol>
-                      <VCol cols="12" md="6">
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Tax ID</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.taxId }}</div>
-                          <AppTextField v-else v-model="franchiseData.legalDetails.taxId" label="Tax ID"
-                            placeholder="Enter tax ID" />
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Industry</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.industry }}</div>
-                          <AppSelect v-else v-model="franchiseData.legalDetails.industry" label="Industry"
-                            placeholder="Select industry" :items="industries" />
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Funding Amount</div>
-                          <div v-if="!isEditMode" class="text-body-1 font-weight-medium text-success">{{
-                            franchiseData.legalDetails.fundingAmount }}</div>
-                          <AppTextField v-else v-model="franchiseData.legalDetails.fundingAmount" label="Funding Amount"
-                            placeholder="Enter funding amount" type="number" />
-                        </div>
-                      </VCol>
-                      <VCol cols="12" md="6">
-                        <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Funding Source</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.legalDetails.fundingSource }}
+                          <div class="text-sm text-disabled mb-1">
+                            Business Structure
                           </div>
-                          <AppSelect v-else v-model="franchiseData.legalDetails.fundingSource" label="Funding Source"
-                            placeholder="Select funding source" :items="fundingSources" />
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.legalDetails.businessStructure }}
+                          </div>
+                          <AppSelect
+                            v-else
+                            v-model="franchiseData.legalDetails.businessStructure"
+                            label="Business Structure"
+                            placeholder="Select business structure"
+                            :items="businessStructures"
+                          />
+                        </div>
+                      </VCol>
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Tax ID
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.legalDetails.taxId }}
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.legalDetails.taxId"
+                            label="Tax ID"
+                            placeholder="Enter tax ID"
+                          />
+                        </div>
+                      </VCol>
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Industry
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.legalDetails.industry }}
+                          </div>
+                          <AppSelect
+                            v-else
+                            v-model="franchiseData.legalDetails.industry"
+                            label="Industry"
+                            placeholder="Select industry"
+                            :items="industries"
+                          />
+                        </div>
+                      </VCol>
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Funding Amount
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1 font-weight-medium text-success"
+                          >
+                            {{
+                              franchiseData.legalDetails.fundingAmount }}
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.legalDetails.fundingAmount"
+                            label="Funding Amount"
+                            placeholder="Enter funding amount"
+                            type="number"
+                          />
+                        </div>
+                      </VCol>
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Funding Source
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.legalDetails.fundingSource }}
+                          </div>
+                          <AppSelect
+                            v-else
+                            v-model="franchiseData.legalDetails.fundingSource"
+                            label="Funding Source"
+                            placeholder="Select funding source"
+                            :items="fundingSources"
+                          />
                         </div>
                       </VCol>
                     </VRow>
@@ -1054,61 +1304,147 @@ const resolveStatusVariant = (status: string) => {
 
               <!-- Contact Details -->
               <VCol cols="12">
-                <h4 class="text-h6 mb-4">Contact Information</h4>
+                <h4 class="text-h6 mb-4">
+                  Contact Information
+                </h4>
                 <VCard variant="outlined">
                   <VCardText>
                     <VRow>
-                      <VCol cols="12" md="6">
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Contact Number</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.contactNumber }}
+                          <div class="text-sm text-disabled mb-1">
+                            Contact Number
                           </div>
-                          <AppTextField v-else v-model="franchiseData.contactDetails.contactNumber"
-                            label="Contact Number" placeholder="Enter contact number" />
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.contactDetails.contactNumber }}
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.contactDetails.contactNumber"
+                            label="Contact Number"
+                            placeholder="Enter contact number"
+                          />
                         </div>
                       </VCol>
-                      <VCol cols="12" md="6">
+                      <VCol
+                        cols="12"
+                        md="6"
+                      >
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Email</div>
-                          <div v-if="!isEditMode" class="text-body-1">
-                            <a :href="`mailto:${franchiseData.contactDetails.email}`" class="text-primary">
+                          <div class="text-sm text-disabled mb-1">
+                            Email
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            <a
+                              :href="`mailto:${franchiseData.contactDetails.email}`"
+                              class="text-primary"
+                            >
                               {{ franchiseData.contactDetails.email }}
                             </a>
                           </div>
-                          <AppTextField v-else v-model="franchiseData.contactDetails.email" label="Email"
-                            placeholder="Enter email address" type="email" />
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.contactDetails.email"
+                            label="Email"
+                            placeholder="Enter email address"
+                            type="email"
+                          />
                         </div>
                       </VCol>
                       <VCol cols="12">
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Address</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.address }}</div>
-                          <AppTextarea v-else v-model="franchiseData.contactDetails.address" label="Address"
-                            placeholder="Enter full address" rows="2" />
+                          <div class="text-sm text-disabled mb-1">
+                            Address
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.contactDetails.address }}
+                          </div>
+                          <AppTextarea
+                            v-else
+                            v-model="franchiseData.contactDetails.address"
+                            label="Address"
+                            placeholder="Enter full address"
+                            rows="2"
+                          />
                         </div>
                       </VCol>
-                      <VCol cols="12" md="4">
+                      <VCol
+                        cols="12"
+                        md="4"
+                      >
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">Country</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.country }}</div>
-                          <AppSelect v-else v-model="franchiseData.contactDetails.country" label="Country"
-                            placeholder="Select country" :items="countries" />
+                          <div class="text-sm text-disabled mb-1">
+                            Country
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.contactDetails.country }}
+                          </div>
+                          <AppSelect
+                            v-else
+                            v-model="franchiseData.contactDetails.country"
+                            label="Country"
+                            placeholder="Select country"
+                            :items="countries"
+                          />
                         </div>
                       </VCol>
-                      <VCol cols="12" md="4">
+                      <VCol
+                        cols="12"
+                        md="4"
+                      >
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">State</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.state }}</div>
-                          <AppTextField v-else v-model="franchiseData.contactDetails.state" label="State"
-                            placeholder="Enter state" />
+                          <div class="text-sm text-disabled mb-1">
+                            State
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.contactDetails.state }}
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.contactDetails.state"
+                            label="State"
+                            placeholder="Enter state"
+                          />
                         </div>
                       </VCol>
-                      <VCol cols="12" md="4">
+                      <VCol
+                        cols="12"
+                        md="4"
+                      >
                         <div class="mb-4">
-                          <div class="text-sm text-disabled mb-1">City</div>
-                          <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.contactDetails.city }}</div>
-                          <AppTextField v-else v-model="franchiseData.contactDetails.city" label="City"
-                            placeholder="Enter city" />
+                          <div class="text-sm text-disabled mb-1">
+                            City
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1"
+                          >
+                            {{ franchiseData.contactDetails.city }}
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.contactDetails.city"
+                            label="City"
+                            placeholder="Enter city"
+                          />
                         </div>
                       </VCol>
                     </VRow>
@@ -1121,10 +1457,20 @@ const resolveStatusVariant = (status: string) => {
           <!-- Action Buttons -->
           <VCardActions class="justify-end">
             <template v-if="isEditMode">
-              <VBtn variant="outlined" prepend-icon="tabler-x" @click="cancelEdit" class="me-2">
+              <VBtn
+                variant="outlined"
+                prepend-icon="tabler-x"
+                class="me-2"
+                @click="cancelEdit"
+              >
                 Cancel
               </VBtn>
-              <VBtn color="primary" :loading="isUpdating" prepend-icon="tabler-device-floppy" @click="saveChanges">
+              <VBtn
+                color="primary"
+                :loading="isUpdating"
+                prepend-icon="tabler-device-floppy"
+                @click="saveChanges"
+              >
                 Save Changes
               </VBtn>
             </template>
@@ -1137,30 +1483,59 @@ const resolveStatusVariant = (status: string) => {
         <VCard>
           <VCardText>
             <div class="d-flex justify-space-between align-center mb-4">
-              <h4 class="text-h6">Franchise Documents</h4>
-              <VBtn color="primary" prepend-icon="tabler-plus" @click="addDocument">
+              <h4 class="text-h6">
+                Franchise Documents
+              </h4>
+              <VBtn
+                color="primary"
+                prepend-icon="tabler-plus"
+                @click="addDocument"
+              >
                 Add Document
               </VBtn>
             </div>
 
             <VRow>
-              <template v-for="document in documentsData" :key="document.id">
-                <VCol cols="12" md="6" lg="4">
+              <template
+                v-for="document in documentsData"
+                :key="document.id"
+              >
+                <VCol
+                  cols="12"
+                  md="6"
+                  lg="4"
+                >
                   <VCard>
                     <VCardText>
                       <div class="d-flex align-center mb-3">
-                        <VIcon icon="tabler-file-text" size="24" color="primary" class="me-3" />
+                        <VIcon
+                          icon="tabler-file-text"
+                          size="24"
+                          color="primary"
+                          class="me-3"
+                        />
                         <div>
-                          <h6 class="text-h6">{{ document.name }}</h6>
-                          <p class="text-body-2 text-disabled mb-0">{{ document.type }}</p>
+                          <h6 class="text-h6">
+                            {{ document.name }}
+                          </h6>
+                          <p class="text-body-2 text-disabled mb-0">
+                            {{ document.type }}
+                          </p>
                         </div>
                       </div>
 
-                      <p class="text-body-2 mb-3">{{ document.description }}</p>
+                      <p class="text-body-2 mb-3">
+                        {{ document.description }}
+                      </p>
 
                       <div class="d-flex align-center justify-space-between mb-3">
                         <span class="text-body-2 text-disabled">{{ document.file_name }}</span>
-                        <VChip size="small" color="secondary">{{ document.file_size }}</VChip>
+                        <VChip
+                          size="small"
+                          color="secondary"
+                        >
+                          {{ document.file_size }}
+                        </VChip>
                       </div>
 
                       <div class="text-body-2 text-disabled mb-3">
@@ -1169,13 +1544,23 @@ const resolveStatusVariant = (status: string) => {
                     </VCardText>
 
                     <VCardActions>
-                      <VBtn size="small" variant="text" color="primary" prepend-icon="tabler-download"
-                        @click="downloadDocument(document)">
+                      <VBtn
+                        size="small"
+                        variant="text"
+                        color="primary"
+                        prepend-icon="tabler-download"
+                        @click="downloadDocument(document)"
+                      >
                         Download
                       </VBtn>
                       <VSpacer />
-                      <VBtn size="small" variant="text" color="error" icon="tabler-trash"
-                        @click="confirmDeleteDocument(document)" />
+                      <VBtn
+                        size="small"
+                        variant="text"
+                        color="error"
+                        icon="tabler-trash"
+                        @click="confirmDeleteDocument(document)"
+                      />
                     </VCardActions>
                   </VCard>
                 </VCol>
@@ -1191,19 +1576,33 @@ const resolveStatusVariant = (status: string) => {
           <VCardItem class="pb-4">
             <VCardTitle>Franchise Products</VCardTitle>
             <template #append>
-              <VBtn color="primary" prepend-icon="tabler-plus" @click="addProduct">
+              <VBtn
+                color="primary"
+                prepend-icon="tabler-plus"
+                @click="addProduct"
+              >
                 Add Product
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VDataTable :headers="productHeaders" :items="productsData" item-value="id" class="text-no-wrap"
-              show-select>
+            <VDataTable
+              :headers="productHeaders"
+              :items="productsData"
+              item-value="id"
+              class="text-no-wrap"
+              show-select
+            >
               <!-- Product Name -->
               <template #item.name="{ item }">
                 <div class="d-flex align-center gap-x-4">
-                  <VAvatar size="34" color="primary" variant="tonal" class="text-primary">
+                  <VAvatar
+                    size="34"
+                    color="primary"
+                    variant="tonal"
+                    class="text-primary"
+                  >
                     <VIcon icon="tabler-package" />
                   </VAvatar>
                   <div class="d-flex flex-column">
@@ -1240,7 +1639,12 @@ const resolveStatusVariant = (status: string) => {
 
               <!-- Status -->
               <template #item.status="{ item }">
-                <VChip :color="resolveStatusVariant(item.status)" size="small" class="text-capitalize" label>
+                <VChip
+                  :color="resolveStatusVariant(item.status)"
+                  size="small"
+                  class="text-capitalize"
+                  label
+                >
                   {{ item.status }}
                 </VChip>
               </template>
@@ -1262,7 +1666,10 @@ const resolveStatusVariant = (status: string) => {
     </VWindow>
 
     <!-- Add Document Modal -->
-    <VDialog v-model="isAddDocumentModalVisible" max-width="600">
+    <VDialog
+      v-model="isAddDocumentModalVisible"
+      max-width="600"
+    >
       <VCard>
         <VCardTitle>Add New Document</VCardTitle>
 
@@ -1270,16 +1677,29 @@ const resolveStatusVariant = (status: string) => {
           <VForm>
             <VRow>
               <VCol cols="12">
-                <AppTextField v-model="selectedDocument.name" label="Document Name" placeholder="Enter document name"
-                  required />
+                <AppTextField
+                  v-model="selectedDocument.name"
+                  label="Document Name"
+                  placeholder="Enter document name"
+                  required
+                />
               </VCol>
               <VCol cols="12">
-                <AppTextarea v-model="selectedDocument.description" label="Description"
-                  placeholder="Enter document description" rows="3" />
+                <AppTextarea
+                  v-model="selectedDocument.description"
+                  label="Description"
+                  placeholder="Enter document description"
+                  rows="3"
+                />
               </VCol>
               <VCol cols="12">
-                <VFileInput v-model="selectedDocument.file" label="Attach File" accept=".pdf,.doc,.docx"
-                  prepend-icon="tabler-paperclip" required />
+                <VFileInput
+                  v-model="selectedDocument.file"
+                  label="Attach File"
+                  accept=".pdf,.doc,.docx"
+                  prepend-icon="tabler-paperclip"
+                  required
+                />
               </VCol>
             </VRow>
           </VForm>
@@ -1287,10 +1707,17 @@ const resolveStatusVariant = (status: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="outlined" @click="isAddDocumentModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="outlined"
+            @click="isAddDocumentModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" @click="saveDocument">
+          <VBtn
+            color="primary"
+            @click="saveDocument"
+          >
             Add Document
           </VBtn>
         </VCardActions>
@@ -1298,39 +1725,91 @@ const resolveStatusVariant = (status: string) => {
     </VDialog>
 
     <!-- Add/Edit Product Modal -->
-    <VDialog v-model="isProductModalVisible" max-width="600">
+    <VDialog
+      v-model="isProductModalVisible"
+      max-width="600"
+    >
       <VCard>
         <VCardTitle>{{ selectedProduct.id ? 'Edit Product' : 'Add New Product' }}</VCardTitle>
 
         <VCardText>
           <VForm>
             <VRow>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedProduct.name" label="Product Name" placeholder="Enter product name"
-                  required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedProduct.name"
+                  label="Product Name"
+                  placeholder="Enter product name"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedProduct.sku" label="SKU" placeholder="Enter product SKU" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedProduct.sku"
+                  label="SKU"
+                  placeholder="Enter product SKU"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppSelect v-model="selectedProduct.category" label="Category" :items="productCategories"
-                  placeholder="Select category" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="selectedProduct.category"
+                  label="Category"
+                  :items="productCategories"
+                  placeholder="Select category"
+                />
               </VCol>
               <VCol cols="12">
-                <AppTextarea v-model="selectedProduct.description" label="Description"
-                  placeholder="Enter product description" rows="3" />
+                <AppTextarea
+                  v-model="selectedProduct.description"
+                  label="Description"
+                  placeholder="Enter product description"
+                  rows="3"
+                />
               </VCol>
-              <VCol cols="12" md="4">
-                <AppTextField v-model.number="selectedProduct.unit_price" label="Unit Price" type="number"
-                  placeholder="0.00" prefix="$" step="0.01" />
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <AppTextField
+                  v-model.number="selectedProduct.unit_price"
+                  label="Unit Price"
+                  type="number"
+                  placeholder="0.00"
+                  prefix="$"
+                  step="0.01"
+                />
               </VCol>
-              <VCol cols="12" md="4">
-                <AppTextField v-model.number="selectedProduct.stock" label="Stock Quantity" type="number"
-                  placeholder="0" />
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <AppTextField
+                  v-model.number="selectedProduct.stock"
+                  label="Stock Quantity"
+                  type="number"
+                  placeholder="0"
+                />
               </VCol>
-              <VCol cols="12" md="4">
-                <AppSelect v-model="selectedProduct.status" label="Status" :items="productStatuses"
-                  placeholder="Select status" />
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <AppSelect
+                  v-model="selectedProduct.status"
+                  label="Status"
+                  :items="productStatuses"
+                  placeholder="Select status"
+                />
               </VCol>
             </VRow>
           </VForm>
@@ -1338,10 +1817,17 @@ const resolveStatusVariant = (status: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="outlined" @click="isProductModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="outlined"
+            @click="isProductModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" @click="saveProduct">
+          <VBtn
+            color="primary"
+            @click="saveProduct"
+          >
             {{ selectedProduct.id ? 'Update Product' : 'Add Product' }}
           </VBtn>
         </VCardActions>
@@ -1349,7 +1835,10 @@ const resolveStatusVariant = (status: string) => {
     </VDialog>
 
     <!-- Delete Product Confirmation -->
-    <VDialog v-model="isDeleteProductModalVisible" max-width="400">
+    <VDialog
+      v-model="isDeleteProductModalVisible"
+      max-width="400"
+    >
       <VCard>
         <VCardTitle>Delete Product</VCardTitle>
 
@@ -1359,10 +1848,17 @@ const resolveStatusVariant = (status: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="outlined" @click="isDeleteProductModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="outlined"
+            @click="isDeleteProductModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" @click="deleteProduct">
+          <VBtn
+            color="error"
+            @click="deleteProduct"
+          >
             Delete
           </VBtn>
         </VCardActions>
@@ -1370,7 +1866,10 @@ const resolveStatusVariant = (status: string) => {
     </VDialog>
 
     <!-- Delete Document Confirmation -->
-    <VDialog v-model="isDeleteDocumentDialogVisible" max-width="500">
+    <VDialog
+      v-model="isDeleteDocumentDialogVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -1382,10 +1881,17 @@ const resolveStatusVariant = (status: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteDocumentDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteDocumentDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" @click="deleteDocument">
+          <VBtn
+            color="error"
+            @click="deleteDocument"
+          >
             Delete
           </VBtn>
         </VCardActions>
@@ -1393,11 +1899,20 @@ const resolveStatusVariant = (status: string) => {
     </VDialog>
 
     <!-- Snackbar for notifications -->
-    <VSnackbar v-model="snackbar.show" :color="snackbar.color" location="top end" timeout="4000">
+    <VSnackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      location="top end"
+      timeout="4000"
+    >
       {{ snackbar.message }}
 
       <template #actions>
-        <VBtn color="white" variant="text" @click="snackbar.show = false">
+        <VBtn
+          color="white"
+          variant="text"
+          @click="snackbar.show = false"
+        >
           Close
         </VBtn>
       </template>

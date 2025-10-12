@@ -26,59 +26,64 @@ const isLoadingAssociates = ref(false)
 
 const updateModelValue = (val: boolean) => {
   emit('update:isDialogVisible', val)
-  if (!val) {
+  if (!val)
     selectedAssociateId.value = props.currentAssigneeId || null
-  }
 }
 
 const fetchSalesAssociates = async () => {
   isLoadingAssociates.value = true
-  
+
   try {
     const response = await $api('/v1/franchisor/sales-associates')
-    
+
     if (response.success) {
       // Transform the data to match the expected format
       salesAssociates.value = response.data.map((associate: any) => ({
         id: associate.id,
         name: associate.name,
-        email: associate.email
+        email: associate.email,
       }))
-    } else {
+    }
+    else {
       salesAssociates.value = []
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching sales associates:', error)
     salesAssociates.value = []
-  } finally {
+  }
+  finally {
     isLoadingAssociates.value = false
   }
 }
 
 const assignLead = async () => {
-  if (!props.leadId || selectedAssociateId.value === null) return
+  if (!props.leadId || selectedAssociateId.value === null)
+    return
 
   isLoading.value = true
-  
+
   try {
     await $api(`/v1/franchisor/leads/${props.leadId}/assign`, {
       method: 'PATCH',
       body: {
-        assigned_to: selectedAssociateId.value
-      }
+        assigned_to: selectedAssociateId.value,
+      },
     })
 
     emit('leadAssigned')
     updateModelValue(false)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error assigning lead:', error)
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
 
 // Fetch sales associates when dialog opens
-watch(() => props.isDialogVisible, (newVal) => {
+watch(() => props.isDialogVisible, newVal => {
   if (newVal) {
     fetchSalesAssociates()
     selectedAssociateId.value = props.currentAssigneeId || null
@@ -122,8 +127,8 @@ watch(() => props.isDialogVisible, (newVal) => {
         <VBtn
           color="secondary"
           variant="tonal"
-          @click="updateModelValue(false)"
           :disabled="isLoading"
+          @click="updateModelValue(false)"
         >
           Cancel
         </VBtn>
@@ -131,9 +136,9 @@ watch(() => props.isDialogVisible, (newVal) => {
         <VBtn
           color="primary"
           variant="elevated"
-          @click="assignLead"
           :loading="isLoading"
           :disabled="selectedAssociateId === null"
+          @click="assignLead"
         >
           Assign Lead
         </VBtn>

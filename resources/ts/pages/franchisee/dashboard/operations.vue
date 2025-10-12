@@ -1,11 +1,11 @@
 <script setup lang="ts">
-
-import { getBarChartConfig, getLineChartSimpleConfig } from '@core/libs/apex-chart/apexCharConfig'
 import { useTheme } from 'vuetify'
+import { getBarChartConfig, getLineChartSimpleConfig } from '@core/libs/apex-chart/apexCharConfig'
 
 // 👉 Store
 const currentTab = ref('store')
 const vuetifyTheme = useTheme()
+
 // Utility function for percentage display
 const prefixWithPlus = (value: number) => value > 0 ? `+${value}` : value.toString()
 
@@ -95,21 +95,41 @@ const tabs = [
 <template>
   <section>
     <!-- 👉 Tabs -->
-    <VTabs v-model="currentTab" class="mb-6">
-      <VTab v-for="tab in tabs" :key="tab.value" :value="tab.value">
-        <VIcon :icon="tab.icon" start />
+    <VTabs
+      v-model="currentTab"
+      class="mb-6"
+    >
+      <VTab
+        v-for="tab in tabs"
+        :key="tab.value"
+        :value="tab.value"
+      >
+        <VIcon
+          :icon="tab.icon"
+          start
+        />
         {{ tab.title }}
       </VTab>
     </VTabs>
 
-    <VWindow v-model="currentTab" class="disable-tab-transition">
+    <VWindow
+      v-model="currentTab"
+      class="disable-tab-transition"
+    >
       <!-- Store Tab -->
       <VWindowItem value="store">
         <!-- 👉 Store Stat Cards -->
         <div class="d-flex mb-6">
           <VRow>
-            <template v-for="(data, id) in storeWidgetData" :key="id">
-              <VCol cols="12" md="3" sm="6">
+            <template
+              v-for="(data, id) in storeWidgetData"
+              :key="id"
+            >
+              <VCol
+                cols="12"
+                md="3"
+                sm="6"
+              >
                 <VCard>
                   <VCardText>
                     <div class="d-flex justify-space-between">
@@ -121,7 +141,10 @@ const tabs = [
                           <h4 class="text-h4">
                             {{ data.value }}
                           </h4>
-                          <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
+                          <div
+                            class="text-base"
+                            :class="data.change > 0 ? 'text-success' : 'text-error'"
+                          >
                             ({{ prefixWithPlus(data.change) }}%)
                           </div>
                         </div>
@@ -129,8 +152,16 @@ const tabs = [
                           {{ data.desc }}
                         </div>
                       </div>
-                      <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
-                        <VIcon :icon="data.icon" size="26" />
+                      <VAvatar
+                        :color="data.iconColor"
+                        variant="tonal"
+                        rounded
+                        size="42"
+                      >
+                        <VIcon
+                          :icon="data.icon"
+                          size="26"
+                        />
                       </VAvatar>
                     </div>
                   </VCardText>
@@ -146,7 +177,12 @@ const tabs = [
             <VCardTitle>Items on Low Stock</VCardTitle>
           </VCardItem>
           <VCardText>
-            <VueApexCharts type="line" height="400" :options="lowStockChartConfig" :series="lowStockChartData" />
+            <VueApexCharts
+              type="line"
+              height="400"
+              :options="lowStockChartConfig"
+              :series="lowStockChartData"
+            />
           </VCardText>
         </VCard>
       </VWindowItem>
@@ -156,8 +192,15 @@ const tabs = [
         <!-- 👉 Staff Stat Cards -->
         <div class="d-flex mb-6">
           <VRow>
-            <template v-for="(data, id) in staffWidgetData" :key="id">
-              <VCol cols="12" md="4" sm="6">
+            <template
+              v-for="(data, id) in staffWidgetData"
+              :key="id"
+            >
+              <VCol
+                cols="12"
+                md="4"
+                sm="6"
+              >
                 <VCard>
                   <VCardText>
                     <div class="d-flex justify-space-between">
@@ -169,7 +212,10 @@ const tabs = [
                           <h4 class="text-h4">
                             {{ data.value }}
                           </h4>
-                          <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
+                          <div
+                            class="text-base"
+                            :class="data.change > 0 ? 'text-success' : 'text-error'"
+                          >
                             ({{ prefixWithPlus(data.change) }}%)
                           </div>
                         </div>
@@ -177,8 +223,16 @@ const tabs = [
                           {{ data.desc }}
                         </div>
                       </div>
-                      <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
-                        <VIcon :icon="data.icon" size="26" />
+                      <VAvatar
+                        :color="data.iconColor"
+                        variant="tonal"
+                        rounded
+                        size="42"
+                      >
+                        <VIcon
+                          :icon="data.icon"
+                          size="26"
+                        />
                       </VAvatar>
                     </div>
                   </VCardText>
@@ -190,16 +244,27 @@ const tabs = [
 
         <VRow>
           <!-- 👉 Top 5 Performer -->
-          <VCol cols="12" md="6">
+          <VCol
+            cols="12"
+            md="6"
+          >
             <VCard>
               <VCardItem>
                 <VCardTitle>Top 5 Performer</VCardTitle>
               </VCardItem>
               <VCardText>
                 <VList>
-                  <VListItem v-for="(performer, index) in staffData.topPerformers" :key="performer.id" class="px-0">
+                  <VListItem
+                    v-for="(performer, index) in staffData.topPerformers"
+                    :key="performer.id"
+                    class="px-0"
+                  >
                     <template #prepend>
-                      <VAvatar size="40" :color="index < 3 ? 'primary' : 'secondary'" variant="tonal">
+                      <VAvatar
+                        size="40"
+                        :color="index < 3 ? 'primary' : 'secondary'"
+                        variant="tonal"
+                      >
                         <span class="text-sm font-weight-medium">{{ index + 1 }}</span>
                       </VAvatar>
                     </template>
@@ -228,14 +293,21 @@ const tabs = [
           </VCol>
 
           <!-- 👉 Employee Shift Coverage Chart -->
-          <VCol cols="12" md="6">
+          <VCol
+            cols="12"
+            md="6"
+          >
             <VCard>
               <VCardItem>
                 <VCardTitle>Employee Shift Coverage</VCardTitle>
               </VCardItem>
               <VCardText>
-                <VueApexCharts type='radar' height="300" :options="shiftCoverageChartConfig"
-                  :series="shiftCoverageData" />
+                <VueApexCharts
+                  type="radar"
+                  height="300"
+                  :options="shiftCoverageChartConfig"
+                  :series="shiftCoverageData"
+                />
               </VCardText>
             </VCard>
           </VCol>

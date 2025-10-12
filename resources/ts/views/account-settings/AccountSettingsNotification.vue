@@ -40,6 +40,7 @@ const notificationSettings = ref([
 
 const saveNotifications = () => {
   console.log('Notification settings saved:', notificationSettings.value)
+
   // Implement API call here
 }
 </script>
@@ -51,7 +52,7 @@ const saveNotifications = () => {
         <VCardItem>
           <VCardTitle>Notification Preferences</VCardTitle>
           <p class="text-body-1 mb-0">
-            Choose how you want to receive notifications. We need permission from your browser to show notifications. 
+            Choose how you want to receive notifications. We need permission from your browser to show notifications.
             <span class="text-primary cursor-pointer">Request Permission</span>
           </p>
         </VCardItem>

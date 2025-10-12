@@ -14,10 +14,9 @@ export const useNavigation = () => {
   const navigationItems = computed(() => {
     const userRole = userData.value?.role
     const hasUserData = !!userData.value
-    
-    if (!hasUserData || !userRole) {
+
+    if (!hasUserData || !userRole)
       return [] as VerticalNavItems
-    }
 
     switch (userRole) {
       case 'admin':

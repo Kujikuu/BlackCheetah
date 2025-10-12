@@ -19,5 +19,5 @@ export default [
     icon: { icon: 'tabler-headset' },
     action: 'create',
     subject: 'TechnicalRequest',
-  }
+  },
 ]

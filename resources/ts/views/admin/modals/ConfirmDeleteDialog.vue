@@ -41,11 +41,11 @@ const handleCancel = () => {
           color="error"
           class="mb-4"
         />
-        
+
         <h3 class="text-h5 mb-2">
           Confirm Deletion
         </h3>
-        
+
         <p class="text-body-1 mb-6">
           Are you sure you want to delete <strong>{{ props.userName }}</strong>?
           <br>

@@ -119,9 +119,9 @@ interface ApiResponse {
 
 // 👉 Reactive data
 const tasksData = ref<{
-  franchisee: { tasks: Task[], total: number }
-  sales: { tasks: Task[], total: number }
-  staff: { tasks: Task[], total: number }
+  franchisee: { tasks: Task[]; total: number }
+  sales: { tasks: Task[]; total: number }
+  staff: { tasks: Task[]; total: number }
 }>({
   franchisee: { tasks: [], total: 0 },
   sales: { tasks: [], total: 0 },
@@ -154,29 +154,32 @@ const statsData = ref<{
 })
 
 // 👉 Watch for API data changes
-watch(operationsApiData, (newData) => {
+watch(operationsApiData, newData => {
   const apiData = newData as ApiResponse
   if (apiData?.success && apiData?.data) {
     const data = apiData.data
 
     // Helper function to map tasks with null/undefined checks
     const mapTasks = (tasks: any[]): Task[] => {
-      return Array.isArray(tasks) ? tasks.map(task => ({
-        id: task.id,
-        task: task.task,
-        assignedTo: task.assigned_to,
-        priority: task.priority,
-        status: task.status,
-        dueDate: new Date(task.due_date).toLocaleDateString(),
-      })) : []
+      return Array.isArray(tasks)
+        ? tasks.map(task => ({
+          id: task.id,
+          task: task.task,
+          assignedTo: task.assigned_to,
+          priority: task.priority,
+          status: task.status,
+          dueDate: new Date(task.due_date).toLocaleDateString(),
+        }))
+        : []
     }
 
     // Create fallback objects for safe access
     const tasks = data.tasks ?? { franchisee: [], sales: [], staff: [] }
+
     const stats = data.stats ?? {
       franchisee: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 },
       sales: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 },
-      staff: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 }
+      staff: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 },
     }
 
     // Update tasks data
@@ -224,6 +227,7 @@ const currentTasks = computed(() => {
     return tasksData.value.franchisee.tasks
   if (currentTab.value === 'sales')
     return tasksData.value.sales.tasks
+
   return tasksData.value.staff.tasks
 })
 
@@ -232,6 +236,7 @@ const totalTasks = computed(() => {
     return tasksData.value.franchisee.total
   if (currentTab.value === 'sales')
     return tasksData.value.sales.total
+
   return tasksData.value.staff.total
 })
 
@@ -240,6 +245,7 @@ const widgetData = computed(() => {
     return statsData.value.franchisee
   if (currentTab.value === 'sales')
     return statsData.value.sales
+
   return statsData.value.staff
 })
 
@@ -295,7 +301,8 @@ const confirmDelete = (id: number) => {
 }
 
 const deleteTask = async () => {
-  if (taskToDelete.value === null) return
+  if (taskToDelete.value === null)
+    return
 
   // TODO: Implement API call for delete
   const taskList = currentTab.value === 'franchisee'
@@ -354,7 +361,8 @@ const editTask = (id: number) => {
 
 // 👉 Save edited task
 const saveTask = async () => {
-  if (!selectedTask.value) return
+  if (!selectedTask.value)
+    return
 
   // TODO: Implement API call for update
   const taskList = currentTab.value === 'franchisee'
@@ -364,9 +372,8 @@ const saveTask = async () => {
       : tasksData.value.staff.tasks
 
   const index = taskList.findIndex(task => task.id === selectedTask.value!.id)
-  if (index !== -1) {
+  if (index !== -1)
     taskList[index] = { ...selectedTask.value }
-  }
 
   isEditTaskModalVisible.value = false
   selectedTask.value = null
@@ -381,13 +388,14 @@ const exportTasks = () => {
   const csvContent = [
     'Task,Assigned To,Priority,Status,Due Date',
     ...dataToExport.map(task =>
-      `"${task.task}","${task.assignedTo}","${task.priority}","${task.status}","${task.dueDate}"`
-    )
+      `"${task.task}","${task.assignedTo}","${task.priority}","${task.status}","${task.dueDate}"`,
+    ),
   ].join('\n')
 
   const blob = new Blob([csvContent], { type: 'text/csv' })
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
+
   a.href = url
   a.download = `${currentTab.value}_tasks_${selectedRows.value.length > 0 ? 'selected' : 'all'}_${new Date().toISOString().split('T')[0]}.csv`
   a.click()
@@ -417,20 +425,44 @@ const tabs = [
 <template>
   <section>
     <!-- 👉 Tabs -->
-    <VTabs v-model="currentTab" class="mb-6">
-      <VTab v-for="tab in tabs" :key="tab.value" :value="tab.value">
-        <VIcon :icon="tab.icon" start />
+    <VTabs
+      v-model="currentTab"
+      class="mb-6"
+    >
+      <VTab
+        v-for="tab in tabs"
+        :key="tab.value"
+        :value="tab.value"
+      >
+        <VIcon
+          :icon="tab.icon"
+          start
+        />
         {{ tab.title }}
       </VTab>
     </VTabs>
 
-    <VWindow v-model="currentTab" class="disable-tab-transition">
-      <VWindowItem v-for="tab in tabs" :key="tab.value" :value="tab.value">
+    <VWindow
+      v-model="currentTab"
+      class="disable-tab-transition"
+    >
+      <VWindowItem
+        v-for="tab in tabs"
+        :key="tab.value"
+        :value="tab.value"
+      >
         <!-- 👉 Widgets -->
         <div class="d-flex mb-6">
           <VRow>
-            <template v-for="(data, id) in widgetData" :key="id">
-              <VCol cols="12" md="3" sm="6">
+            <template
+              v-for="(data, id) in widgetData"
+              :key="id"
+            >
+              <VCol
+                cols="12"
+                md="3"
+                sm="6"
+              >
                 <VCard>
                   <VCardText>
                     <div class="d-flex justify-space-between">
@@ -442,7 +474,10 @@ const tabs = [
                           <h4 class="text-h4">
                             {{ data.value }}
                           </h4>
-                          <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
+                          <div
+                            class="text-base"
+                            :class="data.change > 0 ? 'text-success' : 'text-error'"
+                          >
                             ({{ prefixWithPlusNumber(data.change) }}%)
                           </div>
                         </div>
@@ -450,8 +485,16 @@ const tabs = [
                           {{ data.desc }}
                         </div>
                       </div>
-                      <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
-                        <VIcon :icon="data.icon" size="26" />
+                      <VAvatar
+                        :color="data.iconColor"
+                        variant="tonal"
+                        rounded
+                        size="42"
+                      >
+                        <VIcon
+                          :icon="data.icon"
+                          size="26"
+                        />
                       </VAvatar>
                     </div>
                   </VCardText>
@@ -469,14 +512,30 @@ const tabs = [
           <VCardText>
             <VRow>
               <!-- 👉 Select Priority -->
-              <VCol cols="12" sm="6">
-                <AppSelect v-model="selectedPriority" placeholder="Select Priority" :items="priorities" clearable
-                  clear-icon="tabler-x" />
+              <VCol
+                cols="12"
+                sm="6"
+              >
+                <AppSelect
+                  v-model="selectedPriority"
+                  placeholder="Select Priority"
+                  :items="priorities"
+                  clearable
+                  clear-icon="tabler-x"
+                />
               </VCol>
               <!-- 👉 Select Status -->
-              <VCol cols="12" sm="6">
-                <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statuses" clearable
-                  clear-icon="tabler-x" />
+              <VCol
+                cols="12"
+                sm="6"
+              >
+                <AppSelect
+                  v-model="selectedStatus"
+                  placeholder="Select Status"
+                  :items="statuses"
+                  clearable
+                  clear-icon="tabler-x"
+                />
               </VCol>
             </VRow>
           </VCardText>
@@ -485,40 +544,64 @@ const tabs = [
 
           <VCardText class="d-flex flex-wrap gap-4">
             <div class="me-3 d-flex gap-3">
-              <AppSelect :model-value="itemsPerPage" :items="[
-                { value: 10, title: '10' },
-                { value: 25, title: '25' },
-                { value: 50, title: '50' },
-                { value: 100, title: '100' },
-                { value: -1, title: 'All' },
-              ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+              <AppSelect
+                :model-value="itemsPerPage"
+                :items="[
+                  { value: 10, title: '10' },
+                  { value: 25, title: '25' },
+                  { value: 50, title: '50' },
+                  { value: 100, title: '100' },
+                  { value: -1, title: 'All' },
+                ]"
+                style="inline-size: 6.25rem;"
+                @update:model-value="itemsPerPage = parseInt($event, 10)"
+              />
             </div>
             <VSpacer />
 
             <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
               <!-- 👉 Search  -->
               <div style="inline-size: 15.625rem;">
-                <AppTextField v-model="searchQuery" placeholder="Search Task" />
+                <AppTextField
+                  v-model="searchQuery"
+                  placeholder="Search Task"
+                />
               </div>
 
               <!-- 👉 Export button -->
-              <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload" @click="exportTasks">
+              <VBtn
+                variant="tonal"
+                color="secondary"
+                prepend-icon="tabler-upload"
+                @click="exportTasks"
+              >
                 Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
               </VBtn>
 
               <!-- 👉 Add task button - Commented out as requested -->
-              <!-- <VBtn prepend-icon="tabler-plus">
+              <!--
+                <VBtn prepend-icon="tabler-plus">
                 Add New Task
-              </VBtn> -->
+                </VBtn>
+              -->
             </div>
           </VCardText>
 
           <VDivider />
 
           <!-- SECTION datatable -->
-          <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
-            :items="currentTasks" item-value="id" :items-length="totalTasks" :headers="headers" class="text-no-wrap"
-            show-select @update:options="updateOptions">
+          <VDataTableServer
+            v-model:items-per-page="itemsPerPage"
+            v-model:model-value="selectedRows"
+            v-model:page="page"
+            :items="currentTasks"
+            item-value="id"
+            :items-length="totalTasks"
+            :headers="headers"
+            class="text-no-wrap"
+            show-select
+            @update:options="updateOptions"
+          >
             <!-- Task -->
             <template #item.task="{ item }">
               <div class="d-flex flex-column">
@@ -531,7 +614,11 @@ const tabs = [
             <!-- Assigned To -->
             <template #item.assignedTo="{ item }">
               <div class="d-flex align-center gap-x-4">
-                <VAvatar size="34" variant="tonal" color="primary">
+                <VAvatar
+                  size="34"
+                  variant="tonal"
+                  color="primary"
+                >
                   <span>{{ avatarText(item.assignedTo) }}</span>
                 </VAvatar>
                 <div class="text-body-1">
@@ -542,14 +629,24 @@ const tabs = [
 
             <!-- Priority -->
             <template #item.priority="{ item }">
-              <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
+              <VChip
+                :color="resolvePriorityVariant(item.priority)"
+                size="small"
+                label
+                class="text-capitalize"
+              >
                 {{ item.priority }}
               </VChip>
             </template>
 
             <!-- Status -->
             <template #item.status="{ item }">
-              <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+              <VChip
+                :color="resolveStatusVariant(item.status)"
+                size="small"
+                label
+                class="text-capitalize"
+              >
                 {{ item.status.replace('_', ' ') }}
               </VChip>
             </template>
@@ -563,7 +660,11 @@ const tabs = [
 
             <!-- Actions -->
             <template #item.actions="{ item }">
-              <VBtn icon variant="text" color="medium-emphasis">
+              <VBtn
+                icon
+                variant="text"
+                color="medium-emphasis"
+              >
                 <VIcon icon="tabler-dots-vertical" />
                 <VMenu activator="parent">
                   <VList>
@@ -594,7 +695,11 @@ const tabs = [
 
             <!-- pagination -->
             <template #bottom>
-              <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalTasks" />
+              <TablePagination
+                v-model:page="page"
+                :items-per-page="itemsPerPage"
+                :total-items="totalTasks"
+              />
             </template>
           </VDataTableServer>
           <!-- SECTION -->
@@ -603,7 +708,10 @@ const tabs = [
     </VWindow>
 
     <!-- 👉 View Task Modal -->
-    <VDialog v-model="isViewTaskModalVisible" max-width="600">
+    <VDialog
+      v-model="isViewTaskModalVisible"
+      max-width="600"
+    >
       <VCard v-if="selectedTask">
         <VCardItem>
           <VCardTitle>Task Details</VCardTitle>
@@ -613,35 +721,72 @@ const tabs = [
           <VRow>
             <VCol cols="12">
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Task</div>
-                <div class="text-body-1 font-weight-medium">{{ selectedTask.task }}</div>
+                <div class="text-sm text-disabled mb-1">
+                  Task
+                </div>
+                <div class="text-body-1 font-weight-medium">
+                  {{ selectedTask.task }}
+                </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Assigned To</div>
-                <div class="text-body-1">{{ selectedTask.assignedTo }}</div>
+                <div class="text-sm text-disabled mb-1">
+                  Assigned To
+                </div>
+                <div class="text-body-1">
+                  {{ selectedTask.assignedTo }}
+                </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Due Date</div>
-                <div class="text-body-1">{{ selectedTask.dueDate }}</div>
+                <div class="text-sm text-disabled mb-1">
+                  Due Date
+                </div>
+                <div class="text-body-1">
+                  {{ selectedTask.dueDate }}
+                </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Priority</div>
-                <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label
-                  class="text-capitalize">
+                <div class="text-sm text-disabled mb-1">
+                  Priority
+                </div>
+                <VChip
+                  :color="resolvePriorityVariant(selectedTask.priority)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
                   {{ selectedTask.priority }}
                 </VChip>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Status</div>
-                <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize">
+                <div class="text-sm text-disabled mb-1">
+                  Status
+                </div>
+                <VChip
+                  :color="resolveStatusVariant(selectedTask.status)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
                   {{ selectedTask.status.replace('_', ' ') }}
                 </VChip>
               </div>
@@ -651,10 +796,17 @@ const tabs = [
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewTaskModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewTaskModalVisible = false"
+          >
             Close
           </VBtn>
-          <VBtn color="primary" @click="editTask(selectedTask.id)">
+          <VBtn
+            color="primary"
+            @click="editTask(selectedTask.id)"
+          >
             Edit
           </VBtn>
         </VCardActions>
@@ -662,7 +814,10 @@ const tabs = [
     </VDialog>
 
     <!-- 👉 Edit Task Modal -->
-    <VDialog v-model="isEditTaskModalVisible" max-width="700">
+    <VDialog
+      v-model="isEditTaskModalVisible"
+      max-width="700"
+    >
       <VCard v-if="selectedTask">
         <VCardItem>
           <VCardTitle>Edit Task</VCardTitle>
@@ -672,20 +827,53 @@ const tabs = [
           <VForm @submit.prevent="saveTask">
             <VRow>
               <VCol cols="12">
-                <AppTextField v-model="selectedTask.task" label="Task" placeholder="Enter task description" />
+                <AppTextField
+                  v-model="selectedTask.task"
+                  label="Task"
+                  placeholder="Enter task description"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedTask.assignedTo" label="Assigned To" placeholder="Enter assignee name" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedTask.assignedTo"
+                  label="Assigned To"
+                  placeholder="Enter assignee name"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedTask.dueDate" label="Due Date" type="date" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedTask.dueDate"
+                  label="Due Date"
+                  type="date"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppSelect v-model="selectedTask.priority" label="Priority" :items="priorities"
-                  placeholder="Select priority" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="selectedTask.priority"
+                  label="Priority"
+                  :items="priorities"
+                  placeholder="Select priority"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppSelect v-model="selectedTask.status" label="Status" :items="statuses" placeholder="Select status" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="selectedTask.status"
+                  label="Status"
+                  :items="statuses"
+                  placeholder="Select status"
+                />
               </VCol>
             </VRow>
           </VForm>
@@ -693,10 +881,17 @@ const tabs = [
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isEditTaskModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isEditTaskModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" @click="saveTask">
+          <VBtn
+            color="primary"
+            @click="saveTask"
+          >
             Save Changes
           </VBtn>
         </VCardActions>
@@ -704,7 +899,10 @@ const tabs = [
     </VDialog>
 
     <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog v-model="isDeleteDialogVisible" max-width="500">
+    <VDialog
+      v-model="isDeleteDialogVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -716,10 +914,17 @@ const tabs = [
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" @click="deleteTask">
+          <VBtn
+            color="error"
+            @click="deleteTask"
+          >
             Delete
           </VBtn>
         </VCardActions>

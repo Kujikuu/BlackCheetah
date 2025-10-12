@@ -4,10 +4,11 @@ import { destr } from 'destr'
 // Compute a scheme-safe base URL to avoid mixed content when the app is served over HTTPS
 const computeBaseURL = () => {
   const base = import.meta.env.VITE_API_BASE_URL
-  if (!base || base.trim() === '') return '/api'
-  if (typeof window !== 'undefined' && window.location?.protocol === 'https:' && base.startsWith('http://')) {
+  if (!base || base.trim() === '')
+    return '/api'
+  if (typeof window !== 'undefined' && window.location?.protocol === 'https:' && base.startsWith('http://'))
     return base.replace(/^http:\/\//, 'https://')
-  }
+
   return base
 }
 

@@ -17,7 +17,9 @@
         "boost:mcp"
       ],
       "alwaysAllow": [
-        "browser-logs"
+        "browser-logs",
+        "application-info",
+        "database-schema"
       ]
     },
     "herd": {

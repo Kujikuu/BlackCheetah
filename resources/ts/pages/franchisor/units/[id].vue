@@ -62,10 +62,13 @@ const taskToDelete = ref<number | null>(null)
 const totalTasks = computed(() => tasksData.value.length)
 const completedTasks = computed(() => tasksData.value.filter(task => task.status === 'completed').length)
 const inProgressTasks = computed(() => tasksData.value.filter(task => task.status === 'in_progress').length)
+
 const dueTasks = computed(() => {
   const today = new Date()
+
   return tasksData.value.filter(task => {
     const dueDate = new Date(task.dueDate)
+
     return dueDate <= today && task.status !== 'completed'
   }).length
 })
@@ -80,10 +83,13 @@ const lowStockProducts = computed(() => productsData.value.filter(product => pro
 const outOfStockProducts = computed(() => productsData.value.filter(product => product.stock === 0).length)
 
 const avgRating = computed(() => {
-  if (reviewsData.value.length === 0) return '0.0'
+  if (reviewsData.value.length === 0)
+    return '0.0'
   const sum = reviewsData.value.reduce((total, review) => total + review.rating, 0)
+
   return (sum / reviewsData.value.length).toFixed(1)
 })
+
 const positiveReviews = computed(() => reviewsData.value.filter(review => review.sentiment === 'positive').length)
 const negativeReviews = computed(() => reviewsData.value.filter(review => review.sentiment === 'negative').length)
 const totalReviews = computed(() => reviewsData.value.length)
@@ -121,20 +127,24 @@ const loadUnitData = async () => {
         openingDate: response.data.opening_date || null,
         monthlyRent: response.data.monthly_rent || 0,
       }
-    } else {
+    }
+    else {
       error.value = 'Unit not found'
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to load unit data:', err)
     error.value = err?.data?.message || 'Failed to load unit data'
     unitData.value = null
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
 const loadTasksData = async () => {
-  if (!unitId.value) return
+  if (!unitId.value)
+    return
 
   tasksLoading.value = true
   tasksError.value = null
@@ -158,20 +168,24 @@ const loadTasksData = async () => {
         completionNotes: task.completion_notes || '',
         attachments: task.attachments || [],
       }))
-    } else {
+    }
+    else {
       tasksData.value = []
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to load tasks data:', err)
     tasksError.value = err?.data?.message || 'Failed to load tasks data'
     tasksData.value = []
-  } finally {
+  }
+  finally {
     tasksLoading.value = false
   }
 }
 
 const loadDocumentsData = async () => {
-  if (!unitData.value?.franchise?.id) return
+  if (!unitData.value?.franchise?.id)
+    return
 
   documentsLoading.value = true
   documentsError.value = null
@@ -193,20 +207,24 @@ const loadDocumentsData = async () => {
         filePath: doc.file_path,
         franchiseId: doc.franchise_id,
       }))
-    } else {
+    }
+    else {
       documentsData.value = []
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to load documents data:', err)
     documentsError.value = err?.data?.message || 'Failed to load documents data'
     documentsData.value = []
-  } finally {
+  }
+  finally {
     documentsLoading.value = false
   }
 }
 
 const loadProductsData = async () => {
-  if (!unitData.value?.franchise?.id) return
+  if (!unitData.value?.franchise?.id)
+    return
 
   productsLoading.value = true
   productsError.value = null
@@ -226,20 +244,24 @@ const loadProductsData = async () => {
         sku: product.sku || '',
         minimumStock: product.minimum_stock || 0,
       }))
-    } else {
+    }
+    else {
       productsData.value = []
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to load products data:', err)
     productsError.value = err?.data?.message || 'Failed to load products data'
     productsData.value = []
-  } finally {
+  }
+  finally {
     productsLoading.value = false
   }
 }
 
 const loadStaffData = async () => {
-  if (!unitData.value?.franchise?.id) return
+  if (!unitData.value?.franchise?.id)
+    return
 
   staffLoading.value = true
   staffError.value = null
@@ -259,20 +281,24 @@ const loadStaffData = async () => {
         avatar: user.avatar || '',
         lastLogin: user.last_login_at || null,
       }))
-    } else {
+    }
+    else {
       staffData.value = []
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to load staff data:', err)
     staffError.value = err?.data?.message || 'Failed to load staff data'
     staffData.value = []
-  } finally {
+  }
+  finally {
     staffLoading.value = false
   }
 }
 
 const loadReviewsData = async () => {
-  if (!unitId.value) return
+  if (!unitId.value)
+    return
 
   reviewsLoading.value = true
   reviewsError.value = null
@@ -297,24 +323,29 @@ const loadReviewsData = async () => {
         franchiseeName: review.franchisee?.name || 'Unknown',
         addedDate: review.created_at ? new Date(review.created_at).toISOString().split('T')[0] : '',
       }))
-    } else {
+    }
+    else {
       reviewsData.value = []
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to load reviews data:', err)
     reviewsError.value = err?.data?.message || 'Failed to load reviews data'
     reviewsData.value = []
-  } finally {
+  }
+  finally {
     reviewsLoading.value = false
   }
 }
 
 const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes'
+  if (bytes === 0)
+    return '0 Bytes'
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+
+  return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 
 const goBack = () => {
@@ -322,16 +353,24 @@ const goBack = () => {
 }
 
 const resolveStatusVariant = (status: string) => {
-  if (status === 'active' || status === 'completed' || status === 'approved') return 'success'
-  if (status === 'pending' || status === 'in_progress') return 'warning'
-  if (status === 'inactive' || status === 'rejected') return 'error'
+  if (status === 'active' || status === 'completed' || status === 'approved')
+    return 'success'
+  if (status === 'pending' || status === 'in_progress')
+    return 'warning'
+  if (status === 'inactive' || status === 'rejected')
+    return 'error'
+
   return 'secondary'
 }
 
 const resolvePriorityVariant = (priority: string) => {
-  if (priority === 'high') return 'error'
-  if (priority === 'medium') return 'warning'
-  if (priority === 'low') return 'info'
+  if (priority === 'high')
+    return 'error'
+  if (priority === 'medium')
+    return 'warning'
+  if (priority === 'low')
+    return 'info'
+
   return 'secondary'
 }
 
@@ -357,6 +396,7 @@ const onDocumentActionConfirmed = async (data: { document: any; action: string; 
 
     if (!franchiseId) {
       console.error('Franchise ID not found for document approval')
+
       return
     }
 
@@ -368,8 +408,8 @@ const onDocumentActionConfirmed = async (data: { document: any; action: string; 
     const response = await $api<{ success: boolean; data: any }>(endpoint, {
       method: 'PATCH',
       body: {
-        comment: data.comment
-      }
+        comment: data.comment,
+      },
     })
 
     if (response.success) {
@@ -379,12 +419,16 @@ const onDocumentActionConfirmed = async (data: { document: any; action: string; 
         documentsData.value[documentIndex].status = data.action === 'approve' ? 'approved' : 'rejected'
         documentsData.value[documentIndex].comment = data.comment
       }
-    } else {
+    }
+    else {
       console.error(`Failed to ${data.action} document:`, response)
+
       // Show error message (you could add a toast notification here)
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error(`Error ${data.action}ing document:`, error)
+
     // Show error message (you could add a toast notification here)
   }
 }
@@ -406,24 +450,24 @@ const confirmDelete = (id: number) => {
 }
 
 const deleteTask = () => {
-  if (taskToDelete.value === null) return
+  if (taskToDelete.value === null)
+    return
 
   const index = tasksData.value.findIndex(task => task.id === taskToDelete.value)
-  if (index !== -1) {
+  if (index !== -1)
     tasksData.value.splice(index, 1)
-  }
 
   isDeleteDialogVisible.value = false
   taskToDelete.value = null
 }
 
 const saveTask = () => {
-  if (!selectedTask.value) return
+  if (!selectedTask.value)
+    return
 
   const index = tasksData.value.findIndex(task => task.id === selectedTask.value.id)
-  if (index !== -1) {
+  if (index !== -1)
     tasksData.value[index] = { ...selectedTask.value }
-  }
 
   isEditTaskModalVisible.value = false
   selectedTask.value = null
@@ -467,9 +511,8 @@ const reviewHeaders = [
 
 // Load data on component mount and when unit ID changes
 watch(() => unitId.value, () => {
-  if (unitId.value) {
+  if (unitId.value)
     loadUnitData()
-  }
 }, { immediate: true })
 
 // Load additional data when unit data is loaded
@@ -484,31 +527,52 @@ watch(() => unitData.value, () => {
 
 // Load reviews data when unit ID is available
 watch(() => unitId.value, () => {
-  if (unitId.value) {
+  if (unitId.value)
     loadReviewsData()
-  }
 }, { immediate: true })
 </script>
 
 <template>
   <section>
     <!-- Loading State -->
-    <div v-if="loading" class="text-center py-12">
-      <VProgressCircular indeterminate size="64" class="mb-4" />
-      <h3 class="text-h3 mb-2">Loading Unit Details...</h3>
+    <div
+      v-if="loading"
+      class="text-center py-12"
+    >
+      <VProgressCircular
+        indeterminate
+        size="64"
+        class="mb-4"
+      />
+      <h3 class="text-h3 mb-2">
+        Loading Unit Details...
+      </h3>
       <p class="text-body-1 text-medium-emphasis">
         Please wait while we fetch the unit information.
       </p>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error || !unitData" class="text-center py-12">
-      <VIcon icon="tabler-alert-circle" size="64" class="text-error mb-4" />
-      <h3 class="text-h3 mb-2">Error Loading Unit</h3>
+    <div
+      v-else-if="error || !unitData"
+      class="text-center py-12"
+    >
+      <VIcon
+        icon="tabler-alert-circle"
+        size="64"
+        class="text-error mb-4"
+      />
+      <h3 class="text-h3 mb-2">
+        Error Loading Unit
+      </h3>
       <p class="text-body-1 text-medium-emphasis mb-6">
         {{ error || 'Unit not found or you don\'t have permission to view it.' }}
       </p>
-      <VBtn color="primary" prepend-icon="tabler-arrow-left" @click="goBack">
+      <VBtn
+        color="primary"
+        prepend-icon="tabler-arrow-left"
+        @click="goBack"
+      >
         Back to Units
       </VBtn>
     </div>
@@ -520,7 +584,12 @@ watch(() => unitId.value, () => {
         <VCol cols="12">
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center gap-3">
-              <VBtn icon variant="text" color="default" @click="goBack">
+              <VBtn
+                icon
+                variant="text"
+                color="default"
+                @click="goBack"
+              >
                 <VIcon icon="tabler-arrow-left" />
               </VBtn>
               <div>
@@ -532,7 +601,12 @@ watch(() => unitId.value, () => {
                 </p>
               </div>
             </div>
-            <VChip :color="resolveStatusVariant(unitData.status)" size="large" label class="text-capitalize">
+            <VChip
+              :color="resolveStatusVariant(unitData.status)"
+              size="large"
+              label
+              class="text-capitalize"
+            >
               {{ unitData.status }}
             </VChip>
           </div>
@@ -540,34 +614,58 @@ watch(() => unitId.value, () => {
       </VRow>
 
       <!-- Tabs -->
-      <VTabs v-model="currentTab" class="mb-6">
+      <VTabs
+        v-model="currentTab"
+        class="mb-6"
+      >
         <VTab value="overview">
-          <VIcon icon="tabler-info-circle" start />
+          <VIcon
+            icon="tabler-info-circle"
+            start
+          />
           Overview
         </VTab>
         <VTab value="tasks">
-          <VIcon icon="tabler-checklist" start />
+          <VIcon
+            icon="tabler-checklist"
+            start
+          />
           Tasks
         </VTab>
         <VTab value="documents">
-          <VIcon icon="tabler-files" start />
+          <VIcon
+            icon="tabler-files"
+            start
+          />
           Documents
         </VTab>
         <VTab value="staffs">
-          <VIcon icon="tabler-users" start />
+          <VIcon
+            icon="tabler-users"
+            start
+          />
           Staffs
         </VTab>
         <VTab value="inventory">
-          <VIcon icon="tabler-package" start />
+          <VIcon
+            icon="tabler-package"
+            start
+          />
           Inventory Management
         </VTab>
         <VTab value="reviews">
-          <VIcon icon="tabler-star" start />
+          <VIcon
+            icon="tabler-star"
+            start
+          />
           Customer Reviews
         </VTab>
       </VTabs>
 
-      <VWindow v-model="currentTab" class="disable-tab-transition">
+      <VWindow
+        v-model="currentTab"
+        class="disable-tab-transition"
+      >
         <!-- Overview Tab -->
         <VWindowItem value="overview">
           <VCard>
@@ -575,44 +673,79 @@ watch(() => unitId.value, () => {
               <VRow>
                 <!-- Basic Information -->
                 <VCol cols="12">
-                  <h4 class="text-h6 mb-4">Basic Information</h4>
+                  <h4 class="text-h6 mb-4">
+                    Basic Information
+                  </h4>
                   <VCard variant="outlined">
                     <VCardText>
                       <VRow>
-                        <VCol cols="12" md="6">
+                        <VCol
+                          cols="12"
+                          md="6"
+                        >
                           <div class="mb-4">
-                            <div class="text-sm text-disabled mb-1">Branch Name</div>
-                            <div class="text-body-1 font-weight-medium">{{ unitData.branchName }}</div>
+                            <div class="text-sm text-disabled mb-1">
+                              Branch Name
+                            </div>
+                            <div class="text-body-1 font-weight-medium">
+                              {{ unitData.branchName }}
+                            </div>
                           </div>
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol
+                          cols="12"
+                          md="6"
+                        >
                           <div class="mb-4">
-                            <div class="text-sm text-disabled mb-1">Franchisee Name</div>
-                            <div class="text-body-1">{{ unitData.franchiseeName }}</div>
-                          </div>
-                        </VCol>
-                        <VCol cols="12" md="6">
-                          <div class="mb-4">
-                            <div class="text-sm text-disabled mb-1">Email Address</div>
+                            <div class="text-sm text-disabled mb-1">
+                              Franchisee Name
+                            </div>
                             <div class="text-body-1">
-                              <a :href="`mailto:${unitData.email}`" class="text-primary">
+                              {{ unitData.franchiseeName }}
+                            </div>
+                          </div>
+                        </VCol>
+                        <VCol
+                          cols="12"
+                          md="6"
+                        >
+                          <div class="mb-4">
+                            <div class="text-sm text-disabled mb-1">
+                              Email Address
+                            </div>
+                            <div class="text-body-1">
+                              <a
+                                :href="`mailto:${unitData.email}`"
+                                class="text-primary"
+                              >
                                 {{ unitData.email }}
                               </a>
                             </div>
                           </div>
                         </VCol>
-                        <VCol cols="12" md="6">
+                        <VCol
+                          cols="12"
+                          md="6"
+                        >
                           <div class="mb-4">
-                            <div class="text-sm text-disabled mb-1">Contact Number</div>
-                            <div class="text-body-1">{{ unitData.contactNumber }}</div>
+                            <div class="text-sm text-disabled mb-1">
+                              Contact Number
+                            </div>
+                            <div class="text-body-1">
+                              {{ unitData.contactNumber }}
+                            </div>
                           </div>
                         </VCol>
                         <VCol cols="12">
                           <div class="mb-4">
-                            <div class="text-sm text-disabled mb-1">Address</div>
-                            <div class="text-body-1">{{ unitData.address }}, {{ unitData.city }}, {{ unitData.state }},
+                            <div class="text-sm text-disabled mb-1">
+                              Address
+                            </div>
+                            <div class="text-body-1">
+                              {{ unitData.address }}, {{ unitData.city }}, {{ unitData.state }},
                               {{
-                                unitData.country }}</div>
+                                unitData.country }}
+                            </div>
                           </div>
                         </VCol>
                       </VRow>
@@ -622,27 +755,49 @@ watch(() => unitId.value, () => {
 
                 <!-- Franchisee Details -->
                 <VCol cols="12">
-                  <h4 class="text-h6 mb-4">Franchisee Details</h4>
+                  <h4 class="text-h6 mb-4">
+                    Franchisee Details
+                  </h4>
                   <VCard variant="outlined">
                     <VCardText>
                       <VRow>
-                        <VCol cols="12" md="4">
+                        <VCol
+                          cols="12"
+                          md="4"
+                        >
                           <div class="mb-4">
-                            <div class="text-sm text-disabled mb-1">Royalty Percentage</div>
-                            <div class="text-body-1 font-weight-medium text-success">{{ unitData.royaltyPercentage }}%
+                            <div class="text-sm text-disabled mb-1">
+                              Royalty Percentage
+                            </div>
+                            <div class="text-body-1 font-weight-medium text-success">
+                              {{ unitData.royaltyPercentage }}%
                             </div>
                           </div>
                         </VCol>
-                        <VCol cols="12" md="4">
+                        <VCol
+                          cols="12"
+                          md="4"
+                        >
                           <div class="mb-4">
-                            <div class="text-sm text-disabled mb-1">Contract Start Date</div>
-                            <div class="text-body-1">{{ unitData.contractStartDate }}</div>
+                            <div class="text-sm text-disabled mb-1">
+                              Contract Start Date
+                            </div>
+                            <div class="text-body-1">
+                              {{ unitData.contractStartDate }}
+                            </div>
                           </div>
                         </VCol>
-                        <VCol cols="12" md="4">
+                        <VCol
+                          cols="12"
+                          md="4"
+                        >
                           <div class="mb-4">
-                            <div class="text-sm text-disabled mb-1">Renewal Date</div>
-                            <div class="text-body-1">{{ unitData.renewalDate }}</div>
+                            <div class="text-sm text-disabled mb-1">
+                              Renewal Date
+                            </div>
+                            <div class="text-body-1">
+                              {{ unitData.renewalDate }}
+                            </div>
                           </div>
                         </VCol>
                       </VRow>
@@ -657,16 +812,32 @@ watch(() => unitId.value, () => {
         <!-- Tasks Tab -->
         <VWindowItem value="tasks">
           <!-- Error Alert -->
-          <VAlert v-if="tasksError" type="error" variant="tonal" class="mb-4" closable @click:close="tasksError = null">
+          <VAlert
+            v-if="tasksError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+            closable
+            @click:close="tasksError = null"
+          >
             {{ tasksError }}
           </VAlert>
 
           <!-- Loading State -->
-          <VCard v-if="tasksLoading" class="mb-6">
+          <VCard
+            v-if="tasksLoading"
+            class="mb-6"
+          >
             <VCardText class="py-8">
               <div class="text-center">
-                <VProgressCircular indeterminate size="48" class="mb-4" />
-                <h4 class="text-h4 mb-2">Loading Tasks...</h4>
+                <VProgressCircular
+                  indeterminate
+                  size="48"
+                  class="mb-4"
+                />
+                <h4 class="text-h4 mb-2">
+                  Loading Tasks...
+                </h4>
                 <p class="text-body-1 text-medium-emphasis">
                   Please wait while we fetch the task information.
                 </p>
@@ -678,54 +849,114 @@ watch(() => unitId.value, () => {
           <template v-else>
             <!-- Stats Cards -->
             <VRow class="mb-6">
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="primary" variant="tonal">
-                      <VIcon icon="tabler-checklist" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="primary"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-checklist"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Total Tasks</div>
-                      <h4 class="text-h4">{{ totalTasks }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Total Tasks
+                      </div>
+                      <h4 class="text-h4">
+                        {{ totalTasks }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="success" variant="tonal">
-                      <VIcon icon="tabler-check" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="success"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-check"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Completed</div>
-                      <h4 class="text-h4">{{ completedTasks }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Completed
+                      </div>
+                      <h4 class="text-h4">
+                        {{ completedTasks }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="warning" variant="tonal">
-                      <VIcon icon="tabler-clock" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="warning"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-clock"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">In Progress</div>
-                      <h4 class="text-h4">{{ inProgressTasks }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        In Progress
+                      </div>
+                      <h4 class="text-h4">
+                        {{ inProgressTasks }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="error" variant="tonal">
-                      <VIcon icon="tabler-alert-circle" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="error"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-alert-circle"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Due</div>
-                      <h4 class="text-h4">{{ dueTasks }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Due
+                      </div>
+                      <h4 class="text-h4">
+                        {{ dueTasks }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
@@ -743,35 +974,64 @@ watch(() => unitId.value, () => {
 
               <VDivider />
 
-              <VDataTable v-if="tasksData.length > 0" :items="tasksData" :headers="taskHeaders" class="text-no-wrap" item-value="id">
+              <VDataTable
+                v-if="tasksData.length > 0"
+                :items="tasksData"
+                :headers="taskHeaders"
+                class="text-no-wrap"
+                item-value="id"
+              >
                 <!-- Task Info -->
                 <template #item.taskInfo="{ item }">
                   <div>
-                    <h6 class="text-base font-weight-medium">{{ item.title }}</h6>
-                    <div class="text-body-2 text-disabled">{{ item.description }}</div>
+                    <h6 class="text-base font-weight-medium">
+                      {{ item.title }}
+                    </h6>
+                    <div class="text-body-2 text-disabled">
+                      {{ item.description }}
+                    </div>
                   </div>
                 </template>
 
                 <!-- Priority -->
                 <template #item.priority="{ item }">
-                  <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
+                  <VChip
+                    :color="resolvePriorityVariant(item.priority)"
+                    size="small"
+                    label
+                    class="text-capitalize"
+                  >
                     {{ item.priority }}
                   </VChip>
                 </template>
 
                 <!-- Status -->
                 <template #item.status="{ item }">
-                  <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+                  <VChip
+                    :color="resolveStatusVariant(item.status)"
+                    size="small"
+                    label
+                    class="text-capitalize"
+                  >
                     {{ item.status }}
                   </VChip>
                 </template>
               </VDataTable>
 
               <!-- Empty State -->
-              <VCardText v-else class="py-8">
+              <VCardText
+                v-else
+                class="py-8"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-checklist" size="64" class="text-disabled mb-4" />
-                  <h4 class="text-h4 mb-2">No Tasks Found</h4>
+                  <VIcon
+                    icon="tabler-checklist"
+                    size="64"
+                    class="text-disabled mb-4"
+                  />
+                  <h4 class="text-h4 mb-2">
+                    No Tasks Found
+                  </h4>
                   <p class="text-body-1 text-medium-emphasis">
                     There are no tasks assigned to this unit yet. The franchisee can create tasks to manage operations.
                   </p>
@@ -784,7 +1044,14 @@ watch(() => unitId.value, () => {
         <!-- Documents Tab -->
         <VWindowItem value="documents">
           <!-- Error Alert -->
-          <VAlert v-if="documentsError" type="error" variant="tonal" class="mb-4" closable @click:close="documentsError = null">
+          <VAlert
+            v-if="documentsError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+            closable
+            @click:close="documentsError = null"
+          >
             {{ documentsError }}
           </VAlert>
 
@@ -792,8 +1059,14 @@ watch(() => unitId.value, () => {
           <VCard v-if="documentsLoading">
             <VCardText class="py-8">
               <div class="text-center">
-                <VProgressCircular indeterminate size="48" class="mb-4" />
-                <h4 class="text-h4 mb-2">Loading Documents...</h4>
+                <VProgressCircular
+                  indeterminate
+                  size="48"
+                  class="mb-4"
+                />
+                <h4 class="text-h4 mb-2">
+                  Loading Documents...
+                </h4>
                 <p class="text-body-1 text-medium-emphasis">
                   Please wait while we fetch the document information.
                 </p>
@@ -814,45 +1087,87 @@ watch(() => unitId.value, () => {
 
             <VCardText v-if="documentsData.length > 0">
               <VRow>
-                <template v-for="document in documentsData" :key="document.id">
-                  <VCol cols="12" md="6" lg="4">
+                <template
+                  v-for="document in documentsData"
+                  :key="document.id"
+                >
+                  <VCol
+                    cols="12"
+                    md="6"
+                    lg="4"
+                  >
                     <VCard>
                       <VCardText>
                         <div class="d-flex align-center mb-3">
-                          <VIcon icon="tabler-file-text" size="24" color="primary" class="me-3" />
+                          <VIcon
+                            icon="tabler-file-text"
+                            size="24"
+                            color="primary"
+                            class="me-3"
+                          />
                           <div>
-                            <h6 class="text-h6">{{ document.title }}</h6>
-                            <p class="text-body-2 text-disabled mb-0">{{ document.type }}</p>
+                            <h6 class="text-h6">
+                              {{ document.title }}
+                            </h6>
+                            <p class="text-body-2 text-disabled mb-0">
+                              {{ document.type }}
+                            </p>
                           </div>
                         </div>
 
-                        <p class="text-body-2 mb-3">{{ document.description }}</p>
+                        <p class="text-body-2 mb-3">
+                          {{ document.description }}
+                        </p>
 
                         <div class="d-flex align-center justify-space-between mb-3">
                           <span class="text-body-2 text-disabled">{{ document.fileName }}</span>
-                          <VChip size="small" color="secondary">{{ document.fileSize }}</VChip>
+                          <VChip
+                            size="small"
+                            color="secondary"
+                          >
+                            {{ document.fileSize }}
+                          </VChip>
                         </div>
 
                         <div class="d-flex align-center justify-space-between mb-3">
                           <span class="text-body-2 text-disabled">{{ document.uploadDate }}</span>
-                          <VChip :color="resolveStatusVariant(document.status)" size="small" label
-                            class="text-capitalize">
+                          <VChip
+                            :color="resolveStatusVariant(document.status)"
+                            size="small"
+                            label
+                            class="text-capitalize"
+                          >
                             {{ document.status }}
                           </VChip>
                         </div>
                       </VCardText>
 
                       <VCardActions>
-                        <VBtn size="small" variant="text" color="primary" prepend-icon="tabler-download">
+                        <VBtn
+                          size="small"
+                          variant="text"
+                          color="primary"
+                          prepend-icon="tabler-download"
+                        >
                           Download
                         </VBtn>
                         <VSpacer />
-                        <VBtn v-if="document.status === 'active'" size="small" variant="text" color="success"
-                          @click="openDocumentActionModal(document, 'approve')">
+                        <VBtn
+                          v-if="document.status === 'active'"
+                          size="small"
+                          variant="text"
+                          color="success"
+                          @click="openDocumentActionModal(document, 'approve')"
+                        >
                           Approve
                         </VBtn>
-                        <VBtn v-if="document.status === 'active'" size="small" variant="text" color="error"
-                          @click="openDocumentActionModal(document, 'reject')">
+                        <VBtn
+                          v-if="document.status === 'active'"
+                          size="small"
+                          variant="text"
+                          color="error"
+                          @click="openDocumentActionModal(document, 'reject')"
+                        >
                           Reject
                         </VBtn>
                       </VCardActions>
@@ -863,10 +1178,19 @@ watch(() => unitId.value, () => {
             </VCardText>
 
             <!-- Empty State -->
-            <VCardText v-else class="py-8">
+            <VCardText
+              v-else
+              class="py-8"
+            >
               <div class="text-center">
-                <VIcon icon="tabler-files" size="64" class="text-disabled mb-4" />
-                <h4 class="text-h4 mb-2">No Documents Found</h4>
+                <VIcon
+                  icon="tabler-files"
+                  size="64"
+                  class="text-disabled mb-4"
+                />
+                <h4 class="text-h4 mb-2">
+                  No Documents Found
+                </h4>
                 <p class="text-body-1 text-medium-emphasis">
                   There are no documents uploaded for this unit yet. The franchisee can upload important documents and files.
                 </p>
@@ -878,16 +1202,32 @@ watch(() => unitId.value, () => {
         <!-- Staff Tab -->
         <VWindowItem value="staffs">
           <!-- Error Alert -->
-          <VAlert v-if="staffError" type="error" variant="tonal" class="mb-4" closable @click:close="staffError = null">
+          <VAlert
+            v-if="staffError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+            closable
+            @click:close="staffError = null"
+          >
             {{ staffError }}
           </VAlert>
 
           <!-- Loading State -->
-          <VCard v-if="staffLoading" class="mb-6">
+          <VCard
+            v-if="staffLoading"
+            class="mb-6"
+          >
             <VCardText class="py-8">
               <div class="text-center">
-                <VProgressCircular indeterminate size="48" class="mb-4" />
-                <h4 class="text-h4 mb-2">Loading Staff...</h4>
+                <VProgressCircular
+                  indeterminate
+                  size="48"
+                  class="mb-4"
+                />
+                <h4 class="text-h4 mb-2">
+                  Loading Staff...
+                </h4>
                 <p class="text-body-1 text-medium-emphasis">
                   Please wait while we fetch the staff information.
                 </p>
@@ -899,54 +1239,114 @@ watch(() => unitId.value, () => {
           <template v-else>
             <!-- Stats Cards -->
             <VRow class="mb-6">
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="primary" variant="tonal">
-                      <VIcon icon="tabler-users" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="primary"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-users"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Total Staff</div>
-                      <h4 class="text-h4">{{ totalStaff }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Total Staff
+                      </div>
+                      <h4 class="text-h4">
+                        {{ totalStaff }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="success" variant="tonal">
-                      <VIcon icon="tabler-user-check" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="success"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-user-check"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Working</div>
-                      <h4 class="text-h4">{{ workingStaff }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Working
+                      </div>
+                      <h4 class="text-h4">
+                        {{ workingStaff }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="warning" variant="tonal">
-                      <VIcon icon="tabler-calendar-off" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="warning"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-calendar-off"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">On Leave</div>
-                      <h4 class="text-h4">{{ staffOnLeave }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        On Leave
+                      </div>
+                      <h4 class="text-h4">
+                        {{ staffOnLeave }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="info" variant="tonal">
-                      <VIcon icon="tabler-user-plus" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="info"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-user-plus"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Active</div>
-                      <h4 class="text-h4">{{ staffData.filter(s => s.status === 'working').length }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Active
+                      </div>
+                      <h4 class="text-h4">
+                        {{ staffData.filter(s => s.status === 'working').length }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
@@ -964,40 +1364,76 @@ watch(() => unitId.value, () => {
 
               <VDivider />
 
-              <VDataTable v-if="staffData.length > 0" :items="staffData" :headers="staffHeaders" class="text-no-wrap" item-value="id">
+              <VDataTable
+                v-if="staffData.length > 0"
+                :items="staffData"
+                :headers="staffHeaders"
+                class="text-no-wrap"
+                item-value="id"
+              >
                 <!-- Name -->
                 <template #item.name="{ item }">
                   <div class="d-flex align-center">
-                    <VAvatar size="32" :image="item.avatar" class="me-3">
-                      <VIcon v-if="!item.avatar" icon="tabler-user" />
+                    <VAvatar
+                      size="32"
+                      :image="item.avatar"
+                      class="me-3"
+                    >
+                      <VIcon
+                        v-if="!item.avatar"
+                        icon="tabler-user"
+                      />
                     </VAvatar>
                     <div>
-                      <div class="text-body-1 font-weight-medium">{{ item.name }}</div>
-                      <div class="text-body-2 text-disabled">{{ item.phone || 'No phone' }}</div>
+                      <div class="text-body-1 font-weight-medium">
+                        {{ item.name }}
+                      </div>
+                      <div class="text-body-2 text-disabled">
+                        {{ item.phone || 'No phone' }}
+                      </div>
                     </div>
                   </div>
                 </template>
 
                 <!-- Job Title -->
                 <template #item.jobTitle="{ item }">
-                  <VChip size="small" color="primary" variant="tonal" label>
+                  <VChip
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                    label
+                  >
                     {{ item.jobTitle }}
                   </VChip>
                 </template>
 
                 <!-- Status -->
                 <template #item.status="{ item }">
-                  <VChip :color="item.status === 'working' ? 'success' : 'warning'" size="small" label class="text-capitalize">
+                  <VChip
+                    :color="item.status === 'working' ? 'success' : 'warning'"
+                    size="small"
+                    label
+                    class="text-capitalize"
+                  >
                     {{ item.status }}
                   </VChip>
                 </template>
               </VDataTable>
 
               <!-- Empty State -->
-              <VCardText v-else class="py-8">
+              <VCardText
+                v-else
+                class="py-8"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-users" size="64" class="text-disabled mb-4" />
-                  <h4 class="text-h4 mb-2">No Staff Members Found</h4>
+                  <VIcon
+                    icon="tabler-users"
+                    size="64"
+                    class="text-disabled mb-4"
+                  />
+                  <h4 class="text-h4 mb-2">
+                    No Staff Members Found
+                  </h4>
                   <p class="text-body-1 text-medium-emphasis">
                     There are no staff members assigned to this franchise yet. The franchisee can manage staff assignments and roles.
                   </p>
@@ -1010,16 +1446,32 @@ watch(() => unitId.value, () => {
         <!-- Inventory Tab -->
         <VWindowItem value="inventory">
           <!-- Error Alert -->
-          <VAlert v-if="productsError" type="error" variant="tonal" class="mb-4" closable @click:close="productsError = null">
+          <VAlert
+            v-if="productsError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+            closable
+            @click:close="productsError = null"
+          >
             {{ productsError }}
           </VAlert>
 
           <!-- Loading State -->
-          <VCard v-if="productsLoading" class="mb-6">
+          <VCard
+            v-if="productsLoading"
+            class="mb-6"
+          >
             <VCardText class="py-8">
               <div class="text-center">
-                <VProgressCircular indeterminate size="48" class="mb-4" />
-                <h4 class="text-h4 mb-2">Loading Inventory...</h4>
+                <VProgressCircular
+                  indeterminate
+                  size="48"
+                  class="mb-4"
+                />
+                <h4 class="text-h4 mb-2">
+                  Loading Inventory...
+                </h4>
                 <p class="text-body-1 text-medium-emphasis">
                   Please wait while we fetch the inventory information.
                 </p>
@@ -1031,54 +1483,114 @@ watch(() => unitId.value, () => {
           <template v-else>
             <!-- Stats Cards -->
             <VRow class="mb-6">
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="primary" variant="tonal">
-                      <VIcon icon="tabler-package" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="primary"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-package"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Total Products</div>
-                      <h4 class="text-h4">{{ totalProducts }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Total Products
+                      </div>
+                      <h4 class="text-h4">
+                        {{ totalProducts }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="info" variant="tonal">
-                      <VIcon icon="tabler-stack" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="info"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-stack"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Total Stock</div>
-                      <h4 class="text-h4">{{ totalStock }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Total Stock
+                      </div>
+                      <h4 class="text-h4">
+                        {{ totalStock }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="warning" variant="tonal">
-                      <VIcon icon="tabler-alert-triangle" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="warning"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-alert-triangle"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Low Stock</div>
-                      <h4 class="text-h4">{{ lowStockProducts }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Low Stock
+                      </div>
+                      <h4 class="text-h4">
+                        {{ lowStockProducts }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="error" variant="tonal">
-                      <VIcon icon="tabler-x" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="error"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-x"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Out of Stock</div>
-                      <h4 class="text-h4">{{ outOfStockProducts }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Out of Stock
+                      </div>
+                      <h4 class="text-h4">
+                        {{ outOfStockProducts }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
@@ -1096,7 +1608,13 @@ watch(() => unitId.value, () => {
 
               <VDivider />
 
-              <VDataTable v-if="productsData.length > 0" :items="productsData" :headers="productHeaders" class="text-no-wrap" item-value="id">
+              <VDataTable
+                v-if="productsData.length > 0"
+                :items="productsData"
+                :headers="productHeaders"
+                class="text-no-wrap"
+                item-value="id"
+              >
                 <!-- Unit Price -->
                 <template #item.unitPrice="{ item }">
                   <div class="text-body-1 font-weight-medium">
@@ -1106,25 +1624,42 @@ watch(() => unitId.value, () => {
 
                 <!-- Stock -->
                 <template #item.stock="{ item }">
-                  <VChip :color="item.stock === 0 ? 'error' : item.stock <= 10 ? 'warning' : 'success'" size="small"
-                    label>
+                  <VChip
+                    :color="item.stock === 0 ? 'error' : item.stock <= 10 ? 'warning' : 'success'"
+                    size="small"
+                    label
+                  >
                     {{ item.stock }}
                   </VChip>
                 </template>
 
                 <!-- Status -->
                 <template #item.status="{ item }">
-                  <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+                  <VChip
+                    :color="resolveStatusVariant(item.status)"
+                    size="small"
+                    label
+                    class="text-capitalize"
+                  >
                     {{ item.status }}
                   </VChip>
                 </template>
               </VDataTable>
 
               <!-- Empty State -->
-              <VCardText v-else class="py-8">
+              <VCardText
+                v-else
+                class="py-8"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-package" size="64" class="text-disabled mb-4" />
-                  <h4 class="text-h4 mb-2">No Products Found</h4>
+                  <VIcon
+                    icon="tabler-package"
+                    size="64"
+                    class="text-disabled mb-4"
+                  />
+                  <h4 class="text-h4 mb-2">
+                    No Products Found
+                  </h4>
                   <p class="text-body-1 text-medium-emphasis">
                     There are no products in the inventory for this unit yet. The franchisee can manage products and stock levels.
                   </p>
@@ -1137,16 +1672,32 @@ watch(() => unitId.value, () => {
         <!-- Reviews Tab -->
         <VWindowItem value="reviews">
           <!-- Error Alert -->
-          <VAlert v-if="reviewsError" type="error" variant="tonal" class="mb-4" closable @click:close="reviewsError = null">
+          <VAlert
+            v-if="reviewsError"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+            closable
+            @click:close="reviewsError = null"
+          >
             {{ reviewsError }}
           </VAlert>
 
           <!-- Loading State -->
-          <VCard v-if="reviewsLoading" class="mb-6">
+          <VCard
+            v-if="reviewsLoading"
+            class="mb-6"
+          >
             <VCardText class="py-8">
               <div class="text-center">
-                <VProgressCircular indeterminate size="48" class="mb-4" />
-                <h4 class="text-h4 mb-2">Loading Reviews...</h4>
+                <VProgressCircular
+                  indeterminate
+                  size="48"
+                  class="mb-4"
+                />
+                <h4 class="text-h4 mb-2">
+                  Loading Reviews...
+                </h4>
                 <p class="text-body-1 text-medium-emphasis">
                   Please wait while we fetch the review information.
                 </p>
@@ -1158,54 +1709,114 @@ watch(() => unitId.value, () => {
           <template v-else>
             <!-- Stats Cards -->
             <VRow class="mb-6">
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="primary" variant="tonal">
-                      <VIcon icon="tabler-star" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="primary"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-star"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Total Reviews</div>
-                      <h4 class="text-h4">{{ totalReviews }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Total Reviews
+                      </div>
+                      <h4 class="text-h4">
+                        {{ totalReviews }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="success" variant="tonal">
-                      <VIcon icon="tabler-star" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="success"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-star"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Avg Rating</div>
-                      <h4 class="text-h4">{{ avgRating }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Avg Rating
+                      </div>
+                      <h4 class="text-h4">
+                        {{ avgRating }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="warning" variant="tonal">
-                      <VIcon icon="tabler-file-text" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="warning"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-file-text"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Draft</div>
-                      <h4 class="text-h4">{{ draftReviews }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Draft
+                      </div>
+                      <h4 class="text-h4">
+                        {{ draftReviews }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
               </VCol>
-              <VCol cols="12" md="3">
+              <VCol
+                cols="12"
+                md="3"
+              >
                 <VCard>
                   <VCardText class="d-flex align-center">
-                    <VAvatar size="44" rounded color="info" variant="tonal">
-                      <VIcon icon="tabler-check" size="26" />
+                    <VAvatar
+                      size="44"
+                      rounded
+                      color="info"
+                      variant="tonal"
+                    >
+                      <VIcon
+                        icon="tabler-check"
+                        size="26"
+                      />
                     </VAvatar>
                     <div class="ms-4">
-                      <div class="text-body-2 text-disabled">Verified</div>
-                      <h4 class="text-h4">{{ verifiedReviews }}</h4>
+                      <div class="text-body-2 text-disabled">
+                        Verified
+                      </div>
+                      <h4 class="text-h4">
+                        {{ verifiedReviews }}
+                      </h4>
                     </div>
                   </VCardText>
                 </VCard>
@@ -1223,13 +1834,28 @@ watch(() => unitId.value, () => {
 
               <VDivider />
 
-              <VDataTable v-if="reviewsData.length > 0" :items="reviewsData" :headers="reviewHeaders" class="text-no-wrap" item-value="id">
+              <VDataTable
+                v-if="reviewsData.length > 0"
+                :items="reviewsData"
+                :headers="reviewHeaders"
+                class="text-no-wrap"
+                item-value="id"
+              >
                 <!-- Customer Name -->
                 <template #item.customerName="{ item }">
                   <div>
-                    <div class="text-body-1 font-weight-medium">{{ item.customerName }}</div>
-                    <div class="text-body-2 text-disabled">{{ item.customerEmail || 'No email' }}</div>
-                    <div v-if="item.customerPhone" class="text-body-2 text-disabled">{{ item.customerPhone }}</div>
+                    <div class="text-body-1 font-weight-medium">
+                      {{ item.customerName }}
+                    </div>
+                    <div class="text-body-2 text-disabled">
+                      {{ item.customerEmail || 'No email' }}
+                    </div>
+                    <div
+                      v-if="item.customerPhone"
+                      class="text-body-2 text-disabled"
+                    >
+                      {{ item.customerPhone }}
+                    </div>
                   </div>
                 </template>
 
@@ -1250,21 +1876,33 @@ watch(() => unitId.value, () => {
                 <!-- Comment -->
                 <template #item.comment="{ item }">
                   <div class="max-width-200">
-                    <p class="text-body-2 text-truncate mb-0">{{ item.comment || 'No comment' }}</p>
+                    <p class="text-body-2 text-truncate mb-0">
+                      {{ item.comment || 'No comment' }}
+                    </p>
                   </div>
                 </template>
 
                 <!-- Source -->
                 <template #item.source="{ item }">
-                  <VChip size="small" color="secondary" variant="tonal" label class="text-capitalize">
+                  <VChip
+                    size="small"
+                    color="secondary"
+                    variant="tonal"
+                    label
+                    class="text-capitalize"
+                  >
                     {{ item.source?.replace('_', ' ') }}
                   </VChip>
                 </template>
 
                 <!-- Status -->
                 <template #item.status="{ item }">
-                  <VChip :color="item.status === 'published' ? 'success' : item.status === 'draft' ? 'warning' : 'secondary'"
-                    size="small" label class="text-capitalize">
+                  <VChip
+                    :color="item.status === 'published' ? 'success' : item.status === 'draft' ? 'warning' : 'secondary'"
+                    size="small"
+                    label
+                    class="text-capitalize"
+                  >
                     {{ item.status }}
                   </VChip>
                 </template>
@@ -1272,17 +1910,30 @@ watch(() => unitId.value, () => {
                 <!-- Added By -->
                 <template #item.franchiseeName="{ item }">
                   <div>
-                    <div class="text-body-2">{{ item.franchiseeName }}</div>
-                    <div class="text-body-2 text-disabled">{{ item.addedDate }}</div>
+                    <div class="text-body-2">
+                      {{ item.franchiseeName }}
+                    </div>
+                    <div class="text-body-2 text-disabled">
+                      {{ item.addedDate }}
+                    </div>
                   </div>
                 </template>
               </VDataTable>
 
               <!-- Empty State -->
-              <VCardText v-else class="py-8">
+              <VCardText
+                v-else
+                class="py-8"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-star" size="64" class="text-disabled mb-4" />
-                  <h4 class="text-h4 mb-2">No Customer Reviews Found</h4>
+                  <VIcon
+                    icon="tabler-star"
+                    size="64"
+                    class="text-disabled mb-4"
+                  />
+                  <h4 class="text-h4 mb-2">
+                    No Customer Reviews Found
+                  </h4>
                   <p class="text-body-1 text-medium-emphasis">
                     There are no customer reviews for this unit yet. The franchisee can add and manage customer feedback to build reputation.
                   </p>
@@ -1294,15 +1945,28 @@ watch(() => unitId.value, () => {
       </VWindow>
 
       <!-- Modals -->
-      <CreateTaskModal v-model:is-dialog-visible="isAddTaskModalVisible" @task-created="onTaskCreated" />
+      <CreateTaskModal
+        v-model:is-dialog-visible="isAddTaskModalVisible"
+        @task-created="onTaskCreated"
+      />
 
-      <AddDocumentModal v-model:is-dialog-visible="isAddDocumentModalVisible" @document-added="onDocumentAdded" />
+      <AddDocumentModal
+        v-model:is-dialog-visible="isAddDocumentModalVisible"
+        @document-added="onDocumentAdded"
+      />
 
-      <DocumentActionModal v-model:is-dialog-visible="isDocumentActionModalVisible" :document="selectedDocument"
-        :action="documentAction" @document-action-confirmed="onDocumentActionConfirmed" />
+      <DocumentActionModal
+        v-model:is-dialog-visible="isDocumentActionModalVisible"
+        :document="selectedDocument"
+        :action="documentAction"
+        @document-action-confirmed="onDocumentActionConfirmed"
+      />
 
       <!-- View Task Modal -->
-      <VDialog v-model="isViewTaskModalVisible" max-width="600">
+      <VDialog
+        v-model="isViewTaskModalVisible"
+        max-width="600"
+      >
         <VCard>
           <VCardTitle class="text-h5 pa-6 pb-4">
             Task Details
@@ -1310,38 +1974,92 @@ watch(() => unitId.value, () => {
 
           <VDivider />
 
-          <VCardText class="pa-6" v-if="selectedTask">
+          <VCardText
+            v-if="selectedTask"
+            class="pa-6"
+          >
             <VRow>
               <VCol cols="12">
-                <h6 class="text-h6 mb-2">{{ selectedTask.title }}</h6>
-                <p class="text-body-1 mb-4">{{ selectedTask.description }}</p>
+                <h6 class="text-h6 mb-2">
+                  {{ selectedTask.title }}
+                </h6>
+                <p class="text-body-1 mb-4">
+                  {{ selectedTask.description }}
+                </p>
               </VCol>
-              <VCol cols="12" md="6">
-                <div class="text-body-2 text-disabled mb-1">Category</div>
-                <div class="text-body-1">{{ selectedTask.category }}</div>
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <div class="text-body-2 text-disabled mb-1">
+                  Category
+                </div>
+                <div class="text-body-1">
+                  {{ selectedTask.category }}
+                </div>
               </VCol>
-              <VCol cols="12" md="6">
-                <div class="text-body-2 text-disabled mb-1">Assigned To</div>
-                <div class="text-body-1">{{ selectedTask.assignedTo }}</div>
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <div class="text-body-2 text-disabled mb-1">
+                  Assigned To
+                </div>
+                <div class="text-body-1">
+                  {{ selectedTask.assignedTo }}
+                </div>
               </VCol>
-              <VCol cols="12" md="6">
-                <div class="text-body-2 text-disabled mb-1">Start Date</div>
-                <div class="text-body-1">{{ selectedTask.startDate }}</div>
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <div class="text-body-2 text-disabled mb-1">
+                  Start Date
+                </div>
+                <div class="text-body-1">
+                  {{ selectedTask.startDate }}
+                </div>
               </VCol>
-              <VCol cols="12" md="6">
-                <div class="text-body-2 text-disabled mb-1">Due Date</div>
-                <div class="text-body-1">{{ selectedTask.dueDate }}</div>
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <div class="text-body-2 text-disabled mb-1">
+                  Due Date
+                </div>
+                <div class="text-body-1">
+                  {{ selectedTask.dueDate }}
+                </div>
               </VCol>
-              <VCol cols="12" md="6">
-                <div class="text-body-2 text-disabled mb-1">Priority</div>
-                <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label
-                  class="text-capitalize">
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <div class="text-body-2 text-disabled mb-1">
+                  Priority
+                </div>
+                <VChip
+                  :color="resolvePriorityVariant(selectedTask.priority)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
                   {{ selectedTask.priority }}
                 </VChip>
               </VCol>
-              <VCol cols="12" md="6">
-                <div class="text-body-2 text-disabled mb-1">Status</div>
-                <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize">
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <div class="text-body-2 text-disabled mb-1">
+                  Status
+                </div>
+                <VChip
+                  :color="resolveStatusVariant(selectedTask.status)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
                   {{ selectedTask.status }}
                 </VChip>
               </VCol>
@@ -1352,7 +2070,11 @@ watch(() => unitId.value, () => {
 
           <VCardActions class="pa-6">
             <VSpacer />
-            <VBtn color="secondary" variant="tonal" @click="isViewTaskModalVisible = false">
+            <VBtn
+              color="secondary"
+              variant="tonal"
+              @click="isViewTaskModalVisible = false"
+            >
               Close
             </VBtn>
           </VCardActions>
@@ -1360,7 +2082,11 @@ watch(() => unitId.value, () => {
       </VDialog>
 
       <!-- Edit Task Modal -->
-      <VDialog v-model="isEditTaskModalVisible" max-width="600" persistent>
+      <VDialog
+        v-model="isEditTaskModalVisible"
+        max-width="600"
+        persistent
+      >
         <VCard>
           <VCardTitle class="text-h5 pa-6 pb-4">
             Edit Task
@@ -1368,41 +2094,101 @@ watch(() => unitId.value, () => {
 
           <VDivider />
 
-          <VCardText class="pa-6" v-if="selectedTask">
+          <VCardText
+            v-if="selectedTask"
+            class="pa-6"
+          >
             <VRow>
               <VCol cols="12">
-                <VTextField v-model="selectedTask.title" label="Task Title" placeholder="Enter task title" required />
+                <VTextField
+                  v-model="selectedTask.title"
+                  label="Task Title"
+                  placeholder="Enter task title"
+                  required
+                />
               </VCol>
               <VCol cols="12">
-                <VTextarea v-model="selectedTask.description" label="Description" placeholder="Enter task description"
-                  rows="3" required />
+                <VTextarea
+                  v-model="selectedTask.description"
+                  label="Description"
+                  placeholder="Enter task description"
+                  rows="3"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <VTextField v-model="selectedTask.category" label="Category" placeholder="Enter category" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model="selectedTask.category"
+                  label="Category"
+                  placeholder="Enter category"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <VTextField v-model="selectedTask.assignedTo" label="Assigned To" placeholder="Enter assignee"
-                  required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model="selectedTask.assignedTo"
+                  label="Assigned To"
+                  placeholder="Enter assignee"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <VTextField v-model="selectedTask.startDate" label="Start Date" type="date" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model="selectedTask.startDate"
+                  label="Start Date"
+                  type="date"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <VTextField v-model="selectedTask.dueDate" label="Due Date" type="date" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model="selectedTask.dueDate"
+                  label="Due Date"
+                  type="date"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <VSelect v-model="selectedTask.priority" label="Priority" :items="[
-                  { title: 'Low', value: 'low' },
-                  { title: 'Medium', value: 'medium' },
-                  { title: 'High', value: 'high' }
-                ]" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VSelect
+                  v-model="selectedTask.priority"
+                  label="Priority"
+                  :items="[
+                    { title: 'Low', value: 'low' },
+                    { title: 'Medium', value: 'medium' },
+                    { title: 'High', value: 'high' },
+                  ]"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <VSelect v-model="selectedTask.status" label="Status" :items="[
-                  { title: 'Pending', value: 'pending' },
-                  { title: 'In Progress', value: 'in_progress' },
-                  { title: 'Completed', value: 'completed' }
-                ]" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VSelect
+                  v-model="selectedTask.status"
+                  label="Status"
+                  :items="[
+                    { title: 'Pending', value: 'pending' },
+                    { title: 'In Progress', value: 'in_progress' },
+                    { title: 'Completed', value: 'completed' },
+                  ]"
+                  required
+                />
               </VCol>
             </VRow>
           </VCardText>
@@ -1411,10 +2197,17 @@ watch(() => unitId.value, () => {
 
           <VCardActions class="pa-6">
             <VSpacer />
-            <VBtn color="secondary" variant="tonal" @click="isEditTaskModalVisible = false">
+            <VBtn
+              color="secondary"
+              variant="tonal"
+              @click="isEditTaskModalVisible = false"
+            >
               Cancel
             </VBtn>
-            <VBtn color="primary" @click="saveTask">
+            <VBtn
+              color="primary"
+              @click="saveTask"
+            >
               Save Changes
             </VBtn>
           </VCardActions>
@@ -1422,7 +2215,10 @@ watch(() => unitId.value, () => {
       </VDialog>
 
       <!-- Delete Confirmation Dialog -->
-      <VDialog v-model="isDeleteDialogVisible" max-width="500">
+      <VDialog
+        v-model="isDeleteDialogVisible"
+        max-width="500"
+      >
         <VCard>
           <VCardItem>
             <VCardTitle>Confirm Delete</VCardTitle>
@@ -1434,10 +2230,17 @@ watch(() => unitId.value, () => {
 
           <VCardActions>
             <VSpacer />
-            <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
+            <VBtn
+              color="secondary"
+              variant="tonal"
+              @click="isDeleteDialogVisible = false"
+            >
               Cancel
             </VBtn>
-            <VBtn color="error" @click="deleteTask">
+            <VBtn
+              color="error"
+              @click="deleteTask"
+            >
               Delete
             </VBtn>
           </VCardActions>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { h } from 'vue'
+import { useDisplay } from 'vuetify'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-import { useDisplay } from 'vuetify'
 
 definePage({
   meta: {
@@ -18,6 +18,7 @@ const { smAndUp } = useDisplay()
 const form = ref({
   email: '',
 })
+
 const loading = ref(false)
 const infoMessage = ref<string | null>(null)
 const errorMessage = ref<string | null>(null)
@@ -34,6 +35,7 @@ const onSubmit = async () => {
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null
+
     errorMessage.value = data?.message || 'Failed to request password reset.'
   }
   finally {
@@ -46,15 +48,23 @@ const onSubmit = async () => {
   <div class="auth-wrapper d-flex align-center justify-center pa-4">
     <div class="position-relative my-sm-16">
       <!-- 👉 Top shape -->
-      <VNodeRenderer :nodes="h('div', { innerHTML: authV1TopShape })"
-        class="text-primary auth-v1-top-shape d-none d-sm-block" />
+      <VNodeRenderer
+        :nodes="h('div', { innerHTML: authV1TopShape })"
+        class="text-primary auth-v1-top-shape d-none d-sm-block"
+      />
 
       <!-- 👉 Bottom shape -->
-      <VNodeRenderer :nodes="h('div', { innerHTML: authV1BottomShape })"
-        class="text-primary auth-v1-bottom-shape d-none d-sm-block" />
+      <VNodeRenderer
+        :nodes="h('div', { innerHTML: authV1BottomShape })"
+        class="text-primary auth-v1-bottom-shape d-none d-sm-block"
+      />
 
       <!-- 👉 Auth card -->
-      <VCard class="auth-card" max-width="460" :class="smAndUp ? 'pa-6' : 'pa-0'">
+      <VCard
+        class="auth-card"
+        max-width="460"
+        :class="smAndUp ? 'pa-6' : 'pa-0'"
+      >
         <VCardItem class="justify-center">
           <VCardTitle>
             <RouterLink to="/">
@@ -81,26 +91,57 @@ const onSubmit = async () => {
           <VForm @submit.prevent="onSubmit">
             <VRow>
               <VCol cols="12">
-                <VAlert v-if="errorMessage" type="error" variant="tonal" class="mb-4">{{ errorMessage }}</VAlert>
-                <VAlert v-if="infoMessage" type="info" variant="tonal" class="mb-4">{{ infoMessage }}</VAlert>
+                <VAlert
+                  v-if="errorMessage"
+                  type="error"
+                  variant="tonal"
+                  class="mb-4"
+                >
+                  {{ errorMessage }}
+                </VAlert>
+                <VAlert
+                  v-if="infoMessage"
+                  type="info"
+                  variant="tonal"
+                  class="mb-4"
+                >
+                  {{ infoMessage }}
+                </VAlert>
               </VCol>
               <!-- email -->
               <VCol cols="12">
-                <AppTextField v-model="form.email" autofocus label="Email" type="email"
-                  placeholder="johndoe@email.com" />
+                <AppTextField
+                  v-model="form.email"
+                  autofocus
+                  label="Email"
+                  type="email"
+                  placeholder="johndoe@email.com"
+                />
               </VCol>
 
               <!-- reset password -->
               <VCol cols="12">
-                <VBtn block type="submit" :loading="loading" :disabled="loading">
+                <VBtn
+                  block
+                  type="submit"
+                  :loading="loading"
+                  :disabled="loading"
+                >
                   Send Reset Link
                 </VBtn>
               </VCol>
 
               <!-- back to login -->
               <VCol cols="12">
-                <RouterLink class="d-flex align-center justify-center" :to="{ name: 'login' }">
-                  <VIcon icon="tabler-chevron-left" size="20" class="me-1 flip-in-rtl" />
+                <RouterLink
+                  class="d-flex align-center justify-center"
+                  :to="{ name: 'login' }"
+                >
+                  <VIcon
+                    icon="tabler-chevron-left"
+                    size="20"
+                    class="me-1 flip-in-rtl"
+                  />
                   <span>Back to login</span>
                 </RouterLink>
               </VCol>

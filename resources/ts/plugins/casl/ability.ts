@@ -3,7 +3,8 @@ import { createMongoAbility } from '@casl/ability'
 export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage'
 
 // Application entities and authentication subjects
-export type Subjects = 
+export type Subjects =
+
   // Core entities
   | 'User'
   | 'Lead'
@@ -15,14 +16,14 @@ export type Subjects =
   | 'Revenue'
   | 'Unit'
   | 'Note'
-  
+
   // Dashboard access by role
   | 'Dashboard'
   | 'AdminDashboard'
   | 'FranchisorDashboard'
   | 'FranchiseeDashboard'
   | 'SalesDashboard'
-  
+
   // Feature-specific subjects
   | 'Sales'
   | 'Finance'
@@ -36,7 +37,7 @@ export type Subjects =
   | 'TechnicalSupport'
   | 'FinancialReports'
   | 'RoyaltyManagement'
-  
+
   // Special subjects
   | 'all'
 
@@ -47,9 +48,9 @@ export function defineAbilitiesFor(role: string): Rule[] {
   switch (role) {
     case 'admin':
       return [
-        { action: 'manage', subject: 'all' }
-      ]
-    
+        { action: 'manage', subject: 'all' },
+    ]
+
     case 'franchisor':
       return [
         { action: 'read', subject: 'Dashboard' },
@@ -69,9 +70,9 @@ export function defineAbilitiesFor(role: string): Rule[] {
         { action: 'read', subject: 'Finance' },
         { action: 'read', subject: 'Operations' },
         { action: 'read', subject: 'Timeline' },
-        { action: 'manage', subject: 'Note' }
-      ]
-    
+        { action: 'manage', subject: 'Note' },
+    ]
+
     case 'franchisee':
       return [
         { action: 'read', subject: 'Dashboard' },
@@ -90,9 +91,9 @@ export function defineAbilitiesFor(role: string): Rule[] {
         { action: 'read', subject: 'Operations' },
         { action: 'read', subject: 'FinancialReports' },
         { action: 'read', subject: 'RoyaltyManagement' },
-        { action: 'manage', subject: 'Note' }
-      ]
-    
+        { action: 'manage', subject: 'Note' },
+    ]
+
     case 'sales':
       return [
         { action: 'read', subject: 'Dashboard' },
@@ -106,9 +107,9 @@ export function defineAbilitiesFor(role: string): Rule[] {
         { action: 'create', subject: 'TechnicalRequest' },
         { action: 'update', subject: 'TechnicalRequest' },
         { action: 'read', subject: 'Statistics' },
-        { action: 'manage', subject: 'Note' }
-      ]
-    
+        { action: 'manage', subject: 'Note' },
+    ]
+
     default:
       return []
   }

@@ -18,29 +18,31 @@ const isLoading = ref(false)
 
 const updateModelValue = (val: boolean) => {
   emit('update:isDialogVisible', val)
-  if (!val) {
+  if (!val)
     conversionNotes.value = ''
-  }
 }
 
 const convertLead = async () => {
-  if (!props.leadId) return
+  if (!props.leadId)
+    return
 
   isLoading.value = true
-  
+
   try {
     await $api(`/v1/franchisor/leads/${props.leadId}/convert`, {
       method: 'POST',
       body: {
-        notes: conversionNotes.value.trim()
-      }
+        notes: conversionNotes.value.trim(),
+      },
     })
 
     emit('leadConverted')
     updateModelValue(false)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error converting lead:', error)
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
@@ -60,8 +62,8 @@ const convertLead = async () => {
       <VCardText>
         <div class="mb-4">
           <p class="text-body-1 mb-2">
-            Are you sure you want to convert 
-            <strong>{{ props.leadName || 'this lead' }}</strong> 
+            Are you sure you want to convert
+            <strong>{{ props.leadName || 'this lead' }}</strong>
             to a customer?
           </p>
           <p class="text-body-2 text-medium-emphasis">
@@ -83,8 +85,8 @@ const convertLead = async () => {
         <VBtn
           color="secondary"
           variant="tonal"
-          @click="updateModelValue(false)"
           :disabled="isLoading"
+          @click="updateModelValue(false)"
         >
           Cancel
         </VBtn>
@@ -92,8 +94,8 @@ const convertLead = async () => {
         <VBtn
           color="success"
           variant="elevated"
-          @click="convertLead"
           :loading="isLoading"
+          @click="convertLead"
         >
           Convert to Customer
         </VBtn>

@@ -8,6 +8,7 @@ export default [
       {
         title: 'Sales',
         to: 'franchisee-dashboard-sales',
+
         // icon: { icon: 'tabler-users' },
         action: 'read',
         subject: 'FranchiseeDashboard',
@@ -15,6 +16,7 @@ export default [
       {
         title: 'Operations',
         to: 'franchisee-dashboard-operations',
+
         // icon: { icon: 'tabler-list-check' },
         action: 'read',
         subject: 'FranchiseeDashboard',
@@ -22,6 +24,7 @@ export default [
       {
         title: 'Finance',
         to: 'franchisee-dashboard-finance',
+
         // icon: { icon: 'tabler-chart-line' },
         action: 'read',
         subject: 'Revenue',
@@ -69,5 +72,5 @@ export default [
     icon: { icon: 'tabler-headset' },
     action: 'create',
     subject: 'TechnicalRequest',
-  }
+  },
 ]

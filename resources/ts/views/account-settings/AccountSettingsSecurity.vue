@@ -17,12 +17,14 @@ const onFormSubmit = () => {
   // Validate passwords match
   if (newPassword.value !== confirmPassword.value) {
     console.error('Passwords do not match')
+
     return
   }
 
   console.log('Password change requested')
+
   // Implement API call here
-  
+
   // Reset form
   currentPassword.value = ''
   newPassword.value = ''

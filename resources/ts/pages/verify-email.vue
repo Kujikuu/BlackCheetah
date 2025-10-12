@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { h } from 'vue'
+import { useDisplay } from 'vuetify'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-import { useDisplay } from 'vuetify'
 
 definePage({
   meta: {
@@ -23,15 +23,18 @@ const errorMessage = ref<string | null>(null)
 onMounted(async () => {
   // Try to get authenticated user email if token exists
   const token = useCookie('accessToken').value
-  if (!token) return
+  if (!token)
+    return
 
   loading.value = true
   try {
     const resp = await $api<{ success: boolean; data: { user: { email: string } } }>('/auth/me', { method: 'GET' })
+
     userEmail.value = resp.data.user.email
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null
+
     errorMessage.value = data?.message || 'Failed to load user info.'
   }
   finally {
@@ -84,8 +87,22 @@ const resend = async () => {
           <h4 class="text-h4 mb-1">
             Verify your email ✉️
           </h4>
-          <VAlert v-if="errorMessage" type="error" variant="tonal" class="mb-4">{{ errorMessage }}</VAlert>
-          <VAlert v-if="infoMessage" type="info" variant="tonal" class="mb-4">{{ infoMessage }}</VAlert>
+          <VAlert
+            v-if="errorMessage"
+            type="error"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ errorMessage }}
+          </VAlert>
+          <VAlert
+            v-if="infoMessage"
+            type="info"
+            variant="tonal"
+            class="mb-4"
+          >
+            {{ infoMessage }}
+          </VAlert>
           <p class="text-body-1 mb-0">
             Account activation link sent to your email address:
             <span class="font-weight-medium text-high-emphasis">{{ userEmail || 'hello@example.com' }}</span>
@@ -102,7 +119,10 @@ const resend = async () => {
           </VBtn>
 
           <div class="d-flex align-center justify-center">
-            <span class="me-1">Didn't get the mail? </span><a href="#" @click.prevent="resend">Resend</a>
+            <span class="me-1">Didn't get the mail? </span><a
+              href="#"
+              @click.prevent="resend"
+            >Resend</a>
           </div>
         </VCardText>
       </VCard>

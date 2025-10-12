@@ -6,7 +6,7 @@ import type { Rule } from './ability'
 
 export default function (app: App) {
   const userAbilityRules = useCookie<Rule[]>('userAbilityRules')
-  
+
   // Provide a fallback empty array if userAbilityRules is null/undefined
   // This prevents the CASL plugin from failing during initialization
   const abilityRules = userAbilityRules.value ?? []

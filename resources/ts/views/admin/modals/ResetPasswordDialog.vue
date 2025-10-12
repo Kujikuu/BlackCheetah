@@ -26,20 +26,18 @@ const generatePassword = () => {
   const length = 12
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
   let password = ''
-  
-  for (let i = 0; i < length; i++) {
+
+  for (let i = 0; i < length; i++)
     password += charset.charAt(Math.floor(Math.random() * charset.length))
-  }
-  
+
   newPassword.value = password
   isPasswordGenerated.value = true
 }
 
 // Auto-generate password when dialog opens
-watch(() => props.isDialogOpen, (newVal) => {
-  if (newVal && !isPasswordGenerated.value) {
+watch(() => props.isDialogOpen, newVal => {
+  if (newVal && !isPasswordGenerated.value)
     generatePassword()
-  }
 })
 
 const handleConfirm = () => {

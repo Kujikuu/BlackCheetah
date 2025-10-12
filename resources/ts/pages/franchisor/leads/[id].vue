@@ -22,6 +22,7 @@ const isLoadingLead = ref(false)
 const fetchLeadData = async () => {
   try {
     isLoadingLead.value = true
+
     const response = await $api(`/v1/franchisor/leads/${leadId.value}`, {
       method: 'GET',
     })
@@ -53,10 +54,13 @@ const fetchLeadData = async () => {
         documents: response.data.documents,
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching lead data:', error)
+
     // TODO: Show error toast
-  } finally {
+  }
+  finally {
     isLoadingLead.value = false
   }
 }
@@ -72,10 +76,12 @@ const isLoadingNotes = ref(false)
 
 // Fetch notes from API
 const fetchNotes = async () => {
-  if (!leadId.value) return
+  if (!leadId.value)
+    return
 
   try {
     isLoadingNotes.value = true
+
     const response = await $api('/v1/notes', {
       method: 'GET',
       query: { lead_id: leadId.value },
@@ -91,19 +97,21 @@ const fetchNotes = async () => {
         attachments: note.attachments || [],
       }))
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching notes:', error)
+
     // TODO: Show error toast
-  } finally {
+  }
+  finally {
     isLoadingNotes.value = false
   }
 }
 
 // Fetch notes when component mounts and when leadId changes
 watch(leadId, () => {
-  if (leadId.value) {
+  if (leadId.value)
     fetchNotes()
-  }
 }, { immediate: true })
 
 const tabs = [
@@ -113,11 +121,13 @@ const tabs = [
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
+
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 const formatDateTime = (dateString: string) => {
   const date = new Date(dateString)
+
   return date.toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -130,6 +140,7 @@ const formatDateTime = (dateString: string) => {
 const getExcerpt = (text: string, maxLength: number = 150) => {
   if (text.length <= maxLength)
     return text
+
   return `${text.substring(0, maxLength)}...`
 }
 
@@ -149,7 +160,8 @@ const confirmDeleteNote = (noteId: number) => {
 }
 
 const deleteNote = async () => {
-  if (noteToDelete.value === null) return
+  if (noteToDelete.value === null)
+    return
 
   try {
     const response = await $api(`/v1/notes/${noteToDelete.value}`, {
@@ -160,13 +172,18 @@ const deleteNote = async () => {
       // Refresh notes from API
       await fetchNotes()
       console.log('Note deleted successfully')
+
       // TODO: Show success toast
-    } else {
+    }
+    else {
       console.error('Failed to delete note:', response.message)
+
       // TODO: Show error toast
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error deleting note:', error)
+
     // TODO: Show error toast
   }
 
@@ -175,7 +192,8 @@ const deleteNote = async () => {
 }
 
 const onNoteUpdated = async () => {
-  if (!selectedNote.value) return
+  if (!selectedNote.value)
+    return
 
   try {
     const response = await $api(`/v1/notes/${selectedNote.value.id}`, {
@@ -192,13 +210,18 @@ const onNoteUpdated = async () => {
       await fetchNotes()
       isEditNoteModalVisible.value = false
       console.log('Note updated successfully')
+
       // TODO: Show success toast
-    } else {
+    }
+    else {
       console.error('Failed to update note:', response.message)
+
       // TODO: Show error toast
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error updating note:', error)
+
     // TODO: Show error toast
   }
 }
@@ -216,7 +239,8 @@ const toggleEditMode = () => {
 const isSavingLead = ref(false)
 
 const saveLead = async () => {
-  if (!leadData.value) return
+  if (!leadData.value)
+    return
 
   try {
     isSavingLead.value = true
@@ -249,13 +273,17 @@ const saveLead = async () => {
       // Update local data with response
       await fetchLeadData()
       isEditMode.value = false
+
       // TODO: Show success toast
       console.log('Lead updated successfully')
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error updating lead:', error)
+
     // TODO: Show error toast
-  } finally {
+  }
+  finally {
     isSavingLead.value = false
   }
 }
@@ -264,19 +292,34 @@ const saveLead = async () => {
 <template>
   <section>
     <!-- 👉 Loading State -->
-    <VCard v-if="isLoadingLead" class="mb-6">
+    <VCard
+      v-if="isLoadingLead"
+      class="mb-6"
+    >
       <VCardText class="text-center py-10">
-        <VProgressCircular indeterminate color="primary" />
-        <div class="mt-4">Loading lead data...</div>
+        <VProgressCircular
+          indeterminate
+          color="primary"
+        />
+        <div class="mt-4">
+          Loading lead data...
+        </div>
       </VCardText>
     </VCard>
 
     <!-- 👉 Lead Header -->
-    <VCard v-else-if="leadData" class="mb-6">
+    <VCard
+      v-else-if="leadData"
+      class="mb-6"
+    >
       <VCardText>
         <div class="d-flex justify-space-between align-center flex-wrap gap-4">
           <div class="d-flex align-center gap-4">
-            <VAvatar size="80" variant="tonal" color="primary">
+            <VAvatar
+              size="80"
+              variant="tonal"
+              color="primary"
+            >
               <span class="text-h4">{{ avatarText(`${leadData.firstName} ${leadData.lastName}`) }}</span>
             </VAvatar>
             <div>
@@ -286,21 +329,41 @@ const saveLead = async () => {
               <div class="text-body-1 mb-1">
                 {{ leadData.company }}
               </div>
-              <VChip :color="leadData.status === 'qualified' ? 'success' : 'error'" size="small" label
-                class="text-capitalize">
+              <VChip
+                :color="leadData.status === 'qualified' ? 'success' : 'error'"
+                size="small"
+                label
+                class="text-capitalize"
+              >
                 {{ leadData.status }}
               </VChip>
             </div>
           </div>
           <div class="d-flex gap-2">
-            <VBtn v-if="!isEditMode" color="primary" prepend-icon="tabler-pencil" @click="toggleEditMode">
+            <VBtn
+              v-if="!isEditMode"
+              color="primary"
+              prepend-icon="tabler-pencil"
+              @click="toggleEditMode"
+            >
               Edit
             </VBtn>
-            <VBtn v-if="isEditMode" color="success" prepend-icon="tabler-check" :loading="isSavingLead"
-              :disabled="isSavingLead" @click="saveLead">
+            <VBtn
+              v-if="isEditMode"
+              color="success"
+              prepend-icon="tabler-check"
+              :loading="isSavingLead"
+              :disabled="isSavingLead"
+              @click="saveLead"
+            >
               Save
             </VBtn>
-            <VBtn v-if="isEditMode" color="secondary" variant="tonal" @click="toggleEditMode">
+            <VBtn
+              v-if="isEditMode"
+              color="secondary"
+              variant="tonal"
+              @click="toggleEditMode"
+            >
               Cancel
             </VBtn>
           </div>
@@ -310,78 +373,142 @@ const saveLead = async () => {
 
     <!-- 👉 Tabs -->
     <template v-if="leadData">
-      <VTabs v-model="currentTab" class="mb-6">
-        <VTab v-for="tab in tabs" :key="tab.value" :value="tab.value">
-          <VIcon :icon="tab.icon" start />
+      <VTabs
+        v-model="currentTab"
+        class="mb-6"
+      >
+        <VTab
+          v-for="tab in tabs"
+          :key="tab.value"
+          :value="tab.value"
+        >
+          <VIcon
+            :icon="tab.icon"
+            start
+          />
           {{ tab.title }}
         </VTab>
       </VTabs>
 
-      <VWindow v-model="currentTab" class="disable-tab-transition">
+      <VWindow
+        v-model="currentTab"
+        class="disable-tab-transition"
+      >
         <!-- Overview Tab -->
         <VWindowItem value="overview">
           <VCard>
             <VCardText>
               <VRow>
-                <VCol cols="12" md="6">
+                <VCol
+                  cols="12"
+                  md="6"
+                >
                   <h6 class="text-h6 mb-4">
                     Contact Information
                   </h6>
                   <VRow>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.email" label="Email" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.email"
+                        label="Email"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.phone" label="Phone" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.phone"
+                        label="Phone"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.company" label="Company" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.company"
+                        label="Company"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                   </VRow>
                 </VCol>
 
-                <VCol cols="12" md="6">
+                <VCol
+                  cols="12"
+                  md="6"
+                >
                   <h6 class="text-h6 mb-4">
                     Location
                   </h6>
                   <VRow>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.city" label="City" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.city"
+                        label="City"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.state" label="State" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.state"
+                        label="State"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.country" label="Country" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.country"
+                        label="Country"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                   </VRow>
                 </VCol>
 
-                <VCol cols="12" md="6">
+                <VCol
+                  cols="12"
+                  md="6"
+                >
                   <h6 class="text-h6 mb-4">
                     Lead Details
                   </h6>
                   <VRow>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.source" label="Source" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.source"
+                        label="Source"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.owner" label="Owner" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.owner"
+                        label="Owner"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                   </VRow>
                 </VCol>
 
-                <VCol cols="12" md="6">
+                <VCol
+                  cols="12"
+                  md="6"
+                >
                   <h6 class="text-h6 mb-4">
                     Timeline
                   </h6>
                   <VRow>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.lastContacted" label="Last Contacted" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.lastContacted"
+                        label="Last Contacted"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.scheduledMeeting" label="Scheduled Meeting"
-                        :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.scheduledMeeting"
+                        label="Scheduled Meeting"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                   </VRow>
                 </VCol>
@@ -390,7 +517,12 @@ const saveLead = async () => {
                   <h6 class="text-h6 mb-4">
                     Notes
                   </h6>
-                  <AppTextarea v-model="leadData.note" label="Additional Notes" rows="4" :readonly="!isEditMode" />
+                  <AppTextarea
+                    v-model="leadData.note"
+                    label="Additional Notes"
+                    rows="4"
+                    :readonly="!isEditMode"
+                  />
                 </VCol>
               </VRow>
             </VCardText>
@@ -403,7 +535,11 @@ const saveLead = async () => {
             <VCardItem class="pb-4">
               <VCardTitle>Notes</VCardTitle>
               <template #append>
-                <VBtn color="primary" prepend-icon="tabler-plus" @click="isAddNoteModalVisible = true">
+                <VBtn
+                  color="primary"
+                  prepend-icon="tabler-plus"
+                  @click="isAddNoteModalVisible = true"
+                >
                   Add Note
                 </VBtn>
               </template>
@@ -413,8 +549,15 @@ const saveLead = async () => {
 
             <VCardText>
               <VRow>
-                <VCol v-for="note in notesData" :key="note.id" cols="12">
-                  <VCard variant="tonal" class="mb-4">
+                <VCol
+                  v-for="note in notesData"
+                  :key="note.id"
+                  cols="12"
+                >
+                  <VCard
+                    variant="tonal"
+                    class="mb-4"
+                  >
                     <VCardText>
                       <div class="d-flex justify-space-between align-start mb-2">
                         <div>
@@ -426,10 +569,21 @@ const saveLead = async () => {
                           </h6>
                         </div>
                         <div class="d-flex gap-2">
-                          <VBtn icon size="small" variant="text" @click="editNote(note)">
+                          <VBtn
+                            icon
+                            size="small"
+                            variant="text"
+                            @click="editNote(note)"
+                          >
                             <VIcon icon="tabler-pencil" />
                           </VBtn>
-                          <VBtn icon size="small" variant="text" color="error" @click="confirmDeleteNote(note.id)">
+                          <VBtn
+                            icon
+                            size="small"
+                            variant="text"
+                            color="error"
+                            @click="confirmDeleteNote(note.id)"
+                          >
                             <VIcon icon="tabler-trash" />
                           </VBtn>
                         </div>
@@ -437,7 +591,11 @@ const saveLead = async () => {
                       <p class="text-body-2 mb-2">
                         {{ getExcerpt(note.description) }}
                       </p>
-                      <VBtn variant="text" size="small" @click="viewNote(note)">
+                      <VBtn
+                        variant="text"
+                        size="small"
+                        @click="viewNote(note)"
+                      >
                         Read More
                       </VBtn>
                     </VCardText>
@@ -451,10 +609,17 @@ const saveLead = async () => {
     </template>
 
     <!-- 👉 Add Note Modal -->
-    <AddNoteModal v-model:is-dialog-visible="isAddNoteModalVisible" :lead-id="leadId" @note-added="onNoteAdded" />
+    <AddNoteModal
+      v-model:is-dialog-visible="isAddNoteModalVisible"
+      :lead-id="leadId"
+      @note-added="onNoteAdded"
+    />
 
     <!-- 👉 View Note Modal -->
-    <VDialog v-model="isViewNoteModalVisible" max-width="700">
+    <VDialog
+      v-model="isViewNoteModalVisible"
+      max-width="700"
+    >
       <VCard v-if="selectedNote">
         <VCardItem>
           <VCardTitle>{{ selectedNote.title }}</VCardTitle>
@@ -471,7 +636,11 @@ const saveLead = async () => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewNoteModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewNoteModalVisible = false"
+          >
             Close
           </VBtn>
         </VCardActions>
@@ -479,7 +648,10 @@ const saveLead = async () => {
     </VDialog>
 
     <!-- 👉 Edit Note Modal -->
-    <VDialog v-model="isEditNoteModalVisible" max-width="700">
+    <VDialog
+      v-model="isEditNoteModalVisible"
+      max-width="700"
+    >
       <VCard v-if="selectedNote">
         <VCardItem>
           <VCardTitle>Edit Note</VCardTitle>
@@ -489,17 +661,31 @@ const saveLead = async () => {
           <VForm @submit.prevent="onNoteUpdated">
             <VRow>
               <VCol cols="12">
-                <AppTextField v-model="selectedNote.title" label="Title" placeholder="Enter note title" />
+                <AppTextField
+                  v-model="selectedNote.title"
+                  label="Title"
+                  placeholder="Enter note title"
+                />
               </VCol>
 
               <VCol cols="12">
-                <AppTextarea v-model="selectedNote.description" label="Description"
-                  placeholder="Enter note description..." rows="6" />
+                <AppTextarea
+                  v-model="selectedNote.description"
+                  label="Description"
+                  placeholder="Enter note description..."
+                  rows="6"
+                />
               </VCol>
 
               <VCol cols="12">
-                <VFileInput label="Attachments" multiple prepend-icon="tabler-paperclip" placeholder="Upload files"
-                  chips show-size />
+                <VFileInput
+                  label="Attachments"
+                  multiple
+                  prepend-icon="tabler-paperclip"
+                  placeholder="Upload files"
+                  chips
+                  show-size
+                />
               </VCol>
             </VRow>
           </VForm>
@@ -507,10 +693,17 @@ const saveLead = async () => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isEditNoteModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isEditNoteModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" @click="onNoteUpdated">
+          <VBtn
+            color="primary"
+            @click="onNoteUpdated"
+          >
             Update Note
           </VBtn>
         </VCardActions>
@@ -518,7 +711,10 @@ const saveLead = async () => {
     </VDialog>
 
     <!-- 👉 Delete Note Confirmation Dialog -->
-    <VDialog v-model="isDeleteNoteDialogVisible" max-width="500">
+    <VDialog
+      v-model="isDeleteNoteDialogVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -530,10 +726,17 @@ const saveLead = async () => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteNoteDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteNoteDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" @click="deleteNote">
+          <VBtn
+            color="error"
+            @click="deleteNote"
+          >
             Delete
           </VBtn>
         </VCardActions>

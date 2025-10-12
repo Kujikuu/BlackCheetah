@@ -74,21 +74,23 @@ const resetForm = () => {
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   const files = target.files
-  
+
   if (files) {
     Array.from(files).forEach(file => {
       const fileData = {
         name: file.name,
         size: formatFileSize(file.size),
         url: URL.createObjectURL(file),
-        file: file,
+        file,
       }
+
       uploadedFiles.value.push(fileData)
     })
   }
-  
+
   // Reset input
-  if (target) target.value = ''
+  if (target)
+    target.value = ''
 }
 
 // Remove uploaded file
@@ -98,17 +100,19 @@ const removeFile = (index: number) => {
 
 // Format file size
 const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return '0 Bytes'
+  if (bytes === 0)
+    return '0 Bytes'
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+
+  return `${Math.round(bytes / k ** i * 100) / 100} ${sizes[i]}`
 }
 
 // Get file icon
 const getFileIcon = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase()
-  
+
   if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext || ''))
     return 'tabler-photo'
   if (['pdf'].includes(ext || ''))
@@ -117,7 +121,7 @@ const getFileIcon = (fileName: string) => {
     return 'tabler-file-type-doc'
   if (['txt', 'log'].includes(ext || ''))
     return 'tabler-file-text'
-  
+
   return 'tabler-file'
 }
 
@@ -152,9 +156,8 @@ const onSubmit = () => {
 
 const handleDrawerModelValueUpdate = (val: boolean) => {
   emit('update:isDrawerOpen', val)
-  if (!val) {
+  if (!val)
     resetForm()
-  }
 }
 
 // Helper function for avatar text
@@ -180,7 +183,7 @@ const avatarText = (name: string) => {
     <VDivider />
 
     <!-- Requester Information Section -->
-    <VCard 
+    <VCard
       flat
       class="mb-4"
     >
@@ -195,7 +198,7 @@ const avatarText = (name: string) => {
             :image="props.request?.userAvatar || undefined"
             variant="tonal"
           >
-            <span 
+            <span
               v-if="!props.request?.userAvatar && props.request?.userName"
               class="text-sm font-weight-medium"
             >
@@ -286,7 +289,7 @@ const avatarText = (name: string) => {
               <div class="text-body-2 text-medium-emphasis mb-2">
                 Attachments
               </div>
-              
+
               <input
                 ref="fileInput"
                 type="file"

@@ -15,6 +15,7 @@ export default [
       {
         title: 'Leads',
         to: 'franchisor-dashboard-leads',
+
         // icon: { icon: 'tabler-users' },
         action: 'read',
         subject: 'Lead',
@@ -22,6 +23,7 @@ export default [
       {
         title: 'Operations',
         to: 'franchisor-dashboard-operations',
+
         // icon: { icon: 'tabler-list-check' },
         action: 'read',
         subject: 'FranchisorDashboard',
@@ -29,6 +31,7 @@ export default [
       {
         title: 'Development Timeline',
         to: 'franchisor-dashboard-timeline',
+
         // icon: { icon: 'tabler-timeline' },
         action: 'read',
         subject: 'FranchisorDashboard',
@@ -36,6 +39,7 @@ export default [
       {
         title: 'Finance',
         to: 'franchisor-dashboard-finance',
+
         // icon: { icon: 'tabler-chart-line' },
         action: 'read',
         subject: 'Revenue',
@@ -104,5 +108,5 @@ export default [
     icon: { icon: 'tabler-headset' },
     action: 'create',
     subject: 'TechnicalRequest',
-  }
+  },
 ]

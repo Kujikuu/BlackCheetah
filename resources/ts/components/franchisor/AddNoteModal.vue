@@ -29,9 +29,8 @@ const resetForm = () => {
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
-  if (target.files) {
+  if (target.files)
     attachments.value = Array.from(target.files)
-  }
 }
 
 const onSubmit = async () => {
@@ -47,22 +46,25 @@ const onSubmit = async () => {
 
     if (response.success) {
       console.log('Note added successfully:', response.data)
-      
+
       // Emit event to refresh notes
       emit('noteAdded')
 
       // Close dialog and reset form
       dialogValue.value = false
       resetForm()
-      
+
       // TODO: Show success toast
-    } else {
+    }
+    else {
       console.error('Failed to add note:', response.message)
+
       // TODO: Show error toast
     }
   }
   catch (error) {
     console.error('Error adding note:', error)
+
     // TODO: Show error toast
   }
 }

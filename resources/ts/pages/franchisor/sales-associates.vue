@@ -76,22 +76,24 @@ const totalAssociates = computed(() => salesAssociatesData.value.total)
 // 👉 Helper functions for lead colors
 const getLeadStatusColor = (status: string) => {
   const statusColors: Record<string, string> = {
-    'new': 'primary',
-    'contacted': 'info',
-    'qualified': 'warning',
-    'converted': 'success',
-    'lost': 'error',
-    'follow_up': 'secondary'
+    new: 'primary',
+    contacted: 'info',
+    qualified: 'warning',
+    converted: 'success',
+    lost: 'error',
+    follow_up: 'secondary',
   }
+
   return statusColors[status] || 'default'
 }
 
 const getLeadPriorityColor = (priority: string) => {
   const priorityColors: Record<string, string> = {
-    'low': 'success',
-    'medium': 'warning',
-    'high': 'error'
+    low: 'success',
+    medium: 'warning',
+    high: 'error',
   }
+
   return priorityColors[priority] || 'default'
 }
 
@@ -99,17 +101,22 @@ const getLeadPriorityColor = (priority: string) => {
 const fetchSalesAssociates = async () => {
   try {
     isLoading.value = true
+
     const params = new URLSearchParams({
       page: page.value.toString(),
       per_page: itemsPerPage.value.toString(),
     })
 
-    if (searchQuery.value) params.append('search', searchQuery.value)
-    if (selectedStatus.value) params.append('status', selectedStatus.value)
-    if (sortBy.value) params.append('sort_by', sortBy.value)
-    if (orderBy.value) params.append('order_by', orderBy.value)
+    if (searchQuery.value)
+      params.append('search', searchQuery.value)
+    if (selectedStatus.value)
+      params.append('status', selectedStatus.value)
+    if (sortBy.value)
+      params.append('sort_by', sortBy.value)
+    if (orderBy.value)
+      params.append('order_by', orderBy.value)
 
-    const response = await $api('/v1/franchisor/sales-associates?' + params.toString(), {
+    const response = await $api(`/v1/franchisor/sales-associates?${params.toString()}`, {
       method: 'GET',
     })
 
@@ -119,10 +126,13 @@ const fetchSalesAssociates = async () => {
         total: response.total || 0,
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching sales associates:', error)
+
     // Handle error - show toast notification
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
@@ -176,10 +186,12 @@ const confirmDelete = (id: number) => {
 }
 
 const deleteAssociate = async () => {
-  if (associateToDelete.value === null) return
+  if (associateToDelete.value === null)
+    return
 
   try {
     isSubmitting.value = true
+
     const response = await $api(`/v1/franchisor/sales-associates/${associateToDelete.value}`, {
       method: 'DELETE',
     })
@@ -200,10 +212,13 @@ const deleteAssociate = async () => {
       // Show success message
       console.log('Sales associate deleted successfully')
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error deleting sales associate:', error)
+
     // Handle error - show toast notification
-  } finally {
+  }
+  finally {
     isSubmitting.value = false
     isDeleteDialogVisible.value = false
     associateToDelete.value = null
@@ -219,7 +234,8 @@ const selectedAssociate = ref<SalesAssociate | null>(null)
 
 // 👉 View associate
 const viewAssociate = async (id: number | null) => {
-  if (id === null) return
+  if (id === null)
+    return
   const associate = associates.value.find(a => a.id === id)
   if (associate) {
     try {
@@ -232,12 +248,15 @@ const viewAssociate = async (id: number | null) => {
         selectedAssociate.value = response.data
         isViewAssociateModalVisible.value = true
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error fetching associate details:', error)
+
       // Fallback to basic data
       selectedAssociate.value = associate
       isViewAssociateModalVisible.value = true
-    } finally {
+    }
+    finally {
       isLoading.value = false
     }
   }
@@ -245,7 +264,8 @@ const viewAssociate = async (id: number | null) => {
 
 // 👉 Edit associate
 const editAssociate = (id: number | null) => {
-  if (id === null) return
+  if (id === null)
+    return
   const associate = associates.value.find(a => a.id === id)
   if (associate) {
     selectedAssociate.value = { ...associate }
@@ -273,12 +293,14 @@ const addSalesAssociate = () => {
 
 // 👉 Save associate (for both add and edit)
 const saveAssociate = async () => {
-  if (!selectedAssociate.value) return
+  if (!selectedAssociate.value)
+    return
 
   // Validate form before submission
   if (associateForm.value) {
     const { valid } = await associateForm.value.validate()
-    if (!valid) return
+    if (!valid)
+      return
   }
 
   try {
@@ -286,6 +308,7 @@ const saveAssociate = async () => {
 
     const isEditing = selectedAssociate.value.id !== null
     const method = isEditing ? 'PUT' : 'POST'
+
     const url = isEditing
       ? `/v1/franchisor/sales-associates/${selectedAssociate.value.id}`
       : '/v1/franchisor/sales-associates'
@@ -302,20 +325,18 @@ const saveAssociate = async () => {
     }
 
     // Add password for new associates
-    if (!isEditing && selectedAssociate.value.password) {
+    if (!isEditing && selectedAssociate.value.password)
       formData.password = selectedAssociate.value.password
-    }
 
     const response = await $api(url, {
       method,
-      body: formData
+      body: formData,
     })
 
     if (response.success) {
       // Reset form validation first
-      if (associateForm.value) {
+      if (associateForm.value)
         associateForm.value.reset()
-      }
 
       // Close modals
       isAddAssociateModalVisible.value = false
@@ -334,7 +355,7 @@ const saveAssociate = async () => {
         password: '',
         assignedLeads: 0,
         avatar: '',
-        avatarText: ''
+        avatarText: '',
       }
 
       // Refresh the associates list
@@ -343,10 +364,13 @@ const saveAssociate = async () => {
       // Show success message (you can add a toast notification here)
       console.log(isEditing ? 'Associate updated successfully' : 'Associate created successfully')
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error saving associate:', error)
+
     // Handle error (you can add error notification here)
-  } finally {
+  }
+  finally {
     isSubmitting.value = false
   }
 }
@@ -360,13 +384,14 @@ const exportToCSV = () => {
   const csvContent = [
     'Name,Email,Phone,Status,Country,State,City,Assigned Leads',
     ...dataToExport.map(associate =>
-      `"${associate.name}","${associate.email}","${associate.phone}","${associate.status}","${associate.country || ''}","${associate.state || ''}","${associate.city || ''}","${associate.assignedLeads}"`
-    )
+      `"${associate.name}","${associate.email}","${associate.phone}","${associate.status}","${associate.country || ''}","${associate.state || ''}","${associate.city || ''}","${associate.assignedLeads}"`,
+    ),
   ].join('\n')
 
   const blob = new Blob([csvContent], { type: 'text/csv' })
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
+
   a.href = url
   a.download = `sales_associates_${selectedRows.value.length > 0 ? 'selected' : 'all'}_${new Date().toISOString().split('T')[0]}.csv`
   a.click()
@@ -379,6 +404,7 @@ const exportToPDF = () => {
     : associates.value
 
   console.log('Exporting to PDF:', dataToExport)
+
   // TODO: Implement PDF export logic
 }
 
@@ -398,9 +424,17 @@ onMounted(() => {
       <VCardText>
         <VRow>
           <!-- 👉 Select Status -->
-          <VCol cols="12" sm="6">
-            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statuses" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="6"
+          >
+            <AppSelect
+              v-model="selectedStatus"
+              placeholder="Select Status"
+              :items="statuses"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
         </VRow>
       </VCardText>
@@ -409,25 +443,39 @@ onMounted(() => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect :model-value="itemsPerPage" :items="[
-            { value: 10, title: '10' },
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-            { value: -1, title: 'All' },
-          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+          <AppSelect
+            :model-value="itemsPerPage"
+            :items="[
+              { value: 10, title: '10' },
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+              { value: -1, title: 'All' },
+            ]"
+            style="inline-size: 6.25rem;"
+            @update:model-value="itemsPerPage = parseInt($event, 10)"
+          />
         </div>
         <VSpacer />
 
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- 👉 Search  -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField v-model="searchQuery" placeholder="Search Sales Associate" />
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Search Sales Associate"
+            />
           </div>
 
           <!-- 👉 Export Menu -->
-          <VBtn variant="tonal" color="secondary">
-            <VIcon icon="tabler-upload" class="me-2" />
+          <VBtn
+            variant="tonal"
+            color="secondary"
+          >
+            <VIcon
+              icon="tabler-upload"
+              class="me-2"
+            />
             Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
             <VMenu activator="parent">
               <VList>
@@ -448,7 +496,10 @@ onMounted(() => {
           </VBtn>
 
           <!-- 👉 Add associate button -->
-          <VBtn prepend-icon="tabler-plus" @click="addSalesAssociate">
+          <VBtn
+            prepend-icon="tabler-plus"
+            @click="addSalesAssociate"
+          >
             Add Sales Associate
           </VBtn>
         </div>
@@ -457,15 +508,30 @@ onMounted(() => {
       <VDivider />
 
       <!-- SECTION datatable -->
-      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
-        :items="associates" item-value="id" :items-length="totalAssociates" :headers="headers" class="text-no-wrap"
-        show-select @update:options="updateOptions">
+      <VDataTableServer
+        v-model:items-per-page="itemsPerPage"
+        v-model:model-value="selectedRows"
+        v-model:page="page"
+        :items="associates"
+        item-value="id"
+        :items-length="totalAssociates"
+        :headers="headers"
+        class="text-no-wrap"
+        show-select
+        @update:options="updateOptions"
+      >
         <!-- Sales Associate -->
         <template #item.name="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <VAvatar size="34" :variant="!item.avatar ? 'tonal' : undefined"
-              :color="!item.avatar ? 'primary' : undefined">
-              <VImg v-if="item.avatar" :src="item.avatar" />
+            <VAvatar
+              size="34"
+              :variant="!item.avatar ? 'tonal' : undefined"
+              :color="!item.avatar ? 'primary' : undefined"
+            >
+              <VImg
+                v-if="item.avatar"
+                :src="item.avatar"
+              />
               <span v-else>{{ avatarText(item.name) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
@@ -492,7 +558,12 @@ onMounted(() => {
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+          <VChip
+            :color="resolveStatusVariant(item.status)"
+            size="small"
+            label
+            class="text-capitalize"
+          >
             {{ item.status }}
           </VChip>
         </template>
@@ -506,7 +577,11 @@ onMounted(() => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <VBtn icon variant="text" color="medium-emphasis">
+          <VBtn
+            icon
+            variant="text"
+            color="medium-emphasis"
+          >
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
@@ -537,14 +612,21 @@ onMounted(() => {
 
         <!-- pagination -->
         <template #bottom>
-          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalAssociates" />
+          <TablePagination
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total-items="totalAssociates"
+          />
         </template>
       </VDataTableServer>
       <!-- SECTION -->
     </VCard>
 
     <!-- 👉 View Associate Modal -->
-    <VDialog v-model="isViewAssociateModalVisible" max-width="600">
+    <VDialog
+      v-model="isViewAssociateModalVisible"
+      max-width="600"
+    >
       <VCard v-if="selectedAssociate">
         <VCardItem>
           <VCardTitle>Sales Associate Details</VCardTitle>
@@ -554,53 +636,105 @@ onMounted(() => {
           <VRow>
             <VCol cols="12">
               <div class="d-flex align-center gap-4 mb-6">
-                <VAvatar size="80" variant="tonal" color="primary">
+                <VAvatar
+                  size="80"
+                  variant="tonal"
+                  color="primary"
+                >
                   <span class="text-h4">{{ avatarText(selectedAssociate.name) }}</span>
                 </VAvatar>
                 <div>
-                  <h4 class="text-h4 mb-1">{{ selectedAssociate.name }}</h4>
-                  <VChip :color="resolveStatusVariant(selectedAssociate?.status || '')" size="small" label
-                    class="text-capitalize">
+                  <h4 class="text-h4 mb-1">
+                    {{ selectedAssociate.name }}
+                  </h4>
+                  <VChip
+                    :color="resolveStatusVariant(selectedAssociate?.status || '')"
+                    size="small"
+                    label
+                    class="text-capitalize"
+                  >
                     {{ selectedAssociate.status }}
                   </VChip>
                 </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Email</div>
-                <div class="text-body-1">{{ selectedAssociate.email }}</div>
+                <div class="text-sm text-disabled mb-1">
+                  Email
+                </div>
+                <div class="text-body-1">
+                  {{ selectedAssociate.email }}
+                </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Phone</div>
-                <div class="text-body-1">{{ selectedAssociate.phone }}</div>
+                <div class="text-sm text-disabled mb-1">
+                  Phone
+                </div>
+                <div class="text-body-1">
+                  {{ selectedAssociate.phone }}
+                </div>
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Country</div>
-                <div class="text-body-1">{{ selectedAssociate.country || 'Not specified' }}</div>
+                <div class="text-sm text-disabled mb-1">
+                  Country
+                </div>
+                <div class="text-body-1">
+                  {{ selectedAssociate.country || 'Not specified' }}
+                </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">State</div>
-                <div class="text-body-1">{{ selectedAssociate.state || 'Not specified' }}</div>
+                <div class="text-sm text-disabled mb-1">
+                  State
+                </div>
+                <div class="text-body-1">
+                  {{ selectedAssociate.state || 'Not specified' }}
+                </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">City</div>
-                <div class="text-body-1">{{ selectedAssociate.city || 'Not specified' }}</div>
+                <div class="text-sm text-disabled mb-1">
+                  City
+                </div>
+                <div class="text-body-1">
+                  {{ selectedAssociate.city || 'Not specified' }}
+                </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Assigned Leads</div>
-                <div class="text-body-1">{{ selectedAssociate.assignedLeads }}</div>
+                <div class="text-sm text-disabled mb-1">
+                  Assigned Leads
+                </div>
+                <div class="text-body-1">
+                  {{ selectedAssociate.assignedLeads }}
+                </div>
               </div>
             </VCol>
           </VRow>
@@ -609,7 +743,9 @@ onMounted(() => {
           <VRow v-if="selectedAssociate.leads && selectedAssociate.leads.length > 0">
             <VCol cols="12">
               <VDivider class="my-4" />
-              <div class="text-h6 mb-4">Assigned Leads</div>
+              <div class="text-h6 mb-4">
+                Assigned Leads
+              </div>
               <VCard variant="outlined">
                 <VCardText class="pa-0">
                   <VTable>
@@ -622,16 +758,27 @@ onMounted(() => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="lead in selectedAssociate?.leads || []" :key="lead.id">
+                      <tr
+                        v-for="lead in selectedAssociate?.leads || []"
+                        :key="lead.id"
+                      >
                         <td>{{ lead.first_name }} {{ lead.last_name }}</td>
                         <td>{{ lead.email }}</td>
                         <td>
-                          <VChip :color="getLeadStatusColor(lead.status)" size="small" class="text-capitalize">
+                          <VChip
+                            :color="getLeadStatusColor(lead.status)"
+                            size="small"
+                            class="text-capitalize"
+                          >
                             {{ lead.status.replace('_', ' ') }}
                           </VChip>
                         </td>
                         <td>
-                          <VChip :color="getLeadPriorityColor(lead.priority)" size="small" class="text-capitalize">
+                          <VChip
+                            :color="getLeadPriorityColor(lead.priority)"
+                            size="small"
+                            class="text-capitalize"
+                          >
                             {{ lead.priority }}
                           </VChip>
                         </td>
@@ -646,10 +793,17 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewAssociateModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewAssociateModalVisible = false"
+          >
             Close
           </VBtn>
-          <VBtn color="primary" @click="editAssociate(selectedAssociate.id)">
+          <VBtn
+            color="primary"
+            @click="editAssociate(selectedAssociate.id)"
+          >
             Edit
           </VBtn>
         </VCardActions>
@@ -657,65 +811,138 @@ onMounted(() => {
     </VDialog>
 
     <!-- 👉 Add/Edit Associate Modal -->
-    <VDialog :model-value="isAddAssociateModalVisible || isEditAssociateModalVisible"
+    <VDialog
+      :model-value="isAddAssociateModalVisible || isEditAssociateModalVisible"
+      max-width="700"
+      persistent
       @update:model-value="val => { if (!val) { isAddAssociateModalVisible = false; isEditAssociateModalVisible = false } }"
-      max-width="700" persistent>
+    >
       <VCard v-if="selectedAssociate">
         <VCardItem>
           <VCardTitle>{{ selectedAssociate.id === null ? 'Add New' : 'Edit' }} Sales Associate</VCardTitle>
         </VCardItem>
 
         <VCardText>
-          <VForm ref="associateForm" @submit.prevent="saveAssociate">
+          <VForm
+            ref="associateForm"
+            @submit.prevent="saveAssociate"
+          >
             <VRow>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.name" label="Full Name" placeholder="Enter full name" :rules="[
-                  (v: string) => !!v || 'Full name is required',
-                  (v: string) => v.length <= 255 || 'Name must not exceed 255 characters'
-                ]" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.name"
+                  label="Full Name"
+                  placeholder="Enter full name"
+                  :rules="[
+                    (v: string) => !!v || 'Full name is required',
+                    (v: string) => v.length <= 255 || 'Name must not exceed 255 characters',
+                  ]"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.email" label="Email Address" type="email"
-                  placeholder="Enter email address" :rules="[
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.email"
+                  label="Email Address"
+                  type="email"
+                  placeholder="Enter email address"
+                  :rules="[
                     (v: string) => !!v || 'Email is required',
-                    (v: string) => /.+@.+\..+/.test(v) || 'Email must be valid'
-                  ]" required />
+                    (v: string) => /.+@.+\..+/.test(v) || 'Email must be valid',
+                  ]"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.phone" label="Phone Number" placeholder="Enter phone number"
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.phone"
+                  label="Phone Number"
+                  placeholder="Enter phone number"
                   :rules="[
                     (v: string) => !!v || 'Phone number is required',
-                    (v: string) => v.length <= 20 || 'Phone number must not exceed 20 characters'
-                  ]" required />
+                    (v: string) => v.length <= 20 || 'Phone number must not exceed 20 characters',
+                  ]"
+                  required
+                />
               </VCol>
 
-              <VCol cols="12" md="6">
-                <AppSelect v-model="selectedAssociate.status" label="Status" :items="statuses"
-                  placeholder="Select status" :rules="[(v: string) => !!v || 'Status is required']" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="selectedAssociate.status"
+                  label="Status"
+                  :items="statuses"
+                  placeholder="Select status"
+                  :rules="[(v: string) => !!v || 'Status is required']"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppSelect v-model="selectedAssociate.country" label="Country" :items="countries"
-                  placeholder="Select country" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="selectedAssociate.country"
+                  label="Country"
+                  :items="countries"
+                  placeholder="Select country"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.state" label="State/Province"
-                  placeholder="Enter state or province" :rules="[
-                    (v: string) => !v || v.length <= 100 || 'State must not exceed 100 characters'
-                  ]" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.state"
+                  label="State/Province"
+                  placeholder="Enter state or province"
+                  :rules="[
+                    (v: string) => !v || v.length <= 100 || 'State must not exceed 100 characters',
+                  ]"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.city" label="City" placeholder="Enter city" :rules="[
-                  (v: string) => !v || v.length <= 100 || 'City must not exceed 100 characters'
-                ]" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.city"
+                  label="City"
+                  placeholder="Enter city"
+                  :rules="[
+                    (v: string) => !v || v.length <= 100 || 'City must not exceed 100 characters',
+                  ]"
+                />
               </VCol>
 
               <!-- Password field for new associates only -->
-              <VCol v-if="selectedAssociate.id === null" cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.password" label="Password" type="password"
-                  placeholder="Enter password (minimum 8 characters)" :rules="[
+              <VCol
+                v-if="selectedAssociate.id === null"
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.password"
+                  label="Password"
+                  type="password"
+                  placeholder="Enter password (minimum 8 characters)"
+                  :rules="[
                     (v: string) => !!v || 'Password is required',
-                    (v: string) => v.length >= 8 || 'Password must be at least 8 characters'
-                  ]" required />
+                    (v: string) => v.length >= 8 || 'Password must be at least 8 characters',
+                  ]"
+                  required
+                />
               </VCol>
             </VRow>
           </VForm>
@@ -723,11 +950,19 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" :disabled="isSubmitting"
-            @click="isAddAssociateModalVisible = false; isEditAssociateModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            :disabled="isSubmitting"
+            @click="isAddAssociateModalVisible = false; isEditAssociateModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" :loading="isSubmitting" @click="saveAssociate">
+          <VBtn
+            color="primary"
+            :loading="isSubmitting"
+            @click="saveAssociate"
+          >
             {{ selectedAssociate.id === null ? 'Create Associate' : 'Save Changes' }}
           </VBtn>
         </VCardActions>
@@ -735,7 +970,10 @@ onMounted(() => {
     </VDialog>
 
     <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog v-model="isDeleteDialogVisible" max-width="500">
+    <VDialog
+      v-model="isDeleteDialogVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -747,10 +985,17 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" @click="deleteAssociate">
+          <VBtn
+            color="error"
+            @click="deleteAssociate"
+          >
             Delete
           </VBtn>
         </VCardActions>

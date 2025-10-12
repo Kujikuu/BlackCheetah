@@ -74,13 +74,16 @@ const fetchFranchisees = async () => {
     if (response.success) {
       franchisees.value = response.data.data || []
       totalFranchisees.value = response.data.total || 0
-    } else {
+    }
+    else {
       error.value = response.message || 'Failed to fetch franchisees'
     }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error fetching franchisees:', err)
     error.value = 'Failed to fetch franchisees'
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
@@ -91,15 +94,14 @@ const filteredFranchisees = computed(() => {
 
   if (searchQuery.value) {
     filtered = filtered.filter(user =>
-      user.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.location.toLowerCase().includes(searchQuery.value.toLowerCase()),
+      user.fullName.toLowerCase().includes(searchQuery.value.toLowerCase())
+      || user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+      || user.location.toLowerCase().includes(searchQuery.value.toLowerCase()),
     )
   }
 
-  if (selectedStatus.value) {
+  if (selectedStatus.value)
     filtered = filtered.filter(user => user.status === selectedStatus.value)
-  }
 
   return filtered
 })
@@ -132,8 +134,10 @@ const userToDelete = ref<any>(null)
 
 // Utility functions
 const prefixWithPlus = (value: number) => value > 0 ? `+${value}` : value
+
 const avatarText = (name: string) => {
   const words = name.split(' ')
+
   return words.length > 1 ? `${words[0][0]}${words[1][0]}` : name.slice(0, 2)
 }
 
@@ -146,6 +150,7 @@ const addNewFranchisee = async (franchiseeData: any) => {
       city: franchiseeData.location,
       role: 'franchisee',
     }
+
     // Remove location field as backend expects city
     delete apiData.location
 
@@ -154,12 +159,12 @@ const addNewFranchisee = async (franchiseeData: any) => {
       body: apiData,
     })
 
-    if (response.success) {
+    if (response.success)
       await fetchFranchisees() // Refresh the list
-    } else {
+    else
       error.value = response.message || 'Failed to create franchisee'
-    }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error creating franchisee:', err)
     error.value = 'Failed to create franchisee'
   }
@@ -179,6 +184,7 @@ const updateFranchisee = async (franchiseeData: any) => {
       ...franchiseeData,
       city: franchiseeData.location,
     }
+
     // Remove location field as backend expects city
     delete apiData.location
 
@@ -190,10 +196,12 @@ const updateFranchisee = async (franchiseeData: any) => {
     if (response.success) {
       await fetchFranchisees() // Refresh the list
       selectedFranchisee.value = null
-    } else {
+    }
+    else {
       error.value = response.message || 'Failed to update franchisee'
     }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error updating franchisee:', err)
     error.value = 'Failed to update franchisee'
   }
@@ -201,12 +209,11 @@ const updateFranchisee = async (franchiseeData: any) => {
 
 // Handle drawer data
 const handleFranchiseeData = async (franchiseeData: any) => {
-  if (franchiseeData.id) {
+  if (franchiseeData.id)
     await updateFranchisee(franchiseeData)
-  }
-  else {
+
+  else
     await addNewFranchisee(franchiseeData)
-  }
 }
 
 // Open delete dialog
@@ -217,7 +224,8 @@ const openDeleteDialog = (franchisee: any) => {
 
 // Delete user
 const deleteUser = async () => {
-  if (!userToDelete.value) return
+  if (!userToDelete.value)
+    return
 
   try {
     const response = await $api(`/v1/admin/users/${userToDelete.value.id}`, {
@@ -231,10 +239,12 @@ const deleteUser = async () => {
       const selectedIndex = selectedRows.value.findIndex(row => row === userToDelete.value.id)
       if (selectedIndex !== -1)
         selectedRows.value.splice(selectedIndex, 1)
-    } else {
+    }
+    else {
       error.value = response.message || 'Failed to delete franchisee'
     }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error deleting franchisee:', err)
     error.value = 'Failed to delete franchisee'
   }
@@ -251,22 +261,23 @@ const openResetPasswordDialog = (franchisee: any) => {
 
 // Reset password
 const resetPassword = async (password: string) => {
-  if (!selectedFranchisee.value) return
+  if (!selectedFranchisee.value)
+    return
 
   try {
     const response = await $api(`/v1/admin/users/${selectedFranchisee.value.id}/reset-password`, {
       method: 'POST',
       body: {
-        password: password,
+        password,
       },
     })
 
-    if (response.success) {
+    if (response.success)
       console.log('Password reset successfully for:', selectedFranchisee.value?.fullName)
-    } else {
+    else
       error.value = response.message || 'Failed to reset password'
-    }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error resetting password:', err)
     error.value = 'Failed to reset password'
   }
@@ -274,6 +285,7 @@ const resetPassword = async (password: string) => {
   isResetPasswordDialogVisible.value = false
   selectedFranchisee.value = null
 }// Handle drawer close
+
 const handleDrawerClose = () => {
   selectedFranchisee.value = null
 }
@@ -302,6 +314,7 @@ const exportToCSV = () => {
     : franchisees.value
 
   console.log('Exporting to CSV:', dataToExport)
+
   // Implement CSV export logic
 }
 
@@ -311,6 +324,7 @@ const exportToPDF = () => {
     : franchisees.value
 
   console.log('Exporting to PDF:', dataToExport)
+
   // Implement PDF export logic
 }
 
@@ -325,10 +339,10 @@ const widgetData = ref([
 const fetchWidgetStats = async () => {
   try {
     const response = await $api('/v1/admin/users/franchisees/stats')
-    if (response.success) {
+    if (response.success)
       widgetData.value = response.data
-    }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error fetching franchisee stats:', err)
   }
 }
@@ -354,8 +368,15 @@ const fetchWidgetStats = async () => {
 
     <!-- Widgets -->
     <VRow class="mb-6">
-      <template v-for="(data, id) in widgetData" :key="id">
-        <VCol cols="12" md="4" sm="6">
+      <template
+        v-for="(data, id) in widgetData"
+        :key="id"
+      >
+        <VCol
+          cols="12"
+          md="4"
+          sm="6"
+        >
           <VCard>
             <VCardText>
               <div class="d-flex justify-space-between">
@@ -367,7 +388,10 @@ const fetchWidgetStats = async () => {
                     <h4 class="text-h4">
                       {{ data.value }}
                     </h4>
-                    <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
+                    <div
+                      class="text-base"
+                      :class="data.change > 0 ? 'text-success' : 'text-error'"
+                    >
                       ({{ prefixWithPlus(data.change) }}%)
                     </div>
                   </div>
@@ -375,8 +399,16 @@ const fetchWidgetStats = async () => {
                     {{ data.desc }}
                   </div>
                 </div>
-                <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
-                  <VIcon :icon="data.icon" size="26" />
+                <VAvatar
+                  :color="data.iconColor"
+                  variant="tonal"
+                  rounded
+                  size="42"
+                >
+                  <VIcon
+                    :icon="data.icon"
+                    size="26"
+                  />
                 </VAvatar>
               </div>
             </VCardText>
@@ -394,9 +426,17 @@ const fetchWidgetStats = async () => {
       <VCardText>
         <VRow>
           <!-- Select Status -->
-          <VCol cols="12" sm="4">
-            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statusOptions" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedStatus"
+              placeholder="Select Status"
+              :items="statusOptions"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
         </VRow>
       </VCardText>
@@ -405,25 +445,39 @@ const fetchWidgetStats = async () => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect :model-value="itemsPerPage" :items="[
-            { value: 10, title: '10' },
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-            { value: -1, title: 'All' },
-          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+          <AppSelect
+            :model-value="itemsPerPage"
+            :items="[
+              { value: 10, title: '10' },
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+              { value: -1, title: 'All' },
+            ]"
+            style="inline-size: 6.25rem;"
+            @update:model-value="itemsPerPage = parseInt($event, 10)"
+          />
         </div>
         <VSpacer />
 
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- Search -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField v-model="searchQuery" placeholder="Search Franchisee" />
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Search Franchisee"
+            />
           </div>
 
           <!-- Export Menu -->
-          <VBtn variant="tonal" color="secondary">
-            <VIcon icon="tabler-upload" class="me-2" />
+          <VBtn
+            variant="tonal"
+            color="secondary"
+          >
+            <VIcon
+              icon="tabler-upload"
+              class="me-2"
+            />
             Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
             <VMenu activator="parent">
               <VList>
@@ -444,7 +498,10 @@ const fetchWidgetStats = async () => {
           </VBtn>
 
           <!-- Add user button -->
-          <VBtn prepend-icon="tabler-plus" @click="isAddNewUserDrawerVisible = true">
+          <VBtn
+            prepend-icon="tabler-plus"
+            @click="isAddNewUserDrawerVisible = true"
+          >
             Add New Franchisee
           </VBtn>
         </div>
@@ -453,25 +510,48 @@ const fetchWidgetStats = async () => {
       <VDivider />
 
       <!-- Error Alert -->
-      <VAlert v-if="error" type="error" class="ma-4" closable @click:close="error = ''">
+      <VAlert
+        v-if="error"
+        type="error"
+        class="ma-4"
+        closable
+        @click:close="error = ''"
+      >
         {{ error }}
       </VAlert>
 
       <!-- Data Table -->
-      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
-        :items="filteredFranchisees" item-value="id" :items-length="totalFranchisees" :headers="headers"
-        :loading="isLoading" class="text-no-wrap" show-select @update:options="updateOptions">
+      <VDataTableServer
+        v-model:items-per-page="itemsPerPage"
+        v-model:model-value="selectedRows"
+        v-model:page="page"
+        :items="filteredFranchisees"
+        item-value="id"
+        :items-length="totalFranchisees"
+        :headers="headers"
+        :loading="isLoading"
+        class="text-no-wrap"
+        show-select
+        @update:options="updateOptions"
+      >
         <!-- Empty State -->
         <template #no-data>
           <div class="text-center pa-8">
-            <VIcon icon="tabler-users-off" size="64" class="mb-4 text-disabled" />
+            <VIcon
+              icon="tabler-users-off"
+              size="64"
+              class="mb-4 text-disabled"
+            />
             <h3 class="text-h5 mb-2">
               No Franchisees Found
             </h3>
             <p class="text-body-1 text-medium-emphasis mb-4">
               No franchisees match your search criteria. Try adjusting your filters.
             </p>
-            <VBtn color="primary" @click="isAddNewUserDrawerVisible = true">
+            <VBtn
+              color="primary"
+              @click="isAddNewUserDrawerVisible = true"
+            >
               Add First Franchisee
             </VBtn>
           </div>
@@ -480,8 +560,15 @@ const fetchWidgetStats = async () => {
         <!-- User -->
         <template #item.user="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <VAvatar size="34" :variant="!item.avatar ? 'tonal' : undefined" color="info">
-              <VImg v-if="item.avatar" :src="item.avatar" />
+            <VAvatar
+              size="34"
+              :variant="!item.avatar ? 'tonal' : undefined"
+              color="info"
+            >
+              <VImg
+                v-if="item.avatar"
+                :src="item.avatar"
+              />
               <span v-else>{{ avatarText(item.fullName) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
@@ -518,7 +605,12 @@ const fetchWidgetStats = async () => {
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip :color="resolveUserStatusVariant(item.status)" size="small" label class="text-capitalize">
+          <VChip
+            :color="resolveUserStatusVariant(item.status)"
+            size="small"
+            label
+            class="text-capitalize"
+          >
             {{ item.status }}
           </VChip>
         </template>
@@ -526,8 +618,16 @@ const fetchWidgetStats = async () => {
         <!-- Actions -->
         <template #item.actions="{ item }">
           <div class="d-flex gap-1">
-            <VBtn icon variant="text" color="medium-emphasis" size="small">
-              <VIcon icon="tabler-dots-vertical" size="22" />
+            <VBtn
+              icon
+              variant="text"
+              color="medium-emphasis"
+              size="small"
+            >
+              <VIcon
+                icon="tabler-dots-vertical"
+                size="22"
+              />
               <VMenu activator="parent">
                 <VList>
                   <VListItem @click="viewUser(item)">
@@ -555,9 +655,14 @@ const fetchWidgetStats = async () => {
 
                   <VListItem @click="openDeleteDialog(item)">
                     <template #prepend>
-                      <VIcon icon="tabler-trash" color="error" />
+                      <VIcon
+                        icon="tabler-trash"
+                        color="error"
+                      />
                     </template>
-                    <VListItemTitle class="text-error">Delete</VListItemTitle>
+                    <VListItemTitle class="text-error">
+                      Delete
+                    </VListItemTitle>
                   </VListItem>
                 </VList>
               </VMenu>
@@ -567,25 +672,44 @@ const fetchWidgetStats = async () => {
 
         <!-- Pagination -->
         <template #bottom>
-          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalFranchisees" />
+          <TablePagination
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total-items="totalFranchisees"
+          />
         </template>
       </VDataTableServer>
     </VCard>
 
     <!-- Add/Edit Franchisee Drawer -->
-    <AddEditFranchiseeDrawer v-model:is-drawer-open="isAddNewUserDrawerVisible" :franchisee="selectedFranchisee"
-      @franchisee-data="handleFranchiseeData" @update:is-drawer-open="handleDrawerClose" />
+    <AddEditFranchiseeDrawer
+      v-model:is-drawer-open="isAddNewUserDrawerVisible"
+      :franchisee="selectedFranchisee"
+      @franchisee-data="handleFranchiseeData"
+      @update:is-drawer-open="handleDrawerClose"
+    />
 
     <!-- Delete Confirmation Dialog -->
-    <ConfirmDeleteDialog v-model:is-dialog-open="isDeleteDialogVisible" :user-name="userToDelete?.fullName"
-      user-type="Franchisee" @confirm="deleteUser" />
+    <ConfirmDeleteDialog
+      v-model:is-dialog-open="isDeleteDialogVisible"
+      :user-name="userToDelete?.fullName"
+      user-type="Franchisee"
+      @confirm="deleteUser"
+    />
 
     <!-- Reset Password Dialog -->
-    <ResetPasswordDialog v-model:is-dialog-open="isResetPasswordDialogVisible" :user-name="selectedFranchisee?.fullName"
-      @confirm="resetPassword" />
+    <ResetPasswordDialog
+      v-model:is-dialog-open="isResetPasswordDialogVisible"
+      :user-name="selectedFranchisee?.fullName"
+      @confirm="resetPassword"
+    />
 
     <!-- View User Dialog -->
-    <ViewUserDialog v-model:is-dialog-open="isViewDialogVisible" :user="selectedFranchisee" user-type="Franchisee"
-      @edit="handleEditFromView" />
+    <ViewUserDialog
+      v-model:is-dialog-open="isViewDialogVisible"
+      :user="selectedFranchisee"
+      user-type="Franchisee"
+      @edit="handleEditFromView"
+    />
   </section>
 </template>

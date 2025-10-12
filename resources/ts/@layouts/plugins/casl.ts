@@ -62,10 +62,12 @@ export const canNavigate = (to: RouteLocationNormalized) => {
 
     // Otherwise, allow navigation if ANY matched parent route permits access
     return to.matched.some(route => ability.can(route.meta!.action as any, route.meta!.subject as any))
-  } catch (error) {
+  }
+  catch (error) {
     // If ability is not properly initialized, allow navigation
     // This prevents blocking navigation when CASL is not ready
     console.warn('CASL ability not properly initialized, allowing navigation:', error)
+
     return true
   }
 }

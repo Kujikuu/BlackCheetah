@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TASK_CATEGORIES, USER_ROLES, PRIORITY_OPTIONS, STATUS_OPTIONS } from '@/constants/taskConstants'
+import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES, USER_ROLES } from '@/constants/taskConstants'
 
 interface Props {
   isDialogVisible: boolean
@@ -90,15 +90,19 @@ const onCancel = () => {
 }
 
 // 👉 Watch for dialog visibility changes
-watch(() => props.isDialogVisible, (newVal) => {
-  if (!newVal) {
+watch(() => props.isDialogVisible, newVal => {
+  if (!newVal)
     resetForm()
-  }
 })
 </script>
 
 <template>
-  <VDialog :model-value="props.isDialogVisible" max-width="600" persistent @update:model-value="updateModelValue">
+  <VDialog
+    :model-value="props.isDialogVisible"
+    max-width="600"
+    persistent
+    @update:model-value="updateModelValue"
+  >
     <VCard>
       <VCardTitle class="text-h5 pa-6 pb-4">
         Create New Task
@@ -107,61 +111,144 @@ watch(() => props.isDialogVisible, (newVal) => {
       <VDivider />
 
       <VCardText class="pa-6">
-        <VForm v-model="isFormValid" @submit.prevent="onSubmit">
+        <VForm
+          v-model="isFormValid"
+          @submit.prevent="onSubmit"
+        >
           <VRow>
             <!-- Title -->
             <VCol cols="12">
-              <VTextField v-model="taskForm.title" label="Task Title" placeholder="Enter task title"
-                :rules="[requiredRule]" required />
+              <VTextField
+                v-model="taskForm.title"
+                label="Task Title"
+                placeholder="Enter task title"
+                :rules="[requiredRule]"
+                required
+              />
             </VCol>
 
             <!-- Description -->
             <VCol cols="12">
-              <VTextarea v-model="taskForm.description" label="Description" placeholder="Enter task description"
-                rows="3" :rules="[requiredRule]" required />
+              <VTextarea
+                v-model="taskForm.description"
+                label="Description"
+                placeholder="Enter task description"
+                rows="3"
+                :rules="[requiredRule]"
+                required
+              />
             </VCol>
 
             <!-- Category -->
-            <VCol cols="12" md="6">
-              <VSelect v-model="taskForm.category" label="Category" placeholder="Select category"
-                :items="TASK_CATEGORIES" :rules="[requiredRule]" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VSelect
+                v-model="taskForm.category"
+                label="Category"
+                placeholder="Select category"
+                :items="TASK_CATEGORIES"
+                :rules="[requiredRule]"
+                required
+              />
             </VCol>
 
             <!-- Assigned To -->
-            <VCol cols="12" md="6">
-              <VSelect v-model="taskForm.assignedTo" label="Assigned To" placeholder="Select user" :items="USER_ROLES"
-                :rules="[requiredRule]" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VSelect
+                v-model="taskForm.assignedTo"
+                label="Assigned To"
+                placeholder="Select user"
+                :items="USER_ROLES"
+                :rules="[requiredRule]"
+                required
+              />
             </VCol>
 
             <!-- Start Date -->
-            <VCol cols="12" md="6">
-              <VTextField v-model="taskForm.startDate" label="Start Date" type="date" :rules="[requiredRule]"
-                required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="taskForm.startDate"
+                label="Start Date"
+                type="date"
+                :rules="[requiredRule]"
+                required
+              />
             </VCol>
 
             <!-- Due Date -->
-            <VCol cols="12" md="6">
-              <VTextField v-model="taskForm.dueDate" label="Due Date" type="date" :rules="[requiredRule]" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="taskForm.dueDate"
+                label="Due Date"
+                type="date"
+                :rules="[requiredRule]"
+                required
+              />
             </VCol>
 
             <!-- Priority -->
-            <VCol cols="12" md="6">
-              <VSelect v-model="taskForm.priority" label="Priority" placeholder="Select priority"
-                :items="PRIORITY_OPTIONS" :rules="[requiredRule]" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VSelect
+                v-model="taskForm.priority"
+                label="Priority"
+                placeholder="Select priority"
+                :items="PRIORITY_OPTIONS"
+                :rules="[requiredRule]"
+                required
+              />
             </VCol>
 
             <!-- Status -->
-            <VCol cols="12" md="6">
-              <VSelect v-model="taskForm.status" label="Status" placeholder="Select status" :items="STATUS_OPTIONS"
-                :rules="[requiredRule]" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VSelect
+                v-model="taskForm.status"
+                label="Status"
+                placeholder="Select status"
+                :items="STATUS_OPTIONS"
+                :rules="[requiredRule]"
+                required
+              />
             </VCol>
             <!-- Estimated Hours -->
-            <VCol cols="12" md="6">
-              <VTextField v-model="taskForm.estimatedHours" label="Estimated Hours" type="number" min="0" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="taskForm.estimatedHours"
+                label="Estimated Hours"
+                type="number"
+                min="0"
+              />
             </VCol>
             <!-- Actual Hours -->
-            <VCol cols="12" md="6">
-              <VTextField v-model="taskForm.actualHours" label="Actual Hours" type="number" min="0" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="taskForm.actualHours"
+                label="Actual Hours"
+                type="number"
+                min="0"
+              />
             </VCol>
           </VRow>
         </VForm>
@@ -171,10 +258,18 @@ watch(() => props.isDialogVisible, (newVal) => {
 
       <VCardActions class="pa-6">
         <VSpacer />
-        <VBtn color="error" variant="text" @click="onCancel">
+        <VBtn
+          color="error"
+          variant="text"
+          @click="onCancel"
+        >
           Cancel
         </VBtn>
-        <VBtn color="primary" :disabled="!isFormValid" @click="onSubmit">
+        <VBtn
+          color="primary"
+          :disabled="!isFormValid"
+          @click="onSubmit"
+        >
           Create Task
         </VBtn>
       </VCardActions>

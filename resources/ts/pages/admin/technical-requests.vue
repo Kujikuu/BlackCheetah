@@ -16,6 +16,7 @@ interface TechnicalRequest {
   category: string
   attachments: any[]
 }
+
 // Store
 const searchQuery = ref('')
 const selectedStatus = ref()
@@ -34,11 +35,10 @@ const isDeleting = ref(false)
 
 // Update data table options
 const updateOptions = (options: any) => {
-  if (options.sortBy && options.sortBy.length > 0) {
+  if (options.sortBy && options.sortBy.length > 0)
     sortBy.value = [options.sortBy[0]]
-  } else {
+  else
     sortBy.value = []
-  }
 }
 
 // Headers
@@ -66,24 +66,21 @@ const fetchTechnicalRequests = async () => {
       per_page: itemsPerPage.value.toString(),
     })
 
-    if (searchQuery.value) {
+    if (searchQuery.value)
       params.append('search', searchQuery.value)
-    }
 
-    if (selectedStatus.value) {
+    if (selectedStatus.value)
       params.append('status', selectedStatus.value)
-    }
 
-    if (selectedPriority.value) {
+    if (selectedPriority.value)
       params.append('priority', selectedPriority.value)
-    }
 
     if (sortBy.value && sortBy.value.length > 0) {
       params.append('sortBy', sortBy.value[0].key)
       params.append('sortOrder', sortBy.value[0].order || 'desc')
     }
 
-    const response = await $api('/v1/admin/technical-requests?' + params.toString())
+    const response = await $api(`/v1/admin/technical-requests?${params.toString()}`)
 
     if (response.success) {
       // Map API response to component format
@@ -104,10 +101,13 @@ const fetchTechnicalRequests = async () => {
 
       totalRequests.value = response.data.total
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching technical requests:', error)
+
     // Show error notification
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
@@ -124,43 +124,49 @@ const avatarText = (name: string) => {
 const deleteRequest = async (id: number) => {
   try {
     isDeleting.value = true
-    await $api('/api/v1/admin/technical-requests/' + id, {
-      method: 'DELETE'
+    await $api(`/api/v1/admin/technical-requests/${id}`, {
+      method: 'DELETE',
     })
     await fetchTechnicalRequests()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error deleting request:', error)
-  } finally {
+  }
+  finally {
     isDeleting.value = false
   }
 }
 
 const updateRequestStatus = async (id: number, status: string) => {
   try {
-    await $api('/api/v1/admin/technical-requests/' + id + '/status', {
+    await $api(`/api/v1/admin/technical-requests/${id}/status`, {
       method: 'PUT',
-      body: { status }
+      body: { status },
     })
     await fetchTechnicalRequests()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error updating status:', error)
   }
 }
 
 const bulkDelete = async () => {
-  if (selectedRows.value.length === 0) return
+  if (selectedRows.value.length === 0)
+    return
 
   try {
     isDeleting.value = true
     await $api('/api/v1/admin/technical-requests/bulk-delete', {
       method: 'DELETE',
-      body: { ids: selectedRows.value }
+      body: { ids: selectedRows.value },
     })
     selectedRows.value = []
     await fetchTechnicalRequests()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error bulk deleting:', error)
-  } finally {
+  }
+  finally {
     isDeleting.value = false
   }
 }
@@ -228,9 +234,9 @@ const editRequest = (request: any) => {
 // Update request
 const updateRequest = (requestData: any) => {
   const index = technicalRequests.value.findIndex(r => r.id === requestData.id)
-  if (index !== -1) {
+  if (index !== -1)
     technicalRequests.value[index] = { ...technicalRequests.value[index], ...requestData }
-  }
+
   selectedRequest.value = null
 }
 
@@ -246,6 +252,7 @@ const exportToCSV = () => {
     : technicalRequests.value
 
   console.log('Exporting to CSV:', dataToExport)
+
   // Implement CSV export logic
 }
 
@@ -255,6 +262,7 @@ const exportToPDF = () => {
     : technicalRequests.value
 
   console.log('Exporting to PDF:', dataToExport)
+
   // Implement PDF export logic
 }
 
@@ -263,6 +271,7 @@ const exportToPDF = () => {
 // Download attachment
 const downloadAttachment = (attachment: any) => {
   console.log('Downloading:', attachment.name)
+
   // In production, this would trigger actual file download
   // window.open(attachment.url, '_blank')
 }
@@ -320,15 +329,31 @@ onMounted(() => {
       <VCardText>
         <VRow>
           <!-- Select Status -->
-          <VCol cols="12" sm="4">
-            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statusOptions" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedStatus"
+              placeholder="Select Status"
+              :items="statusOptions"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
 
           <!-- Select Priority -->
-          <VCol cols="12" sm="4">
-            <AppSelect v-model="selectedPriority" placeholder="Select Priority" :items="priorityOptions" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedPriority"
+              placeholder="Select Priority"
+              :items="priorityOptions"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
         </VRow>
       </VCardText>
@@ -337,17 +362,30 @@ onMounted(() => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect :model-value="itemsPerPage" :items="[
-            { value: 10, title: '10' },
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-            { value: -1, title: 'All' },
-          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+          <AppSelect
+            :model-value="itemsPerPage"
+            :items="[
+              { value: 10, title: '10' },
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+              { value: -1, title: 'All' },
+            ]"
+            style="inline-size: 6.25rem;"
+            @update:model-value="itemsPerPage = parseInt($event, 10)"
+          />
 
           <!-- Bulk Actions -->
-          <VBtn v-if="selectedRows.length > 0" variant="tonal" color="error" @click="bulkDelete">
-            <VIcon icon="tabler-trash" class="me-2" />
+          <VBtn
+            v-if="selectedRows.length > 0"
+            variant="tonal"
+            color="error"
+            @click="bulkDelete"
+          >
+            <VIcon
+              icon="tabler-trash"
+              class="me-2"
+            />
             Delete Selected ({{ selectedRows.length }})
           </VBtn>
         </div>
@@ -356,12 +394,21 @@ onMounted(() => {
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- Search -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField v-model="searchQuery" placeholder="Search Requests" />
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Search Requests"
+            />
           </div>
 
           <!-- Export Menu -->
-          <VBtn variant="tonal" color="secondary">
-            <VIcon icon="tabler-upload" class="me-2" />
+          <VBtn
+            variant="tonal"
+            color="secondary"
+          >
+            <VIcon
+              icon="tabler-upload"
+              class="me-2"
+            />
             Export
             <VMenu activator="parent">
               <VList>
@@ -386,13 +433,26 @@ onMounted(() => {
       <VDivider />
 
       <!-- Data Table -->
-      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
-        :items="filteredRequests" item-value="id" :items-length="totalRequests" :headers="headers" class="text-no-wrap"
-        show-select @update:options="updateOptions">
+      <VDataTableServer
+        v-model:items-per-page="itemsPerPage"
+        v-model:model-value="selectedRows"
+        v-model:page="page"
+        :items="filteredRequests"
+        item-value="id"
+        :items-length="totalRequests"
+        :headers="headers"
+        class="text-no-wrap"
+        show-select
+        @update:options="updateOptions"
+      >
         <!-- Empty State -->
         <template #no-data>
           <div class="text-center pa-8">
-            <VIcon icon="tabler-inbox-off" size="64" class="mb-4 text-disabled" />
+            <VIcon
+              icon="tabler-inbox-off"
+              size="64"
+              class="mb-4 text-disabled"
+            />
             <h3 class="text-h5 mb-2">
               No Technical Requests Found
             </h3>
@@ -412,8 +472,15 @@ onMounted(() => {
         <!-- User -->
         <template #item.user="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <VAvatar size="34" :variant="!item.userAvatar ? 'tonal' : undefined" color="primary">
-              <VImg v-if="item.userAvatar" :src="item.userAvatar" />
+            <VAvatar
+              size="34"
+              :variant="!item.userAvatar ? 'tonal' : undefined"
+              color="primary"
+            >
+              <VImg
+                v-if="item.userAvatar"
+                :src="item.userAvatar"
+              />
               <span v-else>{{ avatarText(item.userName) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
@@ -439,15 +506,29 @@ onMounted(() => {
 
         <!-- Priority -->
         <template #item.priority="{ item }">
-          <VChip :color="resolvePriorityVariant(item.priority).color" size="small" label class="text-capitalize">
-            <VIcon :icon="resolvePriorityVariant(item.priority).icon" size="16" class="me-1" />
+          <VChip
+            :color="resolvePriorityVariant(item.priority).color"
+            size="small"
+            label
+            class="text-capitalize"
+          >
+            <VIcon
+              :icon="resolvePriorityVariant(item.priority).icon"
+              size="16"
+              class="me-1"
+            />
             {{ item.priority }}
           </VChip>
         </template>
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+          <VChip
+            :color="resolveStatusVariant(item.status)"
+            size="small"
+            label
+            class="text-capitalize"
+          >
             {{ item.status }}
           </VChip>
         </template>
@@ -462,15 +543,29 @@ onMounted(() => {
         <!-- Actions -->
         <template #item.actions="{ item }">
           <div class="d-flex gap-1">
-            <IconBtn size="small" @click="viewRequest(item)">
+            <IconBtn
+              size="small"
+              @click="viewRequest(item)"
+            >
               <VIcon icon="tabler-eye" />
-              <VTooltip activator="parent" location="top">
+              <VTooltip
+                activator="parent"
+                location="top"
+              >
                 View
               </VTooltip>
             </IconBtn>
 
-            <VBtn icon variant="text" color="medium-emphasis" size="small">
-              <VIcon icon="tabler-dots-vertical" size="22" />
+            <VBtn
+              icon
+              variant="text"
+              color="medium-emphasis"
+              size="small"
+            >
+              <VIcon
+                icon="tabler-dots-vertical"
+                size="22"
+              />
               <VMenu activator="parent">
                 <VList>
                   <VListItem @click="viewRequest(item)">
@@ -493,28 +588,40 @@ onMounted(() => {
 
                   <VListItem @click="changeStatus(item.id, 'open')">
                     <template #prepend>
-                      <VIcon icon="tabler-circle" color="info" />
+                      <VIcon
+                        icon="tabler-circle"
+                        color="info"
+                      />
                     </template>
                     <VListItemTitle>Open</VListItemTitle>
                   </VListItem>
 
                   <VListItem @click="changeStatus(item.id, 'in-progress')">
                     <template #prepend>
-                      <VIcon icon="tabler-circle" color="warning" />
+                      <VIcon
+                        icon="tabler-circle"
+                        color="warning"
+                      />
                     </template>
                     <VListItemTitle>In Progress</VListItemTitle>
                   </VListItem>
 
                   <VListItem @click="changeStatus(item.id, 'resolved')">
                     <template #prepend>
-                      <VIcon icon="tabler-circle" color="success" />
+                      <VIcon
+                        icon="tabler-circle"
+                        color="success"
+                      />
                     </template>
                     <VListItemTitle>Resolved</VListItemTitle>
                   </VListItem>
 
                   <VListItem @click="changeStatus(item.id, 'closed')">
                     <template #prepend>
-                      <VIcon icon="tabler-circle" color="secondary" />
+                      <VIcon
+                        icon="tabler-circle"
+                        color="secondary"
+                      />
                     </template>
                     <VListItemTitle>Closed</VListItemTitle>
                   </VListItem>
@@ -523,7 +630,10 @@ onMounted(() => {
 
                   <VListItem @click="deleteRequest(item.id)">
                     <template #prepend>
-                      <VIcon icon="tabler-trash" color="error" />
+                      <VIcon
+                        icon="tabler-trash"
+                        color="error"
+                      />
                     </template>
                     <VListItemTitle class="text-error">
                       Delete
@@ -537,13 +647,20 @@ onMounted(() => {
 
         <!-- Pagination -->
         <template #bottom>
-          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalRequests" />
+          <TablePagination
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total-items="totalRequests"
+          />
         </template>
       </VDataTableServer>
     </VCard>
 
     <!-- View Request Dialog -->
-    <VDialog v-model="isViewRequestDialogVisible" max-width="600">
+    <VDialog
+      v-model="isViewRequestDialogVisible"
+      max-width="600"
+    >
       <VCard v-if="selectedRequest">
         <VCardItem>
           <VCardTitle>Request Details</VCardTitle>
@@ -561,8 +678,15 @@ onMounted(() => {
           <VRow>
             <VCol cols="12">
               <div class="d-flex align-center gap-x-4 mb-4">
-                <VAvatar size="48" :variant="!selectedRequest.userAvatar ? 'tonal' : undefined" color="primary">
-                  <VImg v-if="selectedRequest.userAvatar" :src="selectedRequest.userAvatar" />
+                <VAvatar
+                  size="48"
+                  :variant="!selectedRequest.userAvatar ? 'tonal' : undefined"
+                  color="primary"
+                >
+                  <VImg
+                    v-if="selectedRequest.userAvatar"
+                    :src="selectedRequest.userAvatar"
+                  />
                   <span v-else>{{ avatarText(selectedRequest.userName) }}</span>
                 </VAvatar>
                 <div>
@@ -598,9 +722,17 @@ onMounted(() => {
               <div class="text-body-2 text-medium-emphasis mb-1">
                 Priority
               </div>
-              <VChip :color="resolvePriorityVariant(selectedRequest.priority).color" size="small" label
-                class="text-capitalize">
-                <VIcon :icon="resolvePriorityVariant(selectedRequest.priority).icon" size="16" class="me-1" />
+              <VChip
+                :color="resolvePriorityVariant(selectedRequest.priority).color"
+                size="small"
+                label
+                class="text-capitalize"
+              >
+                <VIcon
+                  :icon="resolvePriorityVariant(selectedRequest.priority).icon"
+                  size="16"
+                  class="me-1"
+                />
                 {{ selectedRequest.priority }}
               </VChip>
             </VCol>
@@ -609,7 +741,12 @@ onMounted(() => {
               <div class="text-body-2 text-medium-emphasis mb-1">
                 Status
               </div>
-              <VChip :color="resolveStatusVariant(selectedRequest.status)" size="small" label class="text-capitalize">
+              <VChip
+                :color="resolveStatusVariant(selectedRequest.status)"
+                size="small"
+                label
+                class="text-capitalize"
+              >
                 {{ selectedRequest.status }}
               </VChip>
             </VCol>
@@ -642,14 +779,29 @@ onMounted(() => {
             </VCol>
 
             <!-- Attachments -->
-            <VCol v-if="selectedRequest.attachments && selectedRequest.attachments.length > 0" cols="12">
+            <VCol
+              v-if="selectedRequest.attachments && selectedRequest.attachments.length > 0"
+              cols="12"
+            >
               <div class="text-body-2 text-medium-emphasis mb-2">
                 Attachments ({{ selectedRequest.attachments.length }})
               </div>
-              <VList lines="two" density="compact" class="pa-0">
-                <VListItem v-for="(attachment, index) in selectedRequest.attachments" :key="index" class="px-0">
+              <VList
+                lines="two"
+                density="compact"
+                class="pa-0"
+              >
+                <VListItem
+                  v-for="(attachment, index) in selectedRequest.attachments"
+                  :key="index"
+                  class="px-0"
+                >
                   <template #prepend>
-                    <VAvatar color="primary" variant="tonal" size="40">
+                    <VAvatar
+                      color="primary"
+                      variant="tonal"
+                      size="40"
+                    >
                       <VIcon :icon="getFileIcon(attachment.name)" />
                     </VAvatar>
                   </template>
@@ -662,9 +814,18 @@ onMounted(() => {
                   </VListItemSubtitle>
 
                   <template #append>
-                    <VBtn icon variant="text" size="small" color="primary" @click="downloadAttachment(attachment)">
+                    <VBtn
+                      icon
+                      variant="text"
+                      size="small"
+                      color="primary"
+                      @click="downloadAttachment(attachment)"
+                    >
                       <VIcon icon="tabler-download" />
-                      <VTooltip activator="parent" location="top">
+                      <VTooltip
+                        activator="parent"
+                        location="top"
+                      >
                         Download
                       </VTooltip>
                     </VBtn>
@@ -679,10 +840,16 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn variant="outlined" @click="isViewRequestDialogVisible = false">
+          <VBtn
+            variant="outlined"
+            @click="isViewRequestDialogVisible = false"
+          >
             Close
           </VBtn>
-          <VBtn color="primary" @click="editRequest(selectedRequest); isViewRequestDialogVisible = false">
+          <VBtn
+            color="primary"
+            @click="editRequest(selectedRequest); isViewRequestDialogVisible = false"
+          >
             Edit Request
           </VBtn>
         </VCardActions>
@@ -690,7 +857,10 @@ onMounted(() => {
     </VDialog>
 
     <!-- Edit Technical Request Drawer -->
-    <EditTechnicalRequestDrawer v-model:is-drawer-open="isEditRequestDrawerVisible" :request="selectedRequest"
-      @request-data="updateRequest" />
+    <EditTechnicalRequestDrawer
+      v-model:is-drawer-open="isEditRequestDrawerVisible"
+      :request="selectedRequest"
+      @request-data="updateRequest"
+    />
   </section>
 </template>

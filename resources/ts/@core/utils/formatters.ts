@@ -54,9 +54,8 @@ export const prefixWithPlus = (value: number) => value > 0 ? `+${value}` : value
  * @returns {string} Formatted currency string
  */
 export const formatCurrency = (value: number, showDecimals: boolean = true) => {
-  if (typeof value !== 'number' || isNaN(value)) {
+  if (typeof value !== 'number' || isNaN(value))
     return '0 SAR'
-  }
 
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

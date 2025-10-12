@@ -87,9 +87,8 @@ const onSubmit = () => {
 
 const handleDrawerModelValueUpdate = (val: boolean) => {
   emit('update:isDrawerOpen', val)
-  if (!val) {
+  if (!val)
     resetForm()
-  }
 }
 </script>
 

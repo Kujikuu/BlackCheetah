@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { emailValidator, requiredValidator } from '@core/utils/validators';
+import { emailValidator, requiredValidator } from '@core/utils/validators'
 
 interface Props {
   isDialogVisible: boolean
@@ -17,6 +17,7 @@ const emit = defineEmits<Emit>()
 const currentStep = ref(1)
 const loading = ref(false)
 const error = ref<string | null>(null)
+
 const formData = ref({
   name: '',
   email: '',
@@ -36,6 +37,7 @@ const formData = ref({
 
 // Data
 const franchisees = ref([])
+
 const countries = [
   { title: 'United States', value: 'US' },
   { title: 'Canada', value: 'CA' },
@@ -65,13 +67,14 @@ const loadFranchisees = async () => {
         phone: franchisee.phone,
       }))
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to load franchisees:', err)
   }
 }
 
 // Load franchisees when modal opens
-watch(() => props.isDialogVisible, (visible) => {
+watch(() => props.isDialogVisible, visible => {
   if (visible) {
     loadFranchisees()
     resetForm()
@@ -125,9 +128,8 @@ const submitForm = async () => {
   try {
     // Get franchise ID from current user's franchise
     const franchiseResponse = await $api<{ success: boolean; data: any }>('/v1/franchisor/franchise')
-    if (!franchiseResponse.success || !franchiseResponse.data) {
+    if (!franchiseResponse.success || !franchiseResponse.data)
       throw new Error('Franchise not found')
-    }
 
     const franchiseId = franchiseResponse.data.id
 
@@ -179,27 +181,33 @@ const submitForm = async () => {
       emit('franchisee-added', franchiseeData)
       resetForm()
       updateModelValue(false)
-    } else {
+    }
+    else {
       throw new Error('Failed to create unit')
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Failed to create unit:', err)
     error.value = err?.data?.message || 'Failed to create unit. Please try again.'
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
 const onDialogModelValueUpdate = (val: boolean) => {
   emit('update:isDialogVisible', val)
-  if (!val) {
+  if (!val)
     resetForm()
-  }
 }
 </script>
 
 <template>
-  <VDialog :model-value="props.isDialogVisible" max-width="800" @update:model-value="onDialogModelValueUpdate">
+  <VDialog
+    :model-value="props.isDialogVisible"
+    max-width="800"
+    @update:model-value="onDialogModelValueUpdate"
+  >
     <VCard>
       <VCardTitle class="text-center">
         <span class="text-h5">Add New Franchisee</span>
@@ -207,16 +215,33 @@ const onDialogModelValueUpdate = (val: boolean) => {
 
       <VCardText>
         <!-- Error Alert -->
-        <VAlert v-if="error" type="error" variant="tonal" class="mb-4" closable @click:close="error = null">
+        <VAlert
+          v-if="error"
+          type="error"
+          variant="tonal"
+          class="mb-4"
+          closable
+          @click:close="error = null"
+        >
           {{ error }}
         </VAlert>
 
         <!-- Stepper -->
-        <VStepper v-model="currentStep" alt-labels>
+        <VStepper
+          v-model="currentStep"
+          alt-labels
+        >
           <VStepperHeader>
-            <VStepperItem :complete="currentStep > 1" :value="1" title="Basic Info" />
+            <VStepperItem
+              :complete="currentStep > 1"
+              :value="1"
+              title="Basic Info"
+            />
             <VDivider />
-            <VStepperItem :value="2" title="Unit Details" />
+            <VStepperItem
+              :value="2"
+              title="Unit Details"
+            />
           </VStepperHeader>
 
           <VStepperWindow>
@@ -225,47 +250,108 @@ const onDialogModelValueUpdate = (val: boolean) => {
               <VForm>
                 <VRow>
                   <VCol cols="12">
-                    <AppTextField v-model="formData.name" label="Unit Name" placeholder="Enter unit name"
-                      :rules="[requiredValidator]" />
+                    <AppTextField
+                      v-model="formData.name"
+                      label="Unit Name"
+                      placeholder="Enter unit name"
+                      :rules="[requiredValidator]"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="6">
-                    <AppTextField v-model="formData.email" label="Email Address" placeholder="Enter email address"
-                      :rules="[requiredValidator, emailValidator]" />
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppTextField
+                      v-model="formData.email"
+                      label="Email Address"
+                      placeholder="Enter email address"
+                      :rules="[requiredValidator, emailValidator]"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="6">
-                    <AppTextField v-model="formData.phone" label="Contact Number"
-                      placeholder="Enter contact number" :rules="[requiredValidator]" />
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppTextField
+                      v-model="formData.phone"
+                      label="Contact Number"
+                      placeholder="Enter contact number"
+                      :rules="[requiredValidator]"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="4">
-                    <AppSelect v-model="formData.country" :items="countries" label="Country"
-                      placeholder="Select country" :rules="[requiredValidator]" />
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppSelect
+                      v-model="formData.country"
+                      :items="countries"
+                      label="Country"
+                      placeholder="Select country"
+                      :rules="[requiredValidator]"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="4">
-                    <AppTextField v-model="formData.state" label="State" placeholder="Enter state"
-                      :rules="[requiredValidator]" />
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.state"
+                      label="State"
+                      placeholder="Enter state"
+                      :rules="[requiredValidator]"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="4">
-                    <AppTextField v-model="formData.city" label="City" placeholder="Enter city"
-                      :rules="[requiredValidator]" />
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.city"
+                      label="City"
+                      placeholder="Enter city"
+                      :rules="[requiredValidator]"
+                    />
                   </VCol>
 
                   <VCol cols="12">
-                    <AppTextarea v-model="formData.address" label="Address" placeholder="Enter full address"
-                      :rules="[requiredValidator]" />
+                    <AppTextarea
+                      v-model="formData.address"
+                      label="Address"
+                      placeholder="Enter full address"
+                      :rules="[requiredValidator]"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="6">
-                    <AppSelect v-model="formData.managerId" :items="franchisees" item-title="name" item-value="id"
-                      label="Assign Manager (Franchisee)" placeholder="Choose a manager" clearable />
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppSelect
+                      v-model="formData.managerId"
+                      :items="franchisees"
+                      item-title="name"
+                      item-value="id"
+                      label="Assign Manager (Franchisee)"
+                      placeholder="Choose a manager"
+                      clearable
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="6">
-                    <AppTextField v-model="formData.postalCode" label="Postal Code" placeholder="Enter postal code" />
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppTextField
+                      v-model="formData.postalCode"
+                      label="Postal Code"
+                      placeholder="Enter postal code"
+                    />
                   </VCol>
                 </VRow>
               </VForm>
@@ -275,29 +361,65 @@ const onDialogModelValueUpdate = (val: boolean) => {
             <VStepperWindowItem :value="2">
               <VForm>
                 <VRow>
-                  <VCol cols="12" md="6">
-                    <AppSelect v-model="formData.type" :items="unitTypes" label="Unit Type"
-                      placeholder="Select unit type" :rules="[requiredValidator]" />
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppSelect
+                      v-model="formData.type"
+                      :items="unitTypes"
+                      label="Unit Type"
+                      placeholder="Select unit type"
+                      :rules="[requiredValidator]"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="6">
-                    <AppDateTimePicker v-model="formData.openingDate" label="Opening Date"
-                      placeholder="Select opening date" />
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppDateTimePicker
+                      v-model="formData.openingDate"
+                      label="Opening Date"
+                      placeholder="Select opening date"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="4">
-                    <AppTextField v-model="formData.sizeSqft" label="Size (sq ft)" placeholder="Enter size in square feet"
-                      type="number" />
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.sizeSqft"
+                      label="Size (sq ft)"
+                      placeholder="Enter size in square feet"
+                      type="number"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="4">
-                    <AppTextField v-model="formData.capacity" label="Capacity" placeholder="Enter capacity"
-                      type="number" />
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.capacity"
+                      label="Capacity"
+                      placeholder="Enter capacity"
+                      type="number"
+                    />
                   </VCol>
 
-                  <VCol cols="12" md="4">
-                    <AppTextField v-model="formData.monthlyRent" label="Monthly Rent" placeholder="Enter monthly rent"
-                      type="number" prefix="$" />
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.monthlyRent"
+                      label="Monthly Rent"
+                      placeholder="Enter monthly rent"
+                      type="number"
+                      prefix="$"
+                    />
                   </VCol>
                 </VRow>
               </VForm>
@@ -307,21 +429,41 @@ const onDialogModelValueUpdate = (val: boolean) => {
       </VCardText>
 
       <VCardActions class="justify-space-between pa-6">
-        <VBtn v-if="currentStep > 1" variant="outlined" @click="prevStep" :disabled="loading">
+        <VBtn
+          v-if="currentStep > 1"
+          variant="outlined"
+          :disabled="loading"
+          @click="prevStep"
+        >
           Previous
         </VBtn>
         <VSpacer v-else />
 
         <div class="d-flex gap-3">
-          <VBtn variant="outlined" @click="updateModelValue(false)" :disabled="loading">
+          <VBtn
+            variant="outlined"
+            :disabled="loading"
+            @click="updateModelValue(false)"
+          >
             Cancel
           </VBtn>
 
-          <VBtn v-if="currentStep < 2" color="primary" @click="nextStep" :disabled="loading">
+          <VBtn
+            v-if="currentStep < 2"
+            color="primary"
+            :disabled="loading"
+            @click="nextStep"
+          >
             Next
           </VBtn>
 
-          <VBtn v-else color="primary" @click="submitForm" :loading="loading" :disabled="loading">
+          <VBtn
+            v-else
+            color="primary"
+            :loading="loading"
+            :disabled="loading"
+            @click="submitForm"
+          >
             Create Unit
           </VBtn>
         </div>

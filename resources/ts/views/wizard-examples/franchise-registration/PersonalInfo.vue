@@ -49,7 +49,10 @@ const countries = [
 
     <VForm>
       <VRow>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.contactNumber"
             label="Contact Number"
@@ -57,7 +60,10 @@ const countries = [
             required
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppSelect
             v-model="localFormData.country"
             label="Country"
@@ -66,14 +72,20 @@ const countries = [
             required
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.state"
             label="State/Province"
             placeholder="Enter state or province"
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.city"
             label="City"

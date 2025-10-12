@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import { $api } from '@/utils/api'
 
@@ -158,9 +158,8 @@ const chartSeries = computed(() => {
   const datasetKey = selectedUnit.value === 'all' ? 'all' : selectedUnit.value.toString()
   const dataset = chartData.value.datasets[datasetKey]
 
-  if (!dataset) {
+  if (!dataset)
     return []
-  }
 
   return [
     { name: 'Revenue', data: dataset.revenue },
@@ -174,10 +173,10 @@ const chartSeries = computed(() => {
 const fetchUnits = async () => {
   try {
     const response = await $api<ApiResponse<Unit[]>>(`${API_BASE}/units`)
-    if (response.success) {
+    if (response.success)
       franchiseeUnits.value = response.data
-    }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error fetching units:', err)
     error.value = 'Failed to fetch units'
   }
@@ -186,20 +185,24 @@ const fetchUnits = async () => {
 const fetchChartData = async () => {
   try {
     loading.value = true
+
     const unitId = selectedUnit.value === 'all' ? null : selectedUnit.value
+
     const response = await $api<ApiResponse<ChartData>>(`${API_BASE}/chart-data`, {
       query: {
         period_type: selectedPeriod.value,
         unit_id: unitId,
       },
     })
-    if (response.success) {
+
+    if (response.success)
       chartData.value = response.data
-    }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error fetching chart data:', err)
     error.value = 'Failed to fetch chart data'
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -212,10 +215,11 @@ const fetchTopPerformers = async () => {
         limit: 3,
       },
     })
-    if (response.success) {
+
+    if (response.success)
       topPerformingLocations.value = response.data
-    }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error fetching top performers:', err)
   }
 }
@@ -227,10 +231,11 @@ const fetchCustomerSatisfaction = async () => {
         period_type: selectedPeriod.value,
       },
     })
-    if (response.success) {
+
+    if (response.success)
       customerSatisfactionScore.value = response.data
-    }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error fetching customer satisfaction:', err)
   }
 }
@@ -242,10 +247,11 @@ const fetchRatings = async () => {
         period_type: selectedPeriod.value,
       },
     })
-    if (response.success) {
+
+    if (response.success)
       ratingsData.value = response.data
-    }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error fetching ratings:', err)
   }
 }
@@ -291,14 +297,14 @@ const exportDataTypeOptions = [
 
 // Helper function to convert data to CSV
 const convertToCSV = (data: any[], headers: string[]) => {
-  const csvContent = [
+  return [
     headers.join(','),
     ...data.map(row => headers.map(header => {
       const value = row[header] || ''
+
       return typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-    }).join(','))
+    }).join(',')),
   ].join('\n')
-  return csvContent
 }
 
 // Helper function to download file
@@ -306,6 +312,7 @@ const downloadFile = (content: string, filename: string, mimeType: string) => {
   const blob = new Blob([content], { type: mimeType })
   const url = window.URL.createObjectURL(blob)
   const link = document.createElement('a')
+
   link.href = url
   link.download = filename
   document.body.appendChild(link)
@@ -322,6 +329,7 @@ const exportData = () => {
 const performExport = async () => {
   try {
     const unitId = selectedUnit.value === 'all' ? null : selectedUnit.value
+
     const response = await $api<ApiResponse<any>>(`${API_BASE}/export`, {
       query: {
         period_type: selectedPeriod.value,
@@ -334,15 +342,14 @@ const performExport = async () => {
       const timestamp = new Date().toISOString().split('T')[0]
       const unitName = franchiseeUnits.value.find(u => u.id === selectedUnit.value)?.name || 'All Units'
 
-      if (exportDataType.value === 'performance' || exportDataType.value === 'all') {
+      if (exportDataType.value === 'performance' || exportDataType.value === 'all')
         exportPerformanceData(response.data.performance, timestamp, unitName)
-      }
 
-      if (exportDataType.value === 'stats' || exportDataType.value === 'all') {
+      if (exportDataType.value === 'stats' || exportDataType.value === 'all')
         exportStatsData(response.data.stats, timestamp)
-      }
     }
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error exporting data:', err)
     error.value = 'Failed to export data'
   }
@@ -351,72 +358,84 @@ const performExport = async () => {
 }
 
 const exportPerformanceData = (performanceData: any[], timestamp: string, unitName: string) => {
-  if (!performanceData || performanceData.length === 0) return
+  if (!performanceData || performanceData.length === 0)
+    return
 
   const headers = ['Period Date', 'Unit Name', 'Revenue', 'Expenses', 'Royalties', 'Profit', 'Profit Margin', 'Customer Rating', 'Reviews', 'Growth Rate']
   const filename = `performance-data-${unitName.replace(/\s+/g, '-').toLowerCase()}-${selectedPeriod.value}-${timestamp}.${exportFormat.value}`
 
   if (exportFormat.value === 'csv') {
     const csvContent = convertToCSV(performanceData, headers)
+
     downloadFile(csvContent, filename, 'text/csv')
-  } else {
+  }
+  else {
     const csvContent = convertToCSV(performanceData, headers)
+
     downloadFile(csvContent, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
   }
 }
 
 const exportStatsData = (statsData: any, timestamp: string) => {
-  if (!statsData) return
+  if (!statsData)
+    return
 
   const statsRows = [
     // Top Performing Locations
     ...topPerformingLocations.value.map((location, index) => ({
-      Category: 'Top Performing Locations',
-      Rank: index + 1,
-      Name: location.name,
-      Location: location.location,
+      'Category': 'Top Performing Locations',
+      'Rank': index + 1,
+      'Name': location.name,
+      'Location': location.location,
       'Revenue (SAR)': location.revenue,
       'Growth (%)': location.growth,
-      Rating: '',
-      Reviews: '',
-      Manager: '',
+      'Rating': '',
+      'Reviews': '',
+      'Manager': '',
     })),
+
     // Customer Satisfaction
     {
-      Category: 'Customer Satisfaction',
-      Rank: '',
-      Name: 'Overall Score',
-      Location: '',
+      'Category': 'Customer Satisfaction',
+      'Rank': '',
+      'Name': 'Overall Score',
+      'Location': '',
       'Revenue (SAR)': '',
       'Growth (%)': '',
-      Rating: `${customerSatisfactionScore.value.score}/5.0`,
-      Reviews: customerSatisfactionScore.value.total_reviews.toString(),
-      Manager: '',
+      'Rating': `${customerSatisfactionScore.value.score}/5.0`,
+      'Reviews': customerSatisfactionScore.value.total_reviews.toString(),
+      'Manager': '',
     },
+
     // Top Rated Franchise
-    ...(topRatedFranchise.value ? [{
-      Category: 'Top Rated Franchise',
-      Rank: 1,
-      Name: topRatedFranchise.value.name,
-      Location: topRatedFranchise.value.location,
-      'Revenue (SAR)': '',
-      'Growth (%)': '',
-      Rating: `${topRatedFranchise.value.rating}/5.0`,
-      Reviews: topRatedFranchise.value.reviews.toString(),
-      Manager: topRatedFranchise.value.manager,
-    }] : []),
+    ...(topRatedFranchise.value
+      ? [{
+        "Category": 'Top Rated Franchise',
+        "Rank": 1,
+        "Name": topRatedFranchise.value.name,
+        "Location": topRatedFranchise.value.location,
+        'Revenue (SAR)': '',
+        'Growth (%)': '',
+        "Rating": `${topRatedFranchise.value.rating}/5.0`,
+        "Reviews": topRatedFranchise.value.reviews.toString(),
+        "Manager": topRatedFranchise.value.manager,
+      }]
+      : []),
+
     // Lowest Rated Franchise
-    ...(lowestRatedFranchise.value ? [{
-      Category: 'Needs Attention',
-      Rank: '',
-      Name: lowestRatedFranchise.value.name,
-      Location: lowestRatedFranchise.value.location,
-      'Revenue (SAR)': '',
-      'Growth (%)': '',
-      Rating: `${lowestRatedFranchise.value.rating}/5.0`,
-      Reviews: lowestRatedFranchise.value.reviews.toString(),
-      Manager: lowestRatedFranchise.value.manager,
-    }] : []),
+    ...(lowestRatedFranchise.value
+      ? [{
+        "Category": 'Needs Attention',
+        "Rank": '',
+        "Name": lowestRatedFranchise.value.name,
+        "Location": lowestRatedFranchise.value.location,
+        'Revenue (SAR)': '',
+        'Growth (%)': '',
+        "Rating": `${lowestRatedFranchise.value.rating}/5.0`,
+        "Reviews": lowestRatedFranchise.value.reviews.toString(),
+        "Manager": lowestRatedFranchise.value.manager,
+      }]
+      : []),
   ]
 
   const headers = ['Category', 'Rank', 'Name', 'Location', 'Revenue (SAR)', 'Growth (%)', 'Rating', 'Reviews', 'Manager']
@@ -424,9 +443,12 @@ const exportStatsData = (statsData: any, timestamp: string) => {
 
   if (exportFormat.value === 'csv') {
     const csvContent = convertToCSV(statsRows, headers)
+
     downloadFile(csvContent, filename, 'text/csv')
-  } else {
+  }
+  else {
     const csvContent = convertToCSV(statsRows, headers)
+
     downloadFile(csvContent, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
   }
 }
@@ -441,16 +463,33 @@ const periodOptions = [
 <template>
   <section>
     <!-- Loading State -->
-    <VOverlay v-model="loading" class="align-center justify-center">
-      <VProgressCircular indeterminate color="primary" size="64" />
+    <VOverlay
+      v-model="loading"
+      class="align-center justify-center"
+    >
+      <VProgressCircular
+        indeterminate
+        color="primary"
+        size="64"
+      />
       <div class="text-center mt-4">
-        <h4 class="text-h4">Loading Performance Data...</h4>
-        <p class="text-body-1 text-medium-emphasis">Please wait while we fetch the latest metrics</p>
+        <h4 class="text-h4">
+          Loading Performance Data...
+        </h4>
+        <p class="text-body-1 text-medium-emphasis">
+          Please wait while we fetch the latest metrics
+        </p>
       </div>
     </VOverlay>
 
     <!-- Error State -->
-    <VAlert v-if="error" type="error" class="mb-4" dismissible @click:dismiss="error = null">
+    <VAlert
+      v-if="error"
+      type="error"
+      class="mb-4"
+      dismissible
+      @click:dismiss="error = null"
+    >
       {{ error }}
     </VAlert>
 
@@ -459,7 +498,9 @@ const periodOptions = [
       <VCol cols="12">
         <div class="d-flex justify-space-between align-center flex-wrap gap-4">
           <div>
-            <h4 class="text-h4 mb-1">Performance Management</h4>
+            <h4 class="text-h4 mb-1">
+              Performance Management
+            </h4>
             <p class="text-body-1 text-medium-emphasis">
               Monitor and analyze franchise performance across all locations
             </p>
@@ -468,11 +509,23 @@ const periodOptions = [
           <!-- Header Actions -->
           <div class="d-flex gap-3 align-center flex-wrap">
             <!-- Period Selector -->
-            <VSelect v-model="selectedPeriod" :items="periodOptions" item-title="title" item-value="value"
-              density="compact" style="min-width: 120px;" variant="outlined" />
+            <VSelect
+              v-model="selectedPeriod"
+              :items="periodOptions"
+              item-title="title"
+              item-value="value"
+              density="compact"
+              style="min-width: 120px;"
+              variant="outlined"
+            />
 
             <!-- Export Button -->
-            <VBtn color="primary" prepend-icon="tabler-download" @click="exportData" :disabled="loading">
+            <VBtn
+              color="primary"
+              prepend-icon="tabler-download"
+              :disabled="loading"
+              @click="exportData"
+            >
               Export
             </VBtn>
           </div>
@@ -485,11 +538,22 @@ const periodOptions = [
       <VCol cols="12">
         <VCard>
           <VCardItem class="pb-4">
-            <VCardTitle class="text-h6">Franchise Performance Overview</VCardTitle>
+            <VCardTitle class="text-h6">
+              Franchise Performance Overview
+            </VCardTitle>
             <template #append>
               <!-- Unit Selector Tabs -->
-              <VTabs v-model="selectedUnit" density="compact" color="primary">
-                <VTab v-for="unit in franchiseeUnits" :key="unit.id" :value="unit.id" size="small">
+              <VTabs
+                v-model="selectedUnit"
+                density="compact"
+                color="primary"
+              >
+                <VTab
+                  v-for="unit in franchiseeUnits"
+                  :key="unit.id"
+                  :value="unit.id"
+                  size="small"
+                >
                   {{ unit.name }}
                 </VTab>
               </VTabs>
@@ -501,11 +565,26 @@ const periodOptions = [
           <VCardText>
             <!-- Chart Container -->
             <div style="height: 400px; position: relative;">
-              <VueApexCharts v-if="chartSeries.length > 0" type="line" height="400" :options="chartOptions" :series="chartSeries" />
-              <div v-else class="d-flex align-center justify-center h-100">
+              <VueApexCharts
+                v-if="chartSeries.length > 0"
+                type="line"
+                height="400"
+                :options="chartOptions"
+                :series="chartSeries"
+              />
+              <div
+                v-else
+                class="d-flex align-center justify-center h-100"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-chart-line" size="64" class="text-medium-emphasis mb-4" />
-                  <p class="text-body-1 text-medium-emphasis">No data available for the selected period and unit</p>
+                  <VIcon
+                    icon="tabler-chart-line"
+                    size="64"
+                    class="text-medium-emphasis mb-4"
+                  />
+                  <p class="text-body-1 text-medium-emphasis">
+                    No data available for the selected period and unit
+                  </p>
                 </div>
               </div>
             </div>
@@ -517,7 +596,10 @@ const periodOptions = [
     <!-- Stat Cards -->
     <VRow class="mt-6">
       <!-- Top 3 Performing Locations -->
-      <VCol cols="12" md="3">
+      <VCol
+        cols="12"
+        md="3"
+      >
         <VCard class="h-100">
           <VCardText>
             <div class="d-flex align-center justify-space-between mb-4">
@@ -529,19 +611,29 @@ const periodOptions = [
                   This {{ selectedPeriod === 'monthly' ? 'month' : selectedPeriod === 'yearly' ? 'year' : 'period' }}
                 </div>
               </div>
-              <VAvatar color="primary" variant="tonal" size="40">
+              <VAvatar
+                color="primary"
+                variant="tonal"
+                size="40"
+              >
                 <VIcon icon="tabler-trophy" />
               </VAvatar>
             </div>
 
             <div class="mt-4">
               <div v-if="topPerformingLocations.length > 0">
-                <div v-for="(location, index) in topPerformingLocations" :key="index"
+                <div
+                  v-for="(location, index) in topPerformingLocations"
+                  :key="index"
                   class="d-flex align-center justify-space-between py-3"
-                  :class="{ 'border-b': index < topPerformingLocations.length - 1 }">
+                  :class="{ 'border-b': index < topPerformingLocations.length - 1 }"
+                >
                   <div class="d-flex align-center">
-                    <VAvatar :color="index === 0 ? 'warning' : index === 1 ? 'info' : 'success'"
-                      size="24" class="me-3">
+                    <VAvatar
+                      :color="index === 0 ? 'warning' : index === 1 ? 'info' : 'success'"
+                      size="24"
+                      class="me-3"
+                    >
                       <span class="text-caption font-weight-bold">{{ index + 1 }}</span>
                     </VAvatar>
                     <div>
@@ -563,9 +655,18 @@ const periodOptions = [
                   </div>
                 </div>
               </div>
-              <div v-else class="text-center py-4">
-                <VIcon icon="tabler-chart-bar" size="48" class="text-medium-emphasis mb-2" />
-                <p class="text-body-2 text-medium-emphasis">No performance data available</p>
+              <div
+                v-else
+                class="text-center py-4"
+              >
+                <VIcon
+                  icon="tabler-chart-bar"
+                  size="48"
+                  class="text-medium-emphasis mb-2"
+                />
+                <p class="text-body-2 text-medium-emphasis">
+                  No performance data available
+                </p>
               </div>
             </div>
           </VCardText>
@@ -573,7 +674,10 @@ const periodOptions = [
       </VCol>
 
       <!-- Customer Satisfaction Score -->
-      <VCol cols="12" md="3">
+      <VCol
+        cols="12"
+        md="3"
+      >
         <VCard class="h-100">
           <VCardText>
             <div class="d-flex align-center justify-space-between mb-4">
@@ -585,7 +689,11 @@ const periodOptions = [
                   Average rating
                 </div>
               </div>
-              <VAvatar color="success" variant="tonal" size="40">
+              <VAvatar
+                color="success"
+                variant="tonal"
+                size="40"
+              >
                 <VIcon icon="tabler-star" />
               </VAvatar>
             </div>
@@ -599,13 +707,26 @@ const periodOptions = [
                   / {{ customerSatisfactionScore.max_score }}
                 </div>
               </div>
-              <VRating :model-value="customerSatisfactionScore.score" readonly size="small"
-                color="warning" class="mb-3" />
+              <VRating
+                :model-value="customerSatisfactionScore.score"
+                readonly
+                size="small"
+                color="warning"
+                class="mb-3"
+              />
               <div class="text-body-2 text-medium-emphasis mb-2">
                 Based on {{ customerSatisfactionScore.total_reviews.toLocaleString() }} reviews
               </div>
-              <VChip color="success" size="small" variant="tonal">
-                <VIcon start icon="tabler-trending-up" size="16" />
+              <VChip
+                color="success"
+                size="small"
+                variant="tonal"
+              >
+                <VIcon
+                  start
+                  icon="tabler-trending-up"
+                  size="16"
+                />
                 {{ customerSatisfactionScore.trend }} this month
               </VChip>
             </div>
@@ -614,7 +735,10 @@ const periodOptions = [
       </VCol>
 
       <!-- Top-Rated Franchise -->
-      <VCol cols="12" md="3">
+      <VCol
+        cols="12"
+        md="3"
+      >
         <VCard class="h-100">
           <VCardText>
             <div class="d-flex align-center justify-space-between mb-4">
@@ -626,14 +750,28 @@ const periodOptions = [
                   Highest customer rating
                 </div>
               </div>
-              <VAvatar color="warning" variant="tonal" size="40">
+              <VAvatar
+                color="warning"
+                variant="tonal"
+                size="40"
+              >
                 <VIcon icon="tabler-award" />
               </VAvatar>
             </div>
 
-            <div v-if="topRatedFranchise" class="mt-4 text-center">
-              <VAvatar color="warning" size="60" class="mb-3">
-                <VIcon icon="tabler-building-store" size="30" />
+            <div
+              v-if="topRatedFranchise"
+              class="mt-4 text-center"
+            >
+              <VAvatar
+                color="warning"
+                size="60"
+                class="mb-3"
+              >
+                <VIcon
+                  icon="tabler-building-store"
+                  size="30"
+                />
               </VAvatar>
               <div class="text-h6 font-weight-medium mb-1">
                 {{ topRatedFranchise.name }}
@@ -645,23 +783,39 @@ const periodOptions = [
                 <h4 class="text-h4 me-2 text-warning">
                   {{ topRatedFranchise.rating }}
                 </h4>
-                <VRating :model-value="topRatedFranchise.rating" readonly size="small"
-                  color="warning" />
+                <VRating
+                  :model-value="topRatedFranchise.rating"
+                  readonly
+                  size="small"
+                  color="warning"
+                />
               </div>
               <div class="text-caption text-medium-emphasis">
                 {{ topRatedFranchise.reviews }} reviews
               </div>
             </div>
-            <div v-else class="mt-4 text-center">
-              <VIcon icon="tabler-star-off" size="48" class="text-medium-emphasis mb-2" />
-              <p class="text-body-2 text-medium-emphasis">No rating data available</p>
+            <div
+              v-else
+              class="mt-4 text-center"
+            >
+              <VIcon
+                icon="tabler-star-off"
+                size="48"
+                class="text-medium-emphasis mb-2"
+              />
+              <p class="text-body-2 text-medium-emphasis">
+                No rating data available
+              </p>
             </div>
           </VCardText>
         </VCard>
       </VCol>
 
       <!-- Lowest-Rated Franchise (Needs Attention) -->
-      <VCol cols="12" md="3">
+      <VCol
+        cols="12"
+        md="3"
+      >
         <VCard class="h-100">
           <VCardText>
             <div class="d-flex align-center justify-space-between mb-4">
@@ -673,14 +827,28 @@ const periodOptions = [
                   Needs attention
                 </div>
               </div>
-              <VAvatar color="error" variant="tonal" size="40">
+              <VAvatar
+                color="error"
+                variant="tonal"
+                size="40"
+              >
                 <VIcon icon="tabler-alert-triangle" />
               </VAvatar>
             </div>
 
-            <div v-if="lowestRatedFranchise" class="mt-4 text-center">
-              <VAvatar color="error" size="60" class="mb-3">
-                <VIcon icon="tabler-building-store" size="30" />
+            <div
+              v-if="lowestRatedFranchise"
+              class="mt-4 text-center"
+            >
+              <VAvatar
+                color="error"
+                size="60"
+                class="mb-3"
+              >
+                <VIcon
+                  icon="tabler-building-store"
+                  size="30"
+                />
               </VAvatar>
               <div class="text-h6 font-weight-medium mb-1">
                 {{ lowestRatedFranchise.name }}
@@ -692,20 +860,42 @@ const periodOptions = [
                 <h4 class="text-h4 me-2 text-error">
                   {{ lowestRatedFranchise.rating }}
                 </h4>
-                <VRating :model-value="lowestRatedFranchise.rating" readonly size="small"
-                  color="warning" />
+                <VRating
+                  :model-value="lowestRatedFranchise.rating"
+                  readonly
+                  size="small"
+                  color="warning"
+                />
               </div>
               <div class="text-caption text-medium-emphasis mb-3">
                 {{ lowestRatedFranchise.reviews }} reviews
               </div>
-              <VBtn color="error" variant="tonal" size="small" block>
-                <VIcon start icon="tabler-message" size="16" />
+              <VBtn
+                color="error"
+                variant="tonal"
+                size="small"
+                block
+              >
+                <VIcon
+                  start
+                  icon="tabler-message"
+                  size="16"
+                />
                 Contact Unit
               </VBtn>
             </div>
-            <div v-else class="mt-4 text-center">
-              <VIcon icon="tabler-star" size="48" class="text-medium-emphasis mb-2" />
-              <p class="text-body-2 text-medium-emphasis">No rating data available</p>
+            <div
+              v-else
+              class="mt-4 text-center"
+            >
+              <VIcon
+                icon="tabler-star"
+                size="48"
+                class="text-medium-emphasis mb-2"
+              />
+              <p class="text-body-2 text-medium-emphasis">
+                No rating data available
+              </p>
             </div>
           </VCardText>
         </VCard>
@@ -713,11 +903,17 @@ const periodOptions = [
     </VRow>
 
     <!-- Export Options Dialog -->
-    <VDialog v-model="isExportDialogVisible" max-width="500">
+    <VDialog
+      v-model="isExportDialogVisible"
+      max-width="500"
+    >
       <VCard class="text-center px-6 py-8">
         <VCardItem class="pb-4">
           <VCardTitle class="text-h5 mb-2">
-            <VIcon icon="tabler-download" class="me-2" />
+            <VIcon
+              icon="tabler-download"
+              class="me-2"
+            />
             Export Data
           </VCardTitle>
           <VCardSubtitle class="text-body-1">
@@ -730,35 +926,63 @@ const periodOptions = [
         <VCardText class="text-start">
           <VRow>
             <VCol cols="12">
-              <VSelect v-model="exportDataType" :items="exportDataTypeOptions" item-title="title"
-                item-value="value" label="Data Type" variant="outlined" density="comfortable"
-                prepend-inner-icon="tabler-database" />
+              <VSelect
+                v-model="exportDataType"
+                :items="exportDataTypeOptions"
+                item-title="title"
+                item-value="value"
+                label="Data Type"
+                variant="outlined"
+                density="comfortable"
+                prepend-inner-icon="tabler-database"
+              />
             </VCol>
             <VCol cols="12">
-              <VSelect v-model="exportFormat" :items="exportFormatOptions" item-title="title"
-                item-value="value" label="Export Format" variant="outlined" density="comfortable"
-                prepend-inner-icon="tabler-file-type-csv" />
+              <VSelect
+                v-model="exportFormat"
+                :items="exportFormatOptions"
+                item-title="title"
+                item-value="value"
+                label="Export Format"
+                variant="outlined"
+                density="comfortable"
+                prepend-inner-icon="tabler-file-type-csv"
+              />
             </VCol>
           </VRow>
 
           <!-- Export Info -->
-          <VAlert type="info" variant="tonal" class="mt-4" density="compact">
+          <VAlert
+            type="info"
+            variant="tonal"
+            class="mt-4"
+            density="compact"
+          >
             <template #prepend>
               <VIcon icon="tabler-info-circle" />
             </template>
             <div class="text-body-2">
               <strong>Current Selection:</strong><br>
-              Period: {{periodOptions.find(p => p.value === selectedPeriod)?.title}}<br>
-              Unit: {{franchiseeUnits.find(u => u.id === selectedUnit)?.name}}
+              Period: {{ periodOptions.find(p => p.value === selectedPeriod)?.title }}<br>
+              Unit: {{ franchiseeUnits.find(u => u.id === selectedUnit)?.name }}
             </div>
           </VAlert>
         </VCardText>
 
         <VCardActions class="d-flex align-center justify-center gap-3 pt-4">
-          <VBtn variant="outlined" color="secondary" @click="isExportDialogVisible = false">
+          <VBtn
+            variant="outlined"
+            color="secondary"
+            @click="isExportDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" prepend-icon="tabler-download" @click="performExport" :disabled="loading">
+          <VBtn
+            color="primary"
+            prepend-icon="tabler-download"
+            :disabled="loading"
+            @click="performExport"
+          >
             Export Data
           </VBtn>
         </VCardActions>

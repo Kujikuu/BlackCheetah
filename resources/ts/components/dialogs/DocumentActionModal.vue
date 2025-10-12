@@ -68,15 +68,19 @@ const onCancel = () => {
 }
 
 // 👉 Watch for dialog visibility changes
-watch(() => props.isDialogVisible, (newVal) => {
-  if (!newVal) {
+watch(() => props.isDialogVisible, newVal => {
+  if (!newVal)
     resetForm()
-  }
 })
 </script>
 
 <template>
-  <VDialog :model-value="props.isDialogVisible" max-width="500" persistent @update:model-value="updateModelValue">
+  <VDialog
+    :model-value="props.isDialogVisible"
+    max-width="500"
+    persistent
+    @update:model-value="updateModelValue"
+  >
     <VCard>
       <VCardTitle class="text-h5 pa-6 pb-4">
         {{ actionTitle }}
@@ -85,7 +89,12 @@ watch(() => props.isDialogVisible, (newVal) => {
       <VDivider />
       <VCardText class="text-center px-10 py-6">
         <!-- Icon -->
-        <VIcon :icon="actionIcon" :color="actionColor" size="48" class="mb-4" />
+        <VIcon
+          :icon="actionIcon"
+          :color="actionColor"
+          size="48"
+          class="mb-4"
+        />
 
         <!-- Description -->
         <p class="text-body-1 text-medium-emphasis mb-6">
@@ -93,34 +102,61 @@ watch(() => props.isDialogVisible, (newVal) => {
         </p>
 
         <!-- Document Info -->
-        <VCard variant="outlined" class="mb-6">
+        <VCard
+          variant="outlined"
+          class="mb-6"
+        >
           <VCardText class="text-start">
             <div class="d-flex align-center mb-2">
-              <VIcon icon="tabler-file-text" size="20" color="primary" class="me-2" />
+              <VIcon
+                icon="tabler-file-text"
+                size="20"
+                color="primary"
+                class="me-2"
+              />
               <span class="text-body-1 font-weight-medium">{{ props.document?.title }}</span>
             </div>
-            <div class="text-body-2 text-disabled mb-1">{{ props.document?.description }}</div>
-            <div class="text-body-2 text-disabled">{{ props.document?.fileName }} • {{ props.document?.fileSize }}</div>
+            <div class="text-body-2 text-disabled mb-1">
+              {{ props.document?.description }}
+            </div>
+            <div class="text-body-2 text-disabled">
+              {{ props.document?.fileName }} • {{ props.document?.fileSize }}
+            </div>
           </VCardText>
         </VCard>
 
         <!-- Comment Form -->
-        <VForm v-model="isFormValid" @submit.prevent="onSubmit">
-          <VTextarea v-model="comment" :label="props.action === 'approve' ? 'Approval Comment' : 'Rejection Reason'"
+        <VForm
+          v-model="isFormValid"
+          @submit.prevent="onSubmit"
+        >
+          <VTextarea
+            v-model="comment"
+            :label="props.action === 'approve' ? 'Approval Comment' : 'Rejection Reason'"
             :placeholder="props.action === 'approve' ? 'Enter approval comment...' : 'Enter reason for rejection...'"
-            rows="3" :rules="[requiredRule]" required class="mb-4" />
+            rows="3"
+            :rules="[requiredRule]"
+            required
+            class="mb-4"
+          />
         </VForm>
       </VCardText>
 
       <VDivider />
 
-
-
       <VCardActions class="justify-center pa-6">
-        <VBtn color="error" variant="text" @click="onCancel">
+        <VBtn
+          color="error"
+          variant="text"
+          @click="onCancel"
+        >
           Cancel
         </VBtn>
-        <VBtn :color="actionColor" :disabled="!isFormValid" @click="onSubmit">
+        <VBtn
+          :color="actionColor"
+          :disabled="!isFormValid"
+          @click="onSubmit"
+        >
           {{ props.action === 'approve' ? 'Approve' : 'Reject' }}
         </VBtn>
       </VCardActions>

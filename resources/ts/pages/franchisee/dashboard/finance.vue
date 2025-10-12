@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 const chartColors = {
   primary: '#9155FD',
   warning: '#FFB400',
@@ -39,10 +38,6 @@ const financeStats = ref([
     isHover: false,
   },
 ])
-
-
-
-
 
 // 👉 Summary Chart (Combined Sales, Expenses, Profit)
 const summarySeries = [
@@ -150,22 +145,36 @@ const summaryConfig = {
     },
   },
 }
-
-
 </script>
 
 <template>
   <section>
     <!-- 👉 Finance Stats Cards -->
     <VRow class="mb-6">
-      <VCol v-for="(data, index) in financeStats" :key="index" cols="12" md="4" sm="6">
-        <VCard class="finance-card-statistics cursor-pointer"
+      <VCol
+        v-for="(data, index) in financeStats"
+        :key="index"
+        cols="12"
+        md="4"
+        sm="6"
+      >
+        <VCard
+          class="finance-card-statistics cursor-pointer"
           :style="data.isHover ? `border-block-end-color: rgb(var(--v-theme-${data.color}))` : `border-block-end-color: rgba(var(--v-theme-${data.color}),0.38)`"
-          @mouseenter="data.isHover = true" @mouseleave="data.isHover = false">
+          @mouseenter="data.isHover = true"
+          @mouseleave="data.isHover = false"
+        >
           <VCardText>
             <div class="d-flex align-center gap-x-4 mb-1">
-              <VAvatar variant="tonal" :color="data.color" rounded>
-                <VIcon :icon="data.icon" size="28" />
+              <VAvatar
+                variant="tonal"
+                :color="data.color"
+                rounded
+              >
+                <VIcon
+                  :icon="data.icon"
+                  size="28"
+                />
               </VAvatar>
               <h4 class="text-h4">
                 {{ data.value }}
@@ -187,28 +196,36 @@ const summaryConfig = {
       </VCol>
     </VRow>
 
-
-
     <!-- 👉 Summary Chart -->
     <VRow class="mb-6">
       <VCol cols="12">
         <VCard>
-          <VCardItem title="Financial Summary" subtitle="Yearly overview of sales, expenses and profit">
+          <VCardItem
+            title="Financial Summary"
+            subtitle="Yearly overview of sales, expenses and profit"
+          >
             <template #append>
-              <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
+              <VBtn
+                variant="tonal"
+                size="small"
+                append-icon="tabler-chevron-down"
+              >
                 2025
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VueApexCharts type="line" height="400" :options="summaryConfig" :series="summarySeries" />
+            <VueApexCharts
+              type="line"
+              height="400"
+              :options="summaryConfig"
+              :series="summarySeries"
+            />
           </VCardText>
         </VCard>
       </VCol>
     </VRow>
-
-
   </section>
 </template>
 

@@ -91,9 +91,14 @@ const fundingSources = [
 
     <VForm>
       <!-- Franchise Details -->
-      <h4 class="text-h6 mb-3">Franchise Information</h4>
+      <h4 class="text-h6 mb-3">
+        Franchise Information
+      </h4>
       <VRow class="mb-4">
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.franchiseDetails.franchiseName"
             label="Franchise Name"
@@ -101,7 +106,10 @@ const fundingSources = [
             required
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.franchiseDetails.website"
             label="Website"
@@ -119,9 +127,14 @@ const fundingSources = [
       </VRow>
 
       <!-- Legal Details -->
-      <h4 class="text-h6 mb-3">Legal Information</h4>
+      <h4 class="text-h6 mb-3">
+        Legal Information
+      </h4>
       <VRow class="mb-4">
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.legalDetails.legalEntityName"
             label="Legal Entity Name"
@@ -129,7 +142,10 @@ const fundingSources = [
             required
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppSelect
             v-model="localFormData.legalDetails.businessStructure"
             label="Business Structure"
@@ -138,14 +154,20 @@ const fundingSources = [
             required
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.legalDetails.taxId"
             label="Tax ID"
             placeholder="Enter tax identification number"
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppSelect
             v-model="localFormData.legalDetails.industry"
             label="Industry/Sector"
@@ -153,7 +175,10 @@ const fundingSources = [
             placeholder="Select industry"
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.legalDetails.fundingAmount"
             label="Secured Funding Amount"
@@ -161,7 +186,10 @@ const fundingSources = [
             type="number"
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppSelect
             v-model="localFormData.legalDetails.fundingSource"
             label="Source of Funding"
@@ -172,16 +200,24 @@ const fundingSources = [
       </VRow>
 
       <!-- Contact Details -->
-      <h4 class="text-h6 mb-3">Contact Information</h4>
+      <h4 class="text-h6 mb-3">
+        Contact Information
+      </h4>
       <VRow>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.contactDetails.contactNumber"
             label="Business Contact Number"
             placeholder="Enter business contact number"
           />
         </VCol>
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <AppTextField
             v-model="localFormData.contactDetails.email"
             label="Business Email"
@@ -197,7 +233,10 @@ const fundingSources = [
             rows="3"
           />
         </VCol>
-        <VCol cols="12" md="4">
+        <VCol
+          cols="12"
+          md="4"
+        >
           <AppSelect
             v-model="localFormData.contactDetails.country"
             label="Country"
@@ -205,14 +244,20 @@ const fundingSources = [
             placeholder="Select country"
           />
         </VCol>
-        <VCol cols="12" md="4">
+        <VCol
+          cols="12"
+          md="4"
+        >
           <AppTextField
             v-model="localFormData.contactDetails.state"
             label="State/Province"
             placeholder="Enter state"
           />
         </VCol>
-        <VCol cols="12" md="4">
+        <VCol
+          cols="12"
+          md="4"
+        >
           <AppTextField
             v-model="localFormData.contactDetails.city"
             label="City"

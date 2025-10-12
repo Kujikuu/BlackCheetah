@@ -48,6 +48,7 @@ const timezones = [
 
 const onFormSubmit = () => {
   console.log('Account data updated:', accountDataLocal.value)
+
   // Implement API call here
 }
 </script>

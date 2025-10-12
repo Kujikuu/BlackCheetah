@@ -22,34 +22,36 @@ const lostReasons = [
   'Chose competitor',
   'Timing not right',
   'No response',
-  'Other'
+  'Other',
 ]
 
 const updateModelValue = (val: boolean) => {
   emit('update:isDialogVisible', val)
-  if (!val) {
+  if (!val)
     reason.value = ''
-  }
 }
 
 const markAsLost = async () => {
-  if (!props.leadId || !reason.value) return
+  if (!props.leadId || !reason.value)
+    return
 
   isLoading.value = true
-  
+
   try {
     await $api(`/v1/franchisor/leads/${props.leadId}/mark-lost`, {
       method: 'POST',
       body: {
-        reason: reason.value
-      }
+        reason: reason.value,
+      },
     })
 
     emit('leadMarkedAsLost')
     updateModelValue(false)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error marking lead as lost:', error)
-  } finally {
+  }
+  finally {
     isLoading.value = false
   }
 }
@@ -69,8 +71,8 @@ const markAsLost = async () => {
       <VCardText>
         <div class="mb-4">
           <p class="text-body-1 mb-2">
-            Are you sure you want to mark 
-            <strong>{{ props.leadName || 'this lead' }}</strong> 
+            Are you sure you want to mark
+            <strong>{{ props.leadName || 'this lead' }}</strong>
             as lost?
           </p>
           <p class="text-body-2 text-medium-emphasis">
@@ -93,8 +95,8 @@ const markAsLost = async () => {
         <VBtn
           color="secondary"
           variant="tonal"
-          @click="updateModelValue(false)"
           :disabled="isLoading"
+          @click="updateModelValue(false)"
         >
           Cancel
         </VBtn>
@@ -102,9 +104,9 @@ const markAsLost = async () => {
         <VBtn
           color="error"
           variant="elevated"
-          @click="markAsLost"
           :loading="isLoading"
           :disabled="!reason"
+          @click="markAsLost"
         >
           Mark as Lost
         </VBtn>

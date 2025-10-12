@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { h } from 'vue'
+import { useDisplay } from 'vuetify'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-import { h } from 'vue'
-import { useDisplay } from 'vuetify'
 
 definePage({
   meta: {
@@ -32,10 +32,12 @@ const onSubmit = async () => {
 
   if (!form.value.newPassword || form.value.newPassword.length < 8) {
     errorMessage.value = 'Password must be at least 8 characters.'
+
     return
   }
   if (form.value.newPassword !== form.value.confirmPassword) {
     errorMessage.value = 'Passwords do not match.'
+
     return
   }
 
@@ -48,6 +50,7 @@ const onSubmit = async () => {
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null
+
     errorMessage.value = data?.message || 'Failed to reset password.'
   }
   finally {
@@ -60,15 +63,23 @@ const onSubmit = async () => {
   <div class="auth-wrapper d-flex align-center justify-center pa-4">
     <div class="position-relative my-sm-16">
       <!-- 👉 Top shape -->
-      <VNodeRenderer :nodes="h('div', { innerHTML: authV1TopShape })"
-        class="text-primary auth-v1-top-shape d-none d-sm-block" />
+      <VNodeRenderer
+        :nodes="h('div', { innerHTML: authV1TopShape })"
+        class="text-primary auth-v1-top-shape d-none d-sm-block"
+      />
 
       <!-- 👉 Bottom shape -->
-      <VNodeRenderer :nodes="h('div', { innerHTML: authV1BottomShape })"
-        class="text-primary auth-v1-bottom-shape d-none d-sm-block" />
+      <VNodeRenderer
+        :nodes="h('div', { innerHTML: authV1BottomShape })"
+        class="text-primary auth-v1-bottom-shape d-none d-sm-block"
+      />
 
       <!-- 👉 Auth Card -->
-      <VCard class="auth-card" max-width="460" :class="smAndUp ? 'pa-6' : 'pa-2'">
+      <VCard
+        class="auth-card"
+        max-width="460"
+        :class="smAndUp ? 'pa-6' : 'pa-2'"
+      >
         <VCardItem class="justify-center">
           <VCardTitle>
             <RouterLink to="/">
@@ -95,28 +106,58 @@ const onSubmit = async () => {
           <VForm @submit.prevent="onSubmit">
             <VRow>
               <VCol cols="12">
-                <VAlert v-if="errorMessage" type="error" variant="tonal" class="mb-4">{{ errorMessage }}</VAlert>
-                <VAlert v-if="infoMessage" type="info" variant="tonal" class="mb-4">{{ infoMessage }}</VAlert>
+                <VAlert
+                  v-if="errorMessage"
+                  type="error"
+                  variant="tonal"
+                  class="mb-4"
+                >
+                  {{ errorMessage }}
+                </VAlert>
+                <VAlert
+                  v-if="infoMessage"
+                  type="info"
+                  variant="tonal"
+                  class="mb-4"
+                >
+                  {{ infoMessage }}
+                </VAlert>
               </VCol>
               <!-- password -->
               <VCol cols="12">
-                <AppTextField v-model="form.newPassword" autofocus label="New Password" placeholder="············"
-                  :type="isPasswordVisible ? 'text' : 'password'" autocomplete="password"
+                <AppTextField
+                  v-model="form.newPassword"
+                  autofocus
+                  label="New Password"
+                  placeholder="············"
+                  :type="isPasswordVisible ? 'text' : 'password'"
+                  autocomplete="password"
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
-                  @click:append-inner="isPasswordVisible = !isPasswordVisible" />
+                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
+                />
               </VCol>
 
               <!-- Confirm Password -->
               <VCol cols="12">
-                <AppTextField v-model="form.confirmPassword" label="Confirm Password" autocomplete="confirm-password"
-                  placeholder="············" :type="isConfirmPasswordVisible ? 'text' : 'password'"
+                <AppTextField
+                  v-model="form.confirmPassword"
+                  label="Confirm Password"
+                  autocomplete="confirm-password"
+                  placeholder="············"
+                  :type="isConfirmPasswordVisible ? 'text' : 'password'"
                   :append-inner-icon="isConfirmPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
-                  @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible" />
+                  @click:append-inner="isConfirmPasswordVisible = !isConfirmPasswordVisible"
+                />
               </VCol>
 
               <!-- reset password -->
               <VCol cols="12">
-                <VBtn block type="submit" :loading="loading" :disabled="loading">
+                <VBtn
+                  block
+                  type="submit"
+                  :loading="loading"
+                  :disabled="loading"
+                >
                   Set New Password
                 </VBtn>
               </VCol>

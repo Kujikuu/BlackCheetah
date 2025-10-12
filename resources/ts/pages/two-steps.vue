@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { h } from 'vue'
+import { useDisplay } from 'vuetify'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-import { useDisplay } from 'vuetify'
 
 definePage({
   meta: {
@@ -85,7 +85,14 @@ const onFinish = () => {
           <VForm @submit.prevent="() => {}">
             <VRow>
               <VCol cols="12">
-                <VAlert v-if="infoMessage" type="info" variant="tonal" class="mb-4">{{ infoMessage }}</VAlert>
+                <VAlert
+                  v-if="infoMessage"
+                  type="info"
+                  variant="tonal"
+                  class="mb-4"
+                >
+                  {{ infoMessage }}
+                </VAlert>
               </VCol>
               <!-- email -->
               <VCol cols="12">

@@ -61,13 +61,16 @@ export const useFranchisorDashboard = () => {
   const salesAssociates = ref<SalesAssociate[]>([])
   const recentActivities = ref<RecentActivity[]>([])
   const leads = ref<Lead[]>([])
-  
+
   // Profile completion
   const profileCompletionStatus = ref<ProfileCompletionStatus | null>(null)
   const franchiseExists = ref<boolean>(true) // Track if franchise exists
+
   const isProfileComplete = computed(() => {
     // If banner was dismissed for current session, hide it temporarily
-    if (bannerDismissed.value) return true
+    if (bannerDismissed.value)
+      return true
+
     // Show banner only when no franchise exists (not based on completion percentage)
     return franchiseExists.value
   })
@@ -81,16 +84,17 @@ export const useFranchisorDashboard = () => {
       error.value = null
 
       const response = await $api<{ success: boolean; data: DashboardStats }>('/v1/franchisor/dashboard/stats')
-      
-      if (response.success) {
+
+      if (response.success)
         dashboardStats.value = response.data
-      } else {
+      else
         throw new Error('Failed to fetch dashboard stats')
-      }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       error.value = err.message || 'Failed to fetch dashboard statistics'
       console.error('Dashboard stats error:', err)
-    } finally {
+    }
+    finally {
       isLoading.value = false
     }
   }
@@ -101,11 +105,11 @@ export const useFranchisorDashboard = () => {
   const fetchSalesAssociates = async () => {
     try {
       const response = await $api<{ success: boolean; data: SalesAssociate[] }>('/v1/franchisor/sales-associates')
-      
-      if (response.success) {
+
+      if (response.success)
         salesAssociates.value = response.data
-      }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       console.error('Sales associates error:', err)
     }
   }
@@ -116,11 +120,11 @@ export const useFranchisorDashboard = () => {
   const fetchLeads = async (limit = 10) => {
     try {
       const response = await $api<{ success: boolean; data: Lead[] }>(`/v1/franchisor/leads?limit=${limit}`)
-      
-      if (response.success) {
+
+      if (response.success)
         leads.value = response.data
-      }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       console.error('Leads error:', err)
     }
   }
@@ -131,21 +135,24 @@ export const useFranchisorDashboard = () => {
   const fetchProfileCompletion = async () => {
     try {
       const response = await $api<{ success: boolean; data?: ProfileCompletionStatus; message?: string }>('/v1/franchisor/profile/completion-status')
-      
+
       if (response.success) {
         profileCompletionStatus.value = response.data!
         franchiseExists.value = true // Franchise exists if we get a successful response
-      } else {
+      }
+      else {
         // API returned success: false, which means no franchise exists
         franchiseExists.value = false
         profileCompletionStatus.value = null
       }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       // Check if it's a 404 error (no franchise exists)
       if (err.status === 404 || (err.data && err.data.success === false)) {
         franchiseExists.value = false // No franchise exists
         profileCompletionStatus.value = null
-      } else {
+      }
+      else {
         // For other errors, assume franchise exists to be safe
         franchiseExists.value = true
         console.error('Profile completion error:', err)
@@ -178,7 +185,7 @@ export const useFranchisorDashboard = () => {
         title: `New lead: ${lead.name}`,
         time: formatTimeAgo(lead.created_at),
         icon: 'tabler-user-plus',
-        color: 'primary'
+        color: 'primary',
       })
     })
 
@@ -191,7 +198,7 @@ export const useFranchisorDashboard = () => {
           title: `${associate.name} is managing ${associate.leads_count} leads`,
           time: formatTimeAgo(associate.created_at),
           icon: 'tabler-user-check',
-          color: 'info'
+          color: 'info',
         })
       }
     })
@@ -204,7 +211,7 @@ export const useFranchisorDashboard = () => {
         title: `Monthly revenue: $${dashboardStats.value.currentMonthRevenue.toLocaleString()}`,
         time: 'This month',
         icon: 'tabler-currency-dollar',
-        color: 'warning'
+        color: 'warning',
       })
     }
 
@@ -221,14 +228,18 @@ export const useFranchisorDashboard = () => {
     const date = new Date(dateString)
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
-    if (diffInHours < 1) return 'Just now'
-    if (diffInHours < 24) return `${diffInHours} hours ago`
-    
+
+    if (diffInHours < 1)
+      return 'Just now'
+    if (diffInHours < 24)
+      return `${diffInHours} hours ago`
+
     const diffInDays = Math.floor(diffInHours / 24)
-    if (diffInDays === 1) return '1 day ago'
-    if (diffInDays < 7) return `${diffInDays} days ago`
-    
+    if (diffInDays === 1)
+      return '1 day ago'
+    if (diffInDays < 7)
+      return `${diffInDays} days ago`
+
     return date.toLocaleDateString()
   }
 
@@ -240,9 +251,9 @@ export const useFranchisorDashboard = () => {
       fetchDashboardStats(),
       fetchSalesAssociates(),
       fetchLeads(10),
-      fetchProfileCompletion()
+      fetchProfileCompletion(),
     ])
-    
+
     generateRecentActivities()
   }
 
@@ -256,15 +267,18 @@ export const useFranchisorDashboard = () => {
   const checkFranchiseExists = async (): Promise<boolean> => {
     try {
       const response = await $api('/v1/franchisor/profile/completion-status')
+
       // If we get a successful response, the franchise exists
       return response.success === true
-    } catch (error: any) {
+    }
+    catch (error: any) {
       // If we get a 404, it means no franchise exists
-      if (error.status === 404) {
+      if (error.status === 404)
         return false
-      }
+
       // For other errors, assume franchise exists to be safe
       console.error('Error checking franchise existence:', error)
+
       return true
     }
   }
@@ -290,6 +304,6 @@ export const useFranchisorDashboard = () => {
     initializeDashboard,
     refreshDashboard,
     generateRecentActivities,
-    checkFranchiseExists
+    checkFranchiseExists,
   }
 }
