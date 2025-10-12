@@ -172,13 +172,13 @@ const chartOptions = computed(() => {
         </div>
 
         <div v-if="isLoading">
-          <VSkeleton
+          <VSkeletonLoader
             type="text"
             width="100px"
             height="32px"
             class="mb-2"
           />
-          <VSkeleton
+          <VSkeletonLoader
             type="chip"
             width="60px"
             height="24px"

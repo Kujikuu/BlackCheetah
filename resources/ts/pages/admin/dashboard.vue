@@ -233,21 +233,21 @@ const avatarText = (name: string | null | undefined) => {
             <VCardText>
               <div class="d-flex justify-space-between">
                 <div class="d-flex flex-column gap-y-1">
-                  <VSkeleton
+                  <VSkeletonLoader
                     type="text"
                     width="80px"
                   />
-                  <VSkeleton
+                  <VSkeletonLoader
                     type="text"
                     width="60px"
                     height="32px"
                   />
-                  <VSkeleton
+                  <VSkeletonLoader
                     type="text"
                     width="120px"
                   />
                 </div>
-                <VSkeleton
+                <VSkeletonLoader
                   type="avatar"
                   size="42"
                 />

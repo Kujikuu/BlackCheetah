@@ -162,12 +162,12 @@ const chartOptions = computed(() => {
         v-if="isLoading"
         class="d-flex align-center justify-space-between gap-x-2 mt-3"
       >
-        <VSkeleton
+        <VSkeletonLoader
           type="text"
           width="60px"
           height="32px"
         />
-        <VSkeleton
+        <VSkeletonLoader
           type="text"
           width="40px"
         />
