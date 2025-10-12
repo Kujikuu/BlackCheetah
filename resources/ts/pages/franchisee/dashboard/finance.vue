@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import type { FinanceWidgetData } from '@/services/api/franchisee-dashboard'
+import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+
 const chartColors = {
   primary: '#9155FD',
   warning: '#FFB400',
@@ -11,8 +15,13 @@ const headingColor = 'rgba(var(--v-theme-on-background), var(--v-high-emphasis-o
 const labelColor = 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))'
 const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))'
 
+// Loading and error states
+const loading = ref(false)
+const error = ref<string | null>(null)
+const hasLoadedApiData = ref(false)
+
 // 👉 Finance Stats
-const financeStats = ref([
+const financeStats = ref<FinanceWidgetData[]>([
   {
     icon: 'tabler-currency-dollar',
     color: 'primary',
@@ -40,7 +49,7 @@ const financeStats = ref([
 ])
 
 // 👉 Summary Chart (Combined Sales, Expenses, Profit)
-const summarySeries = [
+const summarySeries = ref([
   {
     name: 'Sales',
     data: [420000, 385000, 445000, 398000, 465000, 425000, 485000, 452000, 478000, 495000, 512000, 548000],
@@ -53,7 +62,101 @@ const summarySeries = [
     name: 'Profit',
     data: [212000, 195250, 220250, 196300, 230250, 213250, 240250, 229200, 238300, 245750, 253200, 277800],
   },
-]
+])
+
+// Format currency
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'SAR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+// Load dashboard data
+const loadDashboardData = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    // Load finance statistics
+    const financeStatsResponse = await franchiseeDashboardApi.getFinanceStatistics()
+    if (financeStatsResponse.success && financeStatsResponse.data) {
+      const stats = financeStatsResponse.data
+      financeStats.value = [
+        {
+          icon: 'tabler-currency-dollar',
+          color: 'primary',
+          title: 'Total Sales',
+          value: formatCurrency(stats.totalSales),
+          change: stats.salesChange,
+          isHover: false,
+        },
+        {
+          icon: 'tabler-receipt',
+          color: 'error',
+          title: 'Total Expenses',
+          value: formatCurrency(stats.totalExpenses),
+          change: stats.expensesChange,
+          isHover: false,
+        },
+        {
+          icon: 'tabler-trending-up',
+          color: 'success',
+          title: 'Total Profit',
+          value: formatCurrency(stats.totalProfit),
+          change: stats.profitChange,
+          isHover: false,
+        },
+      ]
+    }
+
+    // Load financial summary data
+    const summaryResponse = await franchiseeDashboardApi.getFinancialSummary()
+    if (summaryResponse.success && summaryResponse.data) {
+      const summary = summaryResponse.data
+      summarySeries.value = [
+        {
+          name: 'Sales',
+          data: summary.sales,
+        },
+        {
+          name: 'Expenses',
+          data: summary.expenses,
+        },
+        {
+          name: 'Profit',
+          data: summary.profit,
+        },
+      ]
+      hasLoadedApiData.value = true
+    }
+  } catch (err) {
+    error.value = 'Failed to load finance data. Please try again.'
+    console.error('Error loading finance data:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Load data on component mount
+onMounted(() => {
+  loadDashboardData()
+})
+
+// Computed property to check if chart data is ready
+const isChartDataReady = computed(() => {
+  return !loading.value &&
+         hasLoadedApiData.value &&
+         summarySeries.value.length > 0 && 
+         summarySeries.value.every(series => 
+           series.data && 
+           Array.isArray(series.data) && 
+           series.data.length > 0 &&
+           series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
+         )
+})
 
 const summaryConfig = {
   chart: {
@@ -133,14 +236,24 @@ const summaryConfig = {
         fontWeight: 400,
       },
       formatter(val: number) {
-        return `$${(val / 1000).toFixed(0)}k`
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'SAR',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(val / 1000) + 'k'
       },
     },
   },
   tooltip: {
     y: {
       formatter(val: number) {
-        return `$${val.toLocaleString()}`
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'SAR',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(val)
       },
     },
   },
@@ -149,15 +262,48 @@ const summaryConfig = {
 
 <template>
   <section>
-    <!-- 👉 Finance Stats Cards -->
-    <VRow class="mb-6">
-      <VCol
-        v-for="(data, index) in financeStats"
-        :key="index"
-        cols="12"
-        md="4"
-        sm="6"
-      >
+    <!-- Loading State -->
+    <VRow v-if="loading" class="mb-6">
+      <VCol cols="12">
+        <VCard>
+          <VCardText class="text-center py-8">
+            <VProgressCircular indeterminate color="primary" size="64" />
+            <div class="mt-4 text-body-1">
+              Loading finance data...
+            </div>
+          </VCardText>
+        </VCard>
+      </VCol>
+    </VRow>
+
+    <!-- Error State -->
+    <VRow v-else-if="error" class="mb-6">
+      <VCol cols="12">
+        <VAlert type="error" variant="tonal" class="mb-0">
+          <template #prepend>
+            <VIcon icon="tabler-alert-circle" />
+          </template>
+          {{ error }}
+          <template #append>
+            <VBtn color="error" variant="text" size="small" @click="loadDashboardData">
+              Retry
+            </VBtn>
+          </template>
+        </VAlert>
+      </VCol>
+    </VRow>
+
+    <!-- Dashboard Content -->
+    <div v-else>
+      <!-- 👉 Finance Stats Cards -->
+      <VRow class="mb-6">
+        <VCol
+          v-for="(data, index) in financeStats"
+          :key="index"
+          cols="12"
+          md="4"
+          sm="6"
+        >
         <VCard
           class="finance-card-statistics cursor-pointer"
           :style="data.isHover ? `border-block-end-color: rgb(var(--v-theme-${data.color}))` : `border-block-end-color: rgba(var(--v-theme-${data.color}),0.38)`"
@@ -217,15 +363,23 @@ const summaryConfig = {
 
           <VCardText>
             <VueApexCharts
+              v-if="isChartDataReady"
               type="line"
               height="400"
               :options="summaryConfig"
               :series="summarySeries"
             />
+            <div v-else class="text-center py-8">
+              <VProgressCircular indeterminate color="primary" size="32" />
+              <div class="mt-4 text-body-2 text-medium-emphasis">
+                Loading chart data...
+              </div>
+            </div>
           </VCardText>
         </VCard>
       </VCol>
     </VRow>
+    </div>
   </section>
 </template>
 

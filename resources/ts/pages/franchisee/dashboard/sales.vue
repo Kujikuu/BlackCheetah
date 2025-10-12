@@ -11,26 +11,53 @@ const vuetifyTheme = useTheme()
 // Loading state
 const loading = ref(false)
 const error = ref<string | null>(null)
+const hasLoadedApiData = ref(false)
 
 // Utility function to prefix positive numbers with +
 const prefixWithPlus = (value: number) => {
   return value > 0 ? `+${value}` : value.toString()
 }
 
-// Reactive data
+// Reactive data with default values
 const widgetData = ref<SalesWidgetData[]>([])
 const mostSellingItemsData = ref<ProductSalesItem[]>([])
 const lowSellingItemsData = ref<ProductSalesItem[]>([])
-const monthlyPerformanceData = ref<any[]>([])
+const monthlyPerformanceData = ref<any[]>([
+  {
+    name: 'Top Performing Items',
+    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  },
+  {
+    name: 'Low Performing Items',
+    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  },
+  {
+    name: 'Average Performance',
+    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  },
+])
 
 // Chart configurations
 const monthlyPerformanceChartConfig = computed(() => getAreaChartSplineConfig(vuetifyTheme.current.value))
+
+// Computed property to check if chart data is ready
+const isChartDataReady = computed(() => {
+  return !loading.value &&
+         hasLoadedApiData.value &&
+         monthlyPerformanceData.value.length > 0 && 
+         monthlyPerformanceData.value.every(series => 
+           series.data && 
+           Array.isArray(series.data) && 
+           series.data.length > 0 &&
+           series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
+         )
+})
 
 // Format currency
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'SAR',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount)
@@ -91,6 +118,7 @@ const loadDashboardData = async () => {
           data: performance.averagePerformance,
         },
       ]
+      hasLoadedApiData.value = true
     }
   } catch (err) {
     error.value = 'Failed to load dashboard data. Please try again.'
@@ -205,7 +233,9 @@ onMounted(() => {
                       {{ item.quantity }} sold
                     </VChip>
                     <span class="text-body-2 text-medium-emphasis">•</span>
-                    <span class="text-body-2 font-weight-medium text-high-emphasis">{{ item.price }}</span>
+                    <span class="text-body-2 font-weight-medium text-high-emphasis">
+                      {{ item.avgPrice ? formatCurrency(item.avgPrice) : (item.price || 'N/A') }}
+                    </span>
                   </VListItemSubtitle>
                 </VListItem>
               </VList>
@@ -240,7 +270,9 @@ onMounted(() => {
                       {{ item.quantity }} sold
                     </VChip>
                     <span class="text-body-2 text-medium-emphasis">•</span>
-                    <span class="text-body-2 font-weight-medium text-high-emphasis">{{ item.price }}</span>
+                    <span class="text-body-2 font-weight-medium text-high-emphasis">
+                      {{ item.avgPrice ? formatCurrency(item.avgPrice) : (item.price || 'N/A') }}
+                    </span>
                   </VListItemSubtitle>
                 </VListItem>
               </VList>
@@ -256,12 +288,24 @@ onMounted(() => {
           <VCardSubtitle>Monthly performance comparison</VCardSubtitle>
         </VCardItem>
         <VCardText>
-          <VueApexCharts type="area" height="350" :options="{
-            ...monthlyPerformanceChartConfig,
-            xaxis: {
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            },
-          }" :series="monthlyPerformanceData" />
+          <VueApexCharts 
+            v-if="isChartDataReady"
+            type="area" 
+            height="350" 
+            :options="{
+              ...monthlyPerformanceChartConfig,
+              xaxis: {
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+              },
+            }" 
+            :series="monthlyPerformanceData" 
+          />
+          <div v-else class="text-center py-8">
+            <VProgressCircular indeterminate color="primary" size="32" />
+            <div class="mt-4 text-body-2 text-medium-emphasis">
+              Loading chart data...
+            </div>
+          </div>
         </VCardText>
       </VCard>
     </div>

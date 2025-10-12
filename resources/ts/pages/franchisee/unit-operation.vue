@@ -3,6 +3,16 @@
 import AddDocumentModal from '@/components/dialogs/AddDocumentModal.vue'
 import CreateTaskModal from '@/components/dialogs/CreateTaskModal.vue'
 import DocumentActionModal from '@/components/dialogs/DocumentActionModal.vue'
+import type {
+  UnitDetails,
+  UnitDocument,
+  UnitProduct,
+  UnitReview,
+  UnitStaff,
+  UnitTask,
+} from '@/services/api/franchisee-dashboard'
+import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+import { computed, onMounted, ref } from 'vue'
 
 // 👉 Router
 const router = useRouter()
@@ -14,172 +24,110 @@ const currentTab = ref('overview')
 // 👉 Unit ID from route
 const unitId = computed(() => route.params.id as string)
 
-// 👉 Mock unit data (in real app, this would be fetched from API)
-const unitData = ref({
-  id: 1,
-  branchName: 'Downtown Coffee Hub',
-  franchiseeName: 'John Smith',
-  email: 'john.smith@email.com',
-  contactNumber: '+1 555-123-4567',
-  address: '123 Main St, Downtown',
-  city: 'Los Angeles',
-  state: 'California',
-  country: 'United States',
-  royaltyPercentage: 8.5,
-  contractStartDate: '2024-01-15',
-  renewalDate: '2027-01-15',
-  status: 'active',
+// 👉 Loading and error states
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+// Format currency
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'SAR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+// 👉 Unit data (fetched from API)
+const unitData = ref<UnitDetails | null>(null)
+
+// 👉 Tasks data (fetched from API)
+const tasksData = ref<UnitTask[]>([])
+
+// 👉 Documents data (fetched from API)
+const documentsData = ref<UnitDocument[]>([])
+
+// 👉 Staff data (fetched from API)
+const staffData = ref<UnitStaff[]>([])
+
+// 👉 Products data (fetched from API)
+const productsData = ref<UnitProduct[]>([])
+
+// 👉 Reviews data (fetched from API)
+const reviewsData = ref<UnitReview[]>([])
+
+// 👉 Available franchise products for inventory
+const availableFranchiseProducts = ref<UnitProduct[]>([])
+const selectedFranchiseProduct = ref<number | null>(null)
+
+// 👉 New inventory form
+const newInventoryForm = ref({
+  quantity: 0,
+  reorderLevel: 5,
 })
 
-// 👉 Mock tasks data
-const tasksData = ref([
-  {
-    id: 1,
-    title: 'Monthly Inventory Check',
-    description: 'Complete monthly inventory audit and report',
-    category: 'Operations',
-    assignedTo: 'Store Manager',
-    startDate: '2024-01-01',
-    dueDate: '2024-01-31',
-    priority: 'high',
-    status: 'completed',
-  },
-  {
-    id: 2,
-    title: 'Staff Training Session',
-    description: 'Conduct quarterly staff training on new procedures',
-    category: 'Training',
-    assignedTo: 'HR Manager',
-    startDate: '2024-01-15',
-    dueDate: '2024-01-30',
-    priority: 'medium',
-    status: 'in_progress',
-  },
-  {
-    id: 3,
-    title: 'Equipment Maintenance',
-    description: 'Schedule and complete equipment maintenance',
-    category: 'Maintenance',
-    assignedTo: 'Technician',
-    startDate: '2024-01-20',
-    dueDate: '2024-02-05',
-    priority: 'high',
-    status: 'pending',
-  },
-])
+// 👉 Computed selected product preview
+const selectedProductPreview = computed(() => {
+  if (!selectedFranchiseProduct.value) return null
+  return availableFranchiseProducts.value.find(p => p.id === selectedFranchiseProduct.value)
+})
 
-// 👉 Mock documents data
-const documentsData = ref([
-  {
-    id: 1,
-    title: 'Franchise Disclosure Document',
-    description: 'Official FDD for this unit',
-    fileName: 'FDD_Unit_001.pdf',
-    fileSize: '2.4 MB',
-    uploadDate: '2024-01-15',
-    type: 'FDD',
-    status: 'approved',
-    comment: '',
-  },
-  {
-    id: 2,
-    title: 'Monthly Sales Report',
-    description: 'Sales report for January 2024',
-    fileName: 'Sales_Report_Jan_2024.pdf',
-    fileSize: '1.2 MB',
-    uploadDate: '2024-02-01',
-    type: 'Sales Report',
-    status: 'pending',
-    comment: '',
-  },
-])
+// 👉 API Loading Functions
+const loadUnitData = async () => {
+  try {
+    loading.value = true
+    error.value = null
 
-// 👉 Mock staff data
-const staffData = ref([
-  {
-    id: 1,
-    name: 'Alice Johnson',
-    jobTitle: 'Store Manager',
-    email: 'alice.johnson@email.com',
-    shiftTime: '9:00 AM - 6:00 PM',
-    status: 'working',
-  },
-  {
-    id: 2,
-    name: 'Bob Wilson',
-    jobTitle: 'Barista',
-    email: 'bob.wilson@email.com',
-    shiftTime: '6:00 AM - 2:00 PM',
-    status: 'working',
-  },
-  {
-    id: 3,
-    name: 'Carol Davis',
-    jobTitle: 'Cashier',
-    email: 'carol.davis@email.com',
-    shiftTime: '2:00 PM - 10:00 PM',
-    status: 'leave',
-  },
-])
+    // Load unit details
+    const unitDetailsResponse = await franchiseeDashboardApi.getUnitDetails(unitId.value)
+    if (unitDetailsResponse.success) {
+      unitData.value = unitDetailsResponse.data
+    }
 
-// 👉 Mock products data
-const productsData = ref([
-  {
-    id: 1,
-    name: 'Premium Espresso',
-    description: 'High-quality espresso blend',
-    unitPrice: 93.75,
-    category: 'Coffee',
-    status: 'active',
-    stock: 150,
-  },
-  {
-    id: 2,
-    name: 'Organic House Blend',
-    description: 'Organic coffee house blend',
-    unitPrice: 75.00,
-    category: 'Coffee',
-    status: 'active',
-    stock: 5, // Low stock
-  },
-  {
-    id: 3,
-    name: 'Coffee Mug - Premium',
-    description: 'Branded coffee mug with logo',
-    unitPrice: 48.75,
-    category: 'Merchandise',
-    status: 'active',
-    stock: 0, // Out of stock
-  },
-])
+    // Load tasks
+    const tasksResponse = await franchiseeDashboardApi.getUnitTasks(unitId.value)
+    if (tasksResponse.success) {
+      tasksData.value = tasksResponse.data
+    }
 
-// 👉 Mock reviews data
-const reviewsData = ref([
-  {
-    id: 1,
-    customerName: 'Emma Thompson',
-    rating: 5,
-    comment: 'Excellent coffee and great service!',
-    date: '2024-01-28',
-    sentiment: 'positive',
-  },
-  {
-    id: 2,
-    customerName: 'James Miller',
-    rating: 4,
-    comment: 'Good coffee, but the wait time was a bit long.',
-    date: '2024-01-27',
-    sentiment: 'positive',
-  },
-  {
-    id: 3,
-    customerName: 'Lisa Brown',
-    rating: 2,
-    comment: 'Coffee was cold and service was slow.',
-    date: '2024-01-26',
-    sentiment: 'negative',
-  },
-])
+    // Load staff
+    const staffResponse = await franchiseeDashboardApi.getUnitStaff(unitId.value)
+    if (staffResponse.success) {
+      staffData.value = staffResponse.data
+    }
+
+    // Load products
+    const productsResponse = await franchiseeDashboardApi.getUnitProducts(unitId.value)
+    if (productsResponse.success) {
+      productsData.value = productsResponse.data
+    }
+
+    // Load reviews
+    const reviewsResponse = await franchiseeDashboardApi.getUnitReviews(unitId.value)
+    if (reviewsResponse.success) {
+      reviewsData.value = reviewsResponse.data
+    }
+
+    // Load documents
+    const documentsResponse = await franchiseeDashboardApi.getUnitDocuments(unitId.value)
+    if (documentsResponse.success) {
+      documentsData.value = documentsResponse.data
+    }
+  }
+  catch (err) {
+    console.error('Error loading unit data:', err)
+    error.value = 'Failed to load unit data. Please try again.'
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+// Load data when component mounts
+onMounted(() => {
+  loadUnitData()
+})
+
 
 // 👉 Modal states
 const isAddTaskModalVisible = ref(false)
@@ -280,27 +228,41 @@ const openEditUnitModal = () => {
   isEditUnitModalVisible.value = true
 }
 
-const saveUnitDetails = () => {
-  unitData.value = { ...editUnitForm.value }
-  isEditUnitModalVisible.value = false
+const saveUnitDetails = async () => {
+  try {
+    const response = await franchiseeDashboardApi.updateUnitDetails(parseInt(unitId.value), editUnitForm.value)
+    if (response.success) {
+      unitData.value = response.data
+      isEditUnitModalVisible.value = false
+    }
+  }
+  catch (error) {
+    console.error('Error updating unit details:', error)
+  }
 }
 
-const onTaskCreated = (task: any) => {
-  const newTask = {
-    ...task,
-    id: Math.max(...tasksData.value.map(t => t.id)) + 1,
+const onTaskCreated = async (task: any) => {
+  try {
+    const response = await franchiseeDashboardApi.createTask(parseInt(unitId.value), task)
+    if (response.success) {
+      tasksData.value.push(response.data)
+    }
   }
-
-  tasksData.value.push(newTask)
+  catch (error) {
+    console.error('Error creating task:', error)
+  }
 }
 
-const onDocumentAdded = (document: any) => {
-  const newDocument = {
-    ...document,
-    id: Math.max(...documentsData.value.map(d => d.id)) + 1,
+const onDocumentAdded = async (document: any) => {
+  try {
+    const response = await franchiseeDashboardApi.createDocument(parseInt(unitId.value), document)
+    if (response.success) {
+      documentsData.value.push(response.data)
+    }
   }
-
-  documentsData.value.push(newDocument)
+  catch (error) {
+    console.error('Error creating document:', error)
+  }
 }
 
 // 👉 Staff handlers
@@ -319,35 +281,58 @@ const confirmDeleteStaff = (id: number) => {
   isDeleteDialogVisible.value = true
 }
 
-const deleteStaff = () => {
+const deleteStaff = async () => {
   if (staffToDelete.value === null)
     return
-  const index = staffData.value.findIndex(staff => staff.id === staffToDelete.value)
-  if (index !== -1)
-    staffData.value.splice(index, 1)
 
-  isDeleteDialogVisible.value = false
-  staffToDelete.value = null
+  try {
+    const response = await franchiseeDashboardApi.deleteStaff(parseInt(unitId.value), staffToDelete.value)
+    if (response.success) {
+      const index = staffData.value.findIndex(staff => staff.id === staffToDelete.value)
+      if (index !== -1)
+        staffData.value.splice(index, 1)
+    }
+  }
+  catch (error) {
+    console.error('Error deleting staff:', error)
+  }
+  finally {
+    isDeleteDialogVisible.value = false
+    staffToDelete.value = null
+  }
 }
 
-const saveStaff = () => {
+const saveStaff = async () => {
   if (!selectedStaff.value)
     return
-  const index = staffData.value.findIndex(staff => staff.id === selectedStaff.value.id)
-  if (index !== -1)
-    staffData.value[index] = { ...selectedStaff.value }
 
-  isEditStaffModalVisible.value = false
-  selectedStaff.value = null
+  try {
+    const response = await franchiseeDashboardApi.updateStaff(parseInt(unitId.value), selectedStaff.value.id, selectedStaff.value)
+    if (response.success) {
+      const index = staffData.value.findIndex(staff => staff.id === selectedStaff.value.id)
+      if (index !== -1)
+        staffData.value[index] = response.data
+    }
+  }
+  catch (error) {
+    console.error('Error updating staff:', error)
+  }
+  finally {
+    isEditStaffModalVisible.value = false
+    selectedStaff.value = null
+  }
 }
 
-const onStaffCreated = (staff: any) => {
-  const newStaff = {
-    ...staff,
-    id: Math.max(...staffData.value.map(s => s.id)) + 1,
+const onStaffCreated = async (staff: any) => {
+  try {
+    const response = await franchiseeDashboardApi.createStaff(parseInt(unitId.value), staff)
+    if (response.success) {
+      staffData.value.push(response.data)
+    }
   }
-
-  staffData.value.push(newStaff)
+  catch (error) {
+    console.error('Error creating staff:', error)
+  }
 }
 
 // 👉 Product handlers
@@ -366,35 +351,107 @@ const confirmDeleteProduct = (id: number) => {
   isDeleteDialogVisible.value = true
 }
 
-const deleteProduct = () => {
+const deleteProduct = async () => {
   if (productToDelete.value === null)
     return
-  const index = productsData.value.findIndex(product => product.id === productToDelete.value)
-  if (index !== -1)
-    productsData.value.splice(index, 1)
 
-  isDeleteDialogVisible.value = false
-  productToDelete.value = null
+  try {
+    const response = await franchiseeDashboardApi.removeProductFromInventory(parseInt(unitId.value), productToDelete.value)
+    if (response.success) {
+      const index = productsData.value.findIndex(product => product.id === productToDelete.value)
+      if (index !== -1)
+        productsData.value.splice(index, 1)
+    }
+  }
+  catch (error) {
+    console.error('Error removing product from inventory:', error)
+  }
+  finally {
+    isDeleteDialogVisible.value = false
+    productToDelete.value = null
+  }
 }
 
-const saveProduct = () => {
+const saveProduct = async () => {
   if (!selectedProduct.value)
     return
-  const index = productsData.value.findIndex(product => product.id === selectedProduct.value.id)
-  if (index !== -1)
-    productsData.value[index] = { ...selectedProduct.value }
 
-  isEditProductModalVisible.value = false
-  selectedProduct.value = null
+  try {
+    const response = await franchiseeDashboardApi.updateProduct(parseInt(unitId.value), selectedProduct.value.id, selectedProduct.value)
+    if (response.success) {
+      const index = productsData.value.findIndex(product => product.id === selectedProduct.value.id)
+      if (index !== -1)
+        productsData.value[index] = response.data
+    }
+  }
+  catch (error) {
+    console.error('Error updating product:', error)
+  }
+  finally {
+    isEditProductModalVisible.value = false
+    selectedProduct.value = null
+  }
 }
 
-const onProductCreated = (product: any) => {
-  const newProduct = {
-    ...product,
-    id: Math.max(...productsData.value.map(p => p.id)) + 1,
+// 👉 Load available franchise products for inventory
+const loadAvailableFranchiseProducts = async () => {
+  try {
+    // This would call an API to get franchise products not yet in this unit's inventory
+    const response = await franchiseeDashboardApi.getAvailableFranchiseProducts(parseInt(unitId.value))
+    if (response.success) {
+      availableFranchiseProducts.value = response.data
+    }
   }
+  catch (error) {
+    console.error('Error loading franchise products:', error)
+    // For now, we'll simulate some available products
+    availableFranchiseProducts.value = []
+  }
+}
 
-  productsData.value.push(newProduct)
+// 👉 Add product to unit inventory 
+const addProductToInventory = async () => {
+  if (!selectedFranchiseProduct.value) return
+
+  try {
+    const inventoryData = {
+      productId: selectedFranchiseProduct.value,
+      quantity: parseInt(newInventoryForm.value.quantity.toString()),
+      reorderLevel: parseInt(newInventoryForm.value.reorderLevel.toString()),
+    }
+
+    const response = await franchiseeDashboardApi.addProductToInventory(parseInt(unitId.value), inventoryData)
+    if (response.success) {
+      // Add the product with inventory data to our products list
+      const selectedProduct = availableFranchiseProducts.value.find(p => p.id === selectedFranchiseProduct.value)
+      if (selectedProduct) {
+        productsData.value.push({
+          ...selectedProduct,
+          stock: inventoryData.quantity
+        })
+      }
+      closeAddProductModal()
+    }
+  }
+  catch (error) {
+    console.error('Error adding product to inventory:', error)
+  }
+}
+
+// 👉 Close add product modal and reset form
+const closeAddProductModal = () => {
+  isAddProductModalVisible.value = false
+  selectedFranchiseProduct.value = null
+  newInventoryForm.value = {
+    quantity: 0,
+    reorderLevel: 5,
+  }
+}
+
+// 👉 Open add product modal and load available products
+const openAddProductModal = () => {
+  loadAvailableFranchiseProducts()
+  isAddProductModalVisible.value = true
 }
 
 // 👉 Review handlers
@@ -413,35 +470,58 @@ const confirmDeleteReview = (id: number) => {
   isDeleteDialogVisible.value = true
 }
 
-const deleteReview = () => {
+const deleteReview = async () => {
   if (reviewToDelete.value === null)
     return
-  const index = reviewsData.value.findIndex(review => review.id === reviewToDelete.value)
-  if (index !== -1)
-    reviewsData.value.splice(index, 1)
 
-  isDeleteDialogVisible.value = false
-  reviewToDelete.value = null
+  try {
+    const response = await franchiseeDashboardApi.deleteReview(parseInt(unitId.value), reviewToDelete.value)
+    if (response.success) {
+      const index = reviewsData.value.findIndex(review => review.id === reviewToDelete.value)
+      if (index !== -1)
+        reviewsData.value.splice(index, 1)
+    }
+  }
+  catch (error) {
+    console.error('Error deleting review:', error)
+  }
+  finally {
+    isDeleteDialogVisible.value = false
+    reviewToDelete.value = null
+  }
 }
 
-const saveReview = () => {
+const saveReview = async () => {
   if (!selectedReview.value)
     return
-  const index = reviewsData.value.findIndex(review => review.id === selectedReview.value.id)
-  if (index !== -1)
-    reviewsData.value[index] = { ...selectedReview.value }
 
-  isEditReviewModalVisible.value = false
-  selectedReview.value = null
+  try {
+    const response = await franchiseeDashboardApi.updateReview(parseInt(unitId.value), selectedReview.value.id, selectedReview.value)
+    if (response.success) {
+      const index = reviewsData.value.findIndex(review => review.id === selectedReview.value.id)
+      if (index !== -1)
+        reviewsData.value[index] = response.data
+    }
+  }
+  catch (error) {
+    console.error('Error updating review:', error)
+  }
+  finally {
+    isEditReviewModalVisible.value = false
+    selectedReview.value = null
+  }
 }
 
-const onReviewCreated = (review: any) => {
-  const newReview = {
-    ...review,
-    id: Math.max(...reviewsData.value.map(r => r.id)) + 1,
+const onReviewCreated = async (review: any) => {
+  try {
+    const response = await franchiseeDashboardApi.createReview(parseInt(unitId.value), review)
+    if (response.success) {
+      reviewsData.value.push(response.data)
+    }
   }
-
-  reviewsData.value.push(newReview)
+  catch (error) {
+    console.error('Error creating review:', error)
+  }
 }
 
 // 👉 Task action handlers
@@ -460,43 +540,59 @@ const confirmDelete = (id: number) => {
   isDeleteDialogVisible.value = true
 }
 
-const deleteTask = () => {
+const deleteTask = async () => {
   if (taskToDelete.value !== null) {
-    const index = tasksData.value.findIndex(task => task.id === taskToDelete.value)
-    if (index !== -1)
-      tasksData.value.splice(index, 1)
-
-    taskToDelete.value = null
+    try {
+      const response = await franchiseeDashboardApi.deleteTask(parseInt(unitId.value), taskToDelete.value)
+      if (response.success) {
+        const index = tasksData.value.findIndex(task => task.id === taskToDelete.value)
+        if (index !== -1)
+          tasksData.value.splice(index, 1)
+      }
+    }
+    catch (error) {
+      console.error('Error deleting task:', error)
+    }
+    finally {
+      taskToDelete.value = null
+      isDeleteDialogVisible.value = false
+    }
   }
   else if (staffToDelete.value !== null) {
-    deleteStaff()
-
+    await deleteStaff()
     return
   }
   else if (productToDelete.value !== null) {
-    deleteProduct()
-
+    await deleteProduct()
     return
   }
   else if (reviewToDelete.value !== null) {
-    deleteReview()
-
+    await deleteReview()
     return
   }
 
   isDeleteDialogVisible.value = false
 }
 
-const saveTask = () => {
+const saveTask = async () => {
   if (!selectedTask.value)
     return
 
-  const index = tasksData.value.findIndex(task => task.id === selectedTask.value.id)
-  if (index !== -1)
-    tasksData.value[index] = { ...selectedTask.value }
-
-  isEditTaskModalVisible.value = false
-  selectedTask.value = null
+  try {
+    const response = await franchiseeDashboardApi.updateTask(parseInt(unitId.value), selectedTask.value.id, selectedTask.value)
+    if (response.success) {
+      const index = tasksData.value.findIndex(task => task.id === selectedTask.value.id)
+      if (index !== -1)
+        tasksData.value[index] = response.data
+    }
+  }
+  catch (error) {
+    console.error('Error updating task:', error)
+  }
+  finally {
+    isEditTaskModalVisible.value = false
+    selectedTask.value = null
+  }
 }
 
 // 👉 Headers
@@ -545,106 +641,88 @@ const reviewHeaders = [
           <div class="d-flex align-center gap-3">
             <div>
               <h2 class="text-h2 mb-1">
-                {{ unitData.branchName }}
+                {{ unitData?.branchName || 'Loading...' }}
               </h2>
               <p class="text-body-1 text-medium-emphasis">
-                Managed by {{ unitData.franchiseeName }} • {{ unitData.city }}, {{ unitData.state }}
+                {{ unitData ? `Managed by ${unitData.franchiseeName} • ${unitData.city}, ${unitData.state}` :
+                  'Loading unit information...' }}
               </p>
             </div>
           </div>
-          <VChip
-            :color="resolveStatusVariant(unitData.status)"
-            size="large"
-            label
-            class="text-capitalize"
-          >
+          <VChip v-if="unitData" :color="resolveStatusVariant(unitData.status)" size="large" label
+            class="text-capitalize">
             {{ unitData.status }}
           </VChip>
+          <VSkeleton v-else type="chip" width="80" height="32" />
         </div>
       </VCol>
     </VRow>
 
     <!-- Tabs -->
-    <VTabs
-      v-model="currentTab"
-      class="mb-6"
-    >
+    <VTabs v-model="currentTab" class="mb-6">
       <VTab value="overview">
-        <VIcon
-          icon="tabler-info-circle"
-          start
-        />
+        <VIcon icon="tabler-info-circle" start />
         Overview
       </VTab>
       <VTab value="tasks">
-        <VIcon
-          icon="tabler-checklist"
-          start
-        />
+        <VIcon icon="tabler-checklist" start />
         Tasks
       </VTab>
       <VTab value="documents">
-        <VIcon
-          icon="tabler-files"
-          start
-        />
+        <VIcon icon="tabler-files" start />
         Documents
       </VTab>
       <VTab value="staffs">
-        <VIcon
-          icon="tabler-users"
-          start
-        />
+        <VIcon icon="tabler-users" start />
         Staffs
       </VTab>
       <VTab value="inventory">
-        <VIcon
-          icon="tabler-package"
-          start
-        />
+        <VIcon icon="tabler-package" start />
         Inventory Management
       </VTab>
       <VTab value="reviews">
-        <VIcon
-          icon="tabler-star"
-          start
-        />
+        <VIcon icon="tabler-star" start />
         Customer Reviews
       </VTab>
     </VTabs>
 
-    <VWindow
-      v-model="currentTab"
-      class="disable-tab-transition"
-    >
+    <VWindow v-model="currentTab" class="disable-tab-transition">
       <!-- Overview Tab -->
       <VWindowItem value="overview">
         <VCard>
           <VCardItem class="pb-4">
             <VCardTitle>Unit Information</VCardTitle>
             <template #append>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-edit"
-                @click="openEditUnitModal"
-              >
+              <VBtn color="primary" prepend-icon="tabler-edit" :disabled="!unitData" @click="openEditUnitModal">
                 Edit Details
               </VBtn>
             </template>
           </VCardItem>
           <VDivider />
           <VCardText>
-            <VRow>
+            <div v-if="loading" class="text-center py-8">
+              <VProgressCircular indeterminate color="primary" />
+              <div class="mt-3 text-body-1">
+                Loading unit information...
+              </div>
+            </div>
+            <div v-else-if="error" class="text-center py-8">
+              <VIcon icon="tabler-alert-circle" color="error" size="48" class="mb-3" />
+              <div class="text-body-1 text-error">
+                {{ error }}
+              </div>
+              <VBtn color="primary" variant="tonal" class="mt-3" @click="loadUnitData">
+                Retry
+              </VBtn>
+            </div>
+            <VRow v-else-if="unitData">
               <!-- Basic Information -->
               <VCol cols="12">
                 <h4 class="text-h6 mb-4">
                   Basic Information
                 </h4>
                 <VRow>
-                  <VCol
-                    cols="12"
-                    md="6"
-                  >
+                  <VCol cols="12" md="6">
                     <div class="mb-4">
                       <div class="text-sm text-disabled mb-1">
                         Branch Name
@@ -654,10 +732,7 @@ const reviewHeaders = [
                       </div>
                     </div>
                   </VCol>
-                  <VCol
-                    cols="12"
-                    md="6"
-                  >
+                  <VCol cols="12" md="6">
                     <div class="mb-4">
                       <div class="text-sm text-disabled mb-1">
                         Franchisee Name
@@ -667,28 +742,19 @@ const reviewHeaders = [
                       </div>
                     </div>
                   </VCol>
-                  <VCol
-                    cols="12"
-                    md="6"
-                  >
+                  <VCol cols="12" md="6">
                     <div class="mb-4">
                       <div class="text-sm text-disabled mb-1">
                         Email Address
                       </div>
                       <div class="text-body-1">
-                        <a
-                          :href="`mailto:${unitData.email}`"
-                          class="text-primary"
-                        >
+                        <a :href="`mailto:${unitData.email}`" class="text-primary">
                           {{ unitData.email }}
                         </a>
                       </div>
                     </div>
                   </VCol>
-                  <VCol
-                    cols="12"
-                    md="6"
-                  >
+                  <VCol cols="12" md="6">
                     <div class="mb-4">
                       <div class="text-sm text-disabled mb-1">
                         Contact Number
@@ -718,216 +784,165 @@ const reviewHeaders = [
 
       <!-- Tasks Tab -->
       <VWindowItem value="tasks">
-        <!-- Stats Cards -->
-        <VRow class="mb-6">
-          <VCol
-            cols="12"
-            md="3"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="primary"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-checklist"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Total Tasks
+        <div v-if="loading" class="text-center py-8">
+          <VProgressCircular indeterminate color="primary" />
+          <div class="mt-3 text-body-1">
+            Loading tasks data...
+          </div>
+        </div>
+        <div v-else-if="error" class="text-center py-8">
+          <VIcon icon="tabler-alert-circle" color="error" size="48" class="mb-3" />
+          <div class="text-body-1 text-error">
+            {{ error }}
+          </div>
+          <VBtn color="primary" variant="tonal" class="mt-3" @click="loadUnitData">
+            Retry
+          </VBtn>
+        </div>
+        <template v-else>
+          <!-- Stats Cards -->
+          <VRow class="mb-6">
+            <VCol cols="12" md="3">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="primary" variant="tonal">
+                    <VIcon icon="tabler-checklist" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Total Tasks
+                    </div>
+                    <h4 class="text-h4">
+                      {{ totalTasks }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ totalTasks }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="success"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-check"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Completed
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="3">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="success" variant="tonal">
+                    <VIcon icon="tabler-check" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Completed
+                    </div>
+                    <h4 class="text-h4">
+                      {{ completedTasks }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ completedTasks }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="warning"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-clock"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    In Progress
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="3">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="warning" variant="tonal">
+                    <VIcon icon="tabler-clock" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      In Progress
+                    </div>
+                    <h4 class="text-h4">
+                      {{ inProgressTasks }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ inProgressTasks }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="error"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-alert-circle"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Due
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="3">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="error" variant="tonal">
+                    <VIcon icon="tabler-alert-circle" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Due
+                    </div>
+                    <h4 class="text-h4">
+                      {{ dueTasks }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ dueTasks }}
-                  </h4>
+                </VCardText>
+              </VCard>
+            </VCol>
+          </VRow>
+
+          <!-- Tasks Table -->
+          <VCard>
+            <VCardItem class="pb-4">
+              <VCardTitle>Tasks</VCardTitle>
+              <template #append>
+                <VBtn color="primary" prepend-icon="tabler-plus" @click="isAddTaskModalVisible = true">
+                  Create Task
+                </VBtn>
+              </template>
+            </VCardItem>
+
+            <VDivider />
+
+            <VDataTable :items="tasksData" :headers="taskHeaders" class="text-no-wrap" item-value="id">
+              <!-- Task Info -->
+              <template #item.taskInfo="{ item }">
+                <div>
+                  <h6 class="text-base font-weight-medium">
+                    {{ item.title }}
+                  </h6>
+                  <div class="text-body-2 text-disabled">
+                    {{ item.description }}
+                  </div>
                 </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-        </VRow>
+              </template>
 
-        <!-- Tasks Table -->
-        <VCard>
-          <VCardItem class="pb-4">
-            <VCardTitle>Tasks</VCardTitle>
-            <template #append>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-plus"
-                @click="isAddTaskModalVisible = true"
-              >
-                Create Task
-              </VBtn>
-            </template>
-          </VCardItem>
+              <!-- Priority -->
+              <template #item.priority="{ item }">
+                <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
+                  {{ item.priority }}
+                </VChip>
+              </template>
 
-          <VDivider />
+              <!-- Status -->
+              <template #item.status="{ item }">
+                <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+                  {{ item.status }}
+                </VChip>
+              </template>
 
-          <VDataTable
-            :items="tasksData"
-            :headers="taskHeaders"
-            class="text-no-wrap"
-            item-value="id"
-          >
-            <!-- Task Info -->
-            <template #item.taskInfo="{ item }">
-              <div>
-                <h6 class="text-base font-weight-medium">
-                  {{ item.title }}
-                </h6>
-                <div class="text-body-2 text-disabled">
-                  {{ item.description }}
-                </div>
-              </div>
-            </template>
-
-            <!-- Priority -->
-            <template #item.priority="{ item }">
-              <VChip
-                :color="resolvePriorityVariant(item.priority)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
-                {{ item.priority }}
-              </VChip>
-            </template>
-
-            <!-- Status -->
-            <template #item.status="{ item }">
-              <VChip
-                :color="resolveStatusVariant(item.status)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
-                {{ item.status }}
-              </VChip>
-            </template>
-
-            <!-- Actions -->
-            <template #item.actions="{ item }">
-              <VBtn
-                icon
-                variant="text"
-                color="medium-emphasis"
-                size="small"
-              >
-                <VIcon icon="tabler-dots-vertical" />
-                <VMenu activator="parent">
-                  <VList>
-                    <VListItem @click="viewTask(item)">
-                      <template #prepend>
-                        <VIcon icon="tabler-eye" />
-                      </template>
-                      <VListItemTitle>View</VListItemTitle>
-                    </VListItem>
-                    <VListItem @click="editTask(item)">
-                      <template #prepend>
-                        <VIcon icon="tabler-edit" />
-                      </template>
-                      <VListItemTitle>Edit</VListItemTitle>
-                    </VListItem>
-                    <VListItem @click="confirmDelete(item.id)">
-                      <template #prepend>
-                        <VIcon icon="tabler-trash" />
-                      </template>
-                      <VListItemTitle>Delete</VListItemTitle>
-                    </VListItem>
-                  </VList>
-                </VMenu>
-              </VBtn>
-            </template>
-          </VDataTable>
-        </VCard>
+              <!-- Actions -->
+              <template #item.actions="{ item }">
+                <VBtn icon variant="text" color="medium-emphasis" size="small">
+                  <VIcon icon="tabler-dots-vertical" />
+                  <VMenu activator="parent">
+                    <VList>
+                      <VListItem @click="viewTask(item)">
+                        <template #prepend>
+                          <VIcon icon="tabler-eye" />
+                        </template>
+                        <VListItemTitle>View</VListItemTitle>
+                      </VListItem>
+                      <VListItem @click="editTask(item)">
+                        <template #prepend>
+                          <VIcon icon="tabler-edit" />
+                        </template>
+                        <VListItemTitle>Edit</VListItemTitle>
+                      </VListItem>
+                      <VListItem @click="confirmDelete(item.id)">
+                        <template #prepend>
+                          <VIcon icon="tabler-trash" />
+                        </template>
+                        <VListItemTitle>Delete</VListItemTitle>
+                      </VListItem>
+                    </VList>
+                  </VMenu>
+                </VBtn>
+              </template>
+            </VDataTable>
+          </VCard>
+        </template>
       </VWindowItem>
 
       <!-- Documents Tab -->
@@ -936,36 +951,42 @@ const reviewHeaders = [
           <VCardItem class="pb-4">
             <VCardTitle>Unit Documents</VCardTitle>
             <template #append>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-plus"
-                @click="isAddDocumentModalVisible = true"
-              >
+              <VBtn color="primary" prepend-icon="tabler-plus" :disabled="loading"
+                @click="isAddDocumentModalVisible = true">
                 Add Document
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VRow>
-              <template
-                v-for="document in documentsData"
-                :key="document.id"
-              >
-                <VCol
-                  cols="12"
-                  md="6"
-                  lg="4"
-                >
+            <div v-if="loading" class="text-center py-8">
+              <VProgressCircular indeterminate color="primary" />
+              <div class="mt-3 text-body-1">
+                Loading documents...
+              </div>
+            </div>
+            <div v-else-if="error" class="text-center py-8">
+              <VIcon icon="tabler-alert-circle" color="error" size="48" class="mb-3" />
+              <div class="text-body-1 text-error">
+                {{ error }}
+              </div>
+              <VBtn color="primary" variant="tonal" class="mt-3" @click="loadUnitData">
+                Retry
+              </VBtn>
+            </div>
+            <div v-else-if="documentsData.length === 0" class="text-center py-8">
+              <VIcon icon="tabler-folder-open" size="48" class="text-disabled mb-3" />
+              <div class="text-body-1 text-disabled">
+                No documents found for this unit
+              </div>
+            </div>
+            <VRow v-else>
+              <template v-for="document in documentsData" :key="document.id">
+                <VCol cols="12" md="6" lg="4">
                   <VCard>
                     <VCardText>
                       <div class="d-flex align-center mb-3">
-                        <VIcon
-                          icon="tabler-file-text"
-                          size="24"
-                          color="primary"
-                          class="me-3"
-                        />
+                        <VIcon icon="tabler-file-text" size="24" color="primary" class="me-3" />
                         <div>
                           <h6 class="text-h6">
                             {{ document.title }}
@@ -982,34 +1003,22 @@ const reviewHeaders = [
 
                       <div class="d-flex align-center justify-space-between mb-3">
                         <span class="text-body-2 text-disabled">{{ document.fileName }}</span>
-                        <VChip
-                          size="small"
-                          color="secondary"
-                        >
+                        <VChip size="small" color="secondary">
                           {{ document.fileSize }}
                         </VChip>
                       </div>
 
                       <div class="d-flex align-center justify-space-between mb-3">
                         <span class="text-body-2 text-disabled">{{ document.uploadDate }}</span>
-                        <VChip
-                          :color="resolveStatusVariant(document.status)"
-                          size="small"
-                          label
-                          class="text-capitalize"
-                        >
+                        <VChip :color="resolveStatusVariant(document.status)" size="small" label
+                          class="text-capitalize">
                           {{ document.status }}
                         </VChip>
                       </div>
                     </VCardText>
 
                     <VCardActions>
-                      <VBtn
-                        size="small"
-                        variant="text"
-                        color="primary"
-                        prepend-icon="tabler-download"
-                      >
+                      <VBtn size="small" variant="text" color="primary" prepend-icon="tabler-download">
                         Download
                       </VBtn>
                     </VCardActions>
@@ -1023,604 +1032,468 @@ const reviewHeaders = [
 
       <!-- Staff Tab -->
       <VWindowItem value="staffs">
-        <!-- Stats Cards -->
-        <VRow class="mb-6">
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="primary"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-users"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Total Employees
+        <div v-if="loading" class="text-center py-8">
+          <VProgressCircular indeterminate color="primary" />
+          <div class="mt-3 text-body-1">
+            Loading staff data...
+          </div>
+        </div>
+        <div v-else-if="error" class="text-center py-8">
+          <VIcon icon="tabler-alert-circle" color="error" size="48" class="mb-3" />
+          <div class="text-body-1 text-error">
+            {{ error }}
+          </div>
+          <VBtn color="primary" variant="tonal" class="mt-3" @click="loadUnitData">
+            Retry
+          </VBtn>
+        </div>
+        <template v-else>
+          <!-- Stats Cards -->
+          <VRow class="mb-6">
+            <VCol cols="12" md="4">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="primary" variant="tonal">
+                    <VIcon icon="tabler-users" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Total Employees
+                    </div>
+                    <h4 class="text-h4">
+                      {{ totalStaff }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ totalStaff }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="success"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-user-check"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Working
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="4">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="success" variant="tonal">
+                    <VIcon icon="tabler-user-check" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Working
+                    </div>
+                    <h4 class="text-h4">
+                      {{ workingStaff }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ workingStaff }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="warning"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-user-minus"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    On Leave
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="4">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="warning" variant="tonal">
+                    <VIcon icon="tabler-user-minus" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      On Leave
+                    </div>
+                    <h4 class="text-h4">
+                      {{ staffOnLeave }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ staffOnLeave }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-        </VRow>
+                </VCardText>
+              </VCard>
+            </VCol>
+          </VRow>
 
-        <!-- Staff Table -->
-        <VCard>
-          <VCardItem class="pb-4">
-            <VCardTitle>Staff Members</VCardTitle>
-            <template #append>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-plus"
-                @click="isAddStaffModalVisible = true"
-              >
-                Add Staff
-              </VBtn>
-            </template>
-          </VCardItem>
+          <!-- Staff Table -->
+          <VCard>
+            <VCardItem class="pb-4">
+              <VCardTitle>Staff Members</VCardTitle>
+              <template #append>
+                <VBtn color="primary" prepend-icon="tabler-plus" @click="isAddStaffModalVisible = true">
+                  Add Staff
+                </VBtn>
+              </template>
+            </VCardItem>
 
-          <VDivider />
+            <VDivider />
 
-          <VDataTable
-            :items="staffData"
-            :headers="[...staffHeaders, { title: 'Actions', key: 'actions', sortable: false }]"
-            class="text-no-wrap"
-            item-value="id"
-          >
-            <!-- Name -->
-            <template #item.name="{ item }">
-              <div class="d-flex align-center gap-x-3">
-                <VAvatar
-                  size="34"
-                  color="primary"
-                  variant="tonal"
-                >
-                  <span>{{ item.name.split(' ').map((n: string) => n[0]).join('') }}</span>
-                </VAvatar>
-                <div>
-                  <h6 class="text-base font-weight-medium">
-                    {{ item.name }}
-                  </h6>
-                  <div class="text-body-2 text-disabled">
-                    {{ item.email }}
+            <VDataTable :items="staffData"
+              :headers="[...staffHeaders, { title: 'Actions', key: 'actions', sortable: false }]" class="text-no-wrap"
+              item-value="id">
+              <!-- Name -->
+              <template #item.name="{ item }">
+                <div class="d-flex align-center gap-x-3">
+                  <VAvatar size="34" color="primary" variant="tonal">
+                    <span>{{item.name.split(' ').map((n: string) => n[0]).join('')}}</span>
+                  </VAvatar>
+                  <div>
+                    <h6 class="text-base font-weight-medium">
+                      {{ item.name }}
+                    </h6>
+                    <div class="text-body-2 text-disabled">
+                      {{ item.email }}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </template>
+              </template>
 
-            <!-- Status -->
-            <template #item.status="{ item }">
-              <VChip
-                :color="resolveStatusVariant(item.status)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
-                {{ item.status }}
-              </VChip>
-            </template>
+              <!-- Status -->
+              <template #item.status="{ item }">
+                <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+                  {{ item.status }}
+                </VChip>
+              </template>
 
-            <!-- Actions -->
-            <template #item.actions="{ item }">
-              <VBtn
-                icon
-                variant="text"
-                color="medium-emphasis"
-                size="small"
-              >
-                <VIcon icon="tabler-dots-vertical" />
-                <VMenu activator="parent">
-                  <VList>
-                    <VListItem @click="viewStaff(item)">
-                      <template #prepend>
-                        <VIcon icon="tabler-eye" />
-                      </template>
-                      <VListItemTitle>View</VListItemTitle>
-                    </VListItem>
-                    <VListItem @click="editStaff(item)">
-                      <template #prepend>
-                        <VIcon icon="tabler-edit" />
-                      </template>
-                      <VListItemTitle>Edit</VListItemTitle>
-                    </VListItem>
-                    <VListItem @click="confirmDeleteStaff(item.id)">
-                      <template #prepend>
-                        <VIcon icon="tabler-trash" />
-                      </template>
-                      <VListItemTitle>Remove</VListItemTitle>
-                    </VListItem>
-                  </VList>
-                </VMenu>
-              </VBtn>
-            </template>
-          </VDataTable>
-        </VCard>
+              <!-- Actions -->
+              <template #item.actions="{ item }">
+                <VBtn icon variant="text" color="medium-emphasis" size="small">
+                  <VIcon icon="tabler-dots-vertical" />
+                  <VMenu activator="parent">
+                    <VList>
+                      <VListItem @click="viewStaff(item)">
+                        <template #prepend>
+                          <VIcon icon="tabler-eye" />
+                        </template>
+                        <VListItemTitle>View</VListItemTitle>
+                      </VListItem>
+                      <VListItem @click="editStaff(item)">
+                        <template #prepend>
+                          <VIcon icon="tabler-edit" />
+                        </template>
+                        <VListItemTitle>Edit</VListItemTitle>
+                      </VListItem>
+                      <VListItem @click="confirmDeleteStaff(item.id)">
+                        <template #prepend>
+                          <VIcon icon="tabler-trash" />
+                        </template>
+                        <VListItemTitle>Remove</VListItemTitle>
+                      </VListItem>
+                    </VList>
+                  </VMenu>
+                </VBtn>
+              </template>
+            </VDataTable>
+          </VCard>
+        </template>
       </VWindowItem>
 
       <!-- Inventory Tab -->
       <VWindowItem value="inventory">
-        <!-- Stats Cards -->
-        <VRow class="mb-6">
-          <VCol
-            cols="12"
-            md="3"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="primary"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-package"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Total Products
+        <div v-if="loading" class="text-center py-8">
+          <VProgressCircular indeterminate color="primary" />
+          <div class="mt-3 text-body-1">
+            Loading inventory data...
+          </div>
+        </div>
+        <div v-else-if="error" class="text-center py-8">
+          <VIcon icon="tabler-alert-circle" color="error" size="48" class="mb-3" />
+          <div class="text-body-1 text-error">
+            {{ error }}
+          </div>
+          <VBtn color="primary" variant="tonal" class="mt-3" @click="loadUnitData">
+            Retry
+          </VBtn>
+        </div>
+        <template v-else>
+          <!-- Stats Cards -->
+          <VRow class="mb-6">
+            <VCol cols="12" md="3">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="primary" variant="tonal">
+                    <VIcon icon="tabler-package" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Total Products
+                    </div>
+                    <h4 class="text-h4">
+                      {{ totalProducts }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ totalProducts }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="info"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-stack"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Total Stock
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="3">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="info" variant="tonal">
+                    <VIcon icon="tabler-stack" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Total Stock
+                    </div>
+                    <h4 class="text-h4">
+                      {{ totalStock }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ totalStock }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="warning"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-alert-triangle"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Low Stock
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="3">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="warning" variant="tonal">
+                    <VIcon icon="tabler-alert-triangle" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Low Stock
+                    </div>
+                    <h4 class="text-h4">
+                      {{ lowStockProducts }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ lowStockProducts }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="3"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="error"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-x"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Out of Stock
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="3">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="error" variant="tonal">
+                    <VIcon icon="tabler-x" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Out of Stock
+                    </div>
+                    <h4 class="text-h4">
+                      {{ outOfStockProducts }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ outOfStockProducts }}
-                  </h4>
+                </VCardText>
+              </VCard>
+            </VCol>
+          </VRow>
+
+          <!-- Products Table -->
+          <VCard>
+            <VCardItem class="pb-4">
+              <VCardTitle>Inventory</VCardTitle>
+              <VCardSubtitle>Manage stock levels for franchise products</VCardSubtitle>
+              <template #append>
+                <VBtn color="primary" prepend-icon="tabler-plus" @click="openAddProductModal">
+                  Add to Inventory
+                </VBtn>
+              </template>
+            </VCardItem>
+
+            <VDivider />
+
+            <VDataTable :items="productsData"
+              :headers="[...productHeaders, { title: 'Actions', key: 'actions', sortable: false }]" class="text-no-wrap"
+              item-value="id">
+              <!-- Unit Price -->
+              <template #item.unitPrice="{ item }">
+                <div class="text-body-1 font-weight-medium">
+                  SAR {{ item.unitPrice.toFixed(2) }}
                 </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-        </VRow>
+              </template>
 
-        <!-- Products Table -->
-        <VCard>
-          <VCardItem class="pb-4">
-            <VCardTitle>Inventory</VCardTitle>
-            <template #append>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-plus"
-                @click="isAddProductModalVisible = true"
-              >
-                Add Product
-              </VBtn>
-            </template>
-          </VCardItem>
+              <!-- Stock -->
+              <template #item.stock="{ item }">
+                <VChip :color="item.stock === 0 ? 'error' : item.stock <= 10 ? 'warning' : 'success'" size="small"
+                  label>
+                  {{ item.stock }}
+                </VChip>
+              </template>
 
-          <VDivider />
+              <!-- Status -->
+              <template #item.status="{ item }">
+                <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+                  {{ item.status }}
+                </VChip>
+              </template>
 
-          <VDataTable
-            :items="productsData"
-            :headers="[...productHeaders, { title: 'Actions', key: 'actions', sortable: false }]"
-            class="text-no-wrap"
-            item-value="id"
-          >
-            <!-- Unit Price -->
-            <template #item.unitPrice="{ item }">
-              <div class="text-body-1 font-weight-medium">
-                SAR {{ item.unitPrice.toFixed(2) }}
-              </div>
-            </template>
-
-            <!-- Stock -->
-            <template #item.stock="{ item }">
-              <VChip
-                :color="item.stock === 0 ? 'error' : item.stock <= 10 ? 'warning' : 'success'"
-                size="small"
-                label
-              >
-                {{ item.stock }}
-              </VChip>
-            </template>
-
-            <!-- Status -->
-            <template #item.status="{ item }">
-              <VChip
-                :color="resolveStatusVariant(item.status)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
-                {{ item.status }}
-              </VChip>
-            </template>
-
-            <!-- Actions -->
-            <template #item.actions="{ item }">
-              <VBtn
-                icon
-                variant="text"
-                color="medium-emphasis"
-                size="small"
-              >
-                <VIcon icon="tabler-dots-vertical" />
-                <VMenu activator="parent">
-                  <VList>
-                    <VListItem @click="viewProduct(item)">
-                      <template #prepend>
-                        <VIcon icon="tabler-eye" />
-                      </template>
-                      <VListItemTitle>View</VListItemTitle>
-                    </VListItem>
-                    <VListItem @click="editProduct(item)">
-                      <template #prepend>
-                        <VIcon icon="tabler-edit" />
-                      </template>
-                      <VListItemTitle>Edit</VListItemTitle>
-                    </VListItem>
-                    <VListItem @click="confirmDeleteProduct(item.id)">
-                      <template #prepend>
-                        <VIcon icon="tabler-trash" />
-                      </template>
-                      <VListItemTitle>Remove</VListItemTitle>
-                    </VListItem>
-                  </VList>
-                </VMenu>
-              </VBtn>
-            </template>
-          </VDataTable>
-        </VCard>
+              <!-- Actions -->
+              <template #item.actions="{ item }">
+                <VBtn icon variant="text" color="medium-emphasis" size="small">
+                  <VIcon icon="tabler-dots-vertical" />
+                  <VMenu activator="parent">
+                    <VList>
+                      <VListItem @click="viewProduct(item)">
+                        <template #prepend>
+                          <VIcon icon="tabler-eye" />
+                        </template>
+                        <VListItemTitle>View</VListItemTitle>
+                      </VListItem>
+                      <VListItem @click="editProduct(item)">
+                        <template #prepend>
+                          <VIcon icon="tabler-edit" />
+                        </template>
+                        <VListItemTitle>Edit</VListItemTitle>
+                      </VListItem>
+                      <VListItem @click="confirmDeleteProduct(item.id)">
+                        <template #prepend>
+                          <VIcon icon="tabler-trash" />
+                        </template>
+                        <VListItemTitle>Remove from Inventory</VListItemTitle>
+                      </VListItem>
+                    </VList>
+                  </VMenu>
+                </VBtn>
+              </template>
+            </VDataTable>
+          </VCard>
+        </template>
       </VWindowItem>
 
       <!-- Reviews Tab -->
       <VWindowItem value="reviews">
-        <!-- Stats Cards -->
-        <VRow class="mb-6">
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="primary"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-star"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Average Rating
+        <div v-if="loading" class="text-center py-8">
+          <VProgressCircular indeterminate color="primary" />
+          <div class="mt-3 text-body-1">
+            Loading reviews data...
+          </div>
+        </div>
+        <div v-else-if="error" class="text-center py-8">
+          <VIcon icon="tabler-alert-circle" color="error" size="48" class="mb-3" />
+          <div class="text-body-1 text-error">
+            {{ error }}
+          </div>
+          <VBtn color="primary" variant="tonal" class="mt-3" @click="loadUnitData">
+            Retry
+          </VBtn>
+        </div>
+        <template v-else>
+          <!-- Stats Cards -->
+          <VRow class="mb-6">
+            <VCol cols="12" md="4">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="primary" variant="tonal">
+                    <VIcon icon="tabler-star" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Average Rating
+                    </div>
+                    <h4 class="text-h4">
+                      {{ avgRating }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ avgRating }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="success"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-thumb-up"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Positive Reviews
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="4">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="success" variant="tonal">
+                    <VIcon icon="tabler-thumb-up" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Positive Reviews
+                    </div>
+                    <h4 class="text-h4">
+                      {{ positiveReviews }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ positiveReviews }}
-                  </h4>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-          <VCol
-            cols="12"
-            md="4"
-          >
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="error"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-thumb-down"
-                    size="26"
-                  />
-                </VAvatar>
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    Negative Reviews
+                </VCardText>
+              </VCard>
+            </VCol>
+            <VCol cols="12" md="4">
+              <VCard>
+                <VCardText class="d-flex align-center">
+                  <VAvatar size="44" rounded color="error" variant="tonal">
+                    <VIcon icon="tabler-thumb-down" size="26" />
+                  </VAvatar>
+                  <div class="ms-4">
+                    <div class="text-body-2 text-disabled">
+                      Negative Reviews
+                    </div>
+                    <h4 class="text-h4">
+                      {{ negativeReviews }}
+                    </h4>
                   </div>
-                  <h4 class="text-h4">
-                    {{ negativeReviews }}
-                  </h4>
+                </VCardText>
+              </VCard>
+            </VCol>
+          </VRow>
+
+          <!-- Reviews Table -->
+          <VCard>
+            <VCardItem class="pb-4">
+              <VCardTitle>Customer Reviews</VCardTitle>
+              <template #append>
+                <VBtn color="primary" prepend-icon="tabler-plus" @click="isAddReviewModalVisible = true">
+                  Add Review
+                </VBtn>
+              </template>
+            </VCardItem>
+
+            <VDivider />
+
+            <VDataTable :items="reviewsData"
+              :headers="[...reviewHeaders, { title: 'Actions', key: 'actions', sortable: false }]" class="text-no-wrap"
+              item-value="id">
+              <!-- Rating -->
+              <template #item.rating="{ item }">
+                <div class="d-flex align-center gap-1">
+                  <VRating :model-value="item.rating" readonly size="small" color="warning" />
+                  <span class="text-body-2">({{ item.rating }})</span>
                 </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-        </VRow>
+              </template>
 
-        <!-- Reviews Table -->
-        <VCard>
-          <VCardItem class="pb-4">
-            <VCardTitle>Customer Reviews</VCardTitle>
-            <template #append>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-plus"
-                @click="isAddReviewModalVisible = true"
-              >
-                Add Review
-              </VBtn>
-            </template>
-          </VCardItem>
+              <!-- Comment -->
+              <template #item.comment="{ item }">
+                <div class="text-body-2" style="max-width: 300px;">
+                  {{ item.comment }}
+                </div>
+              </template>
 
-          <VDivider />
+              <!-- Sentiment -->
+              <template #item.sentiment="{ item }">
+                <VChip :color="item.sentiment === 'positive' ? 'success' : 'error'" size="small" label
+                  class="text-capitalize">
+                  {{ item.sentiment }}
+                </VChip>
+              </template>
 
-          <VDataTable
-            :items="reviewsData"
-            :headers="[...reviewHeaders, { title: 'Actions', key: 'actions', sortable: false }]"
-            class="text-no-wrap"
-            item-value="id"
-          >
-            <!-- Rating -->
-            <template #item.rating="{ item }">
-              <div class="d-flex align-center gap-1">
-                <VRating
-                  :model-value="item.rating"
-                  readonly
-                  size="small"
-                  color="warning"
-                />
-                <span class="text-body-2">({{ item.rating }})</span>
-              </div>
-            </template>
-
-            <!-- Comment -->
-            <template #item.comment="{ item }">
-              <div
-                class="text-body-2"
-                style="max-width: 300px;"
-              >
-                {{ item.comment }}
-              </div>
-            </template>
-
-            <!-- Sentiment -->
-            <template #item.sentiment="{ item }">
-              <VChip
-                :color="item.sentiment === 'positive' ? 'success' : 'error'"
-                size="small"
-                label
-                class="text-capitalize"
-              >
-                {{ item.sentiment }}
-              </VChip>
-            </template>
-
-            <!-- Actions -->
-            <template #item.actions="{ item }">
-              <VBtn
-                icon
-                variant="text"
-                color="medium-emphasis"
-                size="small"
-              >
-                <VIcon icon="tabler-dots-vertical" />
-                <VMenu activator="parent">
-                  <VList>
-                    <VListItem @click="viewReview(item)">
-                      <template #prepend>
-                        <VIcon icon="tabler-eye" />
-                      </template>
-                      <VListItemTitle>View</VListItemTitle>
-                    </VListItem>
-                    <VListItem @click="editReview(item)">
-                      <template #prepend>
-                        <VIcon icon="tabler-edit" />
-                      </template>
-                      <VListItemTitle>Edit</VListItemTitle>
-                    </VListItem>
-                    <VListItem @click="confirmDeleteReview(item.id)">
-                      <template #prepend>
-                        <VIcon icon="tabler-trash" />
-                      </template>
-                      <VListItemTitle>Remove</VListItemTitle>
-                    </VListItem>
-                  </VList>
-                </VMenu>
-              </VBtn>
-            </template>
-          </VDataTable>
-        </VCard>
+              <!-- Actions -->
+              <template #item.actions="{ item }">
+                <VBtn icon variant="text" color="medium-emphasis" size="small">
+                  <VIcon icon="tabler-dots-vertical" />
+                  <VMenu activator="parent">
+                    <VList>
+                      <VListItem @click="viewReview(item)">
+                        <template #prepend>
+                          <VIcon icon="tabler-eye" />
+                        </template>
+                        <VListItemTitle>View</VListItemTitle>
+                      </VListItem>
+                      <VListItem @click="editReview(item)">
+                        <template #prepend>
+                          <VIcon icon="tabler-edit" />
+                        </template>
+                        <VListItemTitle>Edit</VListItemTitle>
+                      </VListItem>
+                      <VListItem @click="confirmDeleteReview(item.id)">
+                        <template #prepend>
+                          <VIcon icon="tabler-trash" />
+                        </template>
+                        <VListItemTitle>Remove</VListItemTitle>
+                      </VListItem>
+                    </VList>
+                  </VMenu>
+                </VBtn>
+              </template>
+            </VDataTable>
+          </VCard>
+        </template>
       </VWindowItem>
     </VWindow>
 
     <!-- Modals -->
-    <CreateTaskModal
-      v-model:is-dialog-visible="isAddTaskModalVisible"
-      @task-created="onTaskCreated"
-    />
+    <CreateTaskModal v-model:is-dialog-visible="isAddTaskModalVisible" @task-created="onTaskCreated" />
 
-    <AddDocumentModal
-      v-model:is-dialog-visible="isAddDocumentModalVisible"
-      @document-added="onDocumentAdded"
-    />
+    <AddDocumentModal v-model:is-dialog-visible="isAddDocumentModalVisible" @document-added="onDocumentAdded" />
 
-    <DocumentActionModal
-      v-model:is-dialog-visible="isDocumentActionModalVisible"
-      :document="selectedDocument"
-      :action="documentAction"
-      @document-action-confirmed="onDocumentActionConfirmed"
-    />
+    <DocumentActionModal v-model:is-dialog-visible="isDocumentActionModalVisible" :document="selectedDocument"
+      :action="documentAction" @document-action-confirmed="onDocumentActionConfirmed" />
 
     <!-- View Task Modal -->
-    <VDialog
-      v-model="isViewTaskModalVisible"
-      max-width="600"
-    >
+    <VDialog v-model="isViewTaskModalVisible" max-width="600">
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
           Task Details
@@ -1628,10 +1501,7 @@ const reviewHeaders = [
 
         <VDivider />
 
-        <VCardText
-          v-if="selectedTask"
-          class="pa-6"
-        >
+        <VCardText v-if="selectedTask" class="pa-6">
           <VRow>
             <VCol cols="12">
               <h6 class="text-h6 mb-2">
@@ -1641,10 +1511,7 @@ const reviewHeaders = [
                 {{ selectedTask.description }}
               </p>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Category
               </div>
@@ -1652,10 +1519,7 @@ const reviewHeaders = [
                 {{ selectedTask.category }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Assigned To
               </div>
@@ -1663,10 +1527,7 @@ const reviewHeaders = [
                 {{ selectedTask.assignedTo }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Start Date
               </div>
@@ -1674,10 +1535,7 @@ const reviewHeaders = [
                 {{ selectedTask.startDate }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Due Date
               </div>
@@ -1685,35 +1543,19 @@ const reviewHeaders = [
                 {{ selectedTask.dueDate }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Priority
               </div>
-              <VChip
-                :color="resolvePriorityVariant(selectedTask.priority)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
+              <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label class="text-capitalize">
                 {{ selectedTask.priority }}
               </VChip>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Status
               </div>
-              <VChip
-                :color="resolveStatusVariant(selectedTask.status)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
+              <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize">
                 {{ selectedTask.status }}
               </VChip>
             </VCol>
@@ -1724,11 +1566,7 @@ const reviewHeaders = [
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isViewTaskModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isViewTaskModalVisible = false">
             Close
           </VBtn>
         </VCardActions>
@@ -1736,11 +1574,7 @@ const reviewHeaders = [
     </VDialog>
 
     <!-- Edit Task Modal -->
-    <VDialog
-      v-model="isEditTaskModalVisible"
-      max-width="600"
-      persistent
-    >
+    <VDialog v-model="isEditTaskModalVisible" max-width="600" persistent>
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
           Edit Task
@@ -1748,101 +1582,40 @@ const reviewHeaders = [
 
         <VDivider />
 
-        <VCardText
-          v-if="selectedTask"
-          class="pa-6"
-        >
+        <VCardText v-if="selectedTask" class="pa-6">
           <VRow>
             <VCol cols="12">
-              <VTextField
-                v-model="selectedTask.title"
-                label="Task Title"
-                placeholder="Enter task title"
-                required
-              />
+              <VTextField v-model="selectedTask.title" label="Task Title" placeholder="Enter task title" required />
             </VCol>
             <VCol cols="12">
-              <VTextarea
-                v-model="selectedTask.description"
-                label="Description"
-                placeholder="Enter task description"
-                rows="3"
-                required
-              />
+              <VTextarea v-model="selectedTask.description" label="Description" placeholder="Enter task description"
+                rows="3" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="selectedTask.category"
-                label="Category"
-                placeholder="Enter category"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedTask.category" label="Category" placeholder="Enter category" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="selectedTask.assignedTo"
-                label="Assigned To"
-                placeholder="Enter assignee"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedTask.assignedTo" label="Assigned To" placeholder="Enter assignee" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="selectedTask.startDate"
-                label="Start Date"
-                type="date"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedTask.startDate" label="Start Date" type="date" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="selectedTask.dueDate"
-                label="Due Date"
-                type="date"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedTask.dueDate" label="Due Date" type="date" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                v-model="selectedTask.priority"
-                label="Priority"
-                :items="[
-                  { title: 'Low', value: 'low' },
-                  { title: 'Medium', value: 'medium' },
-                  { title: 'High', value: 'high' },
-                ]"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VSelect v-model="selectedTask.priority" label="Priority" :items="[
+                { title: 'Low', value: 'low' },
+                { title: 'Medium', value: 'medium' },
+                { title: 'High', value: 'high' },
+              ]" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                v-model="selectedTask.status"
-                label="Status"
-                :items="[
-                  { title: 'Pending', value: 'pending' },
-                  { title: 'In Progress', value: 'in_progress' },
-                  { title: 'Completed', value: 'completed' },
-                ]"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VSelect v-model="selectedTask.status" label="Status" :items="[
+                { title: 'Pending', value: 'pending' },
+                { title: 'In Progress', value: 'in_progress' },
+                { title: 'Completed', value: 'completed' },
+              ]" required />
             </VCol>
           </VRow>
         </VCardText>
@@ -1851,17 +1624,10 @@ const reviewHeaders = [
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isEditTaskModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isEditTaskModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="saveTask"
-          >
+          <VBtn color="primary" @click="saveTask">
             Save Changes
           </VBtn>
         </VCardActions>
@@ -1869,10 +1635,7 @@ const reviewHeaders = [
     </VDialog>
 
     <!-- Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isDeleteDialogVisible"
-      max-width="500"
-    >
+    <VDialog v-model="isDeleteDialogVisible" max-width="500">
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -1884,17 +1647,10 @@ const reviewHeaders = [
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDialogVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteTask"
-          >
+          <VBtn color="error" @click="deleteTask">
             Delete
           </VBtn>
         </VCardActions>
@@ -1902,10 +1658,7 @@ const reviewHeaders = [
     </VDialog>
 
     <!-- Edit Unit Details Modal -->
-    <VDialog
-      v-model="isEditUnitModalVisible"
-      max-width="600"
-    >
+    <VDialog v-model="isEditUnitModalVisible" max-width="600">
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
           Edit Unit Details
@@ -1915,52 +1668,20 @@ const reviewHeaders = [
 
         <VCardText class="pa-6">
           <VRow>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="editUnitForm.branchName"
-                label="Branch Name"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField v-model="editUnitForm.branchName" label="Branch Name" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="editUnitForm.city"
-                label="City"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField v-model="editUnitForm.city" label="City" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="editUnitForm.franchiseeName"
-                label="Franchisee"
-                disabled
-              />
+            <VCol cols="12" md="6">
+              <VTextField v-model="editUnitForm.franchiseeName" label="Franchisee" disabled />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="editUnitForm.contactNumber"
-                label="Contact Number"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField v-model="editUnitForm.contactNumber" label="Contact Number" required />
             </VCol>
             <VCol cols="12">
-              <VTextarea
-                v-model="editUnitForm.address"
-                label="Address"
-                rows="3"
-              />
+              <VTextarea v-model="editUnitForm.address" label="Address" rows="3" />
             </VCol>
           </VRow>
         </VCardText>
@@ -1969,17 +1690,10 @@ const reviewHeaders = [
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isEditUnitModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isEditUnitModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="saveUnitDetails"
-          >
+          <VBtn color="primary" @click="saveUnitDetails">
             Save Changes
           </VBtn>
         </VCardActions>
@@ -1987,10 +1701,7 @@ const reviewHeaders = [
     </VDialog>
 
     <!-- Add Staff Modal -->
-    <VDialog
-      v-model="isAddStaffModalVisible"
-      max-width="600"
-    >
+    <VDialog v-model="isAddStaffModalVisible" max-width="600">
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
           Add New Staff Member
@@ -2000,64 +1711,23 @@ const reviewHeaders = [
 
         <VCardText class="pa-6">
           <VRow>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Full Name"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField label="Full Name" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Email"
-                type="email"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField label="Email" type="email" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Phone"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField label="Phone" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                label="Position"
-                :items="['Manager', 'Cashier', 'Cook', 'Server', 'Cleaner']"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VSelect label="Position" :items="['Manager', 'Cashier', 'Cook', 'Server', 'Cleaner']" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Salary"
-                type="number"
-                prefix="SAR"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField label="Salary" type="number" prefix="SAR" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                label="Status"
-                :items="['Active', 'On Leave', 'Inactive']"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VSelect label="Status" :items="['Active', 'On Leave', 'Inactive']" required />
             </VCol>
           </VRow>
         </VCardText>
@@ -2066,101 +1736,80 @@ const reviewHeaders = [
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isAddStaffModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isAddStaffModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="addStaff"
-          >
+          <VBtn color="primary" @click="addStaff">
             Add Staff
           </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
 
-    <!-- Add Product Modal -->
-    <VDialog
-      v-model="isAddProductModalVisible"
-      max-width="600"
-    >
+    <!-- Add Product to Inventory Modal -->
+    <VDialog v-model="isAddProductModalVisible" max-width="600">
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
-          Add New Product
+          Add Product to Inventory
         </VCardTitle>
+        <VCardSubtitle class="pa-6 pt-0 pb-4">
+          Select an existing franchise product and set inventory levels for this unit
+        </VCardSubtitle>
 
         <VDivider />
 
         <VCardText class="pa-6">
           <VRow>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Product Name"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="SKU"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Unit Price"
-                type="number"
-                prefix="$"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Quantity"
-                type="number"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                label="Category"
-                :items="['Food', 'Beverage', 'Supplies', 'Equipment']"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                label="Stock Status"
-                :items="['In Stock', 'Low Stock', 'Out of Stock']"
-                required
-              />
-            </VCol>
             <VCol cols="12">
-              <VTextarea
-                label="Description"
-                rows="3"
-              />
+              <VSelect label="Select Product" :items="availableFranchiseProducts" item-title="name" item-value="id"
+                v-model="selectedFranchiseProduct" required placeholder="Choose a product from franchise catalog"
+                :no-data-text="availableFranchiseProducts.length === 0 ? 'No available franchise products to add' : 'No products match your search'">
+                <template #item="{ item, props }">
+                  <VListItem v-bind="props">
+                    <VListItemTitle>{{ item.raw.name }}</VListItemTitle>
+                    <VListItemSubtitle>
+                      {{ item.raw.category }} • SAR {{ item.raw.unitPrice.toFixed(2) }}
+                    </VListItemSubtitle>
+                  </VListItem>
+                </template>
+              </VSelect>
+
+              <div v-if="availableFranchiseProducts.length === 0" class="text-center py-4">
+                <VIcon icon="tabler-package-off" size="48" class="text-disabled mb-2" />
+                <div class="text-body-2 text-disabled">
+                  All franchise products are already in this unit's inventory
+                </div>
+              </div>
+            </VCol>
+
+            <!-- Product Preview (when product is selected) -->
+            <VCol v-if="selectedProductPreview" cols="12">
+              <VCard variant="tonal" color="primary">
+                <VCardText>
+                  <div class="d-flex align-center gap-3">
+                    <VIcon icon="tabler-package" size="24" />
+                    <div>
+                      <h6 class="text-h6">{{ selectedProductPreview.name }}</h6>
+                      <p class="text-body-2 mb-0">
+                        {{ selectedProductPreview.description }}
+                      </p>
+                      <div class="text-body-2 text-medium-emphasis">
+                        Category: {{ selectedProductPreview.category }} • Price: SAR {{
+                          selectedProductPreview.unitPrice.toFixed(2) }}
+                      </div>
+                    </div>
+                  </div>
+                </VCardText>
+              </VCard>
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <VTextField label="Initial Stock Quantity" type="number" min="0" v-model="newInventoryForm.quantity"
+                required placeholder="Enter quantity to add" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField label="Reorder Level" type="number" min="0" v-model="newInventoryForm.reorderLevel" required
+                placeholder="Minimum stock alert level" />
             </VCol>
           </VRow>
         </VCardText>
@@ -2169,28 +1818,19 @@ const reviewHeaders = [
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isAddProductModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="closeAddProductModal">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="addProduct"
-          >
-            Add Product
+          <VBtn color="primary" @click="addProductToInventory"
+            :disabled="!selectedFranchiseProduct || !newInventoryForm.quantity">
+            Add to Inventory
           </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
 
     <!-- Add Review Modal -->
-    <VDialog
-      v-model="isAddReviewModalVisible"
-      max-width="600"
-    >
+    <VDialog v-model="isAddReviewModalVisible" max-width="600">
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
           Add Customer Review
@@ -2200,49 +1840,23 @@ const reviewHeaders = [
 
         <VCardText class="pa-6">
           <VRow>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Customer Name"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField label="Customer Name" required />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Customer Email"
-                type="email"
-              />
+            <VCol cols="12" md="6">
+              <VTextField label="Customer Email" type="email" />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-2">
                 Rating
               </div>
               <VRating size="large" />
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                label="Date"
-                type="date"
-                required
-              />
+            <VCol cols="12" md="6">
+              <VTextField label="Date" type="date" required />
             </VCol>
             <VCol cols="12">
-              <VTextarea
-                label="Review Comment"
-                rows="4"
-                required
-              />
+              <VTextarea label="Review Comment" rows="4" required />
             </VCol>
           </VRow>
         </VCardText>
@@ -2251,17 +1865,10 @@ const reviewHeaders = [
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isAddReviewModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isAddReviewModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="addReview"
-          >
+          <VBtn color="primary" @click="addReview">
             Add Review
           </VBtn>
         </VCardActions>

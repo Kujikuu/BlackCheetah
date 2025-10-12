@@ -1,70 +1,127 @@
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
 import { useTheme } from 'vuetify'
 import { getBarChartConfig, getLineChartSimpleConfig } from '@core/libs/apex-chart/apexCharConfig'
+import type { OperationsWidgetData, StoreData, StaffData, LowStockChartData, ShiftCoverageData } from '@/services/api/franchisee-dashboard'
+import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 
 // 👉 Store
 const currentTab = ref('store')
 const vuetifyTheme = useTheme()
 
+// Loading and error states
+const loading = ref(false)
+const error = ref<string | null>(null)
+const hasLoadedApiData = ref(false)
+
 // Utility function for percentage display
 const prefixWithPlus = (value: number) => value > 0 ? `+${value}` : value.toString()
 
-// Store data for new structure
-const storeData = ref({
-  totalItems: 1250,
-  totalStocks: 8500,
-  lowStockItems: 45,
-  outOfStockItems: 12,
+// Store data - will be populated from API
+const storeData = ref<StoreData>({
+  totalItems: 0,
+  totalStocks: 0,
+  lowStockItems: 0,
+  outOfStockItems: 0,
 })
 
-const staffData = ref({
-  totalStaffs: 24,
-  newHires: 3,
-  monthlyAbsenteeismRate: 8.5,
-  topPerformers: [
-    { name: 'Sarah Johnson', performance: 95, department: 'Sales' },
-    { name: 'Michael Brown', performance: 92, department: 'Customer Service' },
-    { name: 'Emily Davis', performance: 90, department: 'Inventory' },
-    { name: 'John Smith', performance: 88, department: 'Operations' },
-    { name: 'Lisa Wilson', performance: 85, department: 'Marketing' },
-  ],
+// Staff data - will be populated from API
+const staffData = ref<StaffData>({
+  totalStaffs: 0,
+  newHires: 0,
+  monthlyAbsenteeismRate: 0,
+  topPerformers: [],
 })
 
-// Chart data for low stock items
-const lowStockChartData = ref([
+// Chart data for low stock items - initialized with safe default values
+const lowStockChartData = ref<LowStockChartData[]>([
   {
     name: 'Intake',
-    data: [120, 132, 101, 134, 90, 230, 210, 150, 180, 200, 220, 240],
+    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   },
   {
-    name: 'Available',
-    data: [80, 95, 70, 110, 60, 180, 160, 120, 140, 160, 180, 200],
+    name: 'Available', 
+    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   },
 ])
 
-// Chart data for employee shift coverage
-const shiftCoverageData = ref([
+// Chart data for employee shift coverage - initialized with safe default values
+const shiftCoverageData = ref<ShiftCoverageData[]>([
   {
     name: 'Morning Shift',
-    data: [8, 7, 8, 6, 7, 8, 7],
+    data: [0, 0, 0, 0, 0, 0, 0],
   },
   {
     name: 'Afternoon Shift',
-    data: [6, 8, 7, 8, 6, 7, 8],
+    data: [0, 0, 0, 0, 0, 0, 0],
   },
   {
     name: 'Evening Shift',
-    data: [4, 5, 6, 5, 4, 5, 6],
+    data: [0, 0, 0, 0, 0, 0, 0],
   },
   {
     name: 'Night Shift',
-    data: [2, 3, 2, 3, 2, 2, 3],
+    data: [0, 0, 0, 0, 0, 0, 0],
   },
 ])
+
+// Load dashboard data
+const loadDashboardData = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    // Load all operations data
+    const operationsResponse = await franchiseeDashboardApi.getOperationsData()
+    if (operationsResponse.success && operationsResponse.data) {
+      const operations = operationsResponse.data
+      storeData.value = operations.storeData
+      staffData.value = operations.staffData
+      lowStockChartData.value = operations.lowStockChart
+      shiftCoverageData.value = operations.shiftCoverageChart
+      hasLoadedApiData.value = true
+    }
+  } catch (err) {
+    error.value = 'Failed to load operations data. Please try again.'
+    console.error('Error loading operations data:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Load data on component mount
+onMounted(() => {
+  loadDashboardData()
+})
 
 // Chart configurations
 const lowStockChartConfig = computed(() => getLineChartSimpleConfig(vuetifyTheme.current.value))
 const shiftCoverageChartConfig = computed(() => getBarChartConfig(vuetifyTheme.current.value))
+
+// Computed properties to check if chart data is ready
+const isLowStockChartDataReady = computed(() => {
+  return !loading.value && 
+         hasLoadedApiData.value &&
+         lowStockChartData.value.length > 0 && 
+         lowStockChartData.value.every(series => 
+           series.data && 
+           Array.isArray(series.data) && 
+           series.data.length > 0 &&
+           series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
+         )
+})
+
+const isShiftCoverageChartDataReady = computed(() => {
+  return !loading.value && 
+         hasLoadedApiData.value &&
+         shiftCoverageData.value.length > 0 && 
+         shiftCoverageData.value.every(series => 
+           series.data && 
+           Array.isArray(series.data) && 
+           series.data.length > 0 &&
+           series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
+         )
+})
 
 // Widget data for Store tab
 const storeWidgetData = computed(() => [
@@ -74,16 +131,21 @@ const storeWidgetData = computed(() => [
   { title: 'Out of Stock', value: storeData.value.outOfStockItems.toString(), change: -15, desc: 'Items unavailable', icon: 'tabler-x-circle', iconColor: 'error' },
 ])
 
-// Widget data for Staff tab
+// Widget data for Staff tab  
 const staffWidgetData = computed(() => [
   { title: 'Total Staffs', value: staffData.value.totalStaffs.toString(), change: 8, desc: 'Active employees', icon: 'tabler-users', iconColor: 'primary' },
   { title: 'New Hires', value: staffData.value.newHires.toString(), change: 25, desc: 'This month', icon: 'tabler-user-plus', iconColor: 'success' },
-  { title: 'Absenteeism Rate', value: `${staffData.value.monthlyAbsenteeismRate}%`, change: -12, desc: 'Monthly average', icon: 'tabler-user-x', iconColor: 'warning' },
+  { title: 'Absenteeism Rate', value: `${staffData.value.monthlyAbsenteeismRate.toFixed(1)}%`, change: -12, desc: 'Monthly average', icon: 'tabler-user-x', iconColor: 'warning' },
 ])
 
 // Current widget data based on selected tab
 const currentWidgetData = computed(() => {
   return currentTab.value === 'store' ? storeWidgetData.value : staffWidgetData.value
+})
+
+// Check if we have top performers data
+const hasPerformersData = computed(() => {
+  return staffData.value.topPerformers && staffData.value.topPerformers.length > 0
 })
 
 const tabs = [
@@ -94,11 +156,44 @@ const tabs = [
 
 <template>
   <section>
-    <!-- 👉 Tabs -->
-    <VTabs
-      v-model="currentTab"
-      class="mb-6"
-    >
+    <!-- Loading State -->
+    <VRow v-if="loading" class="mb-6">
+      <VCol cols="12">
+        <VCard>
+          <VCardText class="text-center py-8">
+            <VProgressCircular indeterminate color="primary" size="64" />
+            <div class="mt-4 text-body-1">
+              Loading operations data...
+            </div>
+          </VCardText>
+        </VCard>
+      </VCol>
+    </VRow>
+
+    <!-- Error State -->
+    <VRow v-else-if="error" class="mb-6">
+      <VCol cols="12">
+        <VAlert type="error" variant="tonal" class="mb-0">
+          <template #prepend>
+            <VIcon icon="tabler-alert-circle" />
+          </template>
+          {{ error }}
+          <template #append>
+            <VBtn color="error" variant="text" size="small" @click="loadDashboardData">
+              Retry
+            </VBtn>
+          </template>
+        </VAlert>
+      </VCol>
+    </VRow>
+
+    <!-- Dashboard Content -->
+    <div v-else>
+      <!-- 👉 Tabs -->
+      <VTabs
+        v-model="currentTab"
+        class="mb-6"
+      >
       <VTab
         v-for="tab in tabs"
         :key="tab.value"
@@ -178,11 +273,18 @@ const tabs = [
           </VCardItem>
           <VCardText>
             <VueApexCharts
+              v-if="isLowStockChartDataReady"
               type="line"
               height="400"
               :options="lowStockChartConfig"
               :series="lowStockChartData"
             />
+            <div v-else class="text-center py-8">
+              <VProgressCircular indeterminate color="primary" size="32" />
+              <div class="mt-4 text-body-2 text-medium-emphasis">
+                Loading chart data...
+              </div>
+            </div>
           </VCardText>
         </VCard>
       </VWindowItem>
@@ -253,10 +355,10 @@ const tabs = [
                 <VCardTitle>Top 5 Performer</VCardTitle>
               </VCardItem>
               <VCardText>
-                <VList>
+                <VList v-if="hasPerformersData">
                   <VListItem
                     v-for="(performer, index) in staffData.topPerformers"
-                    :key="performer.id"
+                    :key="performer.id || index"
                     class="px-0"
                   >
                     <template #prepend>
@@ -279,7 +381,7 @@ const tabs = [
                     <template #append>
                       <div class="text-end">
                         <div class="text-body-1 font-weight-medium">
-                          {{ performer.score }}%
+                          {{ performer.performance || performer.score }}%
                         </div>
                         <div class="text-caption text-disabled">
                           Performance
@@ -288,6 +390,15 @@ const tabs = [
                     </template>
                   </VListItem>
                 </VList>
+                <div v-else class="text-center py-8">
+                  <VProgressCircular v-if="loading" indeterminate color="primary" size="32" />
+                  <div v-else>
+                    <VIcon icon="tabler-users" size="48" class="text-disabled mb-4" />
+                    <div class="text-body-2 text-medium-emphasis">
+                      No performance data available
+                    </div>
+                  </div>
+                </div>
               </VCardText>
             </VCard>
           </VCol>
@@ -303,16 +414,24 @@ const tabs = [
               </VCardItem>
               <VCardText>
                 <VueApexCharts
+                  v-if="isShiftCoverageChartDataReady"
                   type="radar"
                   height="300"
                   :options="shiftCoverageChartConfig"
                   :series="shiftCoverageData"
                 />
+                <div v-else class="text-center py-8">
+                  <VProgressCircular indeterminate color="primary" size="32" />
+                  <div class="mt-4 text-body-2 text-medium-emphasis">
+                    Loading chart data...
+                  </div>
+                </div>
               </VCardText>
             </VCard>
           </VCol>
         </VRow>
       </VWindowItem>
     </VWindow>
+    </div>
   </section>
 </template>

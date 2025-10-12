@@ -86,6 +86,18 @@ class Unit extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function staff(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Staff::class, 'staff_unit')
+            ->withPivot(['assigned_date', 'end_date', 'role', 'is_primary'])
+            ->withTimestamps();
+    }
+
+    public function activeStaff(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->staff()->wherePivotNull('end_date');
+    }
+
     /**
      * Products stocked in this unit.
      */
