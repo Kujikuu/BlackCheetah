@@ -176,7 +176,10 @@ const prefixWithPlus = (value: number) => {
   return value > 0 ? `+${value}` : value.toString()
 }
 
-const avatarText = (name: string) => {
+const avatarText = (name: string | null | undefined) => {
+  if (!name || typeof name !== 'string') {
+    return 'U'
+  }
   return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase()
 }
 </script>

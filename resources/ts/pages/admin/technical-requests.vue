@@ -116,7 +116,10 @@ const fetchTechnicalRequests = async () => {
 const filteredRequests = computed(() => technicalRequests.value)
 
 // Helper function for avatar text
-const avatarText = (name: string) => {
+const avatarText = (name: string | null | undefined) => {
+  if (!name || typeof name !== 'string') {
+    return 'U'
+  }
   return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase()
 }
 
@@ -140,7 +143,7 @@ const deleteRequest = async (id: number) => {
 const updateRequestStatus = async (id: number, status: string) => {
   try {
     await $api(`/api/v1/admin/technical-requests/${id}/status`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: { status },
     })
     await fetchTechnicalRequests()
@@ -187,7 +190,11 @@ const priorityOptions = [
   { title: 'Critical', value: 'critical' },
 ]
 
-const resolveStatusVariant = (status: string) => {
+const resolveStatusVariant = (status: string | null | undefined) => {
+  if (!status || typeof status !== 'string') {
+    return 'primary'
+  }
+  
   const statusLowerCase = status.toLowerCase()
   if (statusLowerCase === 'open')
     return 'info'
@@ -201,7 +208,11 @@ const resolveStatusVariant = (status: string) => {
   return 'primary'
 }
 
-const resolvePriorityVariant = (priority: string) => {
+const resolvePriorityVariant = (priority: string | null | undefined) => {
+  if (!priority || typeof priority !== 'string') {
+    return { color: 'primary', icon: 'tabler-minus' }
+  }
+  
   const priorityLowerCase = priority.toLowerCase()
   if (priorityLowerCase === 'low')
     return { color: 'info', icon: 'tabler-arrow-down' }
@@ -221,7 +232,10 @@ const selectedRequest = ref<any>(null)
 
 // View request
 const viewRequest = (request: any) => {
-  selectedRequest.value = request
+  selectedRequest.value = {
+    ...request,
+    attachments: Array.isArray(request.attachments) ? request.attachments : []
+  }
   isViewRequestDialogVisible.value = true
 }
 
@@ -277,7 +291,11 @@ const downloadAttachment = (attachment: any) => {
 }
 
 // Get file icon based on extension
-const getFileIcon = (fileName: string) => {
+const getFileIcon = (fileName: string | null | undefined) => {
+  if (!fileName || typeof fileName !== 'string') {
+    return 'tabler-file'
+  }
+
   const ext = fileName.split('.').pop()?.toLowerCase()
 
   if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext || ''))
@@ -780,11 +798,11 @@ onMounted(() => {
 
             <!-- Attachments -->
             <VCol
-              v-if="selectedRequest.attachments && selectedRequest.attachments.length > 0"
+              v-if="selectedRequest.attachments && Array.isArray(selectedRequest.attachments) && selectedRequest.attachments.length > 0"
               cols="12"
             >
               <div class="text-body-2 text-medium-emphasis mb-2">
-                Attachments ({{ selectedRequest.attachments.length }})
+                Attachments ({{ Array.isArray(selectedRequest.attachments) ? selectedRequest.attachments.filter(att => att && (att.name || att.filename)).length : 0 }})
               </div>
               <VList
                 lines="two"
@@ -792,7 +810,7 @@ onMounted(() => {
                 class="pa-0"
               >
                 <VListItem
-                  v-for="(attachment, index) in selectedRequest.attachments"
+                  v-for="(attachment, index) in (Array.isArray(selectedRequest.attachments) ? selectedRequest.attachments.filter(att => att && (att.name || att.filename)) : [])"
                   :key="index"
                   class="px-0"
                 >
@@ -802,15 +820,15 @@ onMounted(() => {
                       variant="tonal"
                       size="40"
                     >
-                      <VIcon :icon="getFileIcon(attachment.name)" />
+                      <VIcon :icon="getFileIcon(attachment.name || attachment.filename)" />
                     </VAvatar>
                   </template>
 
                   <VListItemTitle class="font-weight-medium">
-                    {{ attachment.name }}
+                    {{ attachment.name || attachment.filename || 'Unknown File' }}
                   </VListItemTitle>
                   <VListItemSubtitle>
-                    {{ attachment.size }}
+                    {{ attachment.size || 'Unknown Size' }}
                   </VListItemSubtitle>
 
                   <template #append>

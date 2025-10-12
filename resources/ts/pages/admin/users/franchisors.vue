@@ -89,7 +89,10 @@ const fetchFranchisors = async () => {
 // Utility functions
 const prefixWithPlus = (value: number) => value > 0 ? `+${value}` : value
 
-const avatarText = (name: string) => {
+const avatarText = (name: string | null | undefined) => {
+  if (!name || typeof name !== 'string') {
+    return 'U'
+  }
   const words = name.split(' ')
 
   return words.length > 1 ? `${words[0][0]}${words[1][0]}` : name.slice(0, 2)

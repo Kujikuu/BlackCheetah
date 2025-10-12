@@ -111,6 +111,11 @@ const formatFileSize = (bytes: number) => {
 
 // Get file icon
 const getFileIcon = (fileName: string) => {
+  // Handle null, undefined, or empty fileName
+  if (!fileName || typeof fileName !== 'string') {
+    return 'tabler-file'
+  }
+
   const ext = fileName.split('.').pop()?.toLowerCase()
 
   if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext || ''))
@@ -137,7 +142,7 @@ watch(() => props.request, newVal => {
       status: newVal.status,
       attachments: newVal.attachments || [],
     }
-    uploadedFiles.value = [...(newVal.attachments || [])]
+    uploadedFiles.value = [...(Array.isArray(newVal.attachments) ? newVal.attachments.filter(att => att && (att.name || att.filename)) : [])]
   }
   else {
     resetForm()
@@ -324,15 +329,15 @@ const avatarText = (name: string) => {
                       variant="tonal"
                       size="40"
                     >
-                      <VIcon :icon="getFileIcon(file.name)" />
+                      <VIcon :icon="getFileIcon(file.name || file.filename)" />
                     </VAvatar>
                   </template>
 
                   <VListItemTitle class="font-weight-medium">
-                    {{ file.name }}
+                    {{ file.name || file.filename || 'Unknown File' }}
                   </VListItemTitle>
                   <VListItemSubtitle>
-                    {{ file.size }}
+                    {{ file.size || 'Unknown Size' }}
                   </VListItemSubtitle>
 
                   <template #append>

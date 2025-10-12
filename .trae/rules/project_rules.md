@@ -5,6 +5,11 @@
 
 The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to enhance the user's satisfaction building Laravel applications.
 
+# AI Guidelines
+
+Don't use `npm run dev` since I've already running the app.
+the App link is `https://blackcheetah.test/`
+
 ## Foundational Context
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 

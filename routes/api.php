@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\FinancialController;
 use App\Http\Controllers\Api\FranchiseController;
 use App\Http\Controllers\Api\FranchisorController;
 use App\Http\Controllers\Api\LeadController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RevenueController;
 use App\Http\Controllers\Api\ReviewController;
@@ -55,6 +56,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
+
+    // Notification Management Routes
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/stats', [NotificationController::class, 'stats']);
+        Route::get('/{id}', [NotificationController::class, 'show']);
+        Route::patch('/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::patch('/{id}/unread', [NotificationController::class, 'markAsUnread']);
+        Route::patch('/mark-multiple-read', [NotificationController::class, 'markMultipleAsRead']);
+        Route::patch('/mark-multiple-unread', [NotificationController::class, 'markMultipleAsUnread']);
+        Route::patch('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
+    });
 
     // Franchise Management Routes
     Route::apiResource('franchises', FranchiseController::class);
@@ -122,6 +136,13 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
         Route::patch('{task}/start', [TaskController::class, 'start']);
         Route::patch('{task}/assign', [TaskController::class, 'assign']);
         Route::patch('{task}/progress', [TaskController::class, 'updateProgress']);
+    });
+
+    // Admin Technical Request Routes (must be before general resource routes)
+    Route::middleware(['role:admin'])->prefix('admin')->group(function () {
+        Route::get('technical-requests', [AdminController::class, 'technicalRequests']);
+        Route::patch('technical-requests/{id}/status', [AdminController::class, 'updateTechnicalRequestStatus']);
+        Route::delete('technical-requests/{id}', [AdminController::class, 'deleteTechnicalRequest']);
     });
 
     // Technical Request Routes
@@ -434,8 +455,5 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(fun
     Route::delete('users/{id}', [AdminController::class, 'deleteUser']);
     Route::post('users/{id}/reset-password', [AdminController::class, 'resetPassword']);
 
-    // Technical requests management
-    Route::get('technical-requests', [AdminController::class, 'technicalRequests']);
-    Route::patch('technical-requests/{id}/status', [AdminController::class, 'updateTechnicalRequestStatus']);
-    Route::delete('technical-requests/{id}', [AdminController::class, 'deleteTechnicalRequest']);
+    // Technical requests management routes moved to earlier in file to avoid conflicts
 });
