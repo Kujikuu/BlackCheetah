@@ -378,6 +378,9 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::patch('technical-requests/{technicalRequest}/close', [TechnicalRequestController::class, 'close']);
     Route::patch('technical-requests/{technicalRequest}/escalate', [TechnicalRequestController::class, 'escalate']);
 
+    // Franchisee with unit creation for franchisor
+    Route::post('franchisees-with-unit', [FranchisorController::class, 'createFranchiseeWithUnit']);
+
     // Sales associates management for franchisor
     Route::get('sales-associates', [FranchisorController::class, 'salesAssociatesIndex']);
     Route::post('sales-associates', [FranchisorController::class, 'salesAssociatesStore']);

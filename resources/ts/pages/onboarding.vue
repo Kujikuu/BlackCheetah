@@ -79,11 +79,6 @@ const completeProfile = async () => {
       }
     }
 
-    // Refresh user abilities
-    const abilityResponse = await $api('/v1/abilities')
-    useCookie<any>('userAbilityRules').value = abilityResponse.rules
-    updateAbility(abilityResponse.rules)
-
     // Redirect directly to role-specific dashboard
     const userRole = userDataCookie.value?.role
     switch (userRole) {

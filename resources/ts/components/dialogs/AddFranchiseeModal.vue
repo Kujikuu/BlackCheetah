@@ -110,7 +110,7 @@ const submitForm = async () => {
   try {
     // Get the franchisor's franchise ID
     const franchiseResponse = await $api('/v1/franchisor/franchise')
-    const franchiseId = franchiseResponse.data.data.id
+    const franchiseId = franchiseResponse.data?.id || franchiseResponse.id
 
     // Prepare franchisee and unit data
     const franchiseeUnitData = {
@@ -135,7 +135,7 @@ const submitForm = async () => {
     }
 
     // Create franchisee with unit
-    const response = await $api('/v1/admin/franchisees-with-unit', {
+    const response = await $api('/v1/franchisor/franchisees-with-unit', {
       method: 'POST',
       body: franchiseeUnitData,
     })

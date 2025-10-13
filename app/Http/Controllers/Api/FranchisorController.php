@@ -1647,4 +1647,149 @@ class FranchisorController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Create a franchisee with associated unit for the authenticated franchisor
+     */
+    public function createFranchiseeWithUnit(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (! $franchise) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No franchise found for this user',
+                ], 404);
+            }
+
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                // Franchisee details
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'phone' => 'nullable|string|max:20',
+
+                // Unit details
+                'unit_name' => 'required|string|max:255',
+                'unit_type' => 'required|in:store,kiosk,mobile,online,warehouse,office',
+                'address' => 'required|string',
+                'city' => 'required|string|max:100',
+                'state_province' => 'required|string|max:100',
+                'postal_code' => 'nullable|string|max:20',
+                'country' => 'required|string|max:100',
+                'size_sqft' => 'nullable|numeric|min:0',
+                'monthly_rent' => 'nullable|numeric|min:0',
+                'opening_date' => 'nullable|date',
+                'status' => 'nullable|in:planning,construction,training,active,temporarily_closed,permanently_closed',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            // Generate random password for franchisee
+            $temporaryPassword = \Illuminate\Support\Str::random(12);
+
+            // Create franchisee user
+            $franchisee = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => \Illuminate\Support\Facades\Hash::make($temporaryPassword),
+                'role' => 'franchisee',
+                'status' => 'active',
+                'phone' => $request->phone,
+                'city' => $request->city,
+                'profile_completed' => false, // Require onboarding
+            ]);
+
+            // Generate unit code
+            $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $franchise->name), 0, 3));
+            if (empty($prefix)) {
+                $prefix = 'UNI';
+            }
+
+            $baseCode = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $request->unit_name), 0, 6));
+            if (empty($baseCode)) {
+                $baseCode = 'UNIT';
+            }
+
+            $unitCode = $prefix.'-'.$baseCode;
+            $counter = 1;
+
+            // Ensure uniqueness
+            while (Unit::where('unit_code', $unitCode)->exists()) {
+                $unitCode = $prefix.'-'.$baseCode.$counter;
+                $counter++;
+            }
+
+            // Create associated unit with franchisee as manager
+            $unit = Unit::create([
+                'unit_name' => $request->unit_name,
+                'unit_code' => $unitCode,
+                'franchise_id' => $franchise->id, // Use authenticated franchisor's franchise
+                'franchisee_id' => $franchisee->id, // Assign the new franchisee as unit manager
+                'unit_type' => $request->unit_type,
+                'address' => $request->address,
+                'city' => $request->city,
+                'state_province' => $request->state_province,
+                'postal_code' => $request->postal_code,
+                'country' => $request->country,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'size_sqft' => $request->size_sqft,
+                'monthly_rent' => $request->monthly_rent,
+                'opening_date' => $request->opening_date,
+                'status' => $request->status ?? 'planning',
+                'employee_count' => 0,
+            ]);
+
+            // Send email notification with login credentials
+            $loginUrl = env('APP_URL').'/login';
+            $franchisee->notify(new \App\Notifications\NewFranchiseeCredentials($temporaryPassword, $unitCode, $loginUrl));
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Franchisee and unit created successfully',
+                'data' => [
+                    'franchisee' => [
+                        'id' => $franchisee->id,
+                        'name' => $franchisee->name,
+                        'email' => $franchisee->email,
+                        'role' => $franchisee->role,
+                        'status' => $franchisee->status,
+                        'phone' => $franchisee->phone,
+                        'city' => $franchisee->city,
+                    ],
+                    'unit' => [
+                        'id' => $unit->id,
+                        'unit_name' => $unit->unit_name,
+                        'unit_code' => $unit->unit_code,
+                        'unit_type' => $unit->unit_type,
+                        'address' => $unit->address,
+                        'city' => $unit->city,
+                        'state_province' => $unit->state_province,
+                        'status' => $unit->status,
+                        'franchisee_id' => $unit->franchisee_id,
+                    ],
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create franchisee and unit',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
