@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class FranchiseeDashboardController extends Controller
 {
@@ -1802,6 +1803,53 @@ class FranchiseeDashboardController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Document deleted successfully',
+        ]);
+    }
+
+    /**
+     * Download a document
+     */
+    public function downloadDocument(Request $request, $unitId, $documentId): JsonResponse
+    {
+        $user = $request->user();
+        $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
+
+        if (! $unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unit not found or access denied',
+            ], 404);
+        }
+
+        $documents = $unit->documents ?? [];
+        $docIndex = $documentId - 1;
+
+        if (! isset($documents[$docIndex])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Document not found',
+            ], 404);
+        }
+
+        $document = $documents[$docIndex];
+
+        // Generate the download URL based on the document's file path
+        // In production, this would be the actual storage path
+        $downloadUrl = Storage::url('documents/' . $document['fileName']);
+
+        // If using a cloud storage service like S3, you would generate a temporary signed URL
+        // $downloadUrl = Storage::disk('s3')->temporaryUrl(
+        //     'documents/'.$document['fileName'],
+        //     now()->addMinutes(5)
+        // );
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'url' => $downloadUrl,
+                'fileName' => $document['fileName'],
+            ],
+            'message' => 'Document download URL generated successfully',
         ]);
     }
 

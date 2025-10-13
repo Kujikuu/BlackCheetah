@@ -332,7 +332,7 @@ const onDocumentActionConfirmed = async (action: string, document: any) => {
       }
     } else if (action === 'download') {
       // Handle document download
-      window.open(document.url, '_blank')
+      downloadDocument(document)
     }
   }
   catch (error) {
@@ -342,6 +342,24 @@ const onDocumentActionConfirmed = async (action: string, document: any) => {
     isDocumentActionModalVisible.value = false
     selectedDocument.value = null
     documentAction.value = undefined
+  }
+}
+
+// 👉 Download document handler
+const downloadDocument = async (document: any) => {
+  try {
+    const unitIdToUse = unitData.value?.id || getUnitId()
+
+    // Call the API to get the download URL or file
+    const response = await franchiseeDashboardApi.downloadDocument(unitIdToUse, document.id)
+
+    if (response.success && response.data.url) {
+      // Open the download URL in a new window/tab
+      window.open(response.data.url, '_blank')
+    }
+  }
+  catch (error) {
+    console.error('Error downloading document:', error)
   }
 }
 
@@ -1157,7 +1175,8 @@ const reviewHeaders = [
                     </VCardText>
 
                     <VCardActions>
-                      <VBtn size="small" variant="text" color="primary" prepend-icon="tabler-download">
+                      <VBtn size="small" variant="text" color="primary" prepend-icon="tabler-download"
+                        @click="downloadDocument(document)">
                         Download
                       </VBtn>
                     </VCardActions>
@@ -1878,7 +1897,8 @@ const reviewHeaders = [
               <VTextField v-model="newStaffForm.shiftEnd" label="Shift End" type="time" />
             </VCol>
             <VCol cols="12" md="6">
-              <VSelect v-model="newStaffForm.status" label="Status" :items="['Active', 'On Leave', 'Terminated', 'Inactive']" required />
+              <VSelect v-model="newStaffForm.status" label="Status"
+                :items="['Active', 'On Leave', 'Terminated', 'Inactive']" required />
             </VCol>
             <VCol cols="12" md="6">
               <VSelect v-model="newStaffForm.employmentType" label="Employment Type" :items="[
@@ -1921,7 +1941,7 @@ const reviewHeaders = [
           <VRow>
             <VCol cols="12" class="text-center pb-6">
               <VAvatar size="80" color="primary" variant="tonal">
-                <span class="text-h4">{{ selectedStaff.name.split(' ').map((n: string) => n[0]).join('') }}</span>
+                <span class="text-h4">{{selectedStaff.name.split(' ').map((n: string) => n[0]).join('')}}</span>
               </VAvatar>
             </VCol>
             <VCol cols="12" md="6">
@@ -1946,7 +1966,8 @@ const reviewHeaders = [
             </VCol>
             <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">Salary</div>
-              <div class="text-body-1 font-weight-medium">{{ selectedStaff.salary ? `SAR ${selectedStaff.salary}` : 'N/A' }}</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedStaff.salary ? `SAR ${selectedStaff.salary}` :
+                'N/A' }}</div>
             </VCol>
             <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">Hire Date</div>
@@ -1958,7 +1979,8 @@ const reviewHeaders = [
             </VCol>
             <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">Employment Type</div>
-              <div class="text-body-1 font-weight-medium text-capitalize">{{ selectedStaff.employmentType?.replace('_', ' ') || 'N/A' }}</div>
+              <div class="text-body-1 font-weight-medium text-capitalize">{{ selectedStaff.employmentType?.replace('_',
+                ' ') || 'N/A' }}</div>
             </VCol>
             <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">Status</div>
@@ -2023,7 +2045,8 @@ const reviewHeaders = [
               <VTextField v-model="selectedStaff.shiftEnd" label="Shift End" type="time" />
             </VCol>
             <VCol cols="12" md="6">
-              <VSelect v-model="selectedStaff.status" label="Status" :items="['working', 'leave', 'terminated', 'inactive']" required />
+              <VSelect v-model="selectedStaff.status" label="Status"
+                :items="['working', 'leave', 'terminated', 'inactive']" required />
             </VCol>
             <VCol cols="12" md="6">
               <VSelect v-model="selectedStaff.employmentType" label="Employment Type" :items="[

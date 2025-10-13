@@ -503,6 +503,7 @@ Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('v1/unit-manager'
         Route::post('documents/{unitId}', [FranchiseeDashboardController::class, 'createDocument']);
         Route::put('documents/{unitId}/{documentId}', [FranchiseeDashboardController::class, 'updateDocument']);
         Route::delete('documents/{unitId}/{documentId}', [FranchiseeDashboardController::class, 'deleteDocument']);
+        Route::get('documents/{unitId}/{documentId}/download', [FranchiseeDashboardController::class, 'downloadDocument']);
     });
 });
 

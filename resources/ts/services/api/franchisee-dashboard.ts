@@ -401,6 +401,12 @@ export const franchiseeDashboardApi = {
     })
   },
 
+  async downloadDocument(unitId: number, documentId: number): Promise<ApiResponse<{ url: string }>> {
+    return await $api<ApiResponse<{ url: string }>>(`${API_URL}/units/documents/${unitId}/${documentId}/download`, {
+      method: 'GET',
+    })
+  },
+
   // Inventory Operations (Many-to-Many Product-Unit Relationship)
   async getAvailableFranchiseProducts(unitId: number): Promise<ApiResponse<UnitProduct[]>> {
     return await $api<ApiResponse<UnitProduct[]>>(`${API_URL}/units/available-products/${unitId}`, {
