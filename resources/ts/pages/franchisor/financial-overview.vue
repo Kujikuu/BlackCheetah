@@ -683,99 +683,48 @@ onMounted(() => {
           }
         }">
         <!-- Sales specific templates -->
-        <template v-if="activeTab === 'sales'" #item.product="{ item }">
-          <div class="d-flex align-center gap-x-2">
-            <VIcon icon="tabler-package" size="22" color="primary" />
-            <div class="text-body-1 text-high-emphasis">
-              {{ (item as SalesData).product }}
-            </div>
-          </div>
-        </template>
-
         <template v-if="activeTab === 'sales'" #item.unitPrice="{ item }">
-          <div class="text-body-1 text-high-emphasis">
-            {{ formatCurrency((item as SalesData).unitPrice) }}
-          </div>
-        </template>
-
-        <template v-if="activeTab === 'sales'" #item.quantity="{ item }">
-          <div class="text-body-1 text-high-emphasis">
-            {{ (item as SalesData).quantity }}
-          </div>
+          <span class="font-weight-medium">
+            {{ (item as SalesData).unitPrice.toFixed(2) }} SAR
+          </span>
         </template>
 
         <template v-if="activeTab === 'sales'" #item.sale="{ item }">
-          <VChip color="success" size="small" label>
-            {{ formatCurrency((item as SalesData).sale) }}
-          </VChip>
+          <span class="text-success font-weight-medium">
+            {{ (item as SalesData).sale.toFixed(2) }} SAR
+          </span>
         </template>
 
         <!-- Expenses specific templates -->
-        <template v-if="activeTab === 'expense'" #item.expenseCategory="{ item }">
-          <div class="d-flex align-center gap-x-2">
-            <VIcon icon="tabler-receipt" size="22" color="warning" />
-            <div class="text-body-1 text-high-emphasis text-capitalize">
-              {{ (item as ExpenseData).expenseCategory }}
-            </div>
-          </div>
+        <template v-if="activeTab === 'expense'" #item.amount="{ item }">
+          <span class="text-error font-weight-medium">
+            {{ (item as ExpenseData).amount.toFixed(2) }} SAR
+          </span>
         </template>
 
-        <template v-if="activeTab === 'expense'" #item.amount="{ item }">
-          <VChip color="error" size="small" label>
-            {{ formatCurrency((item as ExpenseData).amount) }}
+        <template v-if="activeTab === 'expense'" #item.expenseCategory="{ item }">
+          <VChip size="small" variant="tonal" color="primary">
+            {{ (item as ExpenseData).expenseCategory }}
           </VChip>
         </template>
 
-        <template v-if="activeTab === 'expense'" #item.description="{ item }">
-          <div class="text-body-2" style="max-width: 200px;">
-            {{ (item as ExpenseData).description }}
-          </div>
-        </template>
-
         <!-- Profit specific templates -->
-        <template v-if="activeTab === 'profit'" #item.date="{ item }">
-          <div class="d-flex align-center gap-x-2">
-            <VIcon icon="tabler-calendar" size="22" color="info" />
-            <div class="text-body-1 text-high-emphasis font-weight-medium">
-              {{ (item as ProfitData).date }}
-            </div>
-          </div>
-        </template>
-
         <template v-if="activeTab === 'profit'" #item.totalSales="{ item }">
-          <div class="d-flex flex-column">
-            <span class="text-body-1 text-high-emphasis font-weight-medium">
-              {{ formatCurrency((item as ProfitData).totalSales) }}
-            </span>
-            <span class="text-caption text-success">
-              <VIcon icon="tabler-arrow-up" size="14" />
-              Revenue
-            </span>
-          </div>
+          <span class="font-weight-medium">
+            {{ (item as ProfitData).totalSales.toFixed(2) }} SAR
+          </span>
         </template>
 
         <template v-if="activeTab === 'profit'" #item.totalExpenses="{ item }">
-          <div class="d-flex flex-column">
-            <span class="text-body-1 text-high-emphasis font-weight-medium">
-              {{ formatCurrency((item as ProfitData).totalExpenses) }}
-            </span>
-            <span class="text-caption text-error">
-              <VIcon icon="tabler-arrow-down" size="14" />
-              Costs
-            </span>
-          </div>
+          <span class="text-error">
+            {{ (item as ProfitData).totalExpenses.toFixed(2) }} SAR
+          </span>
         </template>
 
         <template v-if="activeTab === 'profit'" #item.profit="{ item }">
-          <div class="d-flex flex-column align-end">
-            <VChip :color="resolveProfitVariant((item as ProfitData).profit)" size="small" label
-              class="font-weight-bold">
-              {{ formatCurrency((item as ProfitData).profit) }} <span class="text-xs">SAR</span>
-            </VChip>
-            <span class="text-caption text-disabled mt-1">
-              {{ ((item as ProfitData).profit / (item as ProfitData).totalSales * 100).toFixed(1) }}% margin
-            </span>
-          </div>
+          <span class="text-success font-weight-medium">
+            {{ (item as ProfitData).profit.toFixed(2) }} SAR
+          </span>
         </template>
 
         <!-- Actions for Sales Tab -->
