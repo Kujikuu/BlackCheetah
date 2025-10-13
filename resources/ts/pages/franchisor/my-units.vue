@@ -184,12 +184,7 @@ const viewUnitDetails = (unit: any) => {
               Manage your franchise units and their franchisee managers
             </p>
           </div>
-          <VBtn
-            color="primary"
-            prepend-icon="tabler-plus"
-            :loading="loading"
-            @click="addFranchisee"
-          >
+          <VBtn color="primary" prepend-icon="tabler-plus" :loading="loading" @click="addFranchisee">
             Add Franchisee & Unit
           </VBtn>
         </div>
@@ -197,172 +192,93 @@ const viewUnitDetails = (unit: any) => {
     </VRow>
 
     <!-- Error Alert -->
-    <VAlert
-      v-if="error"
-      type="error"
-      variant="tonal"
-      class="mb-6"
-      closable
-      @click:close="error = null"
-    >
+    <VAlert v-if="error" type="error" variant="tonal" class="mb-6" closable @click:close="error = null">
       {{ error }}
     </VAlert>
 
     <!-- Tabs -->
-    <VTabs
-      v-model="currentTab"
-      class="mb-6"
-    >
+    <VTabs v-model="currentTab" class="mb-6">
       <VTab value="overview">
-        <VIcon
-          icon="tabler-dashboard"
-          start
-        />
+        <VIcon icon="tabler-dashboard" start />
         Overview
       </VTab>
       <VTab value="units">
-        <VIcon
-          icon="tabler-building-store"
-          start
-        />
+        <VIcon icon="tabler-building-store" start />
         All Units
       </VTab>
     </VTabs>
 
-    <VWindow
-      v-model="currentTab"
-      class="disable-tab-transition"
-    >
+    <VWindow v-model="currentTab" class="disable-tab-transition">
       <!-- Overview Tab -->
       <VWindowItem value="overview">
         <!-- Stats Cards -->
         <VRow class="mb-6">
-          <VCol
-            cols="12"
-            md="3"
-          >
+          <VCol cols="12" md="3">
             <VCard>
               <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="primary"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-building-store"
-                    size="26"
-                  />
+                <VAvatar size="44" rounded color="primary" variant="tonal">
+                  <VIcon icon="tabler-building-store" size="26" />
                 </VAvatar>
                 <div class="ms-4">
                   <div class="text-body-2 text-disabled">
                     Total Units
                   </div>
                   <h4 class="text-h4">
-                    <VProgressCircular
-                      v-if="loading"
-                      indeterminate
-                      size="20"
-                    />
+                    <VProgressCircular v-if="loading" indeterminate size="20" />
                     <span v-else>{{ totalUnits }}</span>
                   </h4>
                 </div>
               </VCardText>
             </VCard>
           </VCol>
-          <VCol
-            cols="12"
-            md="3"
-          >
+          <VCol cols="12" md="3">
             <VCard>
               <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="success"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-check"
-                    size="26"
-                  />
+                <VAvatar size="44" rounded color="success" variant="tonal">
+                  <VIcon icon="tabler-check" size="26" />
                 </VAvatar>
                 <div class="ms-4">
                   <div class="text-body-2 text-disabled">
                     Active Units
                   </div>
                   <h4 class="text-h4">
-                    <VProgressCircular
-                      v-if="loading"
-                      indeterminate
-                      size="20"
-                    />
+                    <VProgressCircular v-if="loading" indeterminate size="20" />
                     <span v-else>{{ activeUnits }}</span>
                   </h4>
                 </div>
               </VCardText>
             </VCard>
           </VCol>
-          <VCol
-            cols="12"
-            md="3"
-          >
+          <VCol cols="12" md="3">
             <VCard>
               <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="warning"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-clock"
-                    size="26"
-                  />
+                <VAvatar size="44" rounded color="warning" variant="tonal">
+                  <VIcon icon="tabler-clock" size="26" />
                 </VAvatar>
                 <div class="ms-4">
                   <div class="text-body-2 text-disabled">
                     Pending Units
                   </div>
                   <h4 class="text-h4">
-                    <VProgressCircular
-                      v-if="loading"
-                      indeterminate
-                      size="20"
-                    />
+                    <VProgressCircular v-if="loading" indeterminate size="20" />
                     <span v-else>{{ pendingUnits }}</span>
                   </h4>
                 </div>
               </VCardText>
             </VCard>
           </VCol>
-          <VCol
-            cols="12"
-            md="3"
-          >
+          <VCol cols="12" md="3">
             <VCard>
               <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  color="info"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-currency-dollar"
-                    size="26"
-                  />
+                <VAvatar size="44" rounded color="info" variant="tonal">
+                  <VIcon icon="tabler-currency-riyal" size="26" />
                 </VAvatar>
                 <div class="ms-4">
                   <div class="text-body-2 text-disabled">
                     Monthly Royalty
                   </div>
                   <h4 class="text-h4">
-                    <VProgressCircular
-                      v-if="loading"
-                      indeterminate
-                      size="20"
-                    />
+                    <VProgressCircular v-if="loading" indeterminate size="20" />
                     <span v-else>{{ formatCurrency(totalRevenue) }}</span>
                   </h4>
                 </div>
@@ -376,41 +292,20 @@ const viewUnitDetails = (unit: any) => {
           <VCardItem class="pb-4">
             <VCardTitle>Recent Units</VCardTitle>
             <template #append>
-              <VBtn
-                variant="text"
-                color="primary"
-                @click="currentTab = 'units'"
-              >
+              <VBtn variant="text" color="primary" @click="currentTab = 'units'">
                 View All
               </VBtn>
             </template>
           </VCardItem>
           <VCardText>
             <VRow v-if="loading">
-              <VCol
-                v-for="i in 3"
-                :key="i"
-                cols="12"
-                md="4"
-              >
+              <VCol v-for="i in 3" :key="i" cols="12" md="4">
                 <VCard variant="outlined">
                   <VCardText>
-                    <VSkeletonLoader
-                      type="text"
-                      class="mb-3"
-                    />
-                    <VSkeletonLoader
-                      type="text"
-                      class="mb-2"
-                    />
-                    <VSkeletonLoader
-                      type="text"
-                      class="mb-2"
-                    />
-                    <VSkeletonLoader
-                      type="text"
-                      class="mb-3"
-                    />
+                    <VSkeletonLoader type="text" class="mb-3" />
+                    <VSkeletonLoader type="text" class="mb-2" />
+                    <VSkeletonLoader type="text" class="mb-2" />
+                    <VSkeletonLoader type="text" class="mb-3" />
                     <VSkeletonLoader type="button" />
                   </VCardText>
                 </VCard>
@@ -419,11 +314,7 @@ const viewUnitDetails = (unit: any) => {
             <VRow v-else-if="unitsData.length === 0">
               <VCol cols="12">
                 <div class="text-center py-8">
-                  <VIcon
-                    icon="tabler-building-store"
-                    size="48"
-                    class="text-disabled mb-4"
-                  />
+                  <VIcon icon="tabler-building-store" size="48" class="text-disabled mb-4" />
                   <h4 class="text-h4 mb-2">
                     No Units Found
                   </h4>
@@ -431,37 +322,22 @@ const viewUnitDetails = (unit: any) => {
                     You haven't added any franchise units yet. Click "Add Franchisee" to get
                     started.
                   </p>
-                  <VBtn
-                    color="primary"
-                    prepend-icon="tabler-plus"
-                    @click="addFranchisee"
-                  >
+                  <VBtn color="primary" prepend-icon="tabler-plus" @click="addFranchisee">
                     Add Your First Unit
                   </VBtn>
                 </div>
               </VCol>
             </VRow>
             <VRow v-else>
-              <template
-                v-for="unit in unitsData.slice(0, 3)"
-                :key="unit.id"
-              >
-                <VCol
-                  cols="12"
-                  md="4"
-                >
+              <template v-for="unit in unitsData.slice(0, 3)" :key="unit.id">
+                <VCol cols="12" md="4">
                   <VCard variant="outlined">
                     <VCardText>
                       <div class="d-flex align-center justify-space-between mb-3">
                         <h6 class="text-h6">
                           {{ unit.branchName }}
                         </h6>
-                        <VChip
-                          :color="resolveStatusVariant(unit.status)"
-                          size="small"
-                          label
-                          class="text-capitalize"
-                        >
+                        <VChip :color="resolveStatusVariant(unit.status)" size="small" label class="text-capitalize">
                           {{ unit.status }}
                         </VChip>
                       </div>
@@ -496,11 +372,7 @@ const viewUnitDetails = (unit: any) => {
                     </VCardText>
 
                     <VCardActions>
-                      <VBtn
-                        variant="text"
-                        color="primary"
-                        @click="viewUnit(unit.id)"
-                      >
+                      <VBtn variant="text" color="primary" @click="viewUnit(unit.id)">
                         View Details
                       </VBtn>
                     </VCardActions>
@@ -518,12 +390,7 @@ const viewUnitDetails = (unit: any) => {
           <VCardItem class="pb-4">
             <VCardTitle>All Franchise Units</VCardTitle>
             <template #append>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-plus"
-                :loading="loading"
-                @click="addFranchisee"
-              >
+              <VBtn color="primary" prepend-icon="tabler-plus" :loading="loading" @click="addFranchisee">
                 Add Franchisee & Unit
               </VBtn>
             </template>
@@ -532,16 +399,9 @@ const viewUnitDetails = (unit: any) => {
           <VDivider />
 
           <!-- Loading State -->
-          <VCardText
-            v-if="loading"
-            class="py-8"
-          >
+          <VCardText v-if="loading" class="py-8">
             <div class="text-center">
-              <VProgressCircular
-                indeterminate
-                size="48"
-                class="mb-4"
-              />
+              <VProgressCircular indeterminate size="48" class="mb-4" />
               <h4 class="text-h4 mb-2">
                 Loading Units...
               </h4>
@@ -552,55 +412,29 @@ const viewUnitDetails = (unit: any) => {
           </VCardText>
 
           <!-- Empty State -->
-          <VCardText
-            v-else-if="unitsData.length === 0"
-            class="py-8"
-          >
+          <VCardText v-else-if="unitsData.length === 0" class="py-8">
             <div class="text-center">
-              <VIcon
-                icon="tabler-building-store"
-                size="64"
-                class="text-disabled mb-4"
-              />
+              <VIcon icon="tabler-building-store" size="64" class="text-disabled mb-4" />
               <h4 class="text-h4 mb-2">
                 No Units Found
               </h4>
               <p class="text-body-1 text-medium-emphasis mb-6">
                 You haven't added any franchise units yet. Start by adding your first franchisee and their unit.
               </p>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-plus"
-                size="large"
-                @click="addFranchisee"
-              >
+              <VBtn color="primary" prepend-icon="tabler-plus" size="large" @click="addFranchisee">
                 Add Your First Franchisee & Unit
               </VBtn>
             </div>
           </VCardText>
 
           <!-- Units Table -->
-          <VDataTable
-            v-else
-            :items="unitsData"
-            :headers="unitHeaders"
-            class="text-no-wrap"
-            item-value="id"
-            style="cursor: pointer;"
-            @click:row="(event: any, { item }: any) => viewUnitDetails(item)"
-          >
+          <VDataTable v-else :items="unitsData" :headers="unitHeaders" class="text-no-wrap" item-value="id"
+            style="cursor: pointer;" @click:row="(event: any, { item }: any) => viewUnitDetails(item)">
             <!-- Branch Info -->
             <template #item.branchInfo="{ item }">
               <div class="d-flex align-center gap-x-3">
-                <VAvatar
-                  size="34"
-                  color="primary"
-                  variant="tonal"
-                >
-                  <VIcon
-                    icon="tabler-building-store"
-                    size="20"
-                  />
+                <VAvatar size="34" color="primary" variant="tonal">
+                  <VIcon icon="tabler-building-store" size="20" />
                 </VAvatar>
                 <div>
                   <h6 class="text-base font-weight-medium">
@@ -620,11 +454,7 @@ const viewUnitDetails = (unit: any) => {
                   {{ item.franchiseeName }}
                 </div>
                 <div class="text-body-2 text-disabled">
-                  <VIcon 
-                    icon="tabler-user-check" 
-                    size="14" 
-                    class="me-1"
-                  />
+                  <VIcon icon="tabler-user-check" size="14" class="me-1" />
                   Unit Manager • {{ item.contactNumber }}
                 </div>
               </div>
@@ -663,25 +493,14 @@ const viewUnitDetails = (unit: any) => {
 
             <!-- Status -->
             <template #item.status="{ item }">
-              <VChip
-                :color="resolveStatusVariant(item.status)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
+              <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
                 {{ item.status }}
               </VChip>
             </template>
 
             <!-- Actions -->
             <template #item.actions="{ item }">
-              <VBtn
-                icon
-                variant="text"
-                color="medium-emphasis"
-                size="small"
-                @click="viewUnit(item.id)"
-              >
+              <VBtn icon variant="text" color="medium-emphasis" size="small" @click="viewUnit(item.id)">
                 <VIcon icon="tabler-eye" />
                 <VTooltip activator="parent">
                   View Unit Details
@@ -694,9 +513,6 @@ const viewUnitDetails = (unit: any) => {
     </VWindow>
 
     <!-- Add Franchisee Modal -->
-    <AddFranchiseeModal
-      v-model:is-dialog-visible="isAddFranchiseeModalVisible"
-      @franchisee-added="onFranchiseeAdded"
-    />
+    <AddFranchiseeModal v-model:is-dialog-visible="isAddFranchiseeModalVisible" @franchisee-added="onFranchiseeAdded" />
   </section>
 </template>

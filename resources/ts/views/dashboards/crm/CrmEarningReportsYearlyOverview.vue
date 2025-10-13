@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useTheme } from 'vuetify'
 import { hexToRgb } from '@layouts/utils'
+import { useTheme } from 'vuetify'
 
 const vuetifyTheme = useTheme()
 
@@ -298,7 +298,7 @@ const chartConfigs = computed(() => {
     },
     {
       title: 'Profit',
-      icon: 'tabler-currency-dollar',
+      icon: 'tabler-currency-riyal',
       chartOptions: {
         chart: {
           parentHeightOffset: 0,
@@ -584,50 +584,24 @@ const moreList = [
 </script>
 
 <template>
-  <VCard
-    title="Earning Reports"
-    subtitle="Yearly Earnings Overview"
-  >
+  <VCard title="Earning Reports" subtitle="Yearly Earnings Overview">
     <template #append>
       <div class="mt-n4 me-n2">
-        <MoreBtn
-          size="small"
-          :menu-list="moreList"
-        />
+        <MoreBtn size="small" :menu-list="moreList" />
       </div>
     </template>
 
     <VCardText>
-      <VSlideGroup
-        v-model="currentTab"
-        show-arrows
-        mandatory
-        class="mb-10"
-      >
-        <VSlideGroupItem
-          v-for="(report, index) in chartConfigs"
-          :key="report.title"
-          v-slot="{ isSelected, toggle }"
-          :value="index"
-        >
-          <div
-            style="block-size: 100px; inline-size: 110px;"
+      <VSlideGroup v-model="currentTab" show-arrows mandatory class="mb-10">
+        <VSlideGroupItem v-for="(report, index) in chartConfigs" :key="report.title" v-slot="{ isSelected, toggle }"
+          :value="index">
+          <div style="block-size: 100px; inline-size: 110px;"
             :style="isSelected ? 'border-color:rgb(var(--v-theme-primary)) !important' : ''"
             :class="isSelected ? 'border' : 'border border-dashed'"
             class="d-flex flex-column justify-center align-center cursor-pointer rounded py-4 px-5 me-4"
-            @click="toggle"
-          >
-            <VAvatar
-              rounded
-              size="38"
-              :color="isSelected ? 'primary' : ''"
-              variant="tonal"
-              class="mb-2"
-            >
-              <VIcon
-                size="22"
-                :icon="report.icon"
-              />
+            @click="toggle">
+            <VAvatar rounded size="38" :color="isSelected ? 'primary' : ''" variant="tonal" class="mb-2">
+              <VIcon size="22" :icon="report.icon" />
             </VAvatar>
             <h6 class="text-base font-weight-medium mb-0">
               {{ report.title }}
@@ -637,32 +611,17 @@ const moreList = [
 
         <!-- 👉 slider more -->
         <VSlideGroupItem>
-          <div
-            style="block-size: 100px; inline-size: 110px;"
-            class="d-flex flex-column justify-center align-center rounded border border-dashed py-4 px-5"
-          >
-            <VAvatar
-              rounded
-              size="38"
-              variant="tonal"
-            >
-              <VIcon
-                size="22"
-                icon="tabler-plus"
-              />
+          <div style="block-size: 100px; inline-size: 110px;"
+            class="d-flex flex-column justify-center align-center rounded border border-dashed py-4 px-5">
+            <VAvatar rounded size="38" variant="tonal">
+              <VIcon size="22" icon="tabler-plus" />
             </VAvatar>
           </div>
         </VSlideGroupItem>
       </VSlideGroup>
 
-      <VueApexCharts
-        ref="refVueApexChart"
-        :key="currentTab"
-        :options="chartConfigs[Number(currentTab)].chartOptions"
-        :series="chartConfigs[Number(currentTab)].series"
-        height="230"
-        class="mt-3"
-      />
+      <VueApexCharts ref="refVueApexChart" :key="currentTab" :options="chartConfigs[Number(currentTab)].chartOptions"
+        :series="chartConfigs[Number(currentTab)].series" height="230" class="mt-3" />
     </VCardText>
   </VCard>
 </template>

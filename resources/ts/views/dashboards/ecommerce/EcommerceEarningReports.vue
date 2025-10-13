@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useTheme } from 'vuetify'
 import { hexToRgb } from '@layouts/utils'
+import { useTheme } from 'vuetify'
 
 const vuetifyTheme = useTheme()
 
@@ -94,7 +94,7 @@ const earningReports = [
     percentage: '18.6%',
   },
   {
-    avatarIcon: 'tabler-currency-dollar',
+    avatarIcon: 'tabler-currency-riyal',
     avatarColor: 'success',
     title: 'Total Income',
     subtitle: 'Sales, Affiliation',
@@ -119,37 +119,19 @@ const moreList = [
 </script>
 
 <template>
-  <VCard
-    title="Earning Reports"
-    subtitle="Weekly Earnings Overview"
-  >
+  <VCard title="Earning Reports" subtitle="Weekly Earnings Overview">
     <template #append>
       <div class="mt-n4 me-n2">
-        <MoreBtn
-          size="small"
-          :menu-list="moreList"
-        />
+        <MoreBtn size="small" :menu-list="moreList" />
       </div>
     </template>
 
     <VCardText>
       <VList class="card-list mb-5">
-        <VListItem
-          v-for="report in earningReports"
-          :key="report.title"
-        >
+        <VListItem v-for="report in earningReports" :key="report.title">
           <template #prepend>
-            <VAvatar
-              rounded
-              size="34"
-              variant="tonal"
-              :color="report.avatarColor"
-              class="me-1"
-            >
-              <VIcon
-                :icon="report.avatarIcon"
-                size="22"
-              />
+            <VAvatar rounded size="34" variant="tonal" :color="report.avatarColor" class="me-1">
+              <VIcon :icon="report.avatarIcon" size="22" />
             </VAvatar>
           </template>
 
@@ -163,12 +145,7 @@ const moreList = [
           <template #append>
             <div class="d-flex align-center text-body-2">
               <span class="me-4">{{ report.earnings }}</span>
-              <VIcon
-                color="success"
-                icon="tabler-chevron-up"
-                size="20"
-                class="me-1"
-              />
+              <VIcon color="success" icon="tabler-chevron-up" size="20" class="me-1" />
               <span class="text-disabled">{{ report.percentage }}</span>
             </div>
           </template>
@@ -176,11 +153,7 @@ const moreList = [
       </VList>
 
       <div>
-        <VueApexCharts
-          :options="chartOptions"
-          :series="series"
-          :height="196"
-        />
+        <VueApexCharts :options="chartOptions" :series="series" :height="196" />
       </div>
     </VCardText>
   </VCard>

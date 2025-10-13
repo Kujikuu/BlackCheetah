@@ -33,7 +33,7 @@ const transitions = [
     profit: false,
   },
   {
-    avatarIcon: 'tabler-currency-dollar',
+    avatarIcon: 'tabler-currency-riyal',
     avatarColor: 'info',
     title: 'Bank Transactions',
     subtitle: 'Refund',
@@ -66,10 +66,7 @@ const moreList = [
 </script>
 
 <template>
-  <VCard
-    title="Transactions"
-    subtitle="Total 58 Transactions done in this Month"
-  >
+  <VCard title="Transactions" subtitle="Total 58 Transactions done in this Month">
     <template #append>
       <div class="mt-n4 me-n2">
         <MoreBtn :menu-list="moreList" />
@@ -78,22 +75,10 @@ const moreList = [
 
     <VCardText>
       <VList class="card-list">
-        <VListItem
-          v-for="transition in transitions"
-          :key="transition.title"
-        >
+        <VListItem v-for="transition in transitions" :key="transition.title">
           <template #prepend>
-            <VAvatar
-              size="34"
-              :color="transition.avatarColor"
-              variant="tonal"
-              class="me-1"
-              rounded
-            >
-              <VIcon
-                :icon="transition.avatarIcon"
-                size="22"
-              />
+            <VAvatar size="34" :color="transition.avatarColor" variant="tonal" class="me-1" rounded>
+              <VIcon :icon="transition.avatarIcon" size="22" />
             </VAvatar>
           </template>
 
@@ -106,7 +91,8 @@ const moreList = [
 
           <template #append>
             <div class="d-flex align-center">
-              <span :class="`${transition.profit ? 'text-success' : 'text-error'} font-weight-medium me-2`">{{ transition.stats }}</span>
+              <span :class="`${transition.profit ? 'text-success' : 'text-error'} font-weight-medium me-2`">{{
+                transition.stats }}</span>
             </div>
           </template>
         </VListItem>

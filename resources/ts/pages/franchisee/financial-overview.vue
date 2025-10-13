@@ -411,7 +411,7 @@ const handleImport = () => {
         <VCard>
           <VCardText class="d-flex align-center">
             <VAvatar size="44" rounded color="primary" variant="tonal" class="me-4">
-              <VIcon size="24" icon="tabler-currency-dollar" />
+              <VIcon size="24" icon="tabler-currency-riyal" />
             </VAvatar>
             <div>
               <span class="text-sm text-medium-emphasis">Total Sales</span>
@@ -512,7 +512,7 @@ const handleImport = () => {
                     </span>
                   </template>
                   <template #item.actions="{ item }">
-                    <VBtn icon="mdi-pencil" variant="text" color="primary" size="small"
+                    <VBtn icon="tabler-edit" variant="text" color="primary" size="small"
                       @click="openEditModal(item, 'sales')" />
                   </template>
                 </VDataTable>
@@ -533,7 +533,7 @@ const handleImport = () => {
                     </VChip>
                   </template>
                   <template #item.actions="{ item }">
-                    <VBtn icon="mdi-pencil" variant="text" color="primary" size="small"
+                    <VBtn icon="tabler-edit" variant="text" color="primary" size="small"
                       @click="openEditModal(item, 'expense')" />
                   </template>
                 </VDataTable>

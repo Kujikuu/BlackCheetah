@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
 import type { ProductSalesItem, SalesWidgetData } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 import { getAreaChartSplineConfig } from '@core/libs/apex-chart/apexCharConfig'
+import { computed, onMounted, ref } from 'vue'
 import { useTheme } from 'vuetify'
 
 // Sales dashboard data
@@ -43,14 +43,14 @@ const monthlyPerformanceChartConfig = computed(() => getAreaChartSplineConfig(vu
 // Computed property to check if chart data is ready
 const isChartDataReady = computed(() => {
   return !loading.value &&
-         hasLoadedApiData.value &&
-         monthlyPerformanceData.value.length > 0 && 
-         monthlyPerformanceData.value.every(series => 
-           series.data && 
-           Array.isArray(series.data) && 
-           series.data.length > 0 &&
-           series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
-         )
+    hasLoadedApiData.value &&
+    monthlyPerformanceData.value.length > 0 &&
+    monthlyPerformanceData.value.every(series =>
+      series.data &&
+      Array.isArray(series.data) &&
+      series.data.length > 0 &&
+      series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
+    )
 })
 
 // Format currency
@@ -79,7 +79,7 @@ const loadDashboardData = async () => {
           value: formatCurrency(stats.totalSales),
           change: stats.salesChange,
           desc: 'This month sales',
-          icon: 'tabler-currency-dollar',
+          icon: 'tabler-currency-riyal',
           iconColor: 'primary',
         },
         {
@@ -288,18 +288,12 @@ onMounted(() => {
           <VCardSubtitle>Monthly performance comparison</VCardSubtitle>
         </VCardItem>
         <VCardText>
-          <VueApexCharts 
-            v-if="isChartDataReady"
-            type="area" 
-            height="350" 
-            :options="{
-              ...monthlyPerformanceChartConfig,
-              xaxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-              },
-            }" 
-            :series="monthlyPerformanceData" 
-          />
+          <VueApexCharts v-if="isChartDataReady" type="area" height="350" :options="{
+            ...monthlyPerformanceChartConfig,
+            xaxis: {
+              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            },
+          }" :series="monthlyPerformanceData" />
           <div v-else class="text-center py-8">
             <VProgressCircular indeterminate color="primary" size="32" />
             <div class="mt-4 text-body-2 text-medium-emphasis">

@@ -532,7 +532,7 @@ const clearValidationErrors = () => {
 // Handle API validation errors
 const handleValidationErrors = (errors: Record<string, string[]>) => {
   validationErrors.value = errors
-  
+
   // Show first error in a snackbar or alert
   const firstError = Object.values(errors)[0]?.[0]
   if (firstError) {
@@ -598,7 +598,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
                 </h4>
               </div>
               <VAvatar color="success" variant="tonal" size="56">
-                <VIcon icon="tabler-currency-dollar" size="28" />
+                <VIcon icon="tabler-currency-riyal" size="28" />
               </VAvatar>
             </div>
           </VCardText>
@@ -780,7 +780,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               <!-- Franchise Selection -->
               <VCol cols="12" md="6">
                 <VSelect v-model="createRoyaltyData.franchise_id" :items="franchises" item-title="business_name"
-                  item-value="id" label="Franchise *" variant="outlined" density="compact" required clearable 
+                  item-value="id" label="Franchise *" variant="outlined" density="compact" required clearable
                   :rules="validationRules.franchise_id" :error-messages="validationErrors.franchise_id" />
               </VCol>
 
@@ -793,77 +793,78 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               <!-- Franchisee Selection -->
               <VCol cols="12" md="6">
                 <VSelect v-model="createRoyaltyData.franchisee_id" :items="franchisees" item-title="name"
-                  item-value="id" label="Franchisee *" variant="outlined" density="compact" required clearable 
+                  item-value="id" label="Franchisee *" variant="outlined" density="compact" required clearable
                   :rules="validationRules.franchisee_id" :error-messages="validationErrors.franchisee_id" />
               </VCol>
 
               <!-- Royalty Type -->
               <VCol cols="12" md="6">
                 <VSelect v-model="createRoyaltyData.type" :items="periodOptions" item-title="title" item-value="value"
-                  label="Royalty Type *" variant="outlined" density="compact" required 
-                  :rules="validationRules.type" :error-messages="validationErrors.type" />
+                  label="Royalty Type *" variant="outlined" density="compact" required :rules="validationRules.type"
+                  :error-messages="validationErrors.type" />
               </VCol>
 
               <!-- Period Year -->
               <VCol cols="12" md="4">
                 <VTextField v-model.number="createRoyaltyData.period_year" label="Period Year *" type="number"
-                  variant="outlined" density="compact" required 
-                  :rules="validationRules.period_year" :error-messages="validationErrors.period_year" />
+                  variant="outlined" density="compact" required :rules="validationRules.period_year"
+                  :error-messages="validationErrors.period_year" />
               </VCol>
 
               <!-- Period Month (for monthly type) -->
               <VCol cols="12" md="4" v-if="createRoyaltyData.type === 'monthly'">
                 <VTextField v-model.number="createRoyaltyData.period_month" label="Period Month *" type="number" min="1"
-                  max="12" variant="outlined" density="compact" required 
-                  :rules="validationRules.period_month" :error-messages="validationErrors.period_month" />
+                  max="12" variant="outlined" density="compact" required :rules="validationRules.period_month"
+                  :error-messages="validationErrors.period_month" />
               </VCol>
 
               <!-- Due Date -->
               <VCol cols="12" md="4">
                 <VTextField v-model="createRoyaltyData.due_date" label="Due Date *" type="date" variant="outlined"
-                  density="compact" required 
-                  :rules="validationRules.due_date" :error-messages="validationErrors.due_date" />
+                  density="compact" required :rules="validationRules.due_date"
+                  :error-messages="validationErrors.due_date" />
               </VCol>
 
               <!-- Base Revenue -->
               <VCol cols="12" md="6">
                 <VTextField v-model.number="createRoyaltyData.base_revenue" label="Base Revenue (SAR) *" type="number"
-                  step="0.01" variant="outlined" density="compact" required @input="calculateAmounts" 
+                  step="0.01" variant="outlined" density="compact" required @input="calculateAmounts"
                   :rules="validationRules.base_revenue" :error-messages="validationErrors.base_revenue" />
               </VCol>
 
               <!-- Royalty Rate -->
               <VCol cols="12" md="6">
                 <VTextField v-model.number="createRoyaltyData.royalty_rate" label="Royalty Rate (%)" type="number"
-                  step="0.1" variant="outlined" density="compact" @input="calculateAmounts" 
+                  step="0.1" variant="outlined" density="compact" @input="calculateAmounts"
                   :rules="validationRules.royalty_rate" :error-messages="validationErrors.royalty_rate" />
               </VCol>
 
               <!-- Marketing Fee Rate -->
               <VCol cols="12" md="6">
                 <VTextField v-model.number="createRoyaltyData.marketing_fee_rate" label="Marketing Fee Rate (%)"
-                  type="number" step="0.1" variant="outlined" density="compact" @input="calculateAmounts" 
+                  type="number" step="0.1" variant="outlined" density="compact" @input="calculateAmounts"
                   :rules="validationRules.marketing_fee_rate" :error-messages="validationErrors.marketing_fee_rate" />
               </VCol>
 
               <!-- Technology Fee Amount -->
               <VCol cols="12" md="6">
                 <VTextField v-model.number="createRoyaltyData.technology_fee_amount" label="Technology Fee (SAR)"
-                  type="number" step="0.01" variant="outlined" density="compact" @input="calculateAmounts" 
-                  :rules="validationRules.technology_fee_amount" :error-messages="validationErrors.technology_fee_amount" />
+                  type="number" step="0.01" variant="outlined" density="compact" @input="calculateAmounts"
+                  :rules="validationRules.technology_fee_amount"
+                  :error-messages="validationErrors.technology_fee_amount" />
               </VCol>
 
               <!-- Other Fees -->
               <VCol cols="12" md="6">
                 <VTextField v-model.number="createRoyaltyData.other_fees" label="Other Fees (SAR)" type="number"
-                  step="0.01" variant="outlined" density="compact" @input="calculateAmounts" 
+                  step="0.01" variant="outlined" density="compact" @input="calculateAmounts"
                   :rules="validationRules.other_fees" :error-messages="validationErrors.other_fees" />
               </VCol>
 
               <!-- Adjustments -->
               <VCol cols="12" md="6">
                 <VTextField v-model.number="createRoyaltyData.adjustments" label="Adjustments (SAR)" type="number"
-                  step="0.01" variant="outlined" density="compact" @input="calculateAmounts" 
+                  step="0.01" variant="outlined" density="compact" @input="calculateAmounts"
                   :rules="validationRules.adjustments" :error-messages="validationErrors.adjustments" />
               </VCol>
 

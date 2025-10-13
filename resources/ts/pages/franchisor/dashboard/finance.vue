@@ -85,7 +85,7 @@ watch(financeData, newData => {
     // Update finance stats
     financeStats.value = [
       {
-        icon: 'tabler-currency-dollar',
+        icon: 'tabler-currency-riyal',
         color: 'primary',
         title: 'Total Sales',
         value: formatCurrency(data.stats.total_sales),
@@ -175,7 +175,7 @@ watch(financeData, newData => {
 // Fallback data in case API fails
 const fallbackFinanceStats: FinanceStat[] = [
   {
-    icon: 'tabler-currency-dollar',
+    icon: 'tabler-currency-riyal',
     color: 'primary',
     title: 'Total Sales',
     value: '$0',
@@ -520,30 +520,14 @@ const summaryHeaders = [
   <section>
     <!-- 👉 Finance Statistics Cards -->
     <VRow class="mb-6">
-      <VCol
-        v-for="(data, index) in displayStats"
-        :key="index"
-        cols="12"
-        md="3"
-        sm="6"
-      >
-        <VCard
-          class="finance-card-statistics cursor-pointer"
+      <VCol v-for="(data, index) in displayStats" :key="index" cols="12" md="3" sm="6">
+        <VCard class="finance-card-statistics cursor-pointer"
           :style="data.isHover ? `border-block-end-color: rgb(var(--v-theme-${data.color}))` : `border-block-end-color: rgba(var(--v-theme-${data.color}),0.38)`"
-          @mouseenter="data.isHover = true"
-          @mouseleave="data.isHover = false"
-        >
+          @mouseenter="data.isHover = true" @mouseleave="data.isHover = false">
           <VCardText>
             <div class="d-flex align-center gap-x-4 mb-1">
-              <VAvatar
-                variant="tonal"
-                :color="data.color"
-                rounded
-              >
-                <VIcon
-                  :icon="data.icon"
-                  size="28"
-                />
+              <VAvatar variant="tonal" :color="data.color" rounded>
+                <VIcon :icon="data.icon" size="28" />
               </VAvatar>
               <h4 class="text-h4">
                 {{ data.value }}
@@ -568,65 +552,35 @@ const summaryHeaders = [
     <!-- 👉 Top Stores Charts Row -->
     <VRow class="mb-6">
       <!-- Top 5 Stores by Sales -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
-          <VCardItem
-            title="Top 5 Stores by Monthly Sales"
-            subtitle="Performance comparison"
-          >
+          <VCardItem title="Top 5 Stores by Monthly Sales" subtitle="Performance comparison">
             <template #append>
-              <VBtn
-                variant="tonal"
-                size="small"
-                append-icon="tabler-chevron-down"
-              >
+              <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
                 This Month
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VueApexCharts
-              type="bar"
-              height="320"
-              :options="topStoresSalesConfig"
-              :series="topStoresSalesSeries"
-            />
+            <VueApexCharts type="bar" height="320" :options="topStoresSalesConfig" :series="topStoresSalesSeries" />
           </VCardText>
         </VCard>
       </VCol>
 
       <!-- Top 5 Stores by Royalty -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
-          <VCardItem
-            title="Top 5 Stores by Monthly Royalty"
-            subtitle="Royalty contributions"
-          >
+          <VCardItem title="Top 5 Stores by Monthly Royalty" subtitle="Royalty contributions">
             <template #append>
-              <VBtn
-                variant="tonal"
-                size="small"
-                append-icon="tabler-chevron-down"
-              >
+              <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
                 This Month
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VueApexCharts
-              type="bar"
-              height="320"
-              :options="topStoresRoyaltyConfig"
-              :series="topStoresRoyaltySeries"
-            />
+            <VueApexCharts type="bar" height="320" :options="topStoresRoyaltyConfig" :series="topStoresRoyaltySeries" />
           </VCardText>
         </VCard>
       </VCol>
@@ -636,28 +590,16 @@ const summaryHeaders = [
     <VRow class="mb-6">
       <VCol cols="12">
         <VCard>
-          <VCardItem
-            title="Financial Summary"
-            subtitle="Yearly overview of sales, expenses, royalties and profit"
-          >
+          <VCardItem title="Financial Summary" subtitle="Yearly overview of sales, expenses, royalties and profit">
             <template #append>
-              <VBtn
-                variant="tonal"
-                size="small"
-                append-icon="tabler-chevron-down"
-              >
+              <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
                 2024
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VueApexCharts
-              type="line"
-              height="400"
-              :options="summaryConfig"
-              :series="summarySeries"
-            />
+            <VueApexCharts type="line" height="400" :options="summaryConfig" :series="summarySeries" />
           </VCardText>
         </VCard>
       </VCol>
@@ -674,12 +616,7 @@ const summaryHeaders = [
 
           <VDivider />
 
-          <VDataTable
-            :headers="summaryHeaders"
-            :items="summaryTableData"
-            hide-default-footer
-            class="text-no-wrap"
-          >
+          <VDataTable :headers="summaryHeaders" :items="summaryTableData" hide-default-footer class="text-no-wrap">
             <template #item.month="{ item }">
               <div class="text-body-1 font-weight-medium">
                 {{ item.month }}

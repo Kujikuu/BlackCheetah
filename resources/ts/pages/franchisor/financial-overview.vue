@@ -400,10 +400,10 @@ const loadData = async () => {
 const bulkDelete = () => {
   if (selectedRows.value.length === 0)
     return
-  
+
   // TODO: Implement bulk delete functionality
   console.log('Bulk delete:', selectedRows.value)
-  
+
   // Clear selection after delete
   if (activeTab.value === 'sales') selectedSalesRows.value = []
   else if (activeTab.value === 'expenses') selectedExpensesRows.value = []
@@ -888,7 +888,7 @@ onMounted(() => {
                 </h4>
               </div>
               <VAvatar color="primary" variant="tonal" size="56">
-                <VIcon icon="tabler-currency-dollar" size="28" />
+                <VIcon icon="tabler-currency-riyal" size="28" />
               </VAvatar>
             </div>
           </VCardText>

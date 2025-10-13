@@ -59,7 +59,7 @@ export const db: DB = {
     },
     {
       title: 'Licenses',
-      icon: 'tabler-currency-dollar',
+      icon: 'tabler-currency-riyal',
       articles: [
         { title: 'Can I use the same license for the...' },
         { title: 'How to contact an author?' },

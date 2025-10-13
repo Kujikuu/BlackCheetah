@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
 import type { FinanceWidgetData } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+import { computed, onMounted, ref } from 'vue'
 
 const chartColors = {
   primary: '#9155FD',
@@ -23,7 +23,7 @@ const hasLoadedApiData = ref(false)
 // 👉 Finance Stats
 const financeStats = ref<FinanceWidgetData[]>([
   {
-    icon: 'tabler-currency-dollar',
+    icon: 'tabler-currency-riyal',
     color: 'primary',
     title: 'Total Sales',
     value: '$2,458,650',
@@ -86,7 +86,7 @@ const loadDashboardData = async () => {
       const stats = financeStatsResponse.data
       financeStats.value = [
         {
-          icon: 'tabler-currency-dollar',
+          icon: 'tabler-currency-riyal',
           color: 'primary',
           title: 'Total Sales',
           value: formatCurrency(stats.totalSales),
@@ -148,14 +148,14 @@ onMounted(() => {
 // Computed property to check if chart data is ready
 const isChartDataReady = computed(() => {
   return !loading.value &&
-         hasLoadedApiData.value &&
-         summarySeries.value.length > 0 && 
-         summarySeries.value.every(series => 
-           series.data && 
-           Array.isArray(series.data) && 
-           series.data.length > 0 &&
-           series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
-         )
+    hasLoadedApiData.value &&
+    summarySeries.value.length > 0 &&
+    summarySeries.value.every(series =>
+      series.data &&
+      Array.isArray(series.data) &&
+      series.data.length > 0 &&
+      series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
+    )
 })
 
 const summaryConfig = {
@@ -297,88 +297,60 @@ const summaryConfig = {
     <div v-else>
       <!-- 👉 Finance Stats Cards -->
       <VRow class="mb-6">
-        <VCol
-          v-for="(data, index) in financeStats"
-          :key="index"
-          cols="12"
-          md="4"
-          sm="6"
-        >
-        <VCard
-          class="finance-card-statistics cursor-pointer"
-          :style="data.isHover ? `border-block-end-color: rgb(var(--v-theme-${data.color}))` : `border-block-end-color: rgba(var(--v-theme-${data.color}),0.38)`"
-          @mouseenter="data.isHover = true"
-          @mouseleave="data.isHover = false"
-        >
-          <VCardText>
-            <div class="d-flex align-center gap-x-4 mb-1">
-              <VAvatar
-                variant="tonal"
-                :color="data.color"
-                rounded
-              >
-                <VIcon
-                  :icon="data.icon"
-                  size="28"
-                />
-              </VAvatar>
-              <h4 class="text-h4">
-                {{ data.value }}
-              </h4>
-            </div>
-            <div class="text-body-1 mb-1">
-              {{ data.title }}
-            </div>
-            <div class="d-flex gap-x-2 align-center">
-              <h6 class="text-h6">
-                {{ (data.change > 0) ? '+' : '' }} {{ data.change }}%
-              </h6>
-              <div class="text-sm text-disabled">
-                than last month
+        <VCol v-for="(data, index) in financeStats" :key="index" cols="12" md="4" sm="6">
+          <VCard class="finance-card-statistics cursor-pointer"
+            :style="data.isHover ? `border-block-end-color: rgb(var(--v-theme-${data.color}))` : `border-block-end-color: rgba(var(--v-theme-${data.color}),0.38)`"
+            @mouseenter="data.isHover = true" @mouseleave="data.isHover = false">
+            <VCardText>
+              <div class="d-flex align-center gap-x-4 mb-1">
+                <VAvatar variant="tonal" :color="data.color" rounded>
+                  <VIcon :icon="data.icon" size="28" />
+                </VAvatar>
+                <h4 class="text-h4">
+                  {{ data.value }}
+                </h4>
               </div>
-            </div>
-          </VCardText>
-        </VCard>
-      </VCol>
-    </VRow>
-
-    <!-- 👉 Summary Chart -->
-    <VRow class="mb-6">
-      <VCol cols="12">
-        <VCard>
-          <VCardItem
-            title="Financial Summary"
-            subtitle="Yearly overview of sales, expenses and profit"
-          >
-            <template #append>
-              <VBtn
-                variant="tonal"
-                size="small"
-                append-icon="tabler-chevron-down"
-              >
-                2025
-              </VBtn>
-            </template>
-          </VCardItem>
-
-          <VCardText>
-            <VueApexCharts
-              v-if="isChartDataReady"
-              type="line"
-              height="400"
-              :options="summaryConfig"
-              :series="summarySeries"
-            />
-            <div v-else class="text-center py-8">
-              <VProgressCircular indeterminate color="primary" size="32" />
-              <div class="mt-4 text-body-2 text-medium-emphasis">
-                Loading chart data...
+              <div class="text-body-1 mb-1">
+                {{ data.title }}
               </div>
-            </div>
-          </VCardText>
-        </VCard>
-      </VCol>
-    </VRow>
+              <div class="d-flex gap-x-2 align-center">
+                <h6 class="text-h6">
+                  {{ (data.change > 0) ? '+' : '' }} {{ data.change }}%
+                </h6>
+                <div class="text-sm text-disabled">
+                  than last month
+                </div>
+              </div>
+            </VCardText>
+          </VCard>
+        </VCol>
+      </VRow>
+
+      <!-- 👉 Summary Chart -->
+      <VRow class="mb-6">
+        <VCol cols="12">
+          <VCard>
+            <VCardItem title="Financial Summary" subtitle="Yearly overview of sales, expenses and profit">
+              <template #append>
+                <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
+                  2025
+                </VBtn>
+              </template>
+            </VCardItem>
+
+            <VCardText>
+              <VueApexCharts v-if="isChartDataReady" type="line" height="400" :options="summaryConfig"
+                :series="summarySeries" />
+              <div v-else class="text-center py-8">
+                <VProgressCircular indeterminate color="primary" size="32" />
+                <div class="mt-4 text-body-2 text-medium-emphasis">
+                  Loading chart data...
+                </div>
+              </div>
+            </VCardText>
+          </VCard>
+        </VCol>
+      </VRow>
     </div>
   </section>
 </template>

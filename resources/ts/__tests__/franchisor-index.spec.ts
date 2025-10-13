@@ -52,7 +52,7 @@ describe('FranchisorIndex.vue', () => {
         value: `$${apiStats.currentMonthRevenue.toLocaleString()}`,
         change: apiStats.revenueChange,
         desc: 'This month\'s revenue',
-        icon: 'tabler-currency-dollar',
+        icon: 'tabler-currency-riyal',
         iconColor: 'warning',
       },
     ]
@@ -70,11 +70,11 @@ describe('FranchisorIndex.vue', () => {
 
     const dashboardStats = !apiStats
       ? [
-          { title: 'Total Leads', value: '0', change: 0, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
-          { title: 'Active Tasks', value: '0', change: 0, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
-          { title: 'Sales Associates', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
-          { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: 'tabler-currency-dollar', iconColor: 'warning' },
-        ]
+        { title: 'Total Leads', value: '0', change: 0, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
+        { title: 'Active Tasks', value: '0', change: 0, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
+        { title: 'Sales Associates', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
+        { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: 'tabler-currency-riyal', iconColor: 'warning' },
+      ]
       : []
 
     expect(dashboardStats).toHaveLength(4)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useTheme } from 'vuetify'
 import { hexToRgb } from '@layouts/utils'
+import { useTheme } from 'vuetify'
 
 const vuetifyTheme = useTheme()
 
@@ -96,7 +96,7 @@ const chartOptions = computed(() => {
 const earningsReports = [
   {
     color: 'primary',
-    icon: 'tabler-currency-dollar',
+    icon: 'tabler-currency-riyal',
     title: 'Earnings',
     amount: '$545.69',
     progress: '55',
@@ -131,31 +131,19 @@ const moreList = [
 
       <template #append>
         <div class="mt-n4 me-n2">
-          <MoreBtn
-            size="small"
-            :menu-list="moreList"
-          />
+          <MoreBtn size="small" :menu-list="moreList" />
         </div>
       </template>
     </VCardItem>
 
     <VCardText>
       <VRow>
-        <VCol
-          cols="12"
-          sm="5"
-          lg="6"
-          class="d-flex flex-column align-self-center"
-        >
+        <VCol cols="12" sm="5" lg="6" class="d-flex flex-column align-self-center">
           <div class="d-flex align-center gap-2 mb-3 flex-wrap">
             <h2 class="text-h2">
               $468
             </h2>
-            <VChip
-              label
-              size="small"
-              color="success"
-            >
+            <VChip label size="small" color="success">
               +4.2%
             </VChip>
           </div>
@@ -165,39 +153,17 @@ const moreList = [
           </span>
         </VCol>
 
-        <VCol
-          cols="12"
-          sm="7"
-          lg="6"
-        >
-          <VueApexCharts
-            :options="chartOptions"
-            :series="series"
-            height="161"
-          />
+        <VCol cols="12" sm="7" lg="6">
+          <VueApexCharts :options="chartOptions" :series="series" height="161" />
         </VCol>
       </VRow>
 
       <div class="border rounded mt-5 pa-5">
         <VRow>
-          <VCol
-            v-for="report in earningsReports"
-            :key="report.title"
-            cols="12"
-            sm="4"
-          >
+          <VCol v-for="report in earningsReports" :key="report.title" cols="12" sm="4">
             <div class="d-flex align-center">
-              <VAvatar
-                rounded
-                size="26"
-                :color="report.color"
-                variant="tonal"
-                class="me-2"
-              >
-                <VIcon
-                  size="18"
-                  :icon="report.icon"
-                />
+              <VAvatar rounded size="26" :color="report.color" variant="tonal" class="me-2">
+                <VIcon size="18" :icon="report.icon" />
               </VAvatar>
 
               <h6 class="text-base font-weight-regular">
@@ -207,13 +173,7 @@ const moreList = [
             <h6 class="text-h4 my-2">
               {{ report.amount }}
             </h6>
-            <VProgressLinear
-              :model-value="report.progress"
-              :color="report.color"
-              height="4"
-              rounded
-              rounded-bar
-            />
+            <VProgressLinear :model-value="report.progress" :color="report.color" height="4" rounded rounded-bar />
           </VCol>
         </VRow>
       </div>

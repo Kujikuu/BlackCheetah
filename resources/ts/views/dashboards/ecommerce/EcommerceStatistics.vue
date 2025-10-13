@@ -21,7 +21,7 @@ const statistics = [
   {
     title: 'Revenue',
     stats: '$9745',
-    icon: 'tabler-currency-dollar',
+    icon: 'tabler-currency-riyal',
     color: 'success',
   },
 ]
@@ -35,19 +35,9 @@ const statistics = [
 
     <VCardText>
       <VRow>
-        <VCol
-          v-for="item in statistics"
-          :key="item.title"
-          cols="6"
-          md="3"
-        >
+        <VCol v-for="item in statistics" :key="item.title" cols="6" md="3">
           <div class="d-flex align-center gap-4 mt-md-9 mt-0">
-            <VAvatar
-              :color="item.color"
-              variant="tonal"
-              rounded
-              size="40"
-            >
+            <VAvatar :color="item.color" variant="tonal" rounded size="40">
               <VIcon :icon="item.icon" />
             </VAvatar>
 

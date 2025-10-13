@@ -219,7 +219,7 @@ export const db: DB = {
         },
         {
           url: { name: 'pages-account-settings-tab', params: { tab: 'billing-plans' } },
-          icon: 'tabler-currency-dollar',
+          icon: 'tabler-currency-riyal',
           title: 'Account Settings - Billing',
         },
         {
@@ -234,7 +234,7 @@ export const db: DB = {
         },
         {
           url: { name: 'pages-pricing' },
-          icon: 'tabler-currency-dollar',
+          icon: 'tabler-currency-riyal',
           title: 'Pricing',
         },
         {

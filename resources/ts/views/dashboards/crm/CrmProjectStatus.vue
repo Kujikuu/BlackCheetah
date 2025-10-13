@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useTheme } from 'vuetify'
 import { prefixWithPlus } from '@core/utils/formatters'
+import { useTheme } from 'vuetify'
 
 const vuetifyTheme = useTheme()
 
@@ -96,10 +96,7 @@ const moreList = [
   <VCard title="Project Status">
     <template #append>
       <div class="mt-n4 me-n2">
-        <MoreBtn
-          size="small"
-          :menu-list="moreList"
-        />
+        <MoreBtn size="small" :menu-list="moreList" />
       </div>
     </template>
 
@@ -110,12 +107,7 @@ const moreList = [
             $4,3742
           </VListItemTitle>
           <template #prepend>
-            <VAvatar
-              color="warning"
-              variant="tonal"
-              rounded
-              icon="tabler-currency-dollar"
-            />
+            <VAvatar color="warning" variant="tonal" rounded icon="tabler-currency-riyal" />
           </template>
           <VListItemSubtitle>
             Your Earnings
@@ -127,23 +119,17 @@ const moreList = [
         </VListItem>
       </VList>
 
-      <VueApexCharts
-        :options="chartOptions"
-        :series="series"
-        height="208"
-      />
+      <VueApexCharts :options="chartOptions" :series="series" height="208" />
 
       <VList class="card-list">
-        <VListItem
-          v-for="status in projectStatus"
-          :key="status.title"
-        >
+        <VListItem v-for="status in projectStatus" :key="status.title">
           <VListItemTitle class="font-weight-medium">
             {{ status.title }}
           </VListItemTitle>
           <template #append>
             <span class="me-4 text-medium-emphasis">{{ status.amount }}</span>
-            <span :class="status.lossProfit > 0 ? 'text-success' : 'text-error'">{{ prefixWithPlus(status.lossProfit) }}</span>
+            <span :class="status.lossProfit > 0 ? 'text-success' : 'text-error'">{{ prefixWithPlus(status.lossProfit)
+              }}</span>
           </template>
         </VListItem>
       </VList>

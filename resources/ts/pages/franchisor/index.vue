@@ -33,7 +33,7 @@ const dashboardStats = computed(() => {
       { title: 'Total Leads', value: '0', change: 0, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
       { title: 'Active Tasks', value: '0', change: 0, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
       { title: 'Sales Associates', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
-      { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: 'tabler-currency-dollar', iconColor: 'warning' },
+      { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: 'tabler-currency-riyal', iconColor: 'warning' },
     ]
   }
 
@@ -67,7 +67,7 @@ const dashboardStats = computed(() => {
       value: `$${apiStats.value.currentMonthRevenue.toLocaleString()}`,
       change: apiStats.value.revenueChange,
       desc: 'This month\'s revenue',
-      icon: 'tabler-currency-dollar',
+      icon: 'tabler-currency-riyal',
       iconColor: 'warning',
     },
   ]
@@ -95,39 +95,20 @@ onMounted(async () => {
 <template>
   <section>
     <!-- Error Alert -->
-    <VAlert
-      v-if="error"
-      type="error"
-      variant="tonal"
-      class="mb-6"
-      closable
-      @click:close="error = null"
-    >
+    <VAlert v-if="error" type="error" variant="tonal" class="mb-6" closable @click:close="error = null">
       <VAlertTitle class="mb-2">
         Error Loading Dashboard
       </VAlertTitle>
       <p class="mb-3">
         {{ error }}
       </p>
-      <VBtn
-        color="error"
-        variant="elevated"
-        size="small"
-        @click="refreshDashboard"
-      >
+      <VBtn color="error" variant="elevated" size="small" @click="refreshDashboard">
         Retry
       </VBtn>
     </VAlert>
 
     <!-- Onboarding Banner -->
-    <VAlert
-      v-if="!isProfileComplete"
-      type="warning"
-      variant="tonal"
-      class="mb-6"
-      closable
-      @click:close="dismissBanner"
-    >
+    <VAlert v-if="!isProfileComplete" type="warning" variant="tonal" class="mb-6" closable @click:close="dismissBanner">
       <VAlertTitle class="mb-2">
         Complete Your Franchise Profile
       </VAlertTitle>
@@ -135,12 +116,7 @@ onMounted(async () => {
         Welcome to your franchisor dashboard! To get started and unlock all features,
         please complete your franchise registration process.
       </p>
-      <VBtn
-        color="info"
-        variant="elevated"
-        size="small"
-        @click="startOnboarding"
-      >
+      <VBtn color="info" variant="elevated" size="small" @click="startOnboarding">
         Complete Onboarding Process
       </VBtn>
     </VAlert>
@@ -158,20 +134,11 @@ onMounted(async () => {
             </p>
           </div>
           <div class="d-flex align-center gap-3">
-            <VBtn
-              v-if="!isLoading"
-              color="secondary"
-              variant="outlined"
-              prepend-icon="tabler-refresh"
-              @click="refreshDashboard"
-            >
+            <VBtn v-if="!isLoading" color="secondary" variant="outlined" prepend-icon="tabler-refresh"
+              @click="refreshDashboard">
               Refresh
             </VBtn>
-            <VBtn
-              color="primary"
-              prepend-icon="tabler-plus"
-              to="/franchisor/add-lead"
-            >
+            <VBtn color="primary" prepend-icon="tabler-plus" to="/franchisor/add-lead">
               Add New Lead
             </VBtn>
           </div>
@@ -182,48 +149,21 @@ onMounted(async () => {
     <!-- Dashboard Stats -->
     <VRow class="mb-6">
       <template v-if="isLoading">
-        <VCol
-          v-for="i in 4"
-          :key="`loading-${i}`"
-          cols="12"
-          md="3"
-          sm="6"
-        >
+        <VCol v-for="i in 4" :key="`loading-${i}`" cols="12" md="3" sm="6">
           <VCard>
-            <VCardText
-              class="d-flex align-center justify-center"
-              style="min-height: 100px;"
-            >
-              <VProgressCircular
-                indeterminate
-                color="primary"
-              />
+            <VCardText class="d-flex align-center justify-center" style="min-height: 100px;">
+              <VProgressCircular indeterminate color="primary" />
             </VCardText>
           </VCard>
         </VCol>
       </template>
       <template v-else>
-        <template
-          v-for="(data, id) in dashboardStats"
-          :key="id"
-        >
-          <VCol
-            cols="12"
-            md="3"
-            sm="6"
-          >
+        <template v-for="(data, id) in dashboardStats" :key="id">
+          <VCol cols="12" md="3" sm="6">
             <VCard>
               <VCardText class="d-flex align-center">
-                <VAvatar
-                  size="44"
-                  rounded
-                  :color="data.iconColor"
-                  variant="tonal"
-                >
-                  <VIcon
-                    :icon="data.icon"
-                    size="26"
-                  />
+                <VAvatar size="44" rounded :color="data.iconColor" variant="tonal">
+                  <VIcon :icon="data.icon" size="26" />
                 </VAvatar>
 
                 <div class="ms-4">
@@ -234,11 +174,8 @@ onMounted(async () => {
                     <h4 class="text-h4 me-2">
                       {{ data.value }}
                     </h4>
-                    <div
-                      v-if="data.change !== 0"
-                      class="text-body-2"
-                      :class="data.change > 0 ? 'text-success' : 'text-error'"
-                    >
+                    <div v-if="data.change !== 0" class="text-body-2"
+                      :class="data.change > 0 ? 'text-success' : 'text-error'">
                       {{ data.change > 0 ? '+' : '' }}{{ data.change }}%
                     </div>
                   </div>
@@ -256,33 +193,18 @@ onMounted(async () => {
     <!-- Quick Actions & Recent Activity -->
     <VRow>
       <!-- Quick Actions -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
           <VCardItem class="pb-4">
             <VCardTitle>Quick Actions</VCardTitle>
           </VCardItem>
           <VCardText>
             <VRow>
-              <template
-                v-for="(action, index) in quickActions"
-                :key="index"
-              >
+              <template v-for="(action, index) in quickActions" :key="index">
                 <VCol cols="6">
-                  <VCard
-                    variant="tonal"
-                    :color="action.color"
-                    class="cursor-pointer"
-                    @click="$router.push(action.to)"
-                  >
+                  <VCard variant="tonal" :color="action.color" class="cursor-pointer" @click="$router.push(action.to)">
                     <VCardText class="text-center pa-4">
-                      <VIcon
-                        :icon="action.icon"
-                        size="32"
-                        class="mb-2"
-                      />
+                      <VIcon :icon="action.icon" size="32" class="mb-2" />
                       <div class="text-body-2 font-weight-medium">
                         {{ action.title }}
                       </div>
@@ -296,10 +218,7 @@ onMounted(async () => {
       </VCol>
 
       <!-- Recent Activity -->
-      <VCol
-        cols="12"
-        md="6"
-      >
+      <VCol cols="12" md="6">
         <VCard>
           <VCardItem class="pb-4">
             <VCardTitle>Recent Activity</VCardTitle>
@@ -308,31 +227,18 @@ onMounted(async () => {
             <VList class="card-list">
               <template v-if="isLoading">
                 <VListItem class="text-center py-8">
-                  <VProgressCircular
-                    indeterminate
-                    color="primary"
-                  />
+                  <VProgressCircular indeterminate color="primary" />
                   <div class="mt-2 text-body-2 text-disabled">
                     Loading recent activities...
                   </div>
                 </VListItem>
               </template>
               <template v-else-if="recentActivities.length > 0">
-                <template
-                  v-for="(activity, index) in recentActivities"
-                  :key="index"
-                >
+                <template v-for="(activity, index) in recentActivities" :key="index">
                   <VListItem>
                     <template #prepend>
-                      <VAvatar
-                        size="32"
-                        :color="activity.color"
-                        variant="tonal"
-                      >
-                        <VIcon
-                          :icon="activity.icon"
-                          size="18"
-                        />
+                      <VAvatar size="32" :color="activity.color" variant="tonal">
+                        <VIcon :icon="activity.icon" size="18" />
                       </VAvatar>
                     </template>
                     <VListItemTitle class="text-body-2 font-weight-medium">
@@ -360,21 +266,10 @@ onMounted(async () => {
 
     <!-- Dashboard Navigation Cards -->
     <VRow class="mt-6">
-      <VCol
-        cols="12"
-        md="4"
-      >
-        <VCard
-          class="cursor-pointer"
-          @click="$router.push('/franchisor/dashboard/leads')"
-        >
+      <VCol cols="12" md="4">
+        <VCard class="cursor-pointer" @click="$router.push('/franchisor/dashboard/leads')">
           <VCardText class="text-center pa-6">
-            <VIcon
-              icon="tabler-users"
-              size="48"
-              color="primary"
-              class="mb-4"
-            />
+            <VIcon icon="tabler-users" size="48" color="primary" class="mb-4" />
             <h5 class="text-h5 mb-2">
               Leads Dashboard
             </h5>
@@ -385,21 +280,10 @@ onMounted(async () => {
         </VCard>
       </VCol>
 
-      <VCol
-        cols="12"
-        md="4"
-      >
-        <VCard
-          class="cursor-pointer"
-          @click="$router.push('/franchisor/dashboard/operations')"
-        >
+      <VCol cols="12" md="4">
+        <VCard class="cursor-pointer" @click="$router.push('/franchisor/dashboard/operations')">
           <VCardText class="text-center pa-6">
-            <VIcon
-              icon="tabler-settings"
-              size="48"
-              color="success"
-              class="mb-4"
-            />
+            <VIcon icon="tabler-settings" size="48" color="success" class="mb-4" />
             <h5 class="text-h5 mb-2">
               Operations Dashboard
             </h5>
@@ -410,21 +294,10 @@ onMounted(async () => {
         </VCard>
       </VCol>
 
-      <VCol
-        cols="12"
-        md="4"
-      >
-        <VCard
-          class="cursor-pointer"
-          @click="$router.push('/franchisor/sales-associates')"
-        >
+      <VCol cols="12" md="4">
+        <VCard class="cursor-pointer" @click="$router.push('/franchisor/sales-associates')">
           <VCardText class="text-center pa-6">
-            <VIcon
-              icon="tabler-user-check"
-              size="48"
-              color="info"
-              class="mb-4"
-            />
+            <VIcon icon="tabler-user-check" size="48" color="info" class="mb-4" />
             <h5 class="text-h5 mb-2">
               Sales Associates
             </h5>

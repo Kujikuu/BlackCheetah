@@ -188,7 +188,7 @@ export const useFranchisorDashboard = () => {
     leads.value.slice(0, 3).forEach(lead => {
       const fullName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Unknown Lead'
       const createdAt = lead.created_at || new Date().toISOString()
-      
+
       activities.push({
         id: lead.id,
         type: 'lead',
@@ -203,7 +203,7 @@ export const useFranchisorDashboard = () => {
     salesAssociates.value.slice(0, 2).forEach(associate => {
       if (associate.status === 'active') {
         const createdAt = associate.created_at || new Date().toISOString()
-        
+
         activities.push({
           id: associate.id,
           type: 'team',
@@ -222,7 +222,7 @@ export const useFranchisorDashboard = () => {
         type: 'revenue',
         title: `Monthly revenue: $${dashboardStats.value.currentMonthRevenue.toLocaleString()}`,
         time: 'This month',
-        icon: 'tabler-currency-dollar',
+        icon: 'tabler-currency-riyal',
         color: 'warning',
       })
     }
@@ -239,15 +239,15 @@ export const useFranchisorDashboard = () => {
    */
   const formatTimeAgo = (dateString: string): string => {
     if (!dateString) return 'Unknown'
-    
+
     const date = new Date(dateString)
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) {
       console.warn('Invalid date string:', dateString)
       return 'Unknown'
     }
-    
+
     const now = new Date()
     const diffInMs = now.getTime() - date.getTime()
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
