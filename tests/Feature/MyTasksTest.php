@@ -173,4 +173,33 @@ class MyTasksTest extends TestCase
         $response->assertStatus(404)
             ->assertJsonFragment(['message' => 'No unit found for current user']);
     }
+
+    public function test_franchisee_can_set_all_status_types(): void
+    {
+        $task = Task::factory()->create([
+            'unit_id' => $this->unit->id,
+            'franchise_id' => $this->franchise->id,
+            'created_by' => $this->franchisee->id,
+            'title' => 'Test Task',
+            'status' => 'pending',
+        ]);
+
+        // Test all valid statuses
+        $statuses = ['pending', 'in_progress', 'completed', 'cancelled', 'on_hold'];
+
+        foreach ($statuses as $status) {
+            $response = $this->actingAs($this->franchisee, 'sanctum')
+                ->patchJson("/api/v1/unit-manager/my-tasks/{$task->id}/status", [
+                    'status' => $status,
+                ]);
+
+            $response->assertStatus(200)
+                ->assertJsonFragment(['status' => $status]);
+
+            $this->assertDatabaseHas('tasks', [
+                'id' => $task->id,
+                'status' => $status,
+            ]);
+        }
+    }
 }
