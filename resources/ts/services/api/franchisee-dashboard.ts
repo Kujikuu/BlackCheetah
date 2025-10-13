@@ -221,6 +221,60 @@ export interface PerformanceManagementData {
   customerSatisfaction: CustomerSatisfaction
 }
 
+// Financial Overview types
+export interface SalesRecord {
+  id: string
+  product: string
+  dateOfSale: string
+  unitPrice: number
+  quantitySold: number
+  sale: number
+}
+
+export interface ExpenseRecord {
+  id: string
+  expenseCategory: string
+  dateOfExpense: string
+  amount: number
+  description: string
+}
+
+export interface ProfitRecord {
+  id: string
+  date: string
+  totalSales: number
+  totalExpenses: number
+  profit: number
+}
+
+export interface FinancialOverviewTotals {
+  sales: number
+  expenses: number
+  profit: number
+}
+
+export interface FinancialOverviewData {
+  sales: SalesRecord[]
+  expenses: ExpenseRecord[]
+  profit: ProfitRecord[]
+  totals: FinancialOverviewTotals
+}
+
+export interface AddFinancialDataPayload {
+  category: 'sales' | 'expense'
+  product?: string
+  date: string
+  quantitySold?: number
+  expenseCategory?: string
+  amount?: number
+  description?: string
+}
+
+export interface DeleteFinancialDataPayload {
+  category: 'sales' | 'expense' | 'profit'
+  ids: string[]
+}
+
 // API response wrapper
 interface ApiResponse<T> {
   success: boolean
@@ -285,6 +339,28 @@ export const franchiseeDashboardApi = {
   // Performance Management API method
   async getPerformanceManagement(): Promise<ApiResponse<PerformanceManagementData>> {
     return await $api<ApiResponse<PerformanceManagementData>>(`${API_URL}/dashboard/performance-management`)
+  },
+
+  // Financial Overview API methods
+  // Get financial overview data (sales, expenses, profit)
+  async getFinancialOverview(): Promise<ApiResponse<FinancialOverviewData>> {
+    return await $api<ApiResponse<FinancialOverviewData>>(`${API_URL}/dashboard/financial-overview`)
+  },
+
+  // Add new financial data (sale or expense)
+  async addFinancialData(payload: AddFinancialDataPayload): Promise<ApiResponse<SalesRecord | ExpenseRecord>> {
+    return await $api<ApiResponse<SalesRecord | ExpenseRecord>>(`${API_URL}/dashboard/financial-data`, {
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  // Delete financial data
+  async deleteFinancialData(payload: DeleteFinancialDataPayload): Promise<ApiResponse<void>> {
+    return await $api<ApiResponse<void>>(`${API_URL}/dashboard/financial-data`, {
+      method: 'DELETE',
+      body: payload,
+    })
   },
 
   // Unit Operations API methods

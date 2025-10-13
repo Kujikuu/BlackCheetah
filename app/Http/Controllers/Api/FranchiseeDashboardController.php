@@ -2227,4 +2227,286 @@ class FranchiseeDashboardController extends Controller
 
         return $shifts[array_rand($shifts)];
     }
+
+    /**
+     * Get financial overview data (sales, expenses, profit)
+     */
+    public function financialOverview(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $unit = Unit::where('franchisee_id', $user->id)->first();
+
+        if (! $unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No unit found for current user',
+            ], 404);
+        }
+
+        // Get sales data from revenues
+        $salesData = $this->getSalesData($unit);
+
+        // Get expense data from transactions
+        $expenseData = $this->getExpenseData($unit);
+
+        // Calculate profit data
+        $profitData = $this->calculateProfitData($salesData, $expenseData);
+
+        // Calculate totals
+        $totalSales = collect($salesData)->sum('sale');
+        $totalExpenses = collect($expenseData)->sum('amount');
+        $totalProfit = $totalSales - $totalExpenses;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'sales' => $salesData,
+                'expenses' => $expenseData,
+                'profit' => $profitData,
+                'totals' => [
+                    'sales' => $totalSales,
+                    'expenses' => $totalExpenses,
+                    'profit' => $totalProfit,
+                ],
+            ],
+            'message' => 'Financial overview data retrieved successfully',
+        ]);
+    }
+
+    /**
+     * Get sales data from revenues
+     */
+    private function getSalesData(Unit $unit): array
+    {
+        $revenues = Revenue::where('unit_id', $unit->id)
+            ->where('type', 'sales')
+            ->where('revenue_date', '>=', now()->subMonths(3))
+            ->orderBy('revenue_date', 'desc')
+            ->get();
+
+        $salesData = [];
+
+        foreach ($revenues as $revenue) {
+            if ($revenue->line_items && is_array($revenue->line_items)) {
+                foreach ($revenue->line_items as $item) {
+                    $salesData[] = [
+                        'id' => $revenue->id . '-' . ($item['product_id'] ?? 'item'),
+                        'product' => $item['product_name'] ?? $item['product'] ?? 'Unknown Product',
+                        'dateOfSale' => $revenue->revenue_date->format('Y-m-d'),
+                        'unitPrice' => (float) ($item['price'] ?? 0),
+                        'quantitySold' => (int) ($item['quantity'] ?? 0),
+                        'sale' => (float) ($item['price'] ?? 0) * (int) ($item['quantity'] ?? 0),
+                    ];
+                }
+            }
+        }
+
+        return $salesData;
+    }
+
+    /**
+     * Get expense data from transactions
+     */
+    private function getExpenseData(Unit $unit): array
+    {
+        $transactions = \App\Models\Transaction::where('unit_id', $unit->id)
+            ->where('type', 'expense')
+            ->where('transaction_date', '>=', now()->subMonths(3))
+            ->orderBy('transaction_date', 'desc')
+            ->get();
+
+        return $transactions->map(function ($transaction) {
+            return [
+                'id' => (string) $transaction->id,
+                'expenseCategory' => $transaction->category ?? 'Other',
+                'dateOfExpense' => $transaction->transaction_date->format('Y-m-d'),
+                'amount' => (float) $transaction->amount,
+                'description' => $transaction->description ?? '',
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Calculate profit data by aggregating sales and expenses by date
+     */
+    private function calculateProfitData(array $salesData, array $expenseData): array
+    {
+        // Group sales by date
+        $salesByDate = collect($salesData)->groupBy('dateOfSale')->map(function ($items) {
+            return collect($items)->sum('sale');
+        });
+
+        // Group expenses by date
+        $expensesByDate = collect($expenseData)->groupBy('dateOfExpense')->map(function ($items) {
+            return collect($items)->sum('amount');
+        });
+
+        // Get all unique dates
+        $allDates = $salesByDate->keys()->merge($expensesByDate->keys())->unique()->sort()->reverse();
+
+        $profitData = [];
+        foreach ($allDates as $date) {
+            $sales = $salesByDate->get($date, 0);
+            $expenses = $expensesByDate->get($date, 0);
+
+            $profitData[] = [
+                'id' => $date,
+                'date' => $date,
+                'totalSales' => $sales,
+                'totalExpenses' => $expenses,
+                'profit' => $sales - $expenses,
+            ];
+        }
+
+        return array_values($profitData);
+    }
+
+    /**
+     * Add new financial data (sale or expense)
+     */
+    public function storeFinancialData(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $unit = Unit::where('franchisee_id', $user->id)->first();
+
+        if (! $unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No unit found for current user',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'category' => 'required|in:sales,expense',
+            'product' => 'required_if:category,sales|string|max:255',
+            'date' => 'required|date',
+            'quantitySold' => 'required_if:category,sales|integer|min:1',
+            'expenseCategory' => 'required_if:category,expense|string|max:255',
+            'amount' => 'required_if:category,expense|numeric|min:0',
+            'description' => 'nullable|string',
+        ]);
+
+        if ($validated['category'] === 'sales') {
+            // Create revenue with line item
+            $product = Product::where('franchise_id', $unit->franchise_id)
+                ->where('name', $validated['product'])
+                ->first();
+
+            $unitPrice = $product ? (float) $product->unit_price : 0;
+            $quantity = (int) $validated['quantitySold'];
+            $saleAmount = $unitPrice * $quantity;
+
+            $revenue = Revenue::create([
+                'revenue_number' => 'REV' . now()->timestamp . rand(1000, 9999),
+                'franchise_id' => $unit->franchise_id,
+                'unit_id' => $unit->id,
+                'user_id' => $user->id,
+                'type' => 'sales',
+                'category' => 'product_sales',
+                'amount' => $saleAmount,
+                'net_amount' => $saleAmount,
+                'currency' => 'SAR',
+                'description' => 'Product sale: ' . $validated['product'],
+                'revenue_date' => $validated['date'],
+                'period_year' => date('Y', strtotime($validated['date'])),
+                'period_month' => date('n', strtotime($validated['date'])),
+                'status' => 'verified',
+                'payment_status' => 'completed',
+                'line_items' => [
+                    [
+                        'product_id' => $product?->id,
+                        'product_name' => $validated['product'],
+                        'quantity' => $quantity,
+                        'price' => $unitPrice,
+                    ],
+                ],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales data added successfully',
+                'data' => [
+                    'id' => $revenue->id . '-item',
+                    'product' => $validated['product'],
+                    'dateOfSale' => $validated['date'],
+                    'unitPrice' => $unitPrice,
+                    'quantitySold' => $quantity,
+                    'sale' => $saleAmount,
+                ],
+            ], 201);
+        } else {
+            // Create expense transaction
+            $transaction = \App\Models\Transaction::create([
+                'transaction_number' => 'EXP' . now()->timestamp . rand(1000, 9999),
+                'franchise_id' => $unit->franchise_id,
+                'unit_id' => $unit->id,
+                'user_id' => $user->id,
+                'type' => 'expense',
+                'category' => $validated['expenseCategory'],
+                'amount' => $validated['amount'],
+                'currency' => 'SAR',
+                'description' => $validated['description'] ?? '',
+                'transaction_date' => $validated['date'],
+                'status' => 'completed',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Expense data added successfully',
+                'data' => [
+                    'id' => (string) $transaction->id,
+                    'expenseCategory' => $transaction->category,
+                    'dateOfExpense' => $validated['date'],
+                    'amount' => (float) $validated['amount'],
+                    'description' => $validated['description'] ?? '',
+                ],
+            ], 201);
+        }
+    }
+
+    /**
+     * Delete financial data
+     */
+    public function deleteFinancialData(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $unit = Unit::where('franchisee_id', $user->id)->first();
+
+        if (! $unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No unit found for current user',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'category' => 'required|in:sales,expense,profit',
+            'ids' => 'required|array',
+            'ids.*' => 'required|string',
+        ]);
+
+        $deletedCount = 0;
+
+        if ($validated['category'] === 'expense') {
+            // Delete transactions
+            $deletedCount = \App\Models\Transaction::where('unit_id', $unit->id)
+                ->whereIn('id', $validated['ids'])
+                ->delete();
+        } elseif ($validated['category'] === 'sales') {
+            // Delete revenues (extract revenue IDs from composite IDs)
+            $revenueIds = collect($validated['ids'])->map(function ($id) {
+                return explode('-', $id)[0];
+            })->unique()->toArray();
+
+            $deletedCount = Revenue::where('unit_id', $unit->id)
+                ->whereIn('id', $revenueIds)
+                ->delete();
+        }
+        // Note: Profit records are calculated, not stored, so no deletion needed
+
+        return response()->json([
+            'success' => true,
+            'message' => "$deletedCount record(s) deleted successfully",
+        ]);
+    }
 }

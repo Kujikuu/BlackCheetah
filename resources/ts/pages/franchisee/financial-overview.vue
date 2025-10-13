@@ -1,34 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-
-// Type definitions
-interface SalesRecord {
-  id: string
-  product: string
-  dateOfSale: string
-  unitPrice: number
-  quantitySold: number
-  sale: number
-}
-
-interface ExpenseRecord {
-  id: string
-  expenseCategory: string
-  dateOfExpense: string
-  amount: number
-  description: string
-}
-
-interface ProfitRecord {
-  id: string
-  date: string
-  totalSales: number
-  totalExpenses: number
-  profit: number
-}
+import type {
+  AddFinancialDataPayload,
+  FinancialOverviewData
+} from '@/services/api/franchisee-dashboard'
+import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+import { computed, onMounted, ref } from 'vue'
 
 interface AddDataForm {
-
   // Sales fields
   product: string
   date: string
@@ -48,6 +26,10 @@ const isAddDataModalVisible = ref(false)
 const isImportModalVisible = ref(false)
 const selectedCategory = ref('sales')
 const importCategory = ref('sales')
+const isLoading = ref(false)
+
+// Financial data
+const financialData = ref<FinancialOverviewData | null>(null)
 
 // Form data
 const addDataForm = ref<AddDataForm>({
@@ -59,125 +41,32 @@ const addDataForm = ref<AddDataForm>({
   description: '',
 })
 
-// Mock data
-const salesData = ref<SalesRecord[]>([
-  {
-    id: '1',
-    product: 'Burger Deluxe',
-    dateOfSale: '2024-01-15',
-    unitPrice: 25.50,
-    quantitySold: 45,
-    sale: 1147.50,
-  },
-  {
-    id: '2',
-    product: 'Chicken Wings',
-    dateOfSale: '2024-01-15',
-    unitPrice: 18.00,
-    quantitySold: 32,
-    sale: 576.00,
-  },
-  {
-    id: '3',
-    product: 'Caesar Salad',
-    dateOfSale: '2024-01-14',
-    unitPrice: 15.75,
-    quantitySold: 28,
-    sale: 441.00,
-  },
-  {
-    id: '4',
-    product: 'Fish & Chips',
-    dateOfSale: '2024-01-14',
-    unitPrice: 22.00,
-    quantitySold: 19,
-    sale: 418.00,
-  },
-  {
-    id: '5',
-    product: 'Pasta Carbonara',
-    dateOfSale: '2024-01-13',
-    unitPrice: 20.25,
-    quantitySold: 35,
-    sale: 708.75,
-  },
-])
+// Load financial data from API
+const loadFinancialData = async () => {
+  isLoading.value = true
+  try {
+    const response = await franchiseeDashboardApi.getFinancialOverview()
+    if (response.success) {
+      financialData.value = response.data
+    }
+  }
+  catch (error) {
+    console.error('Error loading financial data:', error)
+  }
+  finally {
+    isLoading.value = false
+  }
+}
 
-const expenseData = ref<ExpenseRecord[]>([
-  {
-    id: '1',
-    expenseCategory: 'Food Supplies',
-    dateOfExpense: '2024-01-15',
-    amount: 1250.00,
-    description: 'Weekly food inventory purchase',
-  },
-  {
-    id: '2',
-    expenseCategory: 'Utilities',
-    dateOfExpense: '2024-01-14',
-    amount: 450.75,
-    description: 'Electricity and water bills',
-  },
-  {
-    id: '3',
-    expenseCategory: 'Staff Wages',
-    dateOfExpense: '2024-01-13',
-    amount: 2800.00,
-    description: 'Weekly staff payment',
-  },
-  {
-    id: '4',
-    expenseCategory: 'Marketing',
-    dateOfExpense: '2024-01-12',
-    amount: 350.00,
-    description: 'Social media advertising campaign',
-  },
-  {
-    id: '5',
-    expenseCategory: 'Equipment Maintenance',
-    dateOfExpense: '2024-01-11',
-    amount: 180.50,
-    description: 'Kitchen equipment servicing',
-  },
-])
+// Computed properties for data
+const salesData = computed(() => financialData.value?.sales || [])
+const expenseData = computed(() => financialData.value?.expenses || [])
+const profitData = computed(() => financialData.value?.profit || [])
 
-const profitData = ref<ProfitRecord[]>([
-  {
-    id: '1',
-    date: '2024-01-15',
-    totalSales: 3291.25,
-    totalExpenses: 1700.75,
-    profit: 1590.50,
-  },
-  {
-    id: '2',
-    date: '2024-01-14',
-    totalSales: 2859.00,
-    totalExpenses: 1450.75,
-    profit: 1408.25,
-  },
-  {
-    id: '3',
-    date: '2024-01-13',
-    totalSales: 3508.75,
-    totalExpenses: 2980.00,
-    profit: 528.75,
-  },
-  {
-    id: '4',
-    date: '2024-01-12',
-    totalSales: 2750.50,
-    totalExpenses: 1350.00,
-    profit: 1400.50,
-  },
-  {
-    id: '5',
-    date: '2024-01-11',
-    totalSales: 2980.25,
-    totalExpenses: 1680.50,
-    profit: 1299.75,
-  },
-])
+// Load data on mount
+onMounted(() => {
+  loadFinancialData()
+})
 
 // Product options for sales form
 const productOptions = [
@@ -243,7 +132,7 @@ const filteredSalesData = computed(() => {
 
   return salesData.value.filter(item =>
     item.product.toLowerCase().includes(searchQuery.value.toLowerCase())
-        || item.dateOfSale.includes(searchQuery.value),
+    || item.dateOfSale.includes(searchQuery.value),
   )
 })
 
@@ -253,8 +142,8 @@ const filteredExpenseData = computed(() => {
 
   return expenseData.value.filter(item =>
     item.expenseCategory.toLowerCase().includes(searchQuery.value.toLowerCase())
-        || item.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-        || item.dateOfExpense.includes(searchQuery.value),
+    || item.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+    || item.dateOfExpense.includes(searchQuery.value),
   )
 })
 
@@ -298,52 +187,38 @@ const resetForm = () => {
   }
 }
 
-const saveData = () => {
-  if (selectedCategory.value === 'sales') {
-    const unitPrice = getProductPrice(addDataForm.value.product)
-
-    const newSale: SalesRecord = {
-      id: Date.now().toString(),
-      product: addDataForm.value.product,
-      dateOfSale: addDataForm.value.date,
-      unitPrice,
-      quantitySold: addDataForm.value.quantitySold,
-      sale: unitPrice * addDataForm.value.quantitySold,
+const saveData = async () => {
+  isLoading.value = true
+  try {
+    const payload: AddFinancialDataPayload = {
+      category: selectedCategory.value as 'sales' | 'expense',
+      date: addDataForm.value.date,
     }
 
-    salesData.value.unshift(newSale)
-  }
-  else if (selectedCategory.value === 'expense') {
-    const newExpense: ExpenseRecord = {
-      id: Date.now().toString(),
-      expenseCategory: addDataForm.value.expenseCategory,
-      dateOfExpense: addDataForm.value.date,
-      amount: addDataForm.value.amount,
-      description: addDataForm.value.description,
+    if (selectedCategory.value === 'sales') {
+      payload.product = addDataForm.value.product
+      payload.quantitySold = addDataForm.value.quantitySold
+    }
+    else {
+      payload.expenseCategory = addDataForm.value.expenseCategory
+      payload.amount = addDataForm.value.amount
+      payload.description = addDataForm.value.description
     }
 
-    expenseData.value.unshift(newExpense)
+    const response = await franchiseeDashboardApi.addFinancialData(payload)
+    if (response.success) {
+      // Reload data to get updated list
+      await loadFinancialData()
+      isAddDataModalVisible.value = false
+      resetForm()
+    }
   }
-
-  isAddDataModalVisible.value = false
-  resetForm()
-}
-
-const getProductPrice = (product: string): number => {
-  const prices: { [key: string]: number } = {
-    'Burger Deluxe': 25.50,
-    'Chicken Wings': 18.00,
-    'Caesar Salad': 15.75,
-    'Fish & Chips': 22.00,
-    'Pasta Carbonara': 20.25,
-    'Grilled Salmon': 28.00,
-    'Beef Steak': 35.00,
-    'Vegetarian Pizza': 19.50,
-    'Chicken Sandwich': 16.75,
-    'Greek Salad': 14.25,
+  catch (error) {
+    console.error('Error saving data:', error)
   }
-
-  return prices[product] || 0
+  finally {
+    isLoading.value = false
+  }
 }
 
 const exportData = () => {
@@ -373,15 +248,29 @@ const exportData = () => {
   console.log('Exporting data:', dataToExport, 'as', filename)
 }
 
-const deleteSelected = () => {
-  if (activeTab.value === 'sales')
-    salesData.value = salesData.value.filter(item => !selectedItems.value.includes(item.id))
-  else if (activeTab.value === 'expense')
-    expenseData.value = expenseData.value.filter(item => !selectedItems.value.includes(item.id))
-  else if (activeTab.value === 'profit')
-    profitData.value = profitData.value.filter(item => !selectedItems.value.includes(item.id))
+const deleteSelected = async () => {
+  if (selectedItems.value.length === 0)
+    return
 
-  selectedItems.value = []
+  isLoading.value = true
+  try {
+    const response = await franchiseeDashboardApi.deleteFinancialData({
+      category: activeTab.value as 'sales' | 'expense' | 'profit',
+      ids: selectedItems.value,
+    })
+
+    if (response.success) {
+      // Reload data to get updated list
+      await loadFinancialData()
+      selectedItems.value = []
+    }
+  }
+  catch (error) {
+    console.error('Error deleting data:', error)
+  }
+  finally {
+    isLoading.value = false
+  }
 }
 
 const handleImport = () => {
@@ -408,19 +297,10 @@ const handleImport = () => {
 
           <!-- Header Actions -->
           <div class="d-flex gap-3 align-center flex-wrap">
-            <VBtn
-              color="primary"
-              variant="outlined"
-              prepend-icon="tabler-upload"
-              @click="isImportModalVisible = true"
-            >
+            <VBtn color="primary" variant="outlined" prepend-icon="tabler-upload" @click="isImportModalVisible = true">
               Import
             </VBtn>
-            <VBtn
-              color="primary"
-              prepend-icon="tabler-plus"
-              @click="openAddDataModal(activeTab)"
-            >
+            <VBtn color="primary" prepend-icon="tabler-plus" @click="openAddDataModal(activeTab)">
               Add Data
             </VBtn>
           </div>
@@ -431,23 +311,11 @@ const handleImport = () => {
     <!-- Stat Cards -->
     <VRow class="mb-6">
       <!-- Total Sales -->
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="primary"
-              variant="tonal"
-              class="me-4"
-            >
-              <VIcon
-                size="24"
-                icon="tabler-currency-dollar"
-              />
+            <VAvatar size="44" rounded color="primary" variant="tonal" class="me-4">
+              <VIcon size="24" icon="tabler-currency-dollar" />
             </VAvatar>
             <div>
               <span class="text-sm text-medium-emphasis">Total Sales</span>
@@ -460,23 +328,11 @@ const handleImport = () => {
       </VCol>
 
       <!-- Total Expenses -->
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="error"
-              variant="tonal"
-              class="me-4"
-            >
-              <VIcon
-                size="24"
-                icon="tabler-trending-down"
-              />
+            <VAvatar size="44" rounded color="error" variant="tonal" class="me-4">
+              <VIcon size="24" icon="tabler-trending-down" />
             </VAvatar>
             <div>
               <span class="text-sm text-medium-emphasis">Total Expenses</span>
@@ -489,23 +345,11 @@ const handleImport = () => {
       </VCol>
 
       <!-- Total Profit -->
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="success"
-              variant="tonal"
-              class="me-4"
-            >
-              <VIcon
-                size="24"
-                icon="tabler-trending-up"
-              />
+            <VAvatar size="44" rounded color="success" variant="tonal" class="me-4">
+              <VIcon size="24" icon="tabler-trending-up" />
             </VAvatar>
             <div>
               <span class="text-sm text-medium-emphasis">Total Profit</span>
@@ -523,11 +367,7 @@ const handleImport = () => {
       <VCol cols="12">
         <VCard>
           <VCardText>
-            <VTabs
-              v-model="activeTab"
-              color="primary"
-              class="mb-4"
-            >
+            <VTabs v-model="activeTab" color="primary" class="mb-4">
               <VTab value="sales">
                 Sales
               </VTab>
@@ -541,41 +381,19 @@ const handleImport = () => {
 
             <!-- Search and Actions Bar -->
             <div class="d-flex justify-space-between align-center mb-4">
-              <VTextField
-                v-model="searchQuery"
-                placeholder="Search..."
-                prepend-inner-icon="tabler-search"
-                variant="outlined"
-                density="compact"
-                style="max-width: 300px;"
-                clearable
-              />
+              <VTextField v-model="searchQuery" placeholder="Search..." prepend-inner-icon="tabler-search"
+                variant="outlined" density="compact" style="max-width: 300px;" clearable />
               <div class="d-flex gap-2">
-                <VBtn
-                  v-if="selectedItems.length > 0"
-                  color="primary"
-                  variant="outlined"
-                  prepend-icon="tabler-download"
-                  @click="exportData"
-                >
+                <VBtn v-if="selectedItems.length > 0" color="primary" variant="outlined" prepend-icon="tabler-download"
+                  @click="exportData">
                   Export Selected ({{ selectedItems.length }})
                 </VBtn>
-                <VBtn
-                  v-if="selectedItems.length > 0"
-                  color="error"
-                  variant="outlined"
-                  prepend-icon="tabler-trash"
-                  @click="deleteSelected"
-                >
+                <VBtn v-if="selectedItems.length > 0" color="error" variant="outlined" prepend-icon="tabler-trash"
+                  @click="deleteSelected">
                   Delete Selected ({{ selectedItems.length }})
                 </VBtn>
-                <VBtn
-                  v-if="selectedItems.length === 0"
-                  color="primary"
-                  variant="outlined"
-                  prepend-icon="tabler-download"
-                  @click="exportData"
-                >
+                <VBtn v-if="selectedItems.length === 0" color="primary" variant="outlined"
+                  prepend-icon="tabler-download" @click="exportData">
                   Export All
                 </VBtn>
               </div>
@@ -585,15 +403,8 @@ const handleImport = () => {
             <VTabsWindow v-model="activeTab">
               <!-- Sales Tab -->
               <VTabsWindowItem value="sales">
-                <VDataTable
-                  v-model="selectedItems"
-                  :headers="salesHeaders"
-                  :items="filteredSalesData"
-                  :items-per-page="10"
-                  show-select
-                  class="text-no-wrap"
-                  item-value="id"
-                >
+                <VDataTable v-model="selectedItems" :headers="salesHeaders" :items="filteredSalesData"
+                  :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.unitPrice="{ item }">
                     <span class="font-weight-medium">
                       {{ item.unitPrice.toFixed(2) }} SAR
@@ -609,26 +420,15 @@ const handleImport = () => {
 
               <!-- Expense Tab -->
               <VTabsWindowItem value="expense">
-                <VDataTable
-                  v-model="selectedItems"
-                  :headers="expenseHeaders"
-                  :items="filteredExpenseData"
-                  :items-per-page="10"
-                  show-select
-                  class="text-no-wrap"
-                  item-value="id"
-                >
+                <VDataTable v-model="selectedItems" :headers="expenseHeaders" :items="filteredExpenseData"
+                  :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.amount="{ item }">
                     <span class="text-error font-weight-medium">
                       {{ item.amount.toFixed(2) }} SAR
                     </span>
                   </template>
                   <template #item.expenseCategory="{ item }">
-                    <VChip
-                      size="small"
-                      variant="tonal"
-                      color="primary"
-                    >
+                    <VChip size="small" variant="tonal" color="primary">
                       {{ item.expenseCategory }}
                     </VChip>
                   </template>
@@ -637,15 +437,8 @@ const handleImport = () => {
 
               <!-- Profit Tab -->
               <VTabsWindowItem value="profit">
-                <VDataTable
-                  v-model="selectedItems"
-                  :headers="profitHeaders"
-                  :items="filteredProfitData"
-                  :items-per-page="10"
-                  show-select
-                  class="text-no-wrap"
-                  item-value="id"
-                >
+                <VDataTable v-model="selectedItems" :headers="profitHeaders" :items="filteredProfitData"
+                  :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.totalSales="{ item }">
                     <span class="font-weight-medium">
                       {{ item.totalSales.toFixed(2) }} SAR
@@ -671,10 +464,7 @@ const handleImport = () => {
   </section>
 
   <!-- Add Data Modal -->
-  <VDialog
-    v-model="isAddDataModalVisible"
-    max-width="500"
-  >
+  <VDialog v-model="isAddDataModalVisible" max-width="500">
     <VCard>
       <VCardTitle class="text-h6 font-weight-medium">
         Add {{ selectedCategory === 'sales' ? 'Sales' : 'Expense' }} Data
@@ -685,87 +475,43 @@ const handleImport = () => {
             <!-- Sales Fields -->
             <template v-if="selectedCategory === 'sales'">
               <VCol cols="12">
-                <VSelect
-                  v-model="addDataForm.product"
-                  :items="productOptions"
-                  label="Product"
-                  variant="outlined"
-                  required
-                />
+                <VSelect v-model="addDataForm.product" :items="productOptions" label="Product" variant="outlined"
+                  required />
               </VCol>
               <VCol cols="12">
-                <VTextField
-                  v-model="addDataForm.date"
-                  label="Date"
-                  type="date"
-                  variant="outlined"
-                  required
-                />
+                <VTextField v-model="addDataForm.date" label="Date" type="date" variant="outlined" required />
               </VCol>
               <VCol cols="12">
-                <VTextField
-                  v-model.number="addDataForm.quantitySold"
-                  label="Quantity Sold"
-                  type="number"
-                  variant="outlined"
-                  required
-                />
+                <VTextField v-model.number="addDataForm.quantitySold" label="Quantity Sold" type="number"
+                  variant="outlined" required />
               </VCol>
             </template>
 
             <!-- Expense Fields -->
             <template v-else>
               <VCol cols="12">
-                <VSelect
-                  v-model="addDataForm.expenseCategory"
-                  :items="expenseCategoryOptions"
-                  label="Expense Category"
-                  variant="outlined"
-                  required
-                />
+                <VSelect v-model="addDataForm.expenseCategory" :items="expenseCategoryOptions" label="Expense Category"
+                  variant="outlined" required />
               </VCol>
               <VCol cols="12">
-                <VTextField
-                  v-model="addDataForm.date"
-                  label="Date"
-                  type="date"
-                  variant="outlined"
-                  required
-                />
+                <VTextField v-model="addDataForm.date" label="Date" type="date" variant="outlined" required />
               </VCol>
               <VCol cols="12">
-                <VTextField
-                  v-model.number="addDataForm.amount"
-                  label="Amount (SAR)"
-                  type="number"
-                  step="0.01"
-                  variant="outlined"
-                  required
-                />
+                <VTextField v-model.number="addDataForm.amount" label="Amount (SAR)" type="number" step="0.01"
+                  variant="outlined" required />
               </VCol>
               <VCol cols="12">
-                <VTextarea
-                  v-model="addDataForm.description"
-                  label="Note/Description"
-                  variant="outlined"
-                  rows="3"
-                />
+                <VTextarea v-model="addDataForm.description" label="Note/Description" variant="outlined" rows="3" />
               </VCol>
             </template>
           </VRow>
         </VForm>
       </VCardText>
       <VCardActions class="d-flex justify-end gap-2 pa-4">
-        <VBtn
-          variant="outlined"
-          @click="isAddDataModalVisible = false"
-        >
+        <VBtn variant="outlined" @click="isAddDataModalVisible = false">
           Cancel
         </VBtn>
-        <VBtn
-          color="primary"
-          @click="saveData"
-        >
+        <VBtn color="primary" @click="saveData">
           Save
         </VBtn>
       </VCardActions>
@@ -773,40 +519,21 @@ const handleImport = () => {
   </VDialog>
 
   <!-- Import Modal -->
-  <VDialog
-    v-model="isImportModalVisible"
-    max-width="400"
-  >
+  <VDialog v-model="isImportModalVisible" max-width="400">
     <VCard>
       <VCardTitle class="text-h6 font-weight-medium">
         Import Data
       </VCardTitle>
       <VCardText>
-        <VSelect
-          v-model="importCategory"
-          :items="importCategoryOptions"
-          label="Select Category"
-          variant="outlined"
-          class="mb-4"
-        />
-        <VFileInput
-          label="Choose CSV file"
-          variant="outlined"
-          accept=".csv"
-          prepend-icon="tabler-file-upload"
-        />
+        <VSelect v-model="importCategory" :items="importCategoryOptions" label="Select Category" variant="outlined"
+          class="mb-4" />
+        <VFileInput label="Choose CSV file" variant="outlined" accept=".csv" prepend-icon="tabler-file-upload" />
       </VCardText>
       <VCardActions class="d-flex justify-end gap-2 pa-4">
-        <VBtn
-          variant="outlined"
-          @click="isImportModalVisible = false"
-        >
+        <VBtn variant="outlined" @click="isImportModalVisible = false">
           Cancel
         </VBtn>
-        <VBtn
-          color="primary"
-          @click="handleImport"
-        >
+        <VBtn color="primary" @click="handleImport">
           Import
         </VBtn>
       </VCardActions>
