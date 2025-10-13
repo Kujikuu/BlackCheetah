@@ -37,7 +37,7 @@ const selectedPeriod = ref<'daily' | 'monthly' | 'yearly'>('monthly')
 const selectedUnit = ref('all')
 
 // Data table state
-const activeTab = ref<'sales' | 'expenses' | 'profit'>('sales')
+const activeTab = ref<'sales' | 'expense' | 'profit'>('sales')
 const selectedSalesRows = ref([])
 const selectedExpensesRows = ref([])
 const selectedProfitRows = ref([])
@@ -45,7 +45,7 @@ const selectedProfitRows = ref([])
 // Computed property for current selected rows based on active tab
 const selectedRows = computed(() => {
   if (activeTab.value === 'sales') return selectedSalesRows.value
-  if (activeTab.value === 'expenses') return selectedExpensesRows.value
+  if (activeTab.value === 'expense') return selectedExpensesRows.value
   if (activeTab.value === 'profit') return selectedProfitRows.value
   return []
 })
@@ -87,7 +87,7 @@ const searchQuery = ref('')
 const currentSelectedRows = computed(() => {
   switch (activeTab.value) {
     case 'sales': return selectedSalesRows.value
-    case 'expenses': return selectedExpensesRows.value
+    case 'expense': return selectedExpensesRows.value
     case 'profit': return selectedProfitRows.value
     default: return []
   }
@@ -192,34 +192,33 @@ const tableHeaders = [
 // Headers for different tabs
 const salesHeaders = [
   { title: 'Product', key: 'product', sortable: true },
+  { title: 'Date of Sale', key: 'date', sortable: true },
   { title: 'Unit Price (SAR)', key: 'unitPrice', sortable: true },
-  { title: 'Quantity', key: 'quantity', sortable: true },
-  { title: 'Sale Amount (SAR)', key: 'sale', sortable: true },
-  { title: 'Date', key: 'date', sortable: true },
+  { title: 'Quantity Sold', key: 'quantity', sortable: true },
+  { title: 'Sale (SAR)', key: 'sale', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
 const expensesHeaders = [
-  { title: 'Category', key: 'expenseCategory', sortable: true },
+  { title: 'Expense Category', key: 'expenseCategory', sortable: true },
+  { title: 'Date of Expense', key: 'date', sortable: true },
   { title: 'Amount (SAR)', key: 'amount', sortable: true },
   { title: 'Description', key: 'description', sortable: true },
-  { title: 'Date', key: 'date', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
 const profitHeaders = [
-  { title: 'Period', key: 'date', sortable: true },
-  { title: 'Revenue (SAR)', key: 'totalSales', sortable: true },
-  { title: 'Expenses (SAR)', key: 'totalExpenses', sortable: true },
-  { title: 'Net Profit (SAR)', key: 'profit', sortable: true },
-  { title: 'Actions', key: 'actions', sortable: false },
+  { title: 'Date', key: 'date', sortable: true },
+  { title: 'Total Sales (SAR)', key: 'totalSales', sortable: true },
+  { title: 'Total Expenses (SAR)', key: 'totalExpenses', sortable: true },
+  { title: 'Profit (SAR)', key: 'profit', sortable: true },
 ]
 
 // Computed properties for current tab
 const currentData = computed(() => {
   switch (activeTab.value) {
     case 'sales': return salesData.value
-    case 'expenses': return expensesData.value
+    case 'expense': return expensesData.value
     case 'profit': return profitData.value
     default: return []
   }
@@ -228,7 +227,7 @@ const currentData = computed(() => {
 const currentHeaders = computed(() => {
   switch (activeTab.value) {
     case 'sales': return salesHeaders
-    case 'expenses': return expensesHeaders
+    case 'expense': return expensesHeaders
     case 'profit': return profitHeaders
     default: return []
   }
@@ -321,7 +320,7 @@ const loadTableData = async () => {
         totalItems.value = salesResponse.data?.total || 0
         break
       }
-      case 'expenses': {
+      case 'expense': {
         const expensesResponse = await financialApi.getExpenses(filters)
 
         expensesData.value = expensesResponse.data?.data || []
@@ -447,7 +446,7 @@ const deleteSelected = async () => {
         case 'sales':
           await financialApi.deleteSale(numericId)
           break
-        case 'expenses':
+        case 'expense':
           await financialApi.deleteExpense(numericId)
           break
         case 'profit':
@@ -465,7 +464,7 @@ const deleteSelected = async () => {
       case 'sales':
         selectedSalesRows.value = []
         break
-      case 'expenses':
+      case 'expense':
         selectedExpensesRows.value = []
         break
       case 'profit':
@@ -552,7 +551,7 @@ const deleteItem = async (id: string | number) => {
       case 'sales':
         await financialApi.deleteSale(numericId)
         break
-      case 'expenses':
+      case 'expense':
         await financialApi.deleteExpense(numericId)
         break
       case 'profit':
@@ -576,7 +575,7 @@ const viewItem = (id: string | number) => {
     case 'sales':
       item = salesData.value.find(s => s.id === numericId)
       break
-    case 'expenses':
+    case 'expense':
       item = expensesData.value.find(e => e.id === numericId)
       break
     case 'profit':
@@ -634,8 +633,8 @@ onMounted(() => {
       <VTab value="sales">
         Sales
       </VTab>
-      <VTab value="expenses">
-        Expenses
+      <VTab value="expense">
+        Expense
       </VTab>
       <VTab value="profit">
         Profit
@@ -679,7 +678,7 @@ onMounted(() => {
         show-select :loading="isTableLoading" @update:options="updateOptions" @update:model-value="(value) => {
           switch (activeTab) {
             case 'sales': selectedSalesRows = value; break;
-            case 'expenses': selectedExpensesRows = value; break;
+            case 'expense': selectedExpensesRows = value; break;
             case 'profit': selectedProfitRows = value; break;
           }
         }">
@@ -712,7 +711,7 @@ onMounted(() => {
         </template>
 
         <!-- Expenses specific templates -->
-        <template v-if="activeTab === 'expenses'" #item.expenseCategory="{ item }">
+        <template v-if="activeTab === 'expense'" #item.expenseCategory="{ item }">
           <div class="d-flex align-center gap-x-2">
             <VIcon icon="tabler-receipt" size="22" color="warning" />
             <div class="text-body-1 text-high-emphasis text-capitalize">
@@ -721,13 +720,13 @@ onMounted(() => {
           </div>
         </template>
 
-        <template v-if="activeTab === 'expenses'" #item.amount="{ item }">
+        <template v-if="activeTab === 'expense'" #item.amount="{ item }">
           <VChip color="error" size="small" label>
             {{ formatCurrency((item as ExpenseData).amount) }}
           </VChip>
         </template>
 
-        <template v-if="activeTab === 'expenses'" #item.description="{ item }">
+        <template v-if="activeTab === 'expense'" #item.description="{ item }">
           <div class="text-body-2" style="max-width: 200px;">
             {{ (item as ExpenseData).description }}
           </div>
@@ -790,7 +789,7 @@ onMounted(() => {
         </template>
 
         <!-- Actions for Expenses Tab -->
-        <template v-if="activeTab === 'expenses'" #item.actions="{ item }">
+        <template v-if="activeTab === 'expense'" #item.actions="{ item }">
           <VBtn icon variant="text" color="primary" size="small" @click="viewItem(item.id)">
             <VIcon icon="tabler-eye" />
             <VTooltip activator="parent" location="top">
