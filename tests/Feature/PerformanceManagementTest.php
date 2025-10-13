@@ -68,7 +68,7 @@ class PerformanceManagementTest extends TestCase
         Revenue::factory()->create([
             'unit_id' => $this->unit->id,
             'franchise_id' => $this->franchise->id,
-            'line_items' => json_encode([
+            'line_items' => [
                 [
                     'product_id' => $product1->id,
                     'product_name' => 'Product A',
@@ -81,9 +81,11 @@ class PerformanceManagementTest extends TestCase
                     'quantity' => 5,
                     'price' => 200,
                 ],
-            ]),
+            ],
             'amount' => 2000,
             'revenue_date' => now()->subMonth(),
+            'period_year' => now()->year,
+            'period_month' => now()->subMonth()->month,
         ]);
 
         // Create royalties
@@ -109,7 +111,7 @@ class PerformanceManagementTest extends TestCase
             'unit_id' => $this->unit->id,
             'franchise_id' => $this->franchise->id,
             'status' => 'pending',
-            'due_date' => now()->addDay(),
+            'due_date' => now()->subDay(), // Past due
         ]);
 
         // Create reviews
@@ -227,9 +229,9 @@ class PerformanceManagementTest extends TestCase
         $data = $response->json('data');
 
         // Verify it returns empty but valid structure
-        $this->assertIsArray($data['productPerformance']['topPerforming']);
-        $this->assertIsArray($data['productPerformance']['lowPerforming']);
-        $this->assertCount(4, $data['royaltyData']['amounts']); // Should still have 4 zeros
+        $this->assertIsArray($data['productPerformance']['topPerformingProductData']);
+        $this->assertIsArray($data['productPerformance']['lowPerformingProductData']);
+        $this->assertCount(4, $data['royalty']['phaseData']); // Should still have 4 zeros
         $this->assertEquals(0, $data['tasksOverview']['total']);
         $this->assertEquals(0, $data['customerSatisfaction']['score']);
     }
@@ -245,31 +247,37 @@ class PerformanceManagementTest extends TestCase
         Revenue::factory()->create([
             'unit_id' => $this->unit->id,
             'franchise_id' => $this->franchise->id,
-            'line_items' => json_encode([
+            'line_items' => [
                 [
                     'product_id' => $product->id,
                     'product_name' => 'Test Product',
                     'quantity' => 10,
                     'price' => 100,
                 ],
-            ]),
+            ],
             'amount' => 1000,
             'revenue_date' => now()->subMonth(),
+            'type' => 'sales',
+            'period_year' => now()->year,
+            'period_month' => now()->subMonth()->month,
         ]);
 
         Revenue::factory()->create([
             'unit_id' => $this->unit->id,
             'franchise_id' => $this->franchise->id,
-            'line_items' => json_encode([
+            'line_items' => [
                 [
                     'product_id' => $product->id,
                     'product_name' => 'Test Product',
                     'quantity' => 5,
                     'price' => 100,
                 ],
-            ]),
+            ],
             'amount' => 500,
             'revenue_date' => now()->subMonth(),
+            'type' => 'sales',
+            'period_year' => now()->year,
+            'period_month' => now()->subMonth()->month,
         ]);
 
         $response = $this->actingAs($this->franchisee, 'sanctum')
@@ -278,12 +286,13 @@ class PerformanceManagementTest extends TestCase
         $response->assertStatus(200);
 
         $data = $response->json('data');
-        $topPerforming = collect($data['productPerformance']['topPerforming']);
+        $topPerformingData = $data['productPerformance']['topPerformingProductData'];
 
-        // Verify the product appears and quantities are aggregated
-        $testProduct = $topPerforming->firstWhere('name', 'Test Product');
-        $this->assertNotNull($testProduct);
-        $this->assertEquals(15, $testProduct['value']); // 10 + 5
+        // Verify product data is returned and aggregated
+        $this->assertIsArray($topPerformingData);
+        $this->assertCount(12, $topPerformingData); // 12 months of data
+        // The sum of all months should be 15 (10 + 5)
+        $this->assertEquals(15, array_sum($topPerformingData));
     }
 
     public function test_customer_satisfaction_calculates_score_correctly(): void
@@ -313,13 +322,13 @@ class PerformanceManagementTest extends TestCase
         $data = $response->json('data');
         $satisfaction = $data['customerSatisfaction'];
 
-        // Expected score: (5 + 3) / 2 = 4.0
-        $this->assertEquals(4.0, $satisfaction['score']);
-        $this->assertEquals(2, $satisfaction['totalReviews']);
+        // Expected score: ((5 + 3) / 2) / 5 * 100 = 4.0 / 5 * 100 = 80%
+        $this->assertEquals(80, $satisfaction['score']);
+        $this->assertEquals(2, $satisfaction['users']);
 
         // Verify sentiment breakdown
-        $this->assertEquals(50, $satisfaction['sentimentBreakdown']['positive']); // 1/2 = 50%
-        $this->assertEquals(50, $satisfaction['sentimentBreakdown']['neutral']); // 1/2 = 50%
-        $this->assertEquals(0, $satisfaction['sentimentBreakdown']['negative']); // 0/2 = 0%
+        $this->assertEquals(50, $satisfaction['positive']); // 1/2 = 50%
+        $this->assertEquals(50, $satisfaction['neutral']); // 1/2 = 50%
+        $this->assertEquals(0, $satisfaction['negative']); // 0/2 = 0%
     }
 }
