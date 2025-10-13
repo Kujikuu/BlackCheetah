@@ -685,20 +685,20 @@ onMounted(() => {
         <!-- Sales specific templates -->
         <template v-if="activeTab === 'sales'" #item.unitPrice="{ item }">
           <span class="font-weight-medium">
-            {{ (item as SalesData).unitPrice.toFixed(2) }} SAR
+            {{ Number((item as SalesData).unitPrice).toFixed(2) }} SAR
           </span>
         </template>
 
         <template v-if="activeTab === 'sales'" #item.sale="{ item }">
           <span class="text-success font-weight-medium">
-            {{ (item as SalesData).sale.toFixed(2) }} SAR
+            {{ Number((item as SalesData).sale).toFixed(2) }} SAR
           </span>
         </template>
 
         <!-- Expenses specific templates -->
         <template v-if="activeTab === 'expense'" #item.amount="{ item }">
           <span class="text-error font-weight-medium">
-            {{ (item as ExpenseData).amount.toFixed(2) }} SAR
+            {{ Number((item as ExpenseData).amount).toFixed(2) }} SAR
           </span>
         </template>
 
@@ -711,19 +711,19 @@ onMounted(() => {
         <!-- Profit specific templates -->
         <template v-if="activeTab === 'profit'" #item.totalSales="{ item }">
           <span class="font-weight-medium">
-            {{ (item as ProfitData).totalSales.toFixed(2) }} SAR
+            {{ Number((item as ProfitData).totalSales).toFixed(2) }} SAR
           </span>
         </template>
 
         <template v-if="activeTab === 'profit'" #item.totalExpenses="{ item }">
           <span class="text-error">
-            {{ (item as ProfitData).totalExpenses.toFixed(2) }} SAR
+            {{ Number((item as ProfitData).totalExpenses).toFixed(2) }} SAR
           </span>
         </template>
 
         <template v-if="activeTab === 'profit'" #item.profit="{ item }">
           <span class="text-success font-weight-medium">
-            {{ (item as ProfitData).profit.toFixed(2) }} SAR
+            {{ Number((item as ProfitData).profit).toFixed(2) }} SAR
           </span>
         </template>
 

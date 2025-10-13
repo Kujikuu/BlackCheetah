@@ -544,12 +544,12 @@ const handleImport = () => {
                   :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.unitPrice="{ item }">
                     <span class="font-weight-medium">
-                      {{ item.unitPrice.toFixed(2) }} SAR
+                      {{ Number(item.unitPrice).toFixed(2) }} SAR
                     </span>
                   </template>
                   <template #item.sale="{ item }">
                     <span class="text-success font-weight-medium">
-                      {{ item.sale.toFixed(2) }} SAR
+                      {{ Number(item.sale).toFixed(2) }} SAR
                     </span>
                   </template>
                   <template #item.actions="{ item }">
@@ -565,7 +565,7 @@ const handleImport = () => {
                   :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.amount="{ item }">
                     <span class="text-error font-weight-medium">
-                      {{ item.amount.toFixed(2) }} SAR
+                      {{ Number(item.amount).toFixed(2) }} SAR
                     </span>
                   </template>
                   <template #item.expenseCategory="{ item }">
@@ -586,17 +586,17 @@ const handleImport = () => {
                   :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.totalSales="{ item }">
                     <span class="font-weight-medium">
-                      {{ item.totalSales.toFixed(2) }} SAR
+                      {{ Number(item.totalSales).toFixed(2) }} SAR
                     </span>
                   </template>
                   <template #item.totalExpenses="{ item }">
                     <span class="text-error">
-                      {{ item.totalExpenses.toFixed(2) }} SAR
+                      {{ Number(item.totalExpenses).toFixed(2) }} SAR
                     </span>
                   </template>
                   <template #item.profit="{ item }">
                     <span class="text-success font-weight-medium">
-                      {{ item.profit.toFixed(2) }} SAR
+                      {{ Number(item.profit).toFixed(2) }} SAR
                     </span>
                   </template>
                 </VDataTable>
