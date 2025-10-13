@@ -188,6 +188,29 @@ const isEditReviewModalVisible = ref(false)
 const selectedReview = ref<any>(null)
 const reviewToDelete = ref<number | null>(null)
 
+// 👉 Document modal states
+const isDocumentActionModalVisible = ref(false)
+const selectedDocument = ref<any>(null)
+const documentAction = ref<'view' | 'download' | 'delete' | null>(null)
+
+// 👉 Form data
+const newStaffForm = ref({
+  name: '',
+  email: '',
+  phone: '',
+  position: '',
+  salary: 0,
+  status: 'Active',
+})
+
+const newReviewForm = ref({
+  customerName: '',
+  customerEmail: '',
+  rating: 0,
+  comment: '',
+  date: '',
+})
+
 // 👉 Edit unit form
 const editUnitForm = ref({ ...unitData.value })
 
@@ -291,6 +314,31 @@ const onDocumentAdded = async (document: any) => {
   }
 }
 
+const onDocumentActionConfirmed = async (action: string, document: any) => {
+  try {
+    if (action === 'delete') {
+      const response = await franchiseeDashboardApi.deleteDocument(getUnitId(), document.id)
+      if (response.success) {
+        const index = documentsData.value.findIndex(doc => doc.id === document.id)
+        if (index !== -1) {
+          documentsData.value.splice(index, 1)
+        }
+      }
+    } else if (action === 'download') {
+      // Handle document download
+      window.open(document.url, '_blank')
+    }
+  }
+  catch (error) {
+    console.error('Error performing document action:', error)
+  }
+  finally {
+    isDocumentActionModalVisible.value = false
+    selectedDocument.value = null
+    documentAction.value = undefined
+  }
+}
+
 // 👉 Staff handlers
 const viewStaff = (staff: any) => {
   selectedStaff.value = staff
@@ -358,6 +406,28 @@ const onStaffCreated = async (staff: any) => {
   }
   catch (error) {
     console.error('Error creating staff:', error)
+  }
+}
+
+const addStaff = async () => {
+  try {
+    const response = await franchiseeDashboardApi.createStaff(getUnitId(), newStaffForm.value)
+    if (response.success) {
+      staffData.value.push(response.data)
+      isAddStaffModalVisible.value = false
+      // Reset form
+      newStaffForm.value = {
+        name: '',
+        email: '',
+        phone: '',
+        position: '',
+        salary: 0,
+        status: 'Active',
+      }
+    }
+  }
+  catch (error) {
+    console.error('Error adding staff:', error)
   }
 }
 
@@ -566,6 +636,27 @@ const onReviewCreated = async (review: any) => {
   }
 }
 
+const addReview = async () => {
+  try {
+    const response = await franchiseeDashboardApi.createReview(getUnitId(), newReviewForm.value)
+    if (response.success) {
+      reviewsData.value.push(response.data)
+      isAddReviewModalVisible.value = false
+      // Reset form
+      newReviewForm.value = {
+        customerName: '',
+        customerEmail: '',
+        rating: 0,
+        comment: '',
+        date: '',
+      }
+    }
+  }
+  catch (error) {
+    console.error('Error adding review:', error)
+  }
+}
+
 // 👉 Task action handlers
 const viewTask = (task: any) => {
   selectedTask.value = task
@@ -695,7 +786,7 @@ const reviewHeaders = [
             class="text-capitalize">
             {{ unitData.status }}
           </VChip>
-          <VSkeleton v-else type="chip" width="80" height="32" />
+          <VSkeletonLoader v-else type="chip" width="80" height="32" />
         </div>
       </VCol>
     </VRow>
@@ -1754,22 +1845,22 @@ const reviewHeaders = [
         <VCardText class="pa-6">
           <VRow>
             <VCol cols="12" md="6">
-              <VTextField label="Full Name" required />
+              <VTextField v-model="newStaffForm.name" label="Full Name" required />
             </VCol>
             <VCol cols="12" md="6">
-              <VTextField label="Email" type="email" required />
+              <VTextField v-model="newStaffForm.email" label="Email" type="email" required />
             </VCol>
             <VCol cols="12" md="6">
-              <VTextField label="Phone" required />
+              <VTextField v-model="newStaffForm.phone" label="Phone" required />
             </VCol>
             <VCol cols="12" md="6">
-              <VSelect label="Position" :items="['Manager', 'Cashier', 'Cook', 'Server', 'Cleaner']" required />
+              <VSelect v-model="newStaffForm.position" label="Position" :items="['Manager', 'Cashier', 'Cook', 'Server', 'Cleaner']" required />
             </VCol>
             <VCol cols="12" md="6">
-              <VTextField label="Salary" type="number" prefix="SAR" required />
+              <VTextField v-model="newStaffForm.salary" label="Salary" type="number" prefix="SAR" required />
             </VCol>
             <VCol cols="12" md="6">
-              <VSelect label="Status" :items="['Active', 'On Leave', 'Inactive']" required />
+              <VSelect v-model="newStaffForm.status" label="Status" :items="['Active', 'On Leave', 'Inactive']" required />
             </VCol>
           </VRow>
         </VCardText>
@@ -1883,22 +1974,22 @@ const reviewHeaders = [
         <VCardText class="pa-6">
           <VRow>
             <VCol cols="12" md="6">
-              <VTextField label="Customer Name" required />
+              <VTextField v-model="newReviewForm.customerName" label="Customer Name" required />
             </VCol>
             <VCol cols="12" md="6">
-              <VTextField label="Customer Email" type="email" />
+              <VTextField v-model="newReviewForm.customerEmail" label="Customer Email" type="email" />
             </VCol>
             <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-2">
                 Rating
               </div>
-              <VRating size="large" />
+              <VRating v-model="newReviewForm.rating" size="large" />
             </VCol>
             <VCol cols="12" md="6">
-              <VTextField label="Date" type="date" required />
+              <VTextField v-model="newReviewForm.date" label="Date" type="date" required />
             </VCol>
             <VCol cols="12">
-              <VTextarea label="Review Comment" rows="4" required />
+              <VTextarea v-model="newReviewForm.comment" label="Review Comment" rows="4" required />
             </VCol>
           </VRow>
         </VCardText>

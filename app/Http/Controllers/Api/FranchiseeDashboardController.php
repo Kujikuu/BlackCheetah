@@ -1057,19 +1057,22 @@ class FranchiseeDashboardController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'jobTitle' => 'required|string|max:100',
             'email' => 'required|email|max:255',
-            'shiftTime' => 'required|string|max:100',
-            'status' => 'sometimes|in:active,on_leave,terminated,inactive',
+            'phone' => 'nullable|string|max:20',
+            'position' => 'required|string|max:100',
+            'salary' => 'nullable|numeric|min:0',
+            'status' => 'sometimes|in:Active,On Leave,Inactive',
             'hireDate' => 'nullable|date',
         ]);
 
         $staff = Staff::create([
             'name' => $validated['name'],
-            'job_title' => $validated['jobTitle'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'job_title' => $validated['position'],
+            'salary' => $validated['salary'] ?? null,
             'hire_date' => $validated['hireDate'] ?? now()->toDateString(),
-            'status' => $validated['status'] ?? 'active',
+            'status' => strtolower(str_replace(' ', '_', $validated['status'] ?? 'active')),
         ]);
 
         // Attach staff to unit
@@ -1082,8 +1085,8 @@ class FranchiseeDashboardController extends Controller
                 'name' => $staff->name,
                 'jobTitle' => $staff->job_title,
                 'email' => $staff->email,
-                'shiftTime' => $staff->shift_time,
-                'status' => $staff->status,
+                'shiftTime' => $staff->full_shift_time,
+                'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
             ],
             'message' => 'Staff member created successfully',
         ]);

@@ -1,6 +1,6 @@
-import { useAbility } from '@casl/vue'
-import type { RouteLocationNormalized } from 'vue-router'
+import { useAbility } from '@/plugins/casl/useAbility'
 import type { NavGroup } from '@layouts/types'
+import type { RouteLocationNormalized } from 'vue-router'
 
 /**
  * Returns ability result if ACL is configured or else just return true
@@ -15,12 +15,19 @@ import type { NavGroup } from '@layouts/types'
 export const can = (action: string | undefined, subject: string | undefined) => {
   const vm = getCurrentInstance()
 
-  if (!vm)
-    return false
-
   // If action or subject is undefined, allow access (navigation items without ACL)
   if (!action || !subject)
     return true
+
+  // If not in component context, use the standalone ability instance
+  if (!vm) {
+    try {
+      const { ability } = useAbility()
+      return ability.can(action, subject)
+    } catch {
+      return false
+    }
+  }
 
   const localCan = vm.proxy && '$can' in vm.proxy
 
@@ -46,7 +53,7 @@ export const canViewNavMenuGroup = (item: NavGroup) => {
 
 export const canNavigate = (to: RouteLocationNormalized) => {
   try {
-    const ability = useAbility()
+    const { ability } = useAbility()
 
     // Get the most specific route (last one in the matched array)
     const targetRoute = to.matched[to.matched.length - 1]
