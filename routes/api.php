@@ -445,6 +445,9 @@ Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('v1/unit-manager'
 
     // Franchisee Dashboard routes
     Route::prefix('dashboard')->group(function () {
+        // Performance Management
+        Route::get('performance-management', [FranchiseeDashboardController::class, 'performanceManagement']);
+
         // Sales dashboard endpoints
         Route::get('sales-statistics', [FranchiseeDashboardController::class, 'salesStatistics']);
         Route::get('product-sales', [FranchiseeDashboardController::class, 'productSales']);

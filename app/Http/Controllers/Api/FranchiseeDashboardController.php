@@ -2017,6 +2017,188 @@ class FranchiseeDashboardController extends Controller
     }
 
     /**
+     * Get performance management data
+     */
+    public function performanceManagement(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $unit = Unit::where('franchisee_id', $user->id)->first();
+
+        if (! $unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No unit found for current user',
+            ], 404);
+        }
+
+        // Get product performance data
+        $productPerformance = $this->getProductPerformance($unit);
+
+        // Get royalty data
+        $royaltyData = $this->getRoyaltyData($unit);
+
+        // Get tasks overview
+        $tasksOverview = $this->getTasksOverview($unit, $user);
+
+        // Get customer satisfaction
+        $customerSatisfaction = $this->getCustomerSatisfaction($unit);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'productPerformance' => $productPerformance,
+                'royalty' => $royaltyData,
+                'tasksOverview' => $tasksOverview,
+                'customerSatisfaction' => $customerSatisfaction,
+            ],
+            'message' => 'Performance management data retrieved successfully',
+        ]);
+    }
+
+    /**
+     * Get product performance data
+     */
+    private function getProductPerformance(Unit $unit): array
+    {
+        $currentYear = now()->year;
+
+        // Get monthly sales for each product from revenues
+        $revenues = \App\Models\Revenue::where('unit_id', $unit->id)
+            ->where('type', 'sales')
+            ->where('period_year', $currentYear)
+            ->whereNotNull('line_items')
+            ->get();
+
+        // Aggregate product sales by month
+        $productSales = [];
+        foreach ($revenues as $revenue) {
+            if ($revenue->line_items) {
+                foreach ($revenue->line_items as $item) {
+                    $productId = $item['product_id'] ?? null;
+                    if ($productId) {
+                        $month = $revenue->period_month;
+                        if (! isset($productSales[$productId])) {
+                            $productSales[$productId] = array_fill(1, 12, 0);
+                        }
+                        $productSales[$productId][$month] += $item['quantity'] ?? 0;
+                    }
+                }
+            }
+        }
+
+        // Find top and low performing products
+        $productTotals = [];
+        foreach ($productSales as $productId => $months) {
+            $productTotals[$productId] = array_sum($months);
+        }
+
+        arsort($productTotals);
+        $topProductId = array_key_first($productTotals);
+        $lowProductId = array_key_last($productTotals);
+
+        $topProductData = $topProductId ? array_values($productSales[$topProductId]) : array_fill(0, 12, 0);
+        $lowProductData = $lowProductId ? array_values($productSales[$lowProductId]) : array_fill(0, 12, 0);
+
+        return [
+            'topPerformingProductData' => $topProductData,
+            'lowPerformingProductData' => $lowProductData,
+        ];
+    }
+
+    /**
+     * Get royalty data
+     */
+    private function getRoyaltyData(Unit $unit): array
+    {
+        $royalties = \App\Models\Royalty::where('unit_id', $unit->id)
+            ->orderBy('period_start_date', 'desc')
+            ->take(4)
+            ->get();
+
+        $royaltyAmount = $royalties->first()->total_amount ?? 0;
+        $royaltyPhaseData = $royalties->reverse()->pluck('total_amount')->toArray();
+
+        // Pad with zeros if less than 4 phases
+        while (count($royaltyPhaseData) < 4) {
+            array_unshift($royaltyPhaseData, 0);
+        }
+
+        return [
+            'amount' => $royaltyAmount,
+            'phaseData' => $royaltyPhaseData,
+        ];
+    }
+
+    /**
+     * Get tasks overview
+     */
+    private function getTasksOverview(Unit $unit, $user): array
+    {
+        $tasks = \App\Models\Task::where(function ($query) use ($unit, $user) {
+            $query->where('unit_id', $unit->id)
+                ->orWhere('assigned_to', $user->id)
+                ->orWhere('created_by', $user->id);
+        })->get();
+
+        $total = $tasks->count();
+        $completed = $tasks->where('status', 'completed')->count();
+        $inProgress = $tasks->where('status', 'in_progress')->count();
+
+        $today = now();
+        $due = $tasks->filter(function ($task) {
+            return $task->due_date && $task->due_date->isPast() && ! in_array($task->status, ['completed', 'cancelled']);
+        })->count();
+
+        return [
+            'total' => $total,
+            'completed' => $completed,
+            'inProgress' => $inProgress,
+            'due' => $due,
+        ];
+    }
+
+    /**
+     * Get customer satisfaction data
+     */
+    private function getCustomerSatisfaction(Unit $unit): array
+    {
+        $reviews = \App\Models\Review::where('unit_id', $unit->id)
+            ->where('status', 'published')
+            ->get();
+
+        $totalReviews = $reviews->count();
+
+        if ($totalReviews === 0) {
+            return [
+                'score' => 0,
+                'users' => 0,
+                'positive' => 0,
+                'neutral' => 0,
+                'negative' => 0,
+            ];
+        }
+
+        $averageRating = $reviews->avg('rating');
+        $score = round(($averageRating / 5) * 100);
+
+        $positive = $reviews->where('sentiment', 'positive')->count();
+        $neutral = $reviews->where('sentiment', 'neutral')->count();
+        $negative = $reviews->where('sentiment', 'negative')->count();
+
+        $positivePercent = round(($positive / $totalReviews) * 100);
+        $neutralPercent = round(($neutral / $totalReviews) * 100);
+        $negativePercent = round(($negative / $totalReviews) * 100);
+
+        return [
+            'score' => $score,
+            'users' => $totalReviews,
+            'positive' => $positivePercent,
+            'neutral' => $neutralPercent,
+            'negative' => $negativePercent,
+        ];
+    }
+
+    /**
      * Get role display name
      */
     private function getRoleDisplayName(string $role): string

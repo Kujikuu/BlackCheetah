@@ -188,6 +188,39 @@ export interface UnitDocument {
   comment: string
 }
 
+// Performance Management types
+export interface ProductPerformance {
+  topPerformingProductData: number[]
+  lowPerformingProductData: number[]
+}
+
+export interface RoyaltyData {
+  amount: number
+  phaseData: number[]
+}
+
+export interface TasksOverview {
+  total: number
+  completed: number
+  inProgress: number
+  due: number
+}
+
+export interface CustomerSatisfaction {
+  score: number
+  users: number
+  positive: number
+  neutral: number
+  negative: number
+}
+
+export interface PerformanceManagementData {
+  productPerformance: ProductPerformance
+  royalty: RoyaltyData
+  tasksOverview: TasksOverview
+  customerSatisfaction: CustomerSatisfaction
+}
+
 // API response wrapper
 interface ApiResponse<T> {
   success: boolean
@@ -247,6 +280,11 @@ export const franchiseeDashboardApi = {
   // Get all operations data in one call
   async getOperationsData(): Promise<ApiResponse<OperationsData>> {
     return await $api<ApiResponse<OperationsData>>(`${API_URL}/dashboard/operations-data`)
+  },
+
+  // Performance Management API method
+  async getPerformanceManagement(): Promise<ApiResponse<PerformanceManagementData>> {
+    return await $api<ApiResponse<PerformanceManagementData>>(`${API_URL}/dashboard/performance-management`)
   },
 
   // Unit Operations API methods
