@@ -184,14 +184,22 @@ const loadTasksData = async () => {
 }
 
 const loadDocumentsData = async () => {
-  if (!unitId.value)
+  if (!unitId.value || !unitData.value)
     return
 
   documentsLoading.value = true
   documentsError.value = null
 
   try {
-    const response = await $api<{ success: boolean; data: any }>(`/v1/documents?unit_id=${unitId.value}`)
+    // Use the franchise documents endpoint filtered by franchise_id from the unit
+    const franchiseId = unitData.value.franchise?.id
+    if (!franchiseId) {
+      documentsData.value = []
+      documentsLoading.value = false
+      return
+    }
+
+    const response = await $api<{ success: boolean; data: any }>(`/v1/franchises/${franchiseId}/documents`)
 
     if (response.success && response.data?.data) {
       documentsData.value = response.data.data.map((doc: any) => ({
@@ -232,17 +240,17 @@ const loadProductsData = async () => {
   try {
     const response = await $api<{ data: any }>(`/v1/units/${unitId.value}/inventory`)
 
-    if (response.success && response.data?.data) {
-      productsData.value = response.data.data.map((product: any) => ({
+    if (response.data) {
+      productsData.value = response.data.map((product: any) => ({
         id: product.id,
         name: product.name,
         description: product.description || '',
-        unitPrice: product.unit_price || 0,
+        unitPrice: Number(product.unit_price) || 0,
         category: product.category || 'General',
         status: 'active',
-        stock: product.quantity || 0,
+        stock: Number(product.quantity) || 0,
         sku: '',
-        minimumStock: product.reorder_level || 0,
+        minimumStock: Number(product.reorder_level) || 0,
       }))
     }
     else {
@@ -1703,6 +1711,10 @@ watch(() => unitData.value, () => {
           </VCardActions>
         </VCard>
       </VDialog>
+
+      <!-- Create Task Modal -->
+      <CreateTaskModal v-model:is-dialog-visible="isAddTaskModalVisible"
+        :default-assigned-to="unitData?.franchiseeId?.toString()" :unit-id="unitId" @task-created="onTaskCreated" />
     </div> <!-- End of content div -->
   </section>
 </template>
