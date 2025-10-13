@@ -30,6 +30,22 @@ const { smAndUp } = useDisplay()
 const userData = useCookie('userData')
 const { updateAbility } = useAbility()
 
+const countries = [
+  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
+  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
+  { title: 'Qatar', value: 'Qatar' },
+  { title: 'Kuwait', value: 'Kuwait' },
+  { title: 'Oman', value: 'Oman' },
+  { title: 'Bahrain', value: 'Bahrain' },
+  { title: 'Jordan', value: 'Jordan' },
+  { title: 'Lebanon', value: 'Lebanon' },
+  { title: 'Egypt', value: 'Egypt' },
+  { title: 'Iraq', value: 'Iraq' },
+  { title: 'Syria', value: 'Syria' },
+  { title: 'Palestine', value: 'Palestine' },
+  { title: 'Yemen', value: 'Yemen' },
+]
+
 // Check onboarding status on mount
 onMounted(async () => {
   try {
@@ -177,7 +193,7 @@ const isFormValid = computed(() => {
 
               <!-- Country and State -->
               <VCol cols="12" md="6">
-                <AppTextField v-model="form.country" label="Country" placeholder="United States"
+                <AppSelect v-model="form.country" label="Country" placeholder="Select Country" :items="countries"
                   :error-messages="errorMessages?.country" required />
               </VCol>
 
