@@ -21,7 +21,6 @@ const loadPerformanceData = async () => {
     const response = await franchiseeDashboardApi.getPerformanceManagement()
     if (response.success) {
       performanceData.value = response.data
-      console.log('Performance data loaded:', response.data)
     }
   }
   catch (error) {

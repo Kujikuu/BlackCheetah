@@ -113,7 +113,7 @@ class FranchiseeDashboardController extends Controller
         foreach ($revenues as $revenue) {
             if (is_array($revenue->line_items)) {
                 foreach ($revenue->line_items as $item) {
-                    $itemName = $item['item_name'] ?? $item['name'] ?? 'Unknown Item';
+                    $itemName = $item['product_name'] ?? $item['item_name'] ?? $item['name'] ?? 'Unknown Item';
                     $quantity = $item['quantity'] ?? 0;
                     $unitPrice = $item['unit_price'] ?? $item['price'] ?? 0;
 
