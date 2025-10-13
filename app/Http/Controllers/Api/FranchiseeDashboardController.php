@@ -1120,16 +1120,25 @@ class FranchiseeDashboardController extends Controller
             'jobTitle' => 'sometimes|string|max:100',
             'email' => 'sometimes|email|max:255',
             'shiftTime' => 'sometimes|string|max:100',
-            'status' => 'sometimes|in:active,on_leave,terminated,inactive',
+            'status' => 'sometimes|in:working,leave',
         ]);
+
+        // Map frontend status values to database values if needed
+        $statusMapping = [
+            'working' => 'active',
+            'leave' => 'on_leave',
+        ];
 
         $staff->update([
             'name' => $validated['name'] ?? $staff->name,
             'job_title' => $validated['jobTitle'] ?? $staff->job_title,
             'email' => $validated['email'] ?? $staff->email,
             'shift_time' => $validated['shiftTime'] ?? $staff->shift_time,
-            'status' => $validated['status'] ?? $staff->status,
+            'status' => isset($validated['status']) ? ($statusMapping[$validated['status']] ?? $validated['status']) : $staff->status,
         ]);
+
+        // Reload the staff to get the full_shift_time accessor
+        $staff->refresh();
 
         return response()->json([
             'success' => true,
@@ -1138,8 +1147,8 @@ class FranchiseeDashboardController extends Controller
                 'name' => $staff->name,
                 'jobTitle' => $staff->job_title,
                 'email' => $staff->email,
-                'shiftTime' => $staff->shift_time,
-                'status' => $staff->status,
+                'shiftTime' => $staff->full_shift_time,
+                'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
             ],
             'message' => 'Staff member updated successfully',
         ]);
