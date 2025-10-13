@@ -706,10 +706,18 @@ class FranchiseeDashboardController extends Controller
                 return [
                     'id' => $staff->id,
                     'name' => $staff->name,
-                    'jobTitle' => $staff->job_title,
                     'email' => $staff->email,
+                    'phone' => $staff->phone,
+                    'jobTitle' => $staff->job_title,
+                    'department' => $staff->department,
+                    'salary' => $staff->salary,
+                    'hireDate' => $staff->hire_date?->format('Y-m-d'),
+                    'shiftStart' => $staff->shift_start?->format('H:i'),
+                    'shiftEnd' => $staff->shift_end?->format('H:i'),
                     'shiftTime' => $staff->full_shift_time,
                     'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
+                    'employmentType' => $staff->employment_type,
+                    'notes' => $staff->notes,
                 ];
             });
 
@@ -1057,36 +1065,57 @@ class FranchiseeDashboardController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => 'required|email|max:255|unique:staff,email',
             'phone' => 'nullable|string|max:20',
-            'position' => 'required|string|max:100',
+            'jobTitle' => 'required|string|max:100',
+            'department' => 'nullable|string|max:100',
             'salary' => 'nullable|numeric|min:0',
-            'status' => 'sometimes|in:Active,On Leave,Inactive',
-            'hireDate' => 'nullable|date',
+            'hireDate' => 'required|date',
+            'shiftStart' => 'nullable|date_format:H:i',
+            'shiftEnd' => 'nullable|date_format:H:i',
+            'status' => 'sometimes|in:Active,On Leave,Terminated,Inactive',
+            'employmentType' => 'sometimes|in:full_time,part_time,contract,temporary',
+            'notes' => 'nullable|string',
         ]);
 
         $staff = Staff::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
-            'job_title' => $validated['position'],
+            'job_title' => $validated['jobTitle'],
+            'department' => $validated['department'] ?? null,
             'salary' => $validated['salary'] ?? null,
-            'hire_date' => $validated['hireDate'] ?? now()->toDateString(),
+            'hire_date' => $validated['hireDate'],
+            'shift_start' => $validated['shiftStart'] ?? null,
+            'shift_end' => $validated['shiftEnd'] ?? null,
             'status' => strtolower(str_replace(' ', '_', $validated['status'] ?? 'active')),
+            'employment_type' => $validated['employmentType'] ?? 'full_time',
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         // Attach staff to unit
         $staff->units()->attach($unit->id);
+
+        // Refresh to get accessor values
+        $staff->refresh();
 
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $staff->id,
                 'name' => $staff->name,
-                'jobTitle' => $staff->job_title,
                 'email' => $staff->email,
+                'phone' => $staff->phone,
+                'jobTitle' => $staff->job_title,
+                'department' => $staff->department,
+                'salary' => $staff->salary,
+                'hireDate' => $staff->hire_date?->format('Y-m-d'),
+                'shiftStart' => $staff->shift_start?->format('H:i'),
+                'shiftEnd' => $staff->shift_end?->format('H:i'),
                 'shiftTime' => $staff->full_shift_time,
                 'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
+                'employmentType' => $staff->employment_type,
+                'notes' => $staff->notes,
             ],
             'message' => 'Staff member created successfully',
         ]);
@@ -1117,25 +1146,67 @@ class FranchiseeDashboardController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|max:255|unique:staff,email,'.$staffId,
+            'phone' => 'sometimes|nullable|string|max:20',
             'jobTitle' => 'sometimes|string|max:100',
-            'email' => 'sometimes|email|max:255',
-            'shiftTime' => 'sometimes|string|max:100',
-            'status' => 'sometimes|in:working,leave',
+            'department' => 'sometimes|nullable|string|max:100',
+            'salary' => 'sometimes|nullable|numeric|min:0',
+            'hireDate' => 'sometimes|date',
+            'shiftStart' => 'sometimes|nullable|date_format:H:i',
+            'shiftEnd' => 'sometimes|nullable|date_format:H:i',
+            'status' => 'sometimes|in:working,leave,terminated,inactive',
+            'employmentType' => 'sometimes|in:full_time,part_time,contract,temporary',
+            'notes' => 'sometimes|nullable|string',
         ]);
 
-        // Map frontend status values to database values if needed
+        // Map frontend status values to database values
         $statusMapping = [
             'working' => 'active',
             'leave' => 'on_leave',
+            'terminated' => 'terminated',
+            'inactive' => 'inactive',
         ];
 
-        $staff->update([
-            'name' => $validated['name'] ?? $staff->name,
-            'job_title' => $validated['jobTitle'] ?? $staff->job_title,
-            'email' => $validated['email'] ?? $staff->email,
-            'shift_time' => $validated['shiftTime'] ?? $staff->shift_time,
-            'status' => isset($validated['status']) ? ($statusMapping[$validated['status']] ?? $validated['status']) : $staff->status,
-        ]);
+        $updateData = [];
+
+        if (isset($validated['name'])) {
+            $updateData['name'] = $validated['name'];
+        }
+        if (isset($validated['email'])) {
+            $updateData['email'] = $validated['email'];
+        }
+        if (isset($validated['phone'])) {
+            $updateData['phone'] = $validated['phone'];
+        }
+        if (isset($validated['jobTitle'])) {
+            $updateData['job_title'] = $validated['jobTitle'];
+        }
+        if (isset($validated['department'])) {
+            $updateData['department'] = $validated['department'];
+        }
+        if (isset($validated['salary'])) {
+            $updateData['salary'] = $validated['salary'];
+        }
+        if (isset($validated['hireDate'])) {
+            $updateData['hire_date'] = $validated['hireDate'];
+        }
+        if (isset($validated['shiftStart'])) {
+            $updateData['shift_start'] = $validated['shiftStart'];
+        }
+        if (isset($validated['shiftEnd'])) {
+            $updateData['shift_end'] = $validated['shiftEnd'];
+        }
+        if (isset($validated['status'])) {
+            $updateData['status'] = $statusMapping[$validated['status']] ?? $validated['status'];
+        }
+        if (isset($validated['employmentType'])) {
+            $updateData['employment_type'] = $validated['employmentType'];
+        }
+        if (isset($validated['notes'])) {
+            $updateData['notes'] = $validated['notes'];
+        }
+
+        $staff->update($updateData);
 
         // Reload the staff to get the full_shift_time accessor
         $staff->refresh();
@@ -1145,10 +1216,18 @@ class FranchiseeDashboardController extends Controller
             'data' => [
                 'id' => $staff->id,
                 'name' => $staff->name,
-                'jobTitle' => $staff->job_title,
                 'email' => $staff->email,
+                'phone' => $staff->phone,
+                'jobTitle' => $staff->job_title,
+                'department' => $staff->department,
+                'salary' => $staff->salary,
+                'hireDate' => $staff->hire_date?->format('Y-m-d'),
+                'shiftStart' => $staff->shift_start?->format('H:i'),
+                'shiftEnd' => $staff->shift_end?->format('H:i'),
                 'shiftTime' => $staff->full_shift_time,
                 'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
+                'employmentType' => $staff->employment_type,
+                'notes' => $staff->notes,
             ],
             'message' => 'Staff member updated successfully',
         ]);

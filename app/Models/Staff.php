@@ -25,8 +25,6 @@ class Staff extends Model
         'status',
         'employment_type',
         'notes',
-        'skills',
-        'certifications',
     ];
 
     protected $casts = [
@@ -34,8 +32,6 @@ class Staff extends Model
         'hire_date' => 'date',
         'shift_start' => 'datetime',
         'shift_end' => 'datetime',
-        'skills' => 'array',
-        'certifications' => 'array',
     ];
 
     // Relationships

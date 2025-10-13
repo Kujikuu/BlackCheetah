@@ -198,9 +198,15 @@ const newStaffForm = ref({
   name: '',
   email: '',
   phone: '',
-  position: '',
+  jobTitle: '',
+  department: '',
   salary: 0,
+  hireDate: '',
+  shiftStart: '',
+  shiftEnd: '',
   status: 'Active',
+  employmentType: 'full_time',
+  notes: '',
 })
 
 const newReviewForm = ref({
@@ -254,7 +260,7 @@ const resolveStatusVariant = (status: string) => {
     return 'success'
   if (status === 'pending' || status === 'in_progress' || status === 'leave')
     return 'warning'
-  if (status === 'inactive' || status === 'rejected')
+  if (status === 'inactive' || status === 'rejected' || status === 'terminated')
     return 'error'
 
   return 'secondary'
@@ -1851,16 +1857,39 @@ const reviewHeaders = [
               <VTextField v-model="newStaffForm.email" label="Email" type="email" required />
             </VCol>
             <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.phone" label="Phone" required />
+              <VTextField v-model="newStaffForm.phone" label="Phone" />
             </VCol>
             <VCol cols="12" md="6">
-              <VSelect v-model="newStaffForm.position" label="Position" :items="['Manager', 'Cashier', 'Cook', 'Server', 'Cleaner']" required />
+              <VTextField v-model="newStaffForm.jobTitle" label="Job Title" required />
             </VCol>
             <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.salary" label="Salary" type="number" prefix="SAR" required />
+              <VTextField v-model="newStaffForm.department" label="Department" />
             </VCol>
             <VCol cols="12" md="6">
-              <VSelect v-model="newStaffForm.status" label="Status" :items="['Active', 'On Leave', 'Inactive']" required />
+              <VTextField v-model="newStaffForm.salary" label="Salary" type="number" prefix="SAR" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model="newStaffForm.hireDate" label="Hire Date" type="date" required />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model="newStaffForm.shiftStart" label="Shift Start" type="time" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model="newStaffForm.shiftEnd" label="Shift End" type="time" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VSelect v-model="newStaffForm.status" label="Status" :items="['Active', 'On Leave', 'Terminated', 'Inactive']" required />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VSelect v-model="newStaffForm.employmentType" label="Employment Type" :items="[
+                { title: 'Full Time', value: 'full_time' },
+                { title: 'Part Time', value: 'part_time' },
+                { title: 'Contract', value: 'contract' },
+                { title: 'Temporary', value: 'temporary' }
+              ]" required />
+            </VCol>
+            <VCol cols="12">
+              <VTextarea v-model="newStaffForm.notes" label="Notes" rows="2" />
             </VCol>
           </VRow>
         </VCardText>
@@ -1904,18 +1933,42 @@ const reviewHeaders = [
               <div class="text-body-1 font-weight-medium">{{ selectedStaff.email }}</div>
             </VCol>
             <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Phone</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedStaff.phone || 'N/A' }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">Job Title</div>
               <div class="text-body-1 font-weight-medium">{{ selectedStaff.jobTitle }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Department</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedStaff.department || 'N/A' }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Salary</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedStaff.salary ? `SAR ${selectedStaff.salary}` : 'N/A' }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Hire Date</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedStaff.hireDate || 'N/A' }}</div>
             </VCol>
             <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">Shift Time</div>
               <div class="text-body-1 font-weight-medium">{{ selectedStaff.shiftTime }}</div>
             </VCol>
             <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Employment Type</div>
+              <div class="text-body-1 font-weight-medium text-capitalize">{{ selectedStaff.employmentType?.replace('_', ' ') || 'N/A' }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">Status</div>
               <VChip :color="resolveStatusVariant(selectedStaff.status)" size="small" label class="text-capitalize">
                 {{ selectedStaff.status }}
               </VChip>
+            </VCol>
+            <VCol v-if="selectedStaff.notes" cols="12">
+              <div class="text-body-2 text-disabled mb-1">Notes</div>
+              <div class="text-body-1">{{ selectedStaff.notes }}</div>
             </VCol>
           </VRow>
         </VCardText>
@@ -1949,13 +2002,39 @@ const reviewHeaders = [
               <VTextField v-model="selectedStaff.email" label="Email" type="email" required />
             </VCol>
             <VCol cols="12" md="6">
+              <VTextField v-model="selectedStaff.phone" label="Phone" />
+            </VCol>
+            <VCol cols="12" md="6">
               <VTextField v-model="selectedStaff.jobTitle" label="Job Title" required />
             </VCol>
             <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.shiftTime" label="Shift Time" required />
+              <VTextField v-model="selectedStaff.department" label="Department" />
             </VCol>
             <VCol cols="12" md="6">
-              <VSelect v-model="selectedStaff.status" label="Status" :items="['working', 'leave']" required />
+              <VTextField v-model="selectedStaff.salary" label="Salary" type="number" prefix="SAR" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedStaff.hireDate" label="Hire Date" type="date" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedStaff.shiftStart" label="Shift Start" type="time" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedStaff.shiftEnd" label="Shift End" type="time" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VSelect v-model="selectedStaff.status" label="Status" :items="['working', 'leave', 'terminated', 'inactive']" required />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VSelect v-model="selectedStaff.employmentType" label="Employment Type" :items="[
+                { title: 'Full Time', value: 'full_time' },
+                { title: 'Part Time', value: 'part_time' },
+                { title: 'Contract', value: 'contract' },
+                { title: 'Temporary', value: 'temporary' }
+              ]" />
+            </VCol>
+            <VCol cols="12">
+              <VTextarea v-model="selectedStaff.notes" label="Notes" rows="2" />
             </VCol>
           </VRow>
         </VCardText>
