@@ -862,7 +862,7 @@ const reviewHeaders = [
         <VIcon icon="tabler-info-circle" start />
         Overview
       </VTab>
-      <VTab value="tasks">
+      <VTab value="tasks" hidden>
         <VIcon icon="tabler-checklist" start />
         Tasks
       </VTab>
