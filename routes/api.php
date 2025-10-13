@@ -460,6 +460,7 @@ Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('v1/unit-manager'
         // Financial Overview endpoints
         Route::get('financial-overview', [FranchiseeDashboardController::class, 'financialOverview']);
         Route::post('financial-data', [FranchiseeDashboardController::class, 'storeFinancialData']);
+        Route::put('financial-data/{id}', [FranchiseeDashboardController::class, 'updateFinancialData']);
         Route::delete('financial-data', [FranchiseeDashboardController::class, 'deleteFinancialData']);
 
         // Operations dashboard endpoints

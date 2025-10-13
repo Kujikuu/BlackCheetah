@@ -2540,6 +2540,174 @@ class FranchiseeDashboardController extends Controller
     }
 
     /**
+     * Update financial data (sale or expense)
+     */
+    public function updateFinancialData(Request $request, string $id): JsonResponse
+    {
+        $user = $request->user();
+        $unit = Unit::where('franchisee_id', $user->id)->first();
+
+        if (! $unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No unit found for current user',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'category' => 'required|in:sales,expense',
+            'product' => 'required_if:category,sales|string|max:255',
+            'date' => 'required|date',
+            'quantitySold' => 'required_if:category,sales|integer|min:1',
+            'expenseCategory' => 'required_if:category,expense|string|max:255',
+            'amount' => 'required_if:category,expense|numeric|min:0',
+            'description' => 'nullable|string',
+        ]);
+
+        if ($validated['category'] === 'sales') {
+            // Extract revenue ID from composite ID (format: "revenueId-item")
+            $revenueId = explode('-', $id)[0];
+
+            // Find the revenue
+            $revenue = Revenue::where('unit_id', $unit->id)
+                ->where('id', $revenueId)
+                ->first();
+
+            if (! $revenue) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sales record not found',
+                ], 404);
+            }
+
+            // Find the product
+            $product = Product::where('franchise_id', $unit->franchise_id)
+                ->where('name', $validated['product'])
+                ->first();
+
+            if (! $product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+
+            // Check inventory
+            $inventory = \App\Models\Inventory::where('unit_id', $unit->id)
+                ->where('product_id', $product->id)
+                ->first();
+
+            if (! $inventory) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not available in your unit inventory',
+                ], 400);
+            }
+
+            $newQuantity = (int) $validated['quantitySold'];
+
+            // Get the old quantity from the revenue's line_items
+            $oldQuantity = 0;
+            if ($revenue->line_items && is_array($revenue->line_items)) {
+                foreach ($revenue->line_items as $item) {
+                    if (isset($item['product_name']) && $item['product_name'] === $validated['product']) {
+                        $oldQuantity = (int) ($item['quantity'] ?? 0);
+                        break;
+                    }
+                }
+            }
+
+            // Calculate the difference in quantity
+            $quantityDifference = $newQuantity - $oldQuantity;
+
+            // Check if we have enough stock for the increase
+            if ($quantityDifference > 0 && $inventory->quantity < $quantityDifference) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient stock. Only {$inventory->quantity} units available for increase",
+                ], 400);
+            }
+
+            $unitPrice = (float) $product->unit_price;
+            $saleAmount = $unitPrice * $newQuantity;
+
+            // Update revenue
+            $revenue->update([
+                'amount' => $saleAmount,
+                'revenue_date' => $validated['date'],
+                'period_year' => date('Y', strtotime($validated['date'])),
+                'period_month' => date('n', strtotime($validated['date'])),
+                'line_items' => [
+                    [
+                        'product_id' => $product->id,
+                        'product_name' => $validated['product'],
+                        'quantity' => $newQuantity,
+                        'price' => $unitPrice,
+                    ],
+                ],
+            ]);
+
+            // Update inventory based on the difference
+            // If quantityDifference is positive, we're selling more (decrease inventory)
+            // If quantityDifference is negative, we're selling less (increase inventory)
+            if ($quantityDifference != 0) {
+                if ($quantityDifference > 0) {
+                    $inventory->decrement('quantity', $quantityDifference);
+                } else {
+                    $inventory->increment('quantity', abs($quantityDifference));
+                }
+                $inventory->refresh();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales data updated successfully',
+                'data' => [
+                    'id' => $revenue->id . '-item',
+                    'product' => $validated['product'],
+                    'dateOfSale' => $validated['date'],
+                    'unitPrice' => $unitPrice,
+                    'quantitySold' => $newQuantity,
+                    'sale' => $saleAmount,
+                    'remainingStock' => $inventory->quantity,
+                ],
+            ]);
+        } else {
+            // Update expense transaction
+            $transaction = \App\Models\Transaction::where('unit_id', $unit->id)
+                ->where('id', $id)
+                ->where('type', 'expense')
+                ->first();
+
+            if (! $transaction) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Expense record not found',
+                ], 404);
+            }
+
+            $transaction->update([
+                'category' => $this->mapExpenseCategoryToEnum($validated['expenseCategory']),
+                'amount' => $validated['amount'],
+                'description' => $validated['description'] ?? '',
+                'transaction_date' => $validated['date'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Expense data updated successfully',
+                'data' => [
+                    'id' => (string) $transaction->id,
+                    'expenseCategory' => $validated['expenseCategory'],
+                    'dateOfExpense' => $validated['date'],
+                    'amount' => (float) $validated['amount'],
+                    'description' => $validated['description'] ?? '',
+                ],
+            ]);
+        }
+    }
+
+    /**
      * Delete financial data
      */
     public function deleteFinancialData(Request $request): JsonResponse

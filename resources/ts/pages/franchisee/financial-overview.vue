@@ -28,6 +28,8 @@ const isImportModalVisible = ref(false)
 const selectedCategory = ref('sales')
 const importCategory = ref('sales')
 const isLoading = ref(false)
+const isEditMode = ref(false)
+const editItemId = ref<string>('')
 
 // Financial data
 const financialData = ref<FinancialOverviewData | null>(null)
@@ -151,6 +153,7 @@ const salesHeaders = [
   { title: 'Unit Price (SAR)', key: 'unitPrice', sortable: true },
   { title: 'Quantity Sold', key: 'quantitySold', sortable: true },
   { title: 'Sale (SAR)', key: 'sale', sortable: true },
+  { title: 'Actions', key: 'actions', sortable: false },
 ]
 
 const expenseHeaders = [
@@ -158,6 +161,7 @@ const expenseHeaders = [
   { title: 'Date of Expense', key: 'dateOfExpense', sortable: true },
   { title: 'Amount (SAR)', key: 'amount', sortable: true },
   { title: 'Description', key: 'description', sortable: true },
+  { title: 'Actions', key: 'actions', sortable: false },
 ]
 
 const profitHeaders = [
@@ -214,7 +218,37 @@ const totalProfit = computed(() => {
 // Methods
 const openAddDataModal = (category: string) => {
   selectedCategory.value = category
+  isEditMode.value = false
+  editItemId.value = ''
   resetForm()
+  isAddDataModalVisible.value = true
+}
+
+const openEditModal = (item: any, category: string) => {
+  selectedCategory.value = category
+  isEditMode.value = true
+  editItemId.value = item.id
+
+  if (category === 'sales') {
+    addDataForm.value = {
+      product: item.product,
+      date: item.dateOfSale,
+      quantitySold: item.quantitySold,
+      expenseCategory: '',
+      amount: 0,
+      description: '',
+    }
+  } else {
+    addDataForm.value = {
+      product: '',
+      date: item.dateOfExpense,
+      quantitySold: 0,
+      expenseCategory: item.expenseCategory,
+      amount: item.amount,
+      description: item.description || '',
+    }
+  }
+
   isAddDataModalVisible.value = true
 }
 
@@ -227,6 +261,8 @@ const resetForm = () => {
     amount: 0,
     description: '',
   }
+  isEditMode.value = false
+  editItemId.value = ''
 }
 
 const saveData = async () => {
@@ -252,13 +288,21 @@ const saveData = async () => {
       payload.description = addDataForm.value.description
     }
 
-    const response = await franchiseeDashboardApi.addFinancialData(payload)
+    let response
+    if (isEditMode.value) {
+      response = await franchiseeDashboardApi.updateFinancialData(editItemId.value, payload)
+    } else {
+      response = await franchiseeDashboardApi.addFinancialData(payload)
+    }
+
     if (response.success) {
       // Reload data to get updated list and fresh stock quantities
       await loadFinancialData()
       await loadUnitProducts()
       isAddDataModalVisible.value = false
       resetForm()
+      isEditMode.value = false
+      editItemId.value = ''
     }
   }
   catch (error: any) {
@@ -467,6 +511,10 @@ const handleImport = () => {
                       {{ item.sale.toFixed(2) }} SAR
                     </span>
                   </template>
+                  <template #item.actions="{ item }">
+                    <VBtn icon="mdi-pencil" variant="text" color="primary" size="small"
+                      @click="openEditModal(item, 'sales')" />
+                  </template>
                 </VDataTable>
               </VTabsWindowItem>
 
@@ -483,6 +531,10 @@ const handleImport = () => {
                     <VChip size="small" variant="tonal" color="primary">
                       {{ item.expenseCategory }}
                     </VChip>
+                  </template>
+                  <template #item.actions="{ item }">
+                    <VBtn icon="mdi-pencil" variant="text" color="primary" size="small"
+                      @click="openEditModal(item, 'expense')" />
                   </template>
                 </VDataTable>
               </VTabsWindowItem>
@@ -519,7 +571,7 @@ const handleImport = () => {
   <VDialog v-model="isAddDataModalVisible" max-width="500">
     <VCard>
       <VCardTitle class="text-h6 font-weight-medium">
-        Add {{ selectedCategory === 'sales' ? 'Sales' : 'Expense' }} Data
+        {{ isEditMode ? 'Edit' : 'Add' }} {{ selectedCategory === 'sales' ? 'Sales' : 'Expense' }} Data
       </VCardTitle>
       <VCardText>
         <VForm @submit.prevent="saveData">

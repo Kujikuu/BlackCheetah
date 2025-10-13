@@ -355,6 +355,14 @@ export const franchiseeDashboardApi = {
     })
   },
 
+  // Update financial data (sale or expense)
+  async updateFinancialData(id: string, payload: AddFinancialDataPayload): Promise<ApiResponse<SalesRecord | ExpenseRecord>> {
+    return await $api<ApiResponse<SalesRecord | ExpenseRecord>>(`${API_URL}/dashboard/financial-data/${id}`, {
+      method: 'PUT',
+      body: payload,
+    })
+  },
+
   // Delete financial data
   async deleteFinancialData(payload: DeleteFinancialDataPayload): Promise<ApiResponse<void>> {
     return await $api<ApiResponse<void>>(`${API_URL}/dashboard/financial-data`, {
