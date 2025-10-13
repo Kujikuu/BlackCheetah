@@ -81,7 +81,7 @@ class StaffFactory extends Factory
      */
     public function manager(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'job_title' => 'Store Manager',
             'department' => 'Operations',
             'salary' => $this->faker->numberBetween(6000, 10000),
@@ -95,7 +95,7 @@ class StaffFactory extends Factory
      */
     public function onLeave(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'on_leave',
         ]);
     }
@@ -105,9 +105,20 @@ class StaffFactory extends Factory
      */
     public function partTime(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'employment_type' => 'part_time',
             'salary' => $this->faker->numberBetween(1500, 3500),
+        ]);
+    }
+
+    /**
+     * Create staff without skills and certifications (for testing).
+     */
+    public function withoutSkillsAndCertifications(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'skills' => null,
+            'certifications' => null,
         ]);
     }
 }

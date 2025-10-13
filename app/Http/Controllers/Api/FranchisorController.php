@@ -1815,4 +1815,52 @@ class FranchisorController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get staff members for a specific unit
+     */
+    public function getUnitStaff(Request $request, $unitId): JsonResponse
+    {
+        $user = $request->user();
+
+        // Get the unit and verify it belongs to the franchisor's franchise
+        $unit = Unit::whereHas('franchise', function ($query) use ($user) {
+            $query->where('franchisor_id', $user->id);
+        })->find($unitId);
+
+        if (! $unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unit not found or access denied',
+            ], 404);
+        }
+
+        // Get active staff members for this unit
+        $staffMembers = $unit->activeStaff()
+            ->get()
+            ->map(function ($staff) {
+                return [
+                    'id' => $staff->id,
+                    'name' => $staff->name,
+                    'email' => $staff->email,
+                    'phone' => $staff->phone,
+                    'jobTitle' => $staff->job_title,
+                    'department' => $staff->department,
+                    'salary' => $staff->salary,
+                    'hireDate' => $staff->hire_date?->format('Y-m-d'),
+                    'shiftStart' => $staff->shift_start?->format('H:i'),
+                    'shiftEnd' => $staff->shift_end?->format('H:i'),
+                    'shiftTime' => $staff->full_shift_time,
+                    'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
+                    'employmentType' => $staff->employment_type,
+                    'notes' => $staff->notes,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $staffMembers,
+            'message' => 'Unit staff retrieved successfully',
+        ]);
+    }
 }

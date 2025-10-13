@@ -184,14 +184,14 @@ const loadTasksData = async () => {
 }
 
 const loadDocumentsData = async () => {
-  if (!unitData.value?.franchise?.id)
+  if (!unitId.value)
     return
 
   documentsLoading.value = true
   documentsError.value = null
 
   try {
-    const response = await $api<{ success: boolean; data: any }>(`/v1/documents?franchise_id=${unitData.value.franchise.id}`)
+    const response = await $api<{ success: boolean; data: any }>(`/v1/documents?unit_id=${unitId.value}`)
 
     if (response.success && response.data?.data) {
       documentsData.value = response.data.data.map((doc: any) => ({
@@ -223,7 +223,7 @@ const loadDocumentsData = async () => {
 }
 
 const loadProductsData = async () => {
-  if (!unitData.value?.franchise?.id)
+  if (!unitId.value)
     return
 
   productsLoading.value = true
@@ -260,26 +260,26 @@ const loadProductsData = async () => {
 }
 
 const loadStaffData = async () => {
-  if (!unitData.value?.franchise?.id)
+  if (!unitId.value)
     return
 
   staffLoading.value = true
   staffError.value = null
 
   try {
-    const response = await $api<{ success: boolean; data: any }>(`/v1/users?franchise_id=${unitData.value.franchise.id}`)
+    const response = await $api<{ success: boolean; data: any }>(`/v1/franchisor/units/${unitId.value}/staff`)
 
-    if (response.success && response.data?.data) {
-      staffData.value = response.data.data.map((user: any) => ({
-        id: user.id,
-        name: user.name,
-        jobTitle: user.role === 'franchisor' ? 'Franchisor' : user.role === 'franchisee' ? 'Franchisee' : 'Staff Member',
-        email: user.email,
-        shiftTime: user.role === 'franchisor' ? 'Full Time' : '9:00 AM - 6:00 PM', // Default shift time
-        status: user.status === 'active' ? 'working' : 'leave',
-        phone: user.phone || '',
-        avatar: user.avatar || '',
-        lastLogin: user.last_login_at || null,
+    if (response.success && response.data) {
+      staffData.value = response.data.map((staff: any) => ({
+        id: staff.id,
+        name: staff.name,
+        jobTitle: staff.jobTitle,
+        email: staff.email,
+        shiftTime: staff.shiftTime,
+        status: staff.status,
+        phone: staff.phone || '',
+        avatar: '', // Staff model doesn't have avatar in this response
+        lastLogin: null, // Staff model doesn't have lastLogin
       }))
     }
     else {
@@ -382,6 +382,9 @@ const openDocumentActionModal = (document: any, action: 'approve' | 'reject') =>
 
 const onTaskCreated = async (task: any) => {
   try {
+    // Auto-assign to unit's franchisee (unit manager)
+    const assignedTo = unitData.value?.franchiseeName || task.assignedTo
+
     // Prepare payload mapping camelCase keys from the form to snake_case expected by API
     const payload = {
       title: task.title,
@@ -390,7 +393,7 @@ const onTaskCreated = async (task: any) => {
       priority: task.priority,
       status: task.status,
       unit_id: unitId.value,
-      assigned_to: task.assignedTo,
+      assigned_to: assignedTo, // Auto-filled with unit's franchisee
       due_date: task.dueDate,
       estimated_hours: task.estimatedHours ?? 0,
       actual_hours: task.actualHours ?? 0,
@@ -545,20 +548,15 @@ watch(() => unitId.value, () => {
     loadUnitData()
 }, { immediate: true })
 
-// Load additional data when unit data is loaded
+// Load all data when unit data is loaded
 watch(() => unitData.value, () => {
-  if (unitData.value) {
+  if (unitData.value && unitId.value) {
     loadTasksData()
     loadDocumentsData()
     loadStaffData()
     loadProductsData()
-  }
-}, { immediate: true })
-
-// Load reviews data when unit ID is available
-watch(() => unitId.value, () => {
-  if (unitId.value)
     loadReviewsData()
+  }
 }, { immediate: true })
 </script>
 

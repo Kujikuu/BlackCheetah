@@ -2,6 +2,14 @@
 import { formatCurrency } from '@/@core/utils/formatters'
 import AddFranchiseeModal from '@/components/dialogs/AddFranchiseeModal.vue'
 
+// 👉 Pagination helper
+const paginationMeta = (page: number, perPage: number, total: number) => {
+  const start = (page - 1) * perPage + 1
+  const end = Math.min(page * perPage, total)
+
+  return `Showing ${start} to ${end} of ${total} entries`
+}
+
 // 👉 Router
 const router = useRouter()
 
@@ -12,6 +20,16 @@ const currentTab = ref('overview')
 const unitsData = ref([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+
+// 👉 Pagination
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
+const totalItems = ref(0)
+
+// 👉 Change status modal
+const isChangeStatusDialogVisible = ref(false)
+const selectedUnit = ref<any>(null)
+const newStatus = ref('')
 
 // 👉 Statistics data
 const statisticsData = ref({
@@ -50,6 +68,13 @@ const unitHeaders = [
   { title: 'Contract Period', key: 'contractPeriod' },
   { title: 'Status', key: 'status' },
   { title: 'Actions', key: 'actions', sortable: false },
+]
+
+// 👉 Status options
+const statusOptions = [
+  { title: 'Active', value: 'active' },
+  { title: 'Pending', value: 'pending' },
+  { title: 'Inactive', value: 'inactive' },
 ]
 
 // 👉 Status variant resolver
@@ -167,6 +192,45 @@ onMounted(() => {
 
 const viewUnitDetails = (unit: any) => {
   router.push(`/franchisor/units/${unit.id}`)
+}
+
+const openChangeStatusDialog = (unit: any) => {
+  selectedUnit.value = unit
+  newStatus.value = unit.status
+  isChangeStatusDialogVisible.value = true
+}
+
+const changeUnitStatus = async () => {
+  if (!selectedUnit.value || !newStatus.value)
+    return
+
+  try {
+    const response = await $api(`/v1/units/${selectedUnit.value.id}/status`, {
+      method: 'PATCH',
+      body: {
+        status: newStatus.value,
+      },
+    })
+
+    if (response.success) {
+      // Update local data
+      const unitIndex = unitsData.value.findIndex((u: any) => u.id === selectedUnit.value.id)
+      if (unitIndex !== -1)
+        unitsData.value[unitIndex].status = newStatus.value
+
+      // Close dialog
+      isChangeStatusDialogVisible.value = false
+      selectedUnit.value = null
+      newStatus.value = ''
+
+      // Reload statistics
+      await loadStatisticsData()
+    }
+  }
+  catch (err: any) {
+    console.error('Failed to change unit status:', err)
+    error.value = err?.data?.message || 'Failed to change unit status'
+  }
 }
 </script>
 
@@ -429,7 +493,8 @@ const viewUnitDetails = (unit: any) => {
 
           <!-- Units Table -->
           <VDataTable v-else :items="unitsData" :headers="unitHeaders" class="text-no-wrap" item-value="id"
-            style="cursor: pointer;" @click:row="(event: any, { item }: any) => viewUnitDetails(item)">
+            :items-per-page="itemsPerPage" @update:items-per-page="itemsPerPage = $event" :page="currentPage"
+            @update:page="currentPage = $event">
             <!-- Branch Info -->
             <template #item.branchInfo="{ item }">
               <div class="d-flex align-center gap-x-3">
@@ -500,12 +565,36 @@ const viewUnitDetails = (unit: any) => {
 
             <!-- Actions -->
             <template #item.actions="{ item }">
-              <VBtn icon variant="text" color="medium-emphasis" size="small" @click="viewUnit(item.id)">
+              <VBtn icon variant="text" color="medium-emphasis" size="small" @click.stop="viewUnit(item.id)">
                 <VIcon icon="tabler-eye" />
                 <VTooltip activator="parent">
                   View Unit Details
                 </VTooltip>
               </VBtn>
+              <VBtn icon variant="text" color="medium-emphasis" size="small" @click.stop="openChangeStatusDialog(item)">
+                <VIcon icon="tabler-edit" />
+                <VTooltip activator="parent">
+                  Change Status
+                </VTooltip>
+              </VBtn>
+            </template>
+
+            <!-- Bottom slot for pagination -->
+            <template #bottom>
+              <VDivider />
+              <div class="d-flex align-center justify-space-between flex-wrap gap-3 pa-5 pt-3">
+                <p class="text-sm text-disabled mb-0">
+                  {{ paginationMeta(currentPage, itemsPerPage, unitsData.length) }}
+                </p>
+
+                <VPagination v-model="currentPage" :length="Math.ceil(unitsData.length / itemsPerPage)"
+                  :total-visible="$vuetify.display.xs ? 1 : Math.min(Math.ceil(unitsData.length / itemsPerPage), 5)" />
+
+                <div class="d-flex align-center" style="inline-size: 8rem;">
+                  <span class="text-no-wrap me-3">Rows per page:</span>
+                  <VSelect v-model="itemsPerPage" density="compact" variant="outlined" :items="[5, 10, 25, 50, 100]" />
+                </div>
+              </div>
             </template>
           </VDataTable>
         </VCard>
@@ -514,5 +603,31 @@ const viewUnitDetails = (unit: any) => {
 
     <!-- Add Franchisee Modal -->
     <AddFranchiseeModal v-model:is-dialog-visible="isAddFranchiseeModalVisible" @franchisee-added="onFranchiseeAdded" />
+
+    <!-- Change Status Dialog -->
+    <VDialog v-model="isChangeStatusDialogVisible" max-width="500">
+      <VCard>
+        <VCardItem>
+          <VCardTitle>Change Unit Status</VCardTitle>
+          <VCardSubtitle v-if="selectedUnit">
+            {{ selectedUnit.branchName }}
+          </VCardSubtitle>
+        </VCardItem>
+
+        <VCardText>
+          <VSelect v-model="newStatus" label="Status" :items="statusOptions" placeholder="Select Status" />
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isChangeStatusDialogVisible = false">
+            Cancel
+          </VBtn>
+          <VBtn color="primary" :disabled="!newStatus || newStatus === selectedUnit?.status" @click="changeUnitStatus">
+            Update Status
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </section>
 </template>
