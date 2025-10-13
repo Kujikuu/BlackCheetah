@@ -5,6 +5,7 @@ import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
+import { useAbility } from '@/plugins/casl/useAbility'
 
 definePage({
   meta: {
@@ -19,19 +20,62 @@ const router = useRouter()
 const otp = ref('')
 const isOtpInserted = ref(false)
 const infoMessage = ref<string | null>(null)
+const userData = useCookie('userData')
+const { updateAbility } = useAbility()
 
-const onFinish = () => {
+const onFinish = async () => {
   isOtpInserted.value = true
   infoMessage.value = 'Verifying code...'
 
-  setTimeout(() => {
-    isOtpInserted.value = false
+
+  try {
+    // Simulate API call for OTP verification
+    await new Promise(resolve => setTimeout(resolve, 800))
+
+    // Fetch latest user data and abilities after successful verification
+    const loginResp = await $api<{ accessToken: string; userData: any; userAbilityRules: any[] }>('/auth/login', {
+      method: 'POST',
+      body: {
+        email: userData.value?.email,
+        // This is a placeholder, replace with a secure way to re-authenticate
+        password: 'password',
+      },
+    })
+
+    useCookie<string>('accessToken').value = loginResp.accessToken
+    useCookie<any>('userData').value = loginResp.userData
+    useCookie<any[]>('userAbilityRules').value = loginResp.userAbilityRules
+    updateAbility(loginResp.userAbilityRules)
+
     infoMessage.value = 'Code verified successfully. Redirecting...'
-    setTimeout(() => {
-      infoMessage.value = null
-      router.push('/')
-    }, 1200)
-  }, 800)
+
+    await new Promise(resolve => setTimeout(resolve, 1200))
+
+    infoMessage.value = null
+
+    // Redirect directly to role-specific dashboard
+    const userRole = loginResp.userData.role
+    switch (userRole) {
+      case 'admin':
+        router.push('/admin/dashboard')
+        break
+      case 'franchisor':
+        router.push('/franchisor')
+        break
+      case 'franchisee':
+        router.push('/franchisee/dashboard/sales')
+        break
+      case 'sales':
+        router.push('/sales/lead-management')
+        break
+      default:
+        router.push('/')
+    }
+  }
+  catch (error) {
+    infoMessage.value = 'Verification failed. Please try again.'
+    isOtpInserted.value = false
+  }
 }
 </script>
 

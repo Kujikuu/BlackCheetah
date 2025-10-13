@@ -7,6 +7,7 @@ import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import type { Rule } from '@/plugins/casl/ability'
+import { useAbility } from '@/plugins/casl/useAbility'
 
 definePage({
   meta: {
@@ -27,6 +28,7 @@ const loading = ref(false)
 const errorMessages = ref<{ email?: string[]; password?: string[]; general?: string } | null>(null)
 const router = useRouter()
 const { smAndUp } = useDisplay()
+const { updateAbility } = useAbility()
 
 const login = async () => {
   loading.value = true
@@ -48,8 +50,27 @@ const login = async () => {
     useCookie<any>('userData').value = resp.userData
     useCookie<Rule[]>('userAbilityRules').value = resp.userAbilityRules
 
-    // Redirect to home/dashboard
-    router.push('/')
+    // Update CASL ability rules
+    updateAbility(resp.userAbilityRules)
+
+    // Redirect directly to role-specific dashboard
+    const userRole = resp.userData.role
+    switch (userRole) {
+      case 'admin':
+        router.push('/admin/dashboard')
+        break
+      case 'franchisor':
+        router.push('/franchisor')
+        break
+      case 'franchisee':
+        router.push('/franchisee/dashboard/sales')
+        break
+      case 'sales':
+        router.push('/sales/lead-management')
+        break
+      default:
+        router.push('/')
+    }
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null

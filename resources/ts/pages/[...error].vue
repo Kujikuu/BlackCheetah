@@ -31,7 +31,7 @@ definePage({
     </VBtn>
 
     <!-- 👉 Image -->
-    <div class="misc-avatar w-100 text-center">
+    <!-- <div class="misc-avatar w-100 text-center">
       <VImg
         :src="misc404"
         alt="error 404"
@@ -46,7 +46,7 @@ definePage({
       alt="misc-footer-img"
       height="320"
     >
-  </div>
+  </div> -->
 </template>
 
 <style lang="scss">

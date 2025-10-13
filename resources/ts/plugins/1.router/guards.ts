@@ -25,10 +25,24 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
       (WARN: Don't allow executing further by return statement because next code will check for permissions)
      */
     if (to.meta.unauthenticatedOnly) {
-      if (isLoggedIn)
+      if (isLoggedIn) {
+        const userData = useCookie('userData').value as any
+        const userRole = userData?.role
+
+        if (userRole === 'admin')
+          return { name: 'admin-dashboard' }
+        if (userRole === 'franchisor')
+          return { name: 'franchisor' }
+        if (userRole === 'franchisee')
+          return { name: 'franchisee-dashboard-sales' }
+        if (userRole === 'sales')
+          return { name: 'sales-lead-management' }
+
         return '/'
-      else
+      }
+      else {
         return undefined
+      }
     }
 
     // Check onboarding status for franchisees
@@ -50,9 +64,8 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
     }
 
     if (!canNavigate(to) && to.matched.length) {
-      /* eslint-disable indent */
       return isLoggedIn
-        ? { to: to.fullPath !== '/' ? to.path : undefined }
+        ? { name: 'not-authorized' }
         : {
           name: 'login',
           query: {
@@ -60,7 +73,6 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
             to: to.fullPath !== '/' ? to.path : undefined,
           },
         }
-      /* eslint-enable indent */
     }
   })
 }

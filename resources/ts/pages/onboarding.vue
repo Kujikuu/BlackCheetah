@@ -5,6 +5,7 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import { h } from 'vue'
 import { useDisplay } from 'vuetify'
+import { useAbility } from '@/plugins/casl/useAbility'
 
 definePage({
   meta: {
@@ -26,6 +27,8 @@ const loading = ref(false)
 const errorMessages = ref<{ [key: string]: string[] } | null>(null)
 const router = useRouter()
 const { smAndUp } = useDisplay()
+const userData = useCookie('userData')
+const { updateAbility } = useAbility()
 
 // Check onboarding status on mount
 onMounted(async () => {
@@ -33,7 +36,23 @@ onMounted(async () => {
     const response = await $api('/v1/onboarding/status')
     if (response.profile_completed) {
       // If profile is already completed, redirect to dashboard
-      router.push('/')
+      const userRole = userData.value?.role
+      switch (userRole) {
+        case 'admin':
+          router.push('/admin/dashboard')
+          break
+        case 'franchisor':
+          router.push('/franchisor')
+          break
+        case 'franchisee':
+          router.push('/franchisee/dashboard/sales')
+          break
+        case 'sales':
+          router.push('/sales/lead-management')
+          break
+        default:
+          router.push('/')
+      }
     }
   } catch (error) {
     console.error('Failed to check onboarding status:', error)
@@ -51,18 +70,38 @@ const completeProfile = async () => {
     })
 
     // Update user data in cookie to reflect profile completion
-    const userData = useCookie<any>('userData')
-    if (userData.value) {
-      userData.value = {
-        ...userData.value,
+    const userDataCookie = useCookie<any>('userData')
+    if (userDataCookie.value) {
+      userDataCookie.value = {
+        ...userDataCookie.value,
         profile_completed: true,
-        ...response.user
+        ...response.user,
       }
     }
 
-    // Show success message and redirect to dashboard
-    await nextTick()
-    router.push('/')
+    // Refresh user abilities
+    const abilityResponse = await $api('/v1/abilities')
+    useCookie<any>('userAbilityRules').value = abilityResponse.rules
+    updateAbility(abilityResponse.rules)
+
+    // Redirect directly to role-specific dashboard
+    const userRole = userDataCookie.value?.role
+    switch (userRole) {
+      case 'admin':
+        router.push('/admin/dashboard')
+        break
+      case 'franchisor':
+        router.push('/franchisor')
+        break
+      case 'franchisee':
+        router.push('/franchisee/dashboard/sales')
+        break
+      case 'sales':
+        router.push('/sales/lead-management')
+        break
+      default:
+        router.push('/')
+    }
   } catch (e: any) {
     const data = e?.data || e?.response?._data || null
     if (data?.errors) {

@@ -7,6 +7,7 @@ import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import type { Rule } from '@/plugins/casl/ability'
+import { useAbility } from '@/plugins/casl/useAbility'
 
 definePage({
   meta: {
@@ -30,6 +31,7 @@ const loading = ref(false)
 const errorMessages = ref<{ name?: string[]; email?: string[]; password?: string[]; password_confirmation?: string[]; role?: string[]; general?: string } | null>(null)
 const router = useRouter()
 const { smAndUp } = useDisplay()
+const { updateAbility } = useAbility()
 
 const register = async () => {
   if (!form.value.privacyPolicies) {
@@ -65,8 +67,9 @@ const register = async () => {
     }
 
     // Attempt login to fetch ability rules from backend and ensure consistent cookies
+    let loginResp
     try {
-      const loginResp = await $api<{ accessToken: string; userData: any; userAbilityRules: Rule[] }>('/auth/login', {
+      loginResp = await $api<{ accessToken: string; userData: any; userAbilityRules: Rule[] }>('/auth/login', {
         method: 'POST',
         body: {
           email: form.value.email,
@@ -77,13 +80,32 @@ const register = async () => {
       useCookie<string>('accessToken').value = loginResp.accessToken
       useCookie<any>('userData').value = loginResp.userData
       useCookie<Rule[]>('userAbilityRules').value = loginResp.userAbilityRules
+      updateAbility(loginResp.userAbilityRules)
     }
     catch (e) {
       // If auto-login fails, proceed with registration token and empty abilities
       useCookie<Rule[]>('userAbilityRules').value = []
+      updateAbility([])
     }
 
-    router.push('/')
+    // Redirect directly to role-specific dashboard
+    const userRole = loginResp?.userData?.role || 'franchisor' // Default to franchisor for new registrations
+    switch (userRole) {
+      case 'admin':
+        router.push('/admin/dashboard')
+        break
+      case 'franchisor':
+        router.push('/franchisor')
+        break
+      case 'franchisee':
+        router.push('/franchisee/dashboard/sales')
+        break
+      case 'sales':
+        router.push('/sales/lead-management')
+        break
+      default:
+        router.push('/')
+    }
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null
@@ -185,14 +207,14 @@ const register = async () => {
               </VCol>
 
               <!-- Role -->
-              <VCol cols="12">
+              <!-- <VCol cols="12">
                 <AppSelect
                   v-model="form.role"
                   :items="['franchisor', 'franchisee', 'sales']"
                   label="Role"
                   :error-messages="errorMessages?.role"
                 />
-              </VCol>
+              </VCol> -->
 
               <!-- Password -->
               <VCol cols="12">
