@@ -310,7 +310,18 @@ const onTaskCreated = async (task: any) => {
 
 const onDocumentAdded = async (document: any) => {
   try {
-    const response = await franchiseeDashboardApi.createDocument(getUnitId(), document)
+    // Create FormData to send file
+    const formData = new FormData()
+    formData.append('title', document.title)
+    formData.append('description', document.description)
+    formData.append('type', document.type)
+    formData.append('status', document.status || 'pending')
+    formData.append('comment', document.comment || '')
+    if (document.file) {
+      formData.append('file', document.file)
+    }
+
+    const response = await franchiseeDashboardApi.createDocument(getUnitId(), formData)
     if (response.success) {
       documentsData.value.push(response.data)
     }
@@ -350,13 +361,43 @@ const downloadDocument = async (document: any) => {
   try {
     const unitIdToUse = unitData.value?.id || getUnitId()
 
-    // Call the API to get the download URL or file
-    const response = await franchiseeDashboardApi.downloadDocument(unitIdToUse, document.id)
+    // Get the access token from cookie
+    const accessToken = useCookie('accessToken').value
 
-    if (response.success && response.data.url) {
-      // Open the download URL in a new window/tab
-      window.open(response.data.url, '_blank')
+    if (!accessToken) {
+      console.error('No access token found')
+      return
     }
+
+    // Fetch the document with authentication using native fetch
+    const response = await fetch(`/api/v1/unit-manager/units/documents/${unitIdToUse}/${document.id}/download`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/octet-stream',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Download failed:', response.status, errorText)
+      throw new Error(`Failed to download document: ${response.status}`)
+    }
+
+    // Get the blob from response
+    const blob = await response.blob()
+
+    // Create object URL and trigger download
+    const url = window.URL.createObjectURL(blob)
+    const link = window.document.createElement('a')
+    link.href = url
+    link.download = document.fileName
+    window.document.body.appendChild(link)
+    link.click()
+    window.document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
   }
   catch (error) {
     console.error('Error downloading document:', error)
@@ -2200,6 +2241,211 @@ const reviewHeaders = [
           </VBtn>
           <VBtn color="primary" @click="addReview">
             Add Review
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- View Product Modal -->
+    <VDialog v-model="isViewProductModalVisible" max-width="600">
+      <VCard>
+        <VCardTitle class="text-h5 pa-6 pb-4">
+          Product Details
+        </VCardTitle>
+
+        <VDivider />
+
+        <VCardText v-if="selectedProduct" class="pa-6">
+          <VRow>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Product Name</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedProduct.name }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Category</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedProduct.category }}</div>
+            </VCol>
+            <VCol cols="12">
+              <div class="text-body-2 text-disabled mb-1">Description</div>
+              <div class="text-body-1">{{ selectedProduct.description }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Unit Price</div>
+              <div class="text-body-1 font-weight-medium">{{ formatCurrency(selectedProduct.unitPrice) }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Stock</div>
+              <VChip
+                :color="selectedProduct.stock === 0 ? 'error' : selectedProduct.stock <= 10 ? 'warning' : 'success'"
+                size="small" label>
+                {{ selectedProduct.stock }} units
+              </VChip>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Status</div>
+              <VChip :color="resolveStatusVariant(selectedProduct.status)" size="small" label class="text-capitalize">
+                {{ selectedProduct.status }}
+              </VChip>
+            </VCol>
+          </VRow>
+        </VCardText>
+
+        <VDivider />
+
+        <VCardActions class="pa-6">
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isViewProductModalVisible = false">
+            Close
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Edit Product Modal -->
+    <VDialog v-model="isEditProductModalVisible" max-width="600">
+      <VCard>
+        <VCardTitle class="text-h5 pa-6 pb-4">
+          Edit Product Inventory
+        </VCardTitle>
+
+        <VDivider />
+
+        <VCardText v-if="selectedProduct" class="pa-6">
+          <VRow>
+            <VCol cols="12">
+              <div class="text-body-2 text-disabled mb-3">
+                Product: <span class="font-weight-medium text-high-emphasis">{{ selectedProduct.name }}</span>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model.number="selectedProduct.stock" label="Stock Quantity" type="number" min="0"
+                required />
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Unit Price</div>
+              <div class="text-h6">{{ formatCurrency(selectedProduct.unitPrice) }}</div>
+            </VCol>
+            <VCol cols="12">
+              <div class="text-caption text-disabled">
+                Note: You can only update the stock quantity. Product details like name, price, and category are managed
+                at
+                the franchise level.
+              </div>
+            </VCol>
+          </VRow>
+        </VCardText>
+
+        <VDivider />
+
+        <VCardActions class="pa-6">
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isEditProductModalVisible = false">
+            Cancel
+          </VBtn>
+          <VBtn color="primary" @click="saveProduct">
+            Save Changes
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- View Review Modal -->
+    <VDialog v-model="isViewReviewModalVisible" max-width="600">
+      <VCard>
+        <VCardTitle class="text-h5 pa-6 pb-4">
+          Review Details
+        </VCardTitle>
+
+        <VDivider />
+
+        <VCardText v-if="selectedReview" class="pa-6">
+          <VRow>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Customer Name</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedReview.customerName }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Customer Email</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedReview.customerEmail || 'N/A' }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Rating</div>
+              <div class="d-flex align-center gap-1">
+                <VRating :model-value="selectedReview.rating" readonly size="small" density="compact" />
+                <span class="text-body-1 font-weight-medium">{{ selectedReview.rating }}/5</span>
+              </div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Date</div>
+              <div class="text-body-1 font-weight-medium">{{ selectedReview.date }}</div>
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-1">Sentiment</div>
+              <VChip
+                :color="selectedReview.sentiment === 'positive' ? 'success' : selectedReview.sentiment === 'neutral' ? 'warning' : 'error'"
+                size="small" label class="text-capitalize">
+                {{ selectedReview.sentiment }}
+              </VChip>
+            </VCol>
+            <VCol cols="12">
+              <div class="text-body-2 text-disabled mb-1">Comment</div>
+              <div class="text-body-1">{{ selectedReview.comment }}</div>
+            </VCol>
+          </VRow>
+        </VCardText>
+
+        <VDivider />
+
+        <VCardActions class="pa-6">
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isViewReviewModalVisible = false">
+            Close
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Edit Review Modal -->
+    <VDialog v-model="isEditReviewModalVisible" max-width="600">
+      <VCard>
+        <VCardTitle class="text-h5 pa-6 pb-4">
+          Edit Customer Review
+        </VCardTitle>
+
+        <VDivider />
+
+        <VCardText v-if="selectedReview" class="pa-6">
+          <VRow>
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedReview.customerName" label="Customer Name" required />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedReview.customerEmail" label="Customer Email" type="email" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <div class="text-body-2 text-disabled mb-2">
+                Rating
+              </div>
+              <VRating v-model="selectedReview.rating" size="large" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model="selectedReview.date" label="Date" type="date" required />
+            </VCol>
+            <VCol cols="12">
+              <VTextarea v-model="selectedReview.comment" label="Review Comment" rows="4" required />
+            </VCol>
+          </VRow>
+        </VCardText>
+
+        <VDivider />
+
+        <VCardActions class="pa-6">
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isEditReviewModalVisible = false">
+            Cancel
+          </VBtn>
+          <VBtn color="primary" @click="saveReview">
+            Save Changes
           </VBtn>
         </VCardActions>
       </VCard>

@@ -806,9 +806,10 @@ class FranchiseeDashboardController extends Controller
             return [
                 'id' => $review->id,
                 'customerName' => $review->customer_name ?? 'Anonymous Customer',
+                'customerEmail' => $review->customer_email ?? '',
                 'rating' => (int) $review->rating,
                 'comment' => $review->comment ?? '',
-                'date' => $review->created_at->format('Y-m-d'),
+                'date' => $review->review_date ? $review->review_date->format('Y-m-d') : $review->created_at->format('Y-m-d'),
                 'sentiment' => $review->rating >= 4 ? 'positive' : ($review->rating >= 3 ? 'neutral' : 'negative'),
             ];
         });
@@ -1433,7 +1434,7 @@ class FranchiseeDashboardController extends Controller
         }
 
         // Check if product exists in unit inventory
-        if (! $unit->inventory()->where('product_id', $productId)->exists()) {
+        if (! $unit->products()->where('product_id', $productId)->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product not found in unit inventory',
@@ -1441,7 +1442,7 @@ class FranchiseeDashboardController extends Controller
         }
 
         // Remove product from inventory
-        $unit->inventory()->detach($productId);
+        $unit->products()->detach($productId);
 
         return response()->json([
             'success' => true,
@@ -1450,7 +1451,7 @@ class FranchiseeDashboardController extends Controller
     }
 
     /**
-     * Update a product (keeping for compatibility - now updates inventory stock)
+     * Update a product inventory in the unit
      */
     public function updateProduct(Request $request, $unitId, $productId): JsonResponse
     {
@@ -1464,51 +1465,61 @@ class FranchiseeDashboardController extends Controller
             ], 404);
         }
 
-        // Check if product exists and is associated with this unit through inventory
-        $product = Product::where('id', $productId)
-            ->where('franchise_id', $unit->franchise_id)
-            ->whereHas('units', function ($query) use ($unit) {
-                $query->where('units.id', $unit->id);
-            })
-            ->first();
-
-        if (! $product) {
+        // Check if product exists in unit inventory
+        if (! $unit->products()->where('product_id', $productId)->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found or not associated with this unit',
+                'message' => 'Product not found in unit inventory',
             ], 404);
         }
 
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string|max:1000',
-            'unitPrice' => 'sometimes|numeric|min:0',
-            'category' => 'sometimes|string|max:100',
-            'status' => 'sometimes|in:active,inactive',
             'stock' => 'sometimes|integer|min:0',
+            'reorderLevel' => 'sometimes|integer|min:0',
         ]);
 
-        $product->update([
-            'name' => $validated['name'] ?? $product->name,
-            'description' => $validated['description'] ?? $product->description,
-            'unit_price' => $validated['unitPrice'] ?? $product->unit_price,
-            'category' => $validated['category'] ?? $product->category,
-            'status' => $validated['status'] ?? $product->status,
-            'stock' => $validated['stock'] ?? $product->stock,
-        ]);
+        // Update pivot table data
+        $updateData = [];
+        if (isset($validated['stock'])) {
+            $updateData['quantity'] = $validated['stock'];
+        }
+        if (isset($validated['reorderLevel'])) {
+            $updateData['reorder_level'] = $validated['reorderLevel'];
+        }
+
+        if (! empty($updateData)) {
+            $unit->products()->updateExistingPivot($productId, $updateData);
+        }
+
+        // Get updated product data
+        $productData = DB::table('unit_product_inventories')
+            ->join('products', 'unit_product_inventories.product_id', '=', 'products.id')
+            ->where('unit_product_inventories.unit_id', $unit->id)
+            ->where('unit_product_inventories.product_id', $productId)
+            ->select(
+                'products.id',
+                'products.name',
+                'products.description',
+                'products.unit_price as unitPrice',
+                'products.category',
+                'products.status',
+                'unit_product_inventories.quantity as stock',
+                'unit_product_inventories.reorder_level as reorderLevel'
+            )
+            ->first();
 
         return response()->json([
             'success' => true,
             'data' => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'description' => $product->description,
-                'unitPrice' => (float) $product->unit_price,
-                'category' => $product->category,
-                'status' => $product->status,
-                'stock' => (int) $product->stock,
+                'id' => $productData->id,
+                'name' => $productData->name,
+                'description' => $productData->description ?? '',
+                'unitPrice' => (float) $productData->unitPrice,
+                'category' => $productData->category ?? 'General',
+                'status' => $productData->status ?? 'active',
+                'stock' => (int) $productData->stock,
             ],
-            'message' => 'Product updated successfully',
+            'message' => 'Product inventory updated successfully',
         ]);
     }
 
@@ -1616,6 +1627,7 @@ class FranchiseeDashboardController extends Controller
 
         $validated = $request->validate([
             'customerName' => 'sometimes|string|max:255',
+            'customerEmail' => 'sometimes|nullable|email|max:255',
             'rating' => 'sometimes|integer|min:1|max:5',
             'comment' => 'sometimes|string|max:1000',
             'date' => 'sometimes|date',
@@ -1623,6 +1635,7 @@ class FranchiseeDashboardController extends Controller
 
         $review->update([
             'customer_name' => $validated['customerName'] ?? $review->customer_name,
+            'customer_email' => $validated['customerEmail'] ?? $review->customer_email,
             'rating' => $validated['rating'] ?? $review->rating,
             'comment' => $validated['comment'] ?? $review->comment,
             'review_date' => $validated['date'] ?? $review->review_date,
@@ -1633,9 +1646,10 @@ class FranchiseeDashboardController extends Controller
             'data' => [
                 'id' => $review->id,
                 'customerName' => $review->customer_name,
+                'customerEmail' => $review->customer_email ?? '',
                 'rating' => (int) $review->rating,
                 'comment' => $review->comment,
-                'date' => $review->review_date ?? $review->created_at->format('Y-m-d'),
+                'date' => $review->review_date ? $review->review_date->format('Y-m-d') : $review->created_at->format('Y-m-d'),
                 'sentiment' => $review->rating >= 4 ? 'positive' : ($review->rating >= 3 ? 'neutral' : 'negative'),
             ],
             'message' => 'Review updated successfully',
@@ -1691,19 +1705,28 @@ class FranchiseeDashboardController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:1000',
-            'fileName' => 'required|string|max:255',
-            'fileSize' => 'required|string|max:50',
+            'file' => 'required|file|max:10240', // Max 10MB
             'type' => 'required|string|max:100',
             'status' => 'sometimes|in:approved,pending,rejected',
             'comment' => 'nullable|string|max:500',
         ]);
 
+        // Store the uploaded file
+        $file = $request->file('file');
+        $fileName = $file->getClientOriginalName();
+        $fileSize = $file->getSize();
+
+        // Generate unique filename to prevent collisions
+        $storedFileName = time() . '_' . $fileName;
+        $filePath = $file->storeAs('documents/units/' . $unitId, $storedFileName, 'local');
+
         $documents = $unit->documents ?? [];
         $newDocument = [
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'fileName' => $validated['fileName'],
-            'fileSize' => $validated['fileSize'],
+            'fileName' => $fileName,
+            'fileSize' => $this->formatFileSize($fileSize),
+            'filePath' => $filePath, // Store the actual file path
             'uploadDate' => now()->format('Y-m-d'),
             'type' => $validated['type'],
             'status' => $validated['status'] ?? 'pending',
@@ -1721,6 +1744,22 @@ class FranchiseeDashboardController extends Controller
             'data' => $newDocument,
             'message' => 'Document created successfully',
         ]);
+    }
+
+    /**
+     * Format file size in human readable format
+     */
+    private function formatFileSize(int $bytes): string
+    {
+        if ($bytes === 0) {
+            return '0 Bytes';
+        }
+
+        $k = 1024;
+        $sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        $i = floor(log($bytes) / log($k));
+
+        return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
     }
 
     /**
@@ -1809,7 +1848,7 @@ class FranchiseeDashboardController extends Controller
     /**
      * Download a document
      */
-    public function downloadDocument(Request $request, $unitId, $documentId): JsonResponse
+    public function downloadDocument(Request $request, $unitId, $documentId)
     {
         $user = $request->user();
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
@@ -1833,24 +1872,17 @@ class FranchiseeDashboardController extends Controller
 
         $document = $documents[$docIndex];
 
-        // Generate the download URL based on the document's file path
-        // In production, this would be the actual storage path
-        $downloadUrl = Storage::url('documents/' . $document['fileName']);
+        // Check if filePath exists in the document metadata
+        if (isset($document['filePath']) && Storage::exists($document['filePath'])) {
+            // File exists - return it for download
+            return Storage::download($document['filePath'], $document['fileName']);
+        }
 
-        // If using a cloud storage service like S3, you would generate a temporary signed URL
-        // $downloadUrl = Storage::disk('s3')->temporaryUrl(
-        //     'documents/'.$document['fileName'],
-        //     now()->addMinutes(5)
-        // );
-
+        // File doesn't exist - return error
         return response()->json([
-            'success' => true,
-            'data' => [
-                'url' => $downloadUrl,
-                'fileName' => $document['fileName'],
-            ],
-            'message' => 'Document download URL generated successfully',
-        ]);
+            'success' => false,
+            'message' => 'File not found in storage. The document may have been uploaded before file storage was implemented.',
+        ], 404);
     }
 
     /**

@@ -381,7 +381,7 @@ export const franchiseeDashboardApi = {
   },
 
   // Document Operations
-  async createDocument(unitId: number, data: Omit<UnitDocument, 'id'>): Promise<ApiResponse<UnitDocument>> {
+  async createDocument(unitId: number, data: Omit<UnitDocument, 'id'> | FormData): Promise<ApiResponse<UnitDocument>> {
     return await $api<ApiResponse<UnitDocument>>(`${API_URL}/units/documents/${unitId}`, {
       method: 'POST',
       body: data,

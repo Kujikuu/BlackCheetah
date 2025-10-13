@@ -9,6 +9,8 @@ use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -410,13 +412,15 @@ class UnitOperationsCrudTest extends TestCase
     /** @test */
     public function can_create_document()
     {
+        Storage::fake('local');
         Sanctum::actingAs($this->franchisee);
+
+        $file = UploadedFile::fake()->create('test.pdf', 100, 'application/pdf');
 
         $documentData = [
             'title' => 'Test Document',
             'description' => 'Test document description',
-            'fileName' => 'test.pdf',
-            'fileSize' => '1.5 MB',
+            'file' => $file,
             'type' => 'Report',
         ];
 
@@ -431,6 +435,7 @@ class UnitOperationsCrudTest extends TestCase
                     'description',
                     'fileName',
                     'fileSize',
+                    'filePath',
                     'type',
                     'status',
                 ],
@@ -442,6 +447,10 @@ class UnitOperationsCrudTest extends TestCase
         $documents = $this->unit->documents ?? [];
         $this->assertNotEmpty($documents);
         $this->assertEquals($documentData['title'], end($documents)['title']);
+
+        // Verify file was stored
+        $documentData = $response->json('data');
+        Storage::disk('local')->assertExists($documentData['filePath']);
     }
 
     /** @test */

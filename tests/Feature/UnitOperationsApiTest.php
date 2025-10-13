@@ -241,6 +241,7 @@ class UnitOperationsApiTest extends TestCase
                     '*' => [
                         'id',
                         'customerName',
+                        'customerEmail',
                         'rating',
                         'comment',
                         'date',
