@@ -144,26 +144,20 @@ const statuses = [
 ]
 
 const countries = [
-  { title: 'United States', value: 'United States' },
-  { title: 'Canada', value: 'Canada' },
-  { title: 'United Kingdom', value: 'United Kingdom' },
-  { title: 'Australia', value: 'Australia' },
-  { title: 'Germany', value: 'Germany' },
-  { title: 'France', value: 'France' },
-  { title: 'Japan', value: 'Japan' },
-  { title: 'Brazil', value: 'Brazil' },
-  { title: 'India', value: 'India' },
-  { title: 'Mexico', value: 'Mexico' },
-  { title: 'Spain', value: 'Spain' },
-  { title: 'Italy', value: 'Italy' },
-  { title: 'Netherlands', value: 'Netherlands' },
-  { title: 'Sweden', value: 'Sweden' },
-  { title: 'Norway', value: 'Norway' },
-  { title: 'Switzerland', value: 'Switzerland' },
-  { title: 'South Korea', value: 'South Korea' },
-  { title: 'Singapore', value: 'Singapore' },
-  { title: 'New Zealand', value: 'New Zealand' },
-  { title: 'South Africa', value: 'South Africa' },
+  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
+  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
+  { title: 'Qatar', value: 'Qatar' },
+  { title: 'Kuwait', value: 'Kuwait' },
+  { title: 'Oman', value: 'Oman' },
+  { title: 'Bahrain', value: 'Bahrain' },
+  { title: 'Jordan', value: 'Jordan' },
+  { title: 'Lebanon', value: 'Lebanon' },
+  { title: 'Egypt', value: 'Egypt' },
+  { title: 'Iraq', value: 'Iraq' },
+  { title: 'Palestine', value: 'Palestine' },
+  { title: 'Syria', value: 'Syria' },
+  { title: 'Yemen', value: 'Yemen' },
+  { title: 'Iran', value: 'Iran' },
 ]
 
 const resolveStatusVariant = (stat: string) => {
@@ -741,7 +735,7 @@ onMounted(() => {
                   ]" required />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.phone" label="Phone Number" placeholder="Enter phone number"
+                <AppTextField v-model="selectedAssociate.phone" label="Phone Number" placeholder="+966 50 123 4567"
                   :rules="[
                     (v: string) => !!v || 'Phone number is required',
                     (v: string) => v.length <= 20 || 'Phone number must not exceed 20 characters',

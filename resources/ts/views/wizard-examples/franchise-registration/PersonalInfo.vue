@@ -25,16 +25,19 @@ const localFormData = computed({
 
 // 👉 Options
 const countries = [
-  { title: 'United States', value: 'United States' },
-  { title: 'Canada', value: 'Canada' },
-  { title: 'United Kingdom', value: 'United Kingdom' },
-  { title: 'Australia', value: 'Australia' },
-  { title: 'Germany', value: 'Germany' },
-  { title: 'France', value: 'France' },
-  { title: 'Japan', value: 'Japan' },
-  { title: 'Brazil', value: 'Brazil' },
-  { title: 'India', value: 'India' },
-  { title: 'Mexico', value: 'Mexico' },
+  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
+  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
+  { title: 'Qatar', value: 'Qatar' },
+  { title: 'Kuwait', value: 'Kuwait' },
+  { title: 'Oman', value: 'Oman' },
+  { title: 'Bahrain', value: 'Bahrain' },
+  { title: 'Jordan', value: 'Jordan' },
+  { title: 'Lebanon', value: 'Lebanon' },
+  { title: 'Egypt', value: 'Egypt' },
+  { title: 'Iraq', value: 'Iraq' },
+  { title: 'Syria', value: 'Syria' },
+  { title: 'Palestine', value: 'Palestine' },
+  { title: 'Yemen', value: 'Yemen' },
 ]
 </script>
 
@@ -49,57 +52,22 @@ const countries = [
 
     <VForm>
       <VRow>
-        <VCol
-          cols="12"
-          md="6"
-        >
-          <AppTextField
-            v-model="localFormData.contactNumber"
-            label="Contact Number"
-            placeholder="Enter your contact number"
-            required
-          />
+        <VCol cols="12" md="6">
+          <AppTextField v-model="localFormData.contactNumber" label="Contact Number"
+            placeholder="Enter your contact number" required />
         </VCol>
-        <VCol
-          cols="12"
-          md="6"
-        >
-          <AppSelect
-            v-model="localFormData.country"
-            label="Country"
-            :items="countries"
-            placeholder="Select country"
-            required
-          />
+        <VCol cols="12" md="6">
+          <AppSelect v-model="localFormData.country" label="Country" :items="countries" placeholder="Select country"
+            required />
         </VCol>
-        <VCol
-          cols="12"
-          md="6"
-        >
-          <AppTextField
-            v-model="localFormData.state"
-            label="State/Province"
-            placeholder="Enter state or province"
-          />
+        <VCol cols="12" md="6">
+          <AppTextField v-model="localFormData.state" label="State/Province" placeholder="Enter state or province" />
         </VCol>
-        <VCol
-          cols="12"
-          md="6"
-        >
-          <AppTextField
-            v-model="localFormData.city"
-            label="City"
-            placeholder="Enter city"
-            required
-          />
+        <VCol cols="12" md="6">
+          <AppTextField v-model="localFormData.city" label="City" placeholder="Enter city" required />
         </VCol>
         <VCol cols="12">
-          <AppTextarea
-            v-model="localFormData.address"
-            label="Address"
-            placeholder="Enter your full address"
-            rows="3"
-          />
+          <AppTextarea v-model="localFormData.address" label="Address" placeholder="Enter your full address" rows="3" />
         </VCol>
       </VRow>
     </VForm>

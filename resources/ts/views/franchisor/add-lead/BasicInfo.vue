@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LeadBasicInfo } from './types'
+import type { LeadBasicInfo } from './types';
 
 interface Props {
   formData: LeadBasicInfo
@@ -19,17 +19,34 @@ watch(localFormData, () => {
 }, { deep: true })
 
 const countries = [
-  { title: 'United States', value: 'USA' },
-  { title: 'Canada', value: 'Canada' },
-  { title: 'United Kingdom', value: 'UK' },
-  { title: 'Australia', value: 'Australia' },
+  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
+  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
+  { title: 'Qatar', value: 'Qatar' },
+  { title: 'Kuwait', value: 'Kuwait' },
+  { title: 'Oman', value: 'Oman' },
+  { title: 'Bahrain', value: 'Bahrain' },
+  { title: 'Jordan', value: 'Jordan' },
+  { title: 'Lebanon', value: 'Lebanon' },
+  { title: 'Egypt', value: 'Egypt' },
+  { title: 'Iraq', value: 'Iraq' },
+  { title: 'Syria', value: 'Syria' },
+  { title: 'Palestine', value: 'Palestine' },
+  { title: 'Yemen', value: 'Yemen' },
 ]
 
 const states = [
-  { title: 'California', value: 'California' },
-  { title: 'New York', value: 'New York' },
-  { title: 'Texas', value: 'Texas' },
-  { title: 'Florida', value: 'Florida' },
+  { title: 'Riyadh', value: 'Riyadh' },
+  { title: 'Makkah', value: 'Makkah' },
+  { title: 'Medina', value: 'Medina' },
+  { title: 'Eastern Province', value: 'Eastern Province' },
+  { title: 'Asir', value: 'Asir' },
+  { title: 'Tabuk', value: 'Tabuk' },
+  { title: 'Hail', value: 'Hail' },
+  { title: 'Northern Borders', value: 'Northern Borders' },
+  { title: 'Jazan', value: 'Jazan' },
+  { title: 'Najran', value: 'Najran' },
+  { title: 'Al Bahah', value: 'Al Bahah' },
+  { title: 'Al Jawf', value: 'Al Jawf' },
 ]
 </script>
 
@@ -44,95 +61,37 @@ const states = [
       </p>
     </VCol>
 
-    <VCol
-      cols="12"
-      md="6"
-    >
-      <AppTextField
-        v-model="localFormData.firstName"
-        label="First Name"
-        placeholder="John"
-      />
+    <VCol cols="12" md="6">
+      <AppTextField v-model="localFormData.firstName" label="First Name" placeholder="John" />
     </VCol>
 
-    <VCol
-      cols="12"
-      md="6"
-    >
-      <AppTextField
-        v-model="localFormData.lastName"
-        label="Last Name"
-        placeholder="Doe"
-      />
+    <VCol cols="12" md="6">
+      <AppTextField v-model="localFormData.lastName" label="Last Name" placeholder="Doe" />
     </VCol>
 
-    <VCol
-      cols="12"
-      md="6"
-    >
-      <AppTextField
-        v-model="localFormData.email"
-        label="Email Address"
-        type="email"
-        placeholder="john.doe@example.com"
-      />
+    <VCol cols="12" md="6">
+      <AppTextField v-model="localFormData.email" label="Email Address" type="email"
+        placeholder="john.doe@example.com" />
     </VCol>
 
-    <VCol
-      cols="12"
-      md="6"
-    >
-      <AppTextField
-        v-model="localFormData.contactNumber"
-        label="Contact Number"
-        placeholder="+1 234-567-8900"
-      />
+    <VCol cols="12" md="6">
+      <AppTextField v-model="localFormData.contactNumber" label="Contact Number" placeholder="+966 50 123 4567" />
     </VCol>
 
-    <VCol
-      cols="12"
-      md="6"
-    >
-      <AppSelect
-        v-model="localFormData.country"
-        label="Country"
-        placeholder="Select Country"
-        :items="countries"
-      />
+    <VCol cols="12" md="6">
+      <AppSelect v-model="localFormData.country" label="Country" placeholder="Select Country" :items="countries" />
     </VCol>
 
-    <VCol
-      cols="12"
-      md="6"
-    >
-      <AppSelect
-        v-model="localFormData.state"
-        label="State"
-        placeholder="Select State"
-        :items="states"
-      />
+    <VCol cols="12" md="6">
+      <AppSelect v-model="localFormData.state" label="State" placeholder="Select State" :items="states" />
     </VCol>
 
-    <VCol
-      cols="12"
-      md="6"
-    >
-      <AppTextField
-        v-model="localFormData.city"
-        label="City"
-        placeholder="San Francisco"
-      />
+    <VCol cols="12" md="6">
+      <AppTextField v-model="localFormData.city" label="City" placeholder="San Francisco" />
     </VCol>
 
-    <VCol
-      cols="12"
-      md="6"
-    >
-      <AppTextField
-        v-model="localFormData.companyName"
-        label="Company Name"
-        placeholder="Tech Corp"
-      />
+    <VCol cols="12" md="6">
+      <AppTextField v-model="localFormData.companyName" label="Company Name" placeholder="Tech Corp" />
     </VCol>
   </VRow>
 </template>

@@ -39,101 +39,45 @@ const paymentMethods = [
       <VExpansionPanelTitle>Delivery Address</VExpansionPanelTitle>
 
       <VExpansionPanelText>
-        <VForm
-          class="pt-4 pb-2"
-          @submit.prevent="() => {}"
-        >
+        <VForm class="pt-4 pb-2" @submit.prevent="() => { }">
           <VRow>
             <!-- 👉 Full Name -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                label="Full Name"
-                placeholder="John Doe"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField label="Full Name" placeholder="John Doe" />
             </VCol>
             <!-- 👉 Phone No -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                label="Phone No"
-                type="number"
-                placeholder="+1 123 456 7890"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField label="Phone No" type="number" placeholder="+966 50 123 4567" />
             </VCol>
             <!-- 👉 Address -->
             <VCol cols="12">
-              <AppTextarea
-                label="Address"
-                placeholder="1234 Main St, New York, NY 10001, USA"
-                rows="3"
-              />
+              <AppTextarea label="Address" placeholder="1234 Main St, New York, NY 10001, USA" rows="3" />
             </VCol>
             <!-- 👉 Pincode -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                label="Pincode"
-                placeholder="123456"
-                type="number"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField label="Pincode" placeholder="123456" type="number" />
             </VCol>
             <!-- 👉 Landmark -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                label="Landmark"
-                placeholder="Near City Mall"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField label="Landmark" placeholder="Near City Mall" />
             </VCol>
             <!-- 👉 City -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                label="City"
-                placeholder="New York"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField label="City" placeholder="New York" />
             </VCol>
             <!-- 👉 State -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppSelect
-                :items="stateList"
-                label="State"
-                placeholder="Select State"
-              />
+            <VCol cols="12" md="6">
+              <AppSelect :items="stateList" label="State" placeholder="Select State" />
             </VCol>
             <!-- 👉 Address Type  -->
             <VCol cols="12">
               <VLabel class="mb-3">
                 Address Type
               </VLabel>
-              <VRadioGroup
-                v-model="radios"
-                inline
-              >
+              <VRadioGroup v-model="radios" inline>
                 <div>
-                  <VRadio
-                    label="Home (All day delivery)"
-                    value="home"
-                    class="me-3"
-                  />
-                  <VRadio
-                    label="Office (Delivery between 10 AM - 5 PM)"
-                    value="office"
-                  />
+                  <VRadio label="Home (All day delivery)" value="home" class="me-3" />
+                  <VRadio label="Office (Delivery between 10 AM - 5 PM)" value="office" />
                 </div>
               </VRadioGroup>
             </VCol>
@@ -149,20 +93,10 @@ const paymentMethods = [
 
       <VExpansionPanelText>
         <!-- 👉 Radio Group -->
-        <VRadioGroup
-          v-model="deliveryOption"
-          class="delivery-options pt-4 pb-2"
-        >
-          <div
-            class="delivery-option d-flex rounded-t"
-            :class="deliveryOption === 'standard' ? 'active' : ''"
-            @click="deliveryOption = 'standard'"
-          >
-            <VRadio
-              inline
-              value="standard"
-              class="mt-n4"
-            />
+        <VRadioGroup v-model="deliveryOption" class="delivery-options pt-4 pb-2">
+          <div class="delivery-option d-flex rounded-t" :class="deliveryOption === 'standard' ? 'active' : ''"
+            @click="deliveryOption = 'standard'">
+            <VRadio inline value="standard" class="mt-n4" />
             <div class="w-100">
               <div class="d-flex justify-space-between">
                 <h6 class="text-base font-weight-medium">
@@ -175,16 +109,9 @@ const paymentMethods = [
               <span class="text-sm">Friday, 15 Nov - Monday, 18 Nov</span>
             </div>
           </div>
-          <div
-            class="delivery-option d-flex"
-            :class="deliveryOption === 'express' ? 'active' : ''"
-            @click="deliveryOption = 'express'"
-          >
-            <VRadio
-              inline
-              class="mt-n4"
-              value="express"
-            />
+          <div class="delivery-option d-flex" :class="deliveryOption === 'express' ? 'active' : ''"
+            @click="deliveryOption = 'express'">
+            <VRadio inline class="mt-n4" value="express" />
             <div class="w-100">
               <div class="d-flex justify-space-between">
                 <h5 class="text-base font-weight-medium">
@@ -197,16 +124,9 @@ const paymentMethods = [
               <span class="text-sm">Friday, 15 Nov - Sunday, 17 Nov</span>
             </div>
           </div>
-          <div
-            class="delivery-option d-flex rounded-b"
-            :class="deliveryOption === 'overnight' ? 'active' : ''"
-            @click="deliveryOption = 'overnight'"
-          >
-            <VRadio
-              inline
-              class="mt-n4"
-              value="overnight"
-            />
+          <div class="delivery-option d-flex rounded-b" :class="deliveryOption === 'overnight' ? 'active' : ''"
+            @click="deliveryOption = 'overnight'">
+            <VRadio inline class="mt-n4" value="overnight" />
             <div class="w-100">
               <div class="d-flex justify-space-between">
                 <h6 class="text-base font-weight-medium">
@@ -230,30 +150,17 @@ const paymentMethods = [
 
       <VExpansionPanelText>
         <VRow>
-          <VCol
-            md="6"
-            cols="12"
-          >
+          <VCol md="6" cols="12">
             <VForm class="pt-4 pb-2">
               <!-- 👉 Payment Method -->
               <div>
-                <VRadioGroup
-                  v-model="paymentMethod"
-                  inline
-                >
+                <VRadioGroup v-model="paymentMethod" inline>
                   <div>
-                    <VRadio
-                      v-for="payment in paymentMethods"
-                      :key="payment.radioValue"
-                      :value="payment.radioValue"
-                      class="me-3"
-                    >
+                    <VRadio v-for="payment in paymentMethods" :key="payment.radioValue" :value="payment.radioValue"
+                      class="me-3">
                       <template #label>
                         <span class="me-1">{{ payment.radioLabel }}</span>
-                        <VIcon
-                          size="18"
-                          :icon="payment.icon"
-                        />
+                        <VIcon size="18" :icon="payment.icon" />
                       </template>
                     </VRadio>
                   </div>
@@ -263,53 +170,31 @@ const paymentMethods = [
               <VRow v-if="paymentMethod === 'credit-debit-card'">
                 <!-- 👉 Card Number -->
                 <VCol cols="12">
-                  <AppTextField
-                    label="Card Number"
-                    type="number"
-                    placeholder="1234 5678 9012 3456"
-                  />
+                  <AppTextField label="Card Number" type="number" placeholder="1234 5678 9012 3456" />
                 </VCol>
 
                 <!-- 👉 Name -->
-                <VCol
-                  cols="12"
-                  md="6"
-                >
-                  <AppTextField
-                    label="Name"
-                    placeholder="john doe"
-                  />
+                <VCol cols="12" md="6">
+                  <AppTextField label="Name" placeholder="john doe" />
                 </VCol>
 
                 <!-- 👉 Expire Date -->
-                <VCol
-                  cols="6"
-                  md="3"
-                >
-                  <AppTextField
-                    label="Expiry Date"
-                    placeholder="MM/YY"
-                  />
+                <VCol cols="6" md="3">
+                  <AppTextField label="Expiry Date" placeholder="MM/YY" />
                 </VCol>
 
                 <!-- 👉 CVV Code -->
-                <VCol
-                  cols="6"
-                  md="3"
-                >
-                  <AppTextField
-                    label="CVV Code"
-                    type="number"
-                    max="3"
-                    placeholder="123"
-                  />
+                <VCol cols="6" md="3">
+                  <AppTextField label="CVV Code" type="number" max="3" placeholder="123" />
                 </VCol>
               </VRow>
 
               <VRow v-else>
                 <VCol>
                   <div class="text-high-emphasis">
-                    Cash on Delivery is a type of payment method where the recipient make payment for the order at the time of delivery rather than in advance.
+                    Cash on Delivery is a type of payment method where the recipient make payment for the order at the
+                    time of
+                    delivery rather than in advance.
                   </div>
                 </VCol>
               </VRow>
@@ -322,10 +207,7 @@ const paymentMethods = [
         <!-- 👉 Place Order -->
         <div class="d-flex gap-4">
           <VBtn>Place Order</VBtn>
-          <VBtn
-            color="secondary"
-            variant="tonal"
-          >
+          <VBtn color="secondary" variant="tonal">
             Cancel
           </VBtn>
         </div>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { PersonalDetails } from './types'
 import type { CustomInputContent } from '@core/types'
 import diamond from '@images/svg/Diamond.svg'
 import office from '@images/svg/office.svg'
 import suitcase from '@images/svg/Suitcase.svg'
+import type { PersonalDetails } from './types'
 
 const props = defineProps<{
   formData: PersonalDetails
@@ -47,88 +47,39 @@ watch(formData, () => {
     <VRow>
       <VCol cols="12">
         <!-- 👉 User Type  -->
-        <CustomRadiosWithIcon
-          v-model:selected-radio="formData.userType"
-          :radio-content="propertyRadioContent"
-          :grid-column="{ cols: '12', sm: '4' }"
-        />
+        <CustomRadiosWithIcon v-model:selected-radio="formData.userType" :radio-content="propertyRadioContent"
+          :grid-column="{ cols: '12', sm: '4' }" />
       </VCol>
 
-      <VCol
-        cols="12"
-        sm="6"
-      >
+      <VCol cols="12" sm="6">
         <!-- 👉 First Name -->
-        <AppTextField
-          v-model="formData.firstName"
-          label="First Name"
-          placeholder="John"
-        />
+        <AppTextField v-model="formData.firstName" label="First Name" placeholder="John" />
       </VCol>
 
-      <VCol
-        cols="12"
-        sm="6"
-      >
+      <VCol cols="12" sm="6">
         <!-- 👉 Last Name -->
-        <AppTextField
-          v-model="formData.lastName"
-          label="Last Name"
-          placeholder="Doe"
-        />
+        <AppTextField v-model="formData.lastName" label="Last Name" placeholder="Doe" />
       </VCol>
 
-      <VCol
-        cols="12"
-        sm="6"
-      >
+      <VCol cols="12" sm="6">
         <!-- 👉 Username -->
-        <AppTextField
-          v-model="formData.username"
-          label="Username"
-          placeholder="Johndoe"
-        />
+        <AppTextField v-model="formData.username" label="Username" placeholder="Johndoe" />
       </VCol>
 
-      <VCol
-        cols="12"
-        sm="6"
-      >
+      <VCol cols="12" sm="6">
         <!-- 👉 Password -->
-        <AppTextField
-          v-model="formData.password"
-          autocomplete="on"
-          type="password"
-          label="Password"
-          placeholder="············"
-          append-inner-icon="tabler-eye"
-        />
+        <AppTextField v-model="formData.password" autocomplete="on" type="password" label="Password"
+          placeholder="············" append-inner-icon="tabler-eye" />
       </VCol>
 
-      <VCol
-        cols="12"
-        sm="6"
-      >
+      <VCol cols="12" sm="6">
         <!-- 👉 Email -->
-        <AppTextField
-          v-model="formData.email"
-          type="email"
-          label="Email"
-          placeholder="john.doe@email.com"
-        />
+        <AppTextField v-model="formData.email" type="email" label="Email" placeholder="john.doe@email.com" />
       </VCol>
 
-      <VCol
-        cols="12"
-        sm="6"
-      >
+      <VCol cols="12" sm="6">
         <!-- 👉 Contact -->
-        <AppTextField
-          v-model="formData.contact"
-          type="number"
-          label="Contact"
-          placeholder="+1 123 456 7890"
-        />
+        <AppTextField v-model="formData.contact" type="number" label="Contact" placeholder="+966 50 123 4567" />
       </VCol>
     </VRow>
   </VForm>

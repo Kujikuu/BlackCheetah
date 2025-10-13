@@ -164,7 +164,7 @@ const currencies = [
 
               <!-- 👉 Phone -->
               <VCol cols="12" md="6">
-                <AppTextField v-model="accountDataLocal.phone" label="Phone Number" placeholder="+1 (917) 543-9876" />
+                <AppTextField v-model="accountDataLocal.phone" label="Phone Number" placeholder="+966 50 123 4567" />
               </VCol>
 
               <!-- 👉 Address -->

@@ -599,7 +599,7 @@ const avatarText = (name: string) => {
                   placeholder="Enter email address" />
               </VCol>
               <VCol cols="12" md="6">
-                <AppTextField v-model="selectedLead.phone" label="Phone" placeholder="Enter phone number" />
+                <AppTextField v-model="selectedLead.phone" label="Phone" placeholder="+966 50 123 4567" />
               </VCol>
               <VCol cols="12" md="6">
                 <AppSelect v-model="selectedLead.source" label="Source" :items="sources" placeholder="Select source" />

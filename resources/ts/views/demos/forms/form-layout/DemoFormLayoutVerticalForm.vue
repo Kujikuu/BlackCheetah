@@ -7,64 +7,35 @@ const checkbox = ref(false)
 </script>
 
 <template>
-  <VForm @submit.prevent="() => {}">
+  <VForm @submit.prevent="() => { }">
     <VRow>
       <VCol cols="12">
-        <AppTextField
-          v-model="firstName"
-          label="First Name"
-          placeholder="John"
-        />
+        <AppTextField v-model="firstName" label="First Name" placeholder="John" />
       </VCol>
 
       <VCol cols="12">
-        <AppTextField
-          v-model="email"
-          label="Email"
-          type="email"
-          placeholder="johndoe@example.com"
-        />
+        <AppTextField v-model="email" label="Email" type="email" placeholder="johndoe@example.com" />
       </VCol>
 
       <VCol cols="12">
-        <AppTextField
-          v-model="mobile"
-          label="Mobile"
-          placeholder="+1 123 456 7890"
-          type="number"
-        />
+        <AppTextField v-model="mobile" label="Mobile" placeholder="+966 50 123 4567" type="number" />
       </VCol>
 
       <VCol cols="12">
-        <AppTextField
-          v-model="password"
-          label="Password"
-          autocomplete="on"
-          type="password"
-          placeholder="············"
-        />
+        <AppTextField v-model="password" label="Password" autocomplete="on" type="password"
+          placeholder="············" />
       </VCol>
 
       <VCol cols="12">
-        <VCheckbox
-          v-model="checkbox"
-          label="Remember me"
-        />
+        <VCheckbox v-model="checkbox" label="Remember me" />
       </VCol>
 
-      <VCol
-        cols="12"
-        class="d-flex gap-4"
-      >
+      <VCol cols="12" class="d-flex gap-4">
         <VBtn type="submit">
           Submit
         </VBtn>
 
-        <VBtn
-          type="reset"
-          color="secondary"
-          variant="tonal"
-        >
+        <VBtn type="reset" color="secondary" variant="tonal">
           Reset
         </VBtn>
       </VCol>

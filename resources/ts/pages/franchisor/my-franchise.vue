@@ -505,16 +505,16 @@ const fundingSources = [
 ]
 
 const countries = [
-  { title: 'United States', value: 'United States' },
-  { title: 'Canada', value: 'Canada' },
-  { title: 'United Kingdom', value: 'United Kingdom' },
-  { title: 'Australia', value: 'Australia' },
-  { title: 'Germany', value: 'Germany' },
-  { title: 'France', value: 'France' },
-  { title: 'Japan', value: 'Japan' },
-  { title: 'China', value: 'China' },
-  { title: 'India', value: 'India' },
-  { title: 'Brazil', value: 'Brazil' },
+  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
+  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
+  { title: 'Qatar', value: 'Qatar' },
+  { title: 'Kuwait', value: 'Kuwait' },
+  { title: 'Oman', value: 'Oman' },
+  { title: 'Bahrain', value: 'Bahrain' },
+  { title: 'Jordan', value: 'Jordan' },
+  { title: 'Lebanon', value: 'Lebanon' },
+  { title: 'Egypt', value: 'Egypt' },
+  { title: 'Iraq', value: 'Iraq' },
 ]
 
 const productCategories = [
@@ -839,15 +839,8 @@ const resolveStatusVariant = (status: string) => {
 <template>
   <section>
     <!-- Loading Overlay -->
-    <VOverlay
-      v-model="isLoading"
-      class="align-center justify-center"
-    >
-      <VProgressCircular
-        color="primary"
-        indeterminate
-        size="64"
-      />
+    <VOverlay v-model="isLoading" class="align-center justify-center">
+      <VProgressCircular color="primary" indeterminate size="64" />
     </VOverlay>
     <!-- Page Header -->
     <VRow class="mb-6">
@@ -861,11 +854,8 @@ const resolveStatusVariant = (status: string) => {
               Manage your franchise details, documents, and products
             </p>
           </div>
-          <VBtn
-            :color="isEditMode ? 'secondary' : 'primary'"
-            :prepend-icon="isEditMode ? 'tabler-x' : 'tabler-edit'"
-            @click="isEditMode = !isEditMode"
-          >
+          <VBtn :color="isEditMode ? 'secondary' : 'primary'" :prepend-icon="isEditMode ? 'tabler-x' : 'tabler-edit'"
+            @click="isEditMode = !isEditMode">
             {{ isEditMode ? 'Cancel Edit' : 'Edit Franchise Details' }}
           </VBtn>
         </div>
@@ -874,22 +864,11 @@ const resolveStatusVariant = (status: string) => {
 
     <!-- Stats Cards -->
     <VRow class="mb-6">
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="primary"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-building-store"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="primary" variant="tonal">
+              <VIcon icon="tabler-building-store" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -902,22 +881,11 @@ const resolveStatusVariant = (status: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="success"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-files"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="success" variant="tonal">
+              <VIcon icon="tabler-files" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -930,22 +898,11 @@ const resolveStatusVariant = (status: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="info"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-package"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="info" variant="tonal">
+              <VIcon icon="tabler-package" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -961,37 +918,22 @@ const resolveStatusVariant = (status: string) => {
     </VRow>
 
     <!-- Tabs -->
-    <VTabs
-      v-model="currentTab"
-      class="mb-6"
-    >
+    <VTabs v-model="currentTab" class="mb-6">
       <VTab value="overview">
-        <VIcon
-          icon="tabler-info-circle"
-          start
-        />
+        <VIcon icon="tabler-info-circle" start />
         Overview
       </VTab>
       <VTab value="documents">
-        <VIcon
-          icon="tabler-files"
-          start
-        />
+        <VIcon icon="tabler-files" start />
         Documents
       </VTab>
       <VTab value="products">
-        <VIcon
-          icon="tabler-package"
-          start
-        />
+        <VIcon icon="tabler-package" start />
         Products
       </VTab>
     </VTabs>
 
-    <VWindow
-      v-model="currentTab"
-      class="disable-tab-transition"
-    >
+    <VWindow v-model="currentTab" class="disable-tab-transition">
       <VWindowItem value="overview">
         <VCard>
           <VCardText>
@@ -1057,55 +999,31 @@ const resolveStatusVariant = (status: string) => {
                 <VCard variant="outlined">
                   <VCardText>
                     <VRow>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Franchise Name
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1 font-weight-medium"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1 font-weight-medium">
                             {{
                               franchiseData.franchiseDetails.franchiseName }}
                           </div>
-                          <AppTextField
-                            v-else
-                            v-model="franchiseData.franchiseDetails.franchiseName"
-                            label="Franchise Name"
-                            placeholder="Enter franchise name"
-                          />
+                          <AppTextField v-else v-model="franchiseData.franchiseDetails.franchiseName"
+                            label="Franchise Name" placeholder="Enter franchise name" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Website
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
-                            <a
-                              :href="franchiseData.franchiseDetails.website"
-                              target="_blank"
-                              class="text-primary"
-                            >
+                          <div v-if="!isEditMode" class="text-body-1">
+                            <a :href="franchiseData.franchiseDetails.website" target="_blank" class="text-primary">
                               {{ franchiseData.franchiseDetails.website }}
                             </a>
                           </div>
-                          <AppTextField
-                            v-else
-                            v-model="franchiseData.franchiseDetails.website"
-                            label="Website"
-                            placeholder="https://example.com"
-                          />
+                          <AppTextField v-else v-model="franchiseData.franchiseDetails.website" label="Website"
+                            placeholder="https://example.com" />
                         </div>
                       </VCol>
                       <VCol cols="12">
@@ -1113,38 +1031,17 @@ const resolveStatusVariant = (status: string) => {
                           <div class="text-sm text-disabled mb-1">
                             Franchise Logo
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
-                            <div
-                              v-if="franchiseData.franchiseDetails.logo"
-                              class="d-flex align-center"
-                            >
-                              <VAvatar
-                                size="40"
-                                class="me-3"
-                              >
-                                <VImg
-                                  :src="franchiseData.franchiseDetails.logo"
-                                  alt="Franchise Logo"
-                                />
+                          <div v-if="!isEditMode" class="text-body-1">
+                            <div v-if="franchiseData.franchiseDetails.logo" class="d-flex align-center">
+                              <VAvatar size="40" class="me-3">
+                                <VImg :src="franchiseData.franchiseDetails.logo" alt="Franchise Logo" />
                               </VAvatar>
                               <span>Logo uploaded</span>
                             </div>
-                            <span
-                              v-else
-                              class="text-disabled"
-                            >No logo uploaded</span>
+                            <span v-else class="text-disabled">No logo uploaded</span>
                           </div>
-                          <VFileInput
-                            v-else
-                            v-model="logoFile"
-                            label="Franchise Logo"
-                            accept="image/*"
-                            prepend-icon="tabler-upload"
-                            :loading="isUploadingLogo"
-                          />
+                          <VFileInput v-else v-model="logoFile" label="Franchise Logo" accept="image/*"
+                            prepend-icon="tabler-upload" :loading="isUploadingLogo" />
                         </div>
                       </VCol>
                     </VRow>
@@ -1160,141 +1057,78 @@ const resolveStatusVariant = (status: string) => {
                 <VCard variant="outlined">
                   <VCardText>
                     <VRow>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Legal Entity Name
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.legalDetails.legalEntityName }}
                           </div>
-                          <AppTextField
-                            v-else
-                            v-model="franchiseData.legalDetails.legalEntityName"
-                            label="Legal Entity Name"
-                            placeholder="Enter legal entity name"
-                          />
+                          <AppTextField v-else v-model="franchiseData.legalDetails.legalEntityName"
+                            label="Legal Entity Name" placeholder="Enter legal entity name" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Business Structure
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.legalDetails.businessStructure }}
                           </div>
-                          <AppSelect
-                            v-else
-                            v-model="franchiseData.legalDetails.businessStructure"
-                            label="Business Structure"
-                            placeholder="Select business structure"
-                            :items="businessStructures"
-                          />
+                          <AppSelect v-else v-model="franchiseData.legalDetails.businessStructure"
+                            label="Business Structure" placeholder="Select business structure"
+                            :items="businessStructures" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Tax ID
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.legalDetails.taxId }}
                           </div>
-                          <AppTextField
-                            v-else
-                            v-model="franchiseData.legalDetails.taxId"
-                            label="Tax ID"
-                            placeholder="Enter tax ID"
-                          />
+                          <AppTextField v-else v-model="franchiseData.legalDetails.taxId" label="Tax ID"
+                            placeholder="Enter tax ID" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Industry
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.legalDetails.industry }}
                           </div>
-                          <AppSelect
-                            v-else
-                            v-model="franchiseData.legalDetails.industry"
-                            label="Industry"
-                            placeholder="Select industry"
-                            :items="industries"
-                          />
+                          <AppSelect v-else v-model="franchiseData.legalDetails.industry" label="Industry"
+                            placeholder="Select industry" :items="industries" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Funding Amount
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1 font-weight-medium text-success"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1 font-weight-medium text-success">
                             {{
                               franchiseData.legalDetails.fundingAmount }}
                           </div>
-                          <AppTextField
-                            v-else
-                            v-model="franchiseData.legalDetails.fundingAmount"
-                            label="Funding Amount"
-                            placeholder="Enter funding amount"
-                            type="number"
-                          />
+                          <AppTextField v-else v-model="franchiseData.legalDetails.fundingAmount" label="Funding Amount"
+                            placeholder="Enter funding amount" type="number" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Funding Source
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.legalDetails.fundingSource }}
                           </div>
-                          <AppSelect
-                            v-else
-                            v-model="franchiseData.legalDetails.fundingSource"
-                            label="Funding Source"
-                            placeholder="Select funding source"
-                            :items="fundingSources"
-                          />
+                          <AppSelect v-else v-model="franchiseData.legalDetails.fundingSource" label="Funding Source"
+                            placeholder="Select funding source" :items="fundingSources" />
                         </div>
                       </VCol>
                     </VRow>
@@ -1310,54 +1144,30 @@ const resolveStatusVariant = (status: string) => {
                 <VCard variant="outlined">
                   <VCardText>
                     <VRow>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Contact Number
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.contactDetails.contactNumber }}
                           </div>
-                          <AppTextField
-                            v-else
-                            v-model="franchiseData.contactDetails.contactNumber"
-                            label="Contact Number"
-                            placeholder="Enter contact number"
-                          />
+                          <AppTextField v-else v-model="franchiseData.contactDetails.contactNumber"
+                            label="Contact Number" placeholder="Enter contact number" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
+                      <VCol cols="12" md="6">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Email
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
-                            <a
-                              :href="`mailto:${franchiseData.contactDetails.email}`"
-                              class="text-primary"
-                            >
+                          <div v-if="!isEditMode" class="text-body-1">
+                            <a :href="`mailto:${franchiseData.contactDetails.email}`" class="text-primary">
                               {{ franchiseData.contactDetails.email }}
                             </a>
                           </div>
-                          <AppTextField
-                            v-else
-                            v-model="franchiseData.contactDetails.email"
-                            label="Email"
-                            placeholder="Enter email address"
-                            type="email"
-                          />
+                          <AppTextField v-else v-model="franchiseData.contactDetails.email" label="Email"
+                            placeholder="Enter email address" type="email" />
                         </div>
                       </VCol>
                       <VCol cols="12">
@@ -1365,86 +1175,47 @@ const resolveStatusVariant = (status: string) => {
                           <div class="text-sm text-disabled mb-1">
                             Address
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.contactDetails.address }}
                           </div>
-                          <AppTextarea
-                            v-else
-                            v-model="franchiseData.contactDetails.address"
-                            label="Address"
-                            placeholder="Enter full address"
-                            rows="2"
-                          />
+                          <AppTextarea v-else v-model="franchiseData.contactDetails.address" label="Address"
+                            placeholder="Enter full address" rows="2" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="4"
-                      >
+                      <VCol cols="12" md="4">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             Country
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.contactDetails.country }}
                           </div>
-                          <AppSelect
-                            v-else
-                            v-model="franchiseData.contactDetails.country"
-                            label="Country"
-                            placeholder="Select country"
-                            :items="countries"
-                          />
+                          <AppSelect v-else v-model="franchiseData.contactDetails.country" label="Country"
+                            placeholder="Select country" :items="countries" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="4"
-                      >
+                      <VCol cols="12" md="4">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             State
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.contactDetails.state }}
                           </div>
-                          <AppTextField
-                            v-else
-                            v-model="franchiseData.contactDetails.state"
-                            label="State"
-                            placeholder="Enter state"
-                          />
+                          <AppTextField v-else v-model="franchiseData.contactDetails.state" label="State"
+                            placeholder="Enter state" />
                         </div>
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="4"
-                      >
+                      <VCol cols="12" md="4">
                         <div class="mb-4">
                           <div class="text-sm text-disabled mb-1">
                             City
                           </div>
-                          <div
-                            v-if="!isEditMode"
-                            class="text-body-1"
-                          >
+                          <div v-if="!isEditMode" class="text-body-1">
                             {{ franchiseData.contactDetails.city }}
                           </div>
-                          <AppTextField
-                            v-else
-                            v-model="franchiseData.contactDetails.city"
-                            label="City"
-                            placeholder="Enter city"
-                          />
+                          <AppTextField v-else v-model="franchiseData.contactDetails.city" label="City"
+                            placeholder="Enter city" />
                         </div>
                       </VCol>
                     </VRow>
@@ -1457,20 +1228,10 @@ const resolveStatusVariant = (status: string) => {
           <!-- Action Buttons -->
           <VCardActions class="justify-end">
             <template v-if="isEditMode">
-              <VBtn
-                variant="outlined"
-                prepend-icon="tabler-x"
-                class="me-2"
-                @click="cancelEdit"
-              >
+              <VBtn variant="outlined" prepend-icon="tabler-x" class="me-2" @click="cancelEdit">
                 Cancel
               </VBtn>
-              <VBtn
-                color="primary"
-                :loading="isUpdating"
-                prepend-icon="tabler-device-floppy"
-                @click="saveChanges"
-              >
+              <VBtn color="primary" :loading="isUpdating" prepend-icon="tabler-device-floppy" @click="saveChanges">
                 Save Changes
               </VBtn>
             </template>
@@ -1486,34 +1247,18 @@ const resolveStatusVariant = (status: string) => {
               <h4 class="text-h6">
                 Franchise Documents
               </h4>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-plus"
-                @click="addDocument"
-              >
+              <VBtn color="primary" prepend-icon="tabler-plus" @click="addDocument">
                 Add Document
               </VBtn>
             </div>
 
             <VRow>
-              <template
-                v-for="document in documentsData"
-                :key="document.id"
-              >
-                <VCol
-                  cols="12"
-                  md="6"
-                  lg="4"
-                >
+              <template v-for="document in documentsData" :key="document.id">
+                <VCol cols="12" md="6" lg="4">
                   <VCard>
                     <VCardText>
                       <div class="d-flex align-center mb-3">
-                        <VIcon
-                          icon="tabler-file-text"
-                          size="24"
-                          color="primary"
-                          class="me-3"
-                        />
+                        <VIcon icon="tabler-file-text" size="24" color="primary" class="me-3" />
                         <div>
                           <h6 class="text-h6">
                             {{ document.name }}
@@ -1530,10 +1275,7 @@ const resolveStatusVariant = (status: string) => {
 
                       <div class="d-flex align-center justify-space-between mb-3">
                         <span class="text-body-2 text-disabled">{{ document.file_name }}</span>
-                        <VChip
-                          size="small"
-                          color="secondary"
-                        >
+                        <VChip size="small" color="secondary">
                           {{ document.file_size }}
                         </VChip>
                       </div>
@@ -1544,23 +1286,13 @@ const resolveStatusVariant = (status: string) => {
                     </VCardText>
 
                     <VCardActions>
-                      <VBtn
-                        size="small"
-                        variant="text"
-                        color="primary"
-                        prepend-icon="tabler-download"
-                        @click="downloadDocument(document)"
-                      >
+                      <VBtn size="small" variant="text" color="primary" prepend-icon="tabler-download"
+                        @click="downloadDocument(document)">
                         Download
                       </VBtn>
                       <VSpacer />
-                      <VBtn
-                        size="small"
-                        variant="text"
-                        color="error"
-                        icon="tabler-trash"
-                        @click="confirmDeleteDocument(document)"
-                      />
+                      <VBtn size="small" variant="text" color="error" icon="tabler-trash"
+                        @click="confirmDeleteDocument(document)" />
                     </VCardActions>
                   </VCard>
                 </VCol>
@@ -1576,33 +1308,19 @@ const resolveStatusVariant = (status: string) => {
           <VCardItem class="pb-4">
             <VCardTitle>Franchise Products</VCardTitle>
             <template #append>
-              <VBtn
-                color="primary"
-                prepend-icon="tabler-plus"
-                @click="addProduct"
-              >
+              <VBtn color="primary" prepend-icon="tabler-plus" @click="addProduct">
                 Add Product
               </VBtn>
             </template>
           </VCardItem>
 
           <VCardText>
-            <VDataTable
-              :headers="productHeaders"
-              :items="productsData"
-              item-value="id"
-              class="text-no-wrap"
-              show-select
-            >
+            <VDataTable :headers="productHeaders" :items="productsData" item-value="id" class="text-no-wrap"
+              show-select>
               <!-- Product Name -->
               <template #item.name="{ item }">
                 <div class="d-flex align-center gap-x-4">
-                  <VAvatar
-                    size="34"
-                    color="primary"
-                    variant="tonal"
-                    class="text-primary"
-                  >
+                  <VAvatar size="34" color="primary" variant="tonal" class="text-primary">
                     <VIcon icon="tabler-package" />
                   </VAvatar>
                   <div class="d-flex flex-column">
@@ -1639,12 +1357,7 @@ const resolveStatusVariant = (status: string) => {
 
               <!-- Status -->
               <template #item.status="{ item }">
-                <VChip
-                  :color="resolveStatusVariant(item.status)"
-                  size="small"
-                  class="text-capitalize"
-                  label
-                >
+                <VChip :color="resolveStatusVariant(item.status)" size="small" class="text-capitalize" label>
                   {{ item.status }}
                 </VChip>
               </template>
@@ -1666,10 +1379,7 @@ const resolveStatusVariant = (status: string) => {
     </VWindow>
 
     <!-- Add Document Modal -->
-    <VDialog
-      v-model="isAddDocumentModalVisible"
-      max-width="600"
-    >
+    <VDialog v-model="isAddDocumentModalVisible" max-width="600">
       <VCard>
         <VCardTitle>Add New Document</VCardTitle>
 
@@ -1677,29 +1387,16 @@ const resolveStatusVariant = (status: string) => {
           <VForm>
             <VRow>
               <VCol cols="12">
-                <AppTextField
-                  v-model="selectedDocument.name"
-                  label="Document Name"
-                  placeholder="Enter document name"
-                  required
-                />
+                <AppTextField v-model="selectedDocument.name" label="Document Name" placeholder="Enter document name"
+                  required />
               </VCol>
               <VCol cols="12">
-                <AppTextarea
-                  v-model="selectedDocument.description"
-                  label="Description"
-                  placeholder="Enter document description"
-                  rows="3"
-                />
+                <AppTextarea v-model="selectedDocument.description" label="Description"
+                  placeholder="Enter document description" rows="3" />
               </VCol>
               <VCol cols="12">
-                <VFileInput
-                  v-model="selectedDocument.file"
-                  label="Attach File"
-                  accept=".pdf,.doc,.docx"
-                  prepend-icon="tabler-paperclip"
-                  required
-                />
+                <VFileInput v-model="selectedDocument.file" label="Attach File" accept=".pdf,.doc,.docx"
+                  prepend-icon="tabler-paperclip" required />
               </VCol>
             </VRow>
           </VForm>
@@ -1707,17 +1404,10 @@ const resolveStatusVariant = (status: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="outlined"
-            @click="isAddDocumentModalVisible = false"
-          >
+          <VBtn color="secondary" variant="outlined" @click="isAddDocumentModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="saveDocument"
-          >
+          <VBtn color="primary" @click="saveDocument">
             Add Document
           </VBtn>
         </VCardActions>
@@ -1725,91 +1415,39 @@ const resolveStatusVariant = (status: string) => {
     </VDialog>
 
     <!-- Add/Edit Product Modal -->
-    <VDialog
-      v-model="isProductModalVisible"
-      max-width="600"
-    >
+    <VDialog v-model="isProductModalVisible" max-width="600">
       <VCard>
         <VCardTitle>{{ selectedProduct.id ? 'Edit Product' : 'Add New Product' }}</VCardTitle>
 
         <VCardText>
           <VForm>
             <VRow>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  v-model="selectedProduct.name"
-                  label="Product Name"
-                  placeholder="Enter product name"
-                  required
-                />
+              <VCol cols="12" md="6">
+                <AppTextField v-model="selectedProduct.name" label="Product Name" placeholder="Enter product name"
+                  required />
               </VCol>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  v-model="selectedProduct.sku"
-                  label="SKU"
-                  placeholder="Enter product SKU"
-                  required
-                />
+              <VCol cols="12" md="6">
+                <AppTextField v-model="selectedProduct.sku" label="SKU" placeholder="Enter product SKU" required />
               </VCol>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppSelect
-                  v-model="selectedProduct.category"
-                  label="Category"
-                  :items="productCategories"
-                  placeholder="Select category"
-                />
+              <VCol cols="12" md="6">
+                <AppSelect v-model="selectedProduct.category" label="Category" :items="productCategories"
+                  placeholder="Select category" />
               </VCol>
               <VCol cols="12">
-                <AppTextarea
-                  v-model="selectedProduct.description"
-                  label="Description"
-                  placeholder="Enter product description"
-                  rows="3"
-                />
+                <AppTextarea v-model="selectedProduct.description" label="Description"
+                  placeholder="Enter product description" rows="3" />
               </VCol>
-              <VCol
-                cols="12"
-                md="4"
-              >
-                <AppTextField
-                  v-model.number="selectedProduct.unit_price"
-                  label="Unit Price"
-                  type="number"
-                  placeholder="0.00"
-                  prefix="$"
-                  step="0.01"
-                />
+              <VCol cols="12" md="4">
+                <AppTextField v-model.number="selectedProduct.unit_price" label="Unit Price" type="number"
+                  placeholder="0.00" prefix="$" step="0.01" />
               </VCol>
-              <VCol
-                cols="12"
-                md="4"
-              >
-                <AppTextField
-                  v-model.number="selectedProduct.stock"
-                  label="Stock Quantity"
-                  type="number"
-                  placeholder="0"
-                />
+              <VCol cols="12" md="4">
+                <AppTextField v-model.number="selectedProduct.stock" label="Stock Quantity" type="number"
+                  placeholder="0" />
               </VCol>
-              <VCol
-                cols="12"
-                md="4"
-              >
-                <AppSelect
-                  v-model="selectedProduct.status"
-                  label="Status"
-                  :items="productStatuses"
-                  placeholder="Select status"
-                />
+              <VCol cols="12" md="4">
+                <AppSelect v-model="selectedProduct.status" label="Status" :items="productStatuses"
+                  placeholder="Select status" />
               </VCol>
             </VRow>
           </VForm>
@@ -1817,17 +1455,10 @@ const resolveStatusVariant = (status: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="outlined"
-            @click="isProductModalVisible = false"
-          >
+          <VBtn color="secondary" variant="outlined" @click="isProductModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="primary"
-            @click="saveProduct"
-          >
+          <VBtn color="primary" @click="saveProduct">
             {{ selectedProduct.id ? 'Update Product' : 'Add Product' }}
           </VBtn>
         </VCardActions>
@@ -1835,10 +1466,7 @@ const resolveStatusVariant = (status: string) => {
     </VDialog>
 
     <!-- Delete Product Confirmation -->
-    <VDialog
-      v-model="isDeleteProductModalVisible"
-      max-width="400"
-    >
+    <VDialog v-model="isDeleteProductModalVisible" max-width="400">
       <VCard>
         <VCardTitle>Delete Product</VCardTitle>
 
@@ -1848,17 +1476,10 @@ const resolveStatusVariant = (status: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="outlined"
-            @click="isDeleteProductModalVisible = false"
-          >
+          <VBtn color="secondary" variant="outlined" @click="isDeleteProductModalVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteProduct"
-          >
+          <VBtn color="error" @click="deleteProduct">
             Delete
           </VBtn>
         </VCardActions>
@@ -1866,10 +1487,7 @@ const resolveStatusVariant = (status: string) => {
     </VDialog>
 
     <!-- Delete Document Confirmation -->
-    <VDialog
-      v-model="isDeleteDocumentDialogVisible"
-      max-width="500"
-    >
+    <VDialog v-model="isDeleteDocumentDialogVisible" max-width="500">
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -1881,17 +1499,10 @@ const resolveStatusVariant = (status: string) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDocumentDialogVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isDeleteDocumentDialogVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteDocument"
-          >
+          <VBtn color="error" @click="deleteDocument">
             Delete
           </VBtn>
         </VCardActions>
@@ -1899,20 +1510,11 @@ const resolveStatusVariant = (status: string) => {
     </VDialog>
 
     <!-- Snackbar for notifications -->
-    <VSnackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      location="top end"
-      timeout="4000"
-    >
+    <VSnackbar v-model="snackbar.show" :color="snackbar.color" location="top end" timeout="4000">
       {{ snackbar.message }}
 
       <template #actions>
-        <VBtn
-          color="white"
-          variant="text"
-          @click="snackbar.show = false"
-        >
+        <VBtn color="white" variant="text" @click="snackbar.show = false">
           Close
         </VBtn>
       </template>

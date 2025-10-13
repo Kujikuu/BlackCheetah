@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { useAbility } from '@/plugins/casl/useAbility'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import { h } from 'vue'
 import { useDisplay } from 'vuetify'
-import { useAbility } from '@/plugins/casl/useAbility'
 
 definePage({
   meta: {
@@ -171,7 +171,7 @@ const isFormValid = computed(() => {
 
               <!-- Phone -->
               <VCol cols="12">
-                <AppTextField v-model="form.phone" label="Phone Number" placeholder="+1 (555) 123-4567"
+                <AppTextField v-model="form.phone" label="Phone Number" placeholder="+966 50 123 4567"
                   :error-messages="errorMessages?.phone" required />
               </VCol>
 
