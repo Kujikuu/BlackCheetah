@@ -21,6 +21,33 @@ use Illuminate\Support\Facades\DB;
 class FranchisorController extends Controller
 {
     /**
+     * Parse sorting parameters from request
+     * Handles both string and JSON object formats
+     */
+    private function parseSortParams(Request $request, string $defaultColumn = 'created_at', string $defaultOrder = 'desc'): array
+    {
+        $sortBy = $request->get('sortBy', $defaultColumn);
+
+        // Handle if sortBy is a JSON string
+        if (is_string($sortBy) && (str_starts_with($sortBy, '{') || str_starts_with($sortBy, '['))) {
+            $sortByDecoded = json_decode($sortBy, true);
+            if ($sortByDecoded && isset($sortByDecoded['key'])) {
+                return [
+                    'column' => $sortByDecoded['key'],
+                    'order' => $sortByDecoded['order'] ?? $defaultOrder,
+                ];
+            }
+
+            return ['column' => $defaultColumn, 'order' => $defaultOrder];
+        }
+
+        return [
+            'column' => $sortBy,
+            'order' => $request->get('sortOrder', $defaultOrder),
+        ];
+    }
+
+    /**
      * Get franchisor dashboard statistics
      */
     public function dashboardStats(): JsonResponse
@@ -290,9 +317,8 @@ class FranchisorController extends Controller
             }
 
             // Apply sorting
-            $sortBy = $request->get('sortBy', 'created_at');
-            $sortOrder = $request->get('sortOrder', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sort = $this->parseSortParams($request);
+            $query->orderBy($sort['column'], $sort['order']);
 
             // Pagination
             $perPage = $request->get('perPage', 10);
@@ -413,9 +439,8 @@ class FranchisorController extends Controller
             }
 
             // Apply sorting
-            $sortBy = $request->get('sortBy', 'created_at');
-            $sortOrder = $request->get('sortOrder', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sort = $this->parseSortParams($request);
+            $query->orderBy($sort['column'], $sort['order']);
 
             // Pagination
             $perPage = $request->get('perPage', 10);
@@ -638,9 +663,8 @@ class FranchisorController extends Controller
             }
 
             // Apply sorting
-            $sortBy = $request->get('sortBy', 'created_at');
-            $sortOrder = $request->get('sortOrder', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sort = $this->parseSortParams($request);
+            $query->orderBy($sort['column'], $sort['order']);
 
             // Pagination
             $perPage = $request->get('perPage', 10);
@@ -710,9 +734,8 @@ class FranchisorController extends Controller
             }
 
             // Apply sorting
-            $sortBy = $request->get('sortBy', 'created_at');
-            $sortOrder = $request->get('sortOrder', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sort = $this->parseSortParams($request);
+            $query->orderBy($sort['column'], $sort['order']);
 
             // Pagination
             $perPage = $request->get('perPage', 10);
@@ -769,9 +792,8 @@ class FranchisorController extends Controller
             }
 
             // Apply sorting
-            $sortBy = $request->get('sortBy', 'created_at');
-            $sortOrder = $request->get('sortOrder', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sort = $this->parseSortParams($request);
+            $query->orderBy($sort['column'], $sort['order']);
 
             // Pagination
             $perPage = $request->get('perPage', 10);
@@ -780,6 +802,7 @@ class FranchisorController extends Controller
             // Transform the data to include assignedLeads count
             $salesAssociates->getCollection()->transform(function ($associate) {
                 $name = $associate->name;
+
                 return [
                     'id' => $associate->id,
                     'name' => $name,

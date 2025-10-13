@@ -21,6 +21,33 @@ use Illuminate\Support\Str;
 class AdminController extends Controller
 {
     /**
+     * Parse sorting parameters from request
+     * Handles both string and JSON object formats
+     */
+    private function parseSortParams(Request $request, string $defaultColumn = 'created_at', string $defaultOrder = 'desc'): array
+    {
+        $sortBy = $request->get('sortBy', $defaultColumn);
+
+        // Handle if sortBy is a JSON string
+        if (is_string($sortBy) && (str_starts_with($sortBy, '{') || str_starts_with($sortBy, '['))) {
+            $sortByDecoded = json_decode($sortBy, true);
+            if ($sortByDecoded && isset($sortByDecoded['key'])) {
+                return [
+                    'column' => $sortByDecoded['key'],
+                    'order' => $sortByDecoded['order'] ?? $defaultOrder,
+                ];
+            }
+
+            return ['column' => $defaultColumn, 'order' => $defaultOrder];
+        }
+
+        return [
+            'column' => $sortBy,
+            'order' => $request->get('sortOrder', $defaultOrder),
+        ];
+    }
+
+    /**
      * Get admin dashboard statistics
      */
     public function dashboardStats(): JsonResponse
@@ -235,9 +262,8 @@ class AdminController extends Controller
             }
 
             // Apply sorting
-            $sortBy = $request->get('sortBy', 'created_at');
-            $sortOrder = $request->get('sortOrder', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sort = $this->parseSortParams($request);
+            $query->orderBy($sort['column'], $sort['order']);
 
             // Paginate results
             $perPage = $request->get('perPage', 10);
@@ -295,9 +321,8 @@ class AdminController extends Controller
             }
 
             // Apply sorting
-            $sortBy = $request->get('sortBy', 'created_at');
-            $sortOrder = $request->get('sortOrder', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sort = $this->parseSortParams($request);
+            $query->orderBy($sort['column'], $sort['order']);
 
             // Paginate results
             $perPage = $request->get('perPage', 10);
@@ -354,9 +379,8 @@ class AdminController extends Controller
             }
 
             // Apply sorting
-            $sortBy = $request->get('sortBy', 'created_at');
-            $sortOrder = $request->get('sortOrder', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sort = $this->parseSortParams($request);
+            $query->orderBy($sort['column'], $sort['order']);
 
             // Paginate results
             $perPage = $request->get('perPage', 10);
@@ -636,9 +660,8 @@ class AdminController extends Controller
             }
 
             // Apply sorting
-            $sortBy = $request->get('sortBy', 'created_at');
-            $sortOrder = $request->get('sortOrder', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sort = $this->parseSortParams($request);
+            $query->orderBy($sort['column'], $sort['order']);
 
             // Paginate results
             $perPage = $request->get('perPage', 10);

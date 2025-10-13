@@ -140,25 +140,25 @@ const submitForm = async () => {
       body: franchiseeUnitData,
     })
 
-    if (response.data.success) {
+    if (response.success) {
       // Transform the response to match expected format
       const transformedData = {
-        id: response.data.data.unit.id,
-        name: response.data.data.unit.unit_name,
-        email: response.data.data.franchisee.email,
-        phone: response.data.data.franchisee.phone,
-        type: response.data.data.unit.unit_type,
-        sizeSqft: response.data.data.unit.size_sqft,
+        id: response.data.unit.id,
+        name: response.data.unit.unit_name,
+        email: response.data.franchisee.email,
+        phone: response.data.franchisee.phone,
+        type: response.data.unit.unit_type,
+        sizeSqft: response.data.unit.size_sqft,
         capacity: null, // Not available in unit response
-        openingDate: response.data.data.unit.opening_date,
-        monthlyRent: response.data.data.unit.monthly_rent,
-        managerId: response.data.data.unit.franchisee_id,
-        managerName: response.data.data.franchisee.name,
-        country: response.data.data.unit.country,
-        state: response.data.data.unit.state_province,
-        city: response.data.data.unit.city,
-        address: response.data.data.unit.address,
-        postalCode: response.data.data.unit.postal_code,
+        openingDate: response.data.unit.opening_date,
+        monthlyRent: response.data.unit.monthly_rent,
+        managerId: response.data.unit.franchisee_id,
+        managerName: response.data.franchisee.name,
+        country: response.data.unit.country,
+        state: response.data.unit.state_province,
+        city: response.data.unit.city,
+        address: response.data.unit.address,
+        postalCode: response.data.unit.postal_code,
       }
 
       emit('franchisee-added', transformedData)
