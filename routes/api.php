@@ -56,6 +56,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
     });
 
+    // Account Settings routes (available for all authenticated users)
+    Route::prefix('v1/account')->group(function () {
+        Route::get('/profile', [\App\Http\Controllers\Api\AccountSettingsController::class, 'getProfile']);
+        Route::put('/profile', [\App\Http\Controllers\Api\AccountSettingsController::class, 'updateProfile']);
+        Route::put('/password', [\App\Http\Controllers\Api\AccountSettingsController::class, 'updatePassword']);
+        Route::post('/avatar', [\App\Http\Controllers\Api\AccountSettingsController::class, 'uploadAvatar']);
+        Route::delete('/avatar', [\App\Http\Controllers\Api\AccountSettingsController::class, 'deleteAvatar']);
+        Route::put('/notifications', [\App\Http\Controllers\Api\AccountSettingsController::class, 'updateNotifications']);
+    });
+
     // Onboarding routes (for franchisees)
     Route::prefix('v1/onboarding')->group(function () {
         Route::get('/status', [OnboardingController::class, 'checkOnboardingStatus']);
