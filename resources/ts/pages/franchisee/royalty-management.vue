@@ -75,12 +75,10 @@ const paymentTypeOptions = [
 
 // Table headers
 const tableHeaders = [
-  { title: 'Billing Period', key: 'billingPeriod', sortable: true },
-  { title: 'Franchisee Name', key: 'franchiseeName', sortable: true },
-  { title: 'Store Location', key: 'storeLocation', sortable: true },
-  { title: 'Due Date', key: 'dueDate', sortable: true },
-  { title: 'Gross Sales (SAR)', key: 'grossSales', sortable: true },
-  { title: 'Royalty %', key: 'royaltyPercentage', sortable: true },
+  { title: 'Billing Period', key: 'billing_period', sortable: true },
+  { title: 'Due Date', key: 'due_date', sortable: true },
+  { title: 'Gross Sales (SAR)', key: 'gross_sales', sortable: true },
+  { title: 'Royalty %', key: 'royalty_percentage', sortable: true },
   { title: 'Amount (SAR)', key: 'amount', sortable: true },
   { title: 'Status', key: 'status', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false },
@@ -245,7 +243,7 @@ onMounted(() => {
           <div class="d-flex gap-3 align-center flex-wrap">
             <!-- Period Selector -->
             <VSelect v-model="selectedPeriod" :items="periodOptions" item-title="title" item-value="value"
-              density="compact" style="min-width: 120px;" variant="outlined" />
+              density='comfortable' style="min-width: 120px;" variant="outlined" />
 
             <!-- Export Button -->
             <VBtn color="primary" variant="elevated" @click="openExportDialog">
@@ -325,42 +323,28 @@ onMounted(() => {
 
           <VDataTable :headers="tableHeaders" :items="royaltyRecords" :items-per-page="10" class="text-no-wrap">
             <!-- Billing Period Column -->
-            <template #item.billingPeriod="{ item }">
+            <template #item.billing_period="{ item }">
               <div class="font-weight-medium">
                 {{ item.billing_period }}
               </div>
             </template>
 
-            <!-- Franchisee Name Column -->
-            <template #item.franchiseeName="{ item }">
-              <div class="font-weight-medium text-primary">
-                {{ item.franchisee_name }}
-              </div>
-            </template>
-
-            <!-- Store Location Column -->
-            <template #item.storeLocation="{ item }">
-              <div class="text-body-2 text-medium-emphasis">
-                {{ item.store_location }}
-              </div>
-            </template>
-
             <!-- Due Date Column -->
-            <template #item.dueDate="{ item }">
+            <template #item.due_date="{ item }">
               <div class="text-body-2">
                 {{ formatDate(item.due_date) }}
               </div>
             </template>
 
             <!-- Gross Sales Column -->
-            <template #item.grossSales="{ item }">
+            <template #item.gross_sales="{ item }">
               <div class="font-weight-medium text-info">
                 {{ (item.gross_sales || 0).toLocaleString() }}
               </div>
             </template>
 
             <!-- Royalty Percentage Column -->
-            <template #item.royaltyPercentage="{ item }">
+            <template #item.royalty_percentage="{ item }">
               <VChip size="small" variant="tonal" color="primary">
                 {{ item.royalty_percentage }}%
               </VChip>

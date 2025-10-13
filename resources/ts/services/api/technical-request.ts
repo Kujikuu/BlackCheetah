@@ -9,7 +9,7 @@ export interface TechnicalRequest {
   ticket_number: string
   title: string
   description: string
-  category: 'bug' | 'feature_request' | 'technical_issue' | 'system_error' | 'performance' | 'security' | 'integration' | 'other'
+  category: 'hardware' | 'software' | 'network' | 'pos_system' | 'website' | 'mobile_app' | 'training' | 'other'
   priority: 'low' | 'medium' | 'high' | 'urgent'
   status: 'open' | 'in_progress' | 'pending_info' | 'resolved' | 'closed' | 'cancelled'
   requester_id: number

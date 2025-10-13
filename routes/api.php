@@ -437,8 +437,9 @@ Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('v1/unit-manager'
     Route::get('revenues', [RevenueController::class, 'myUnitRevenues']);
     Route::get('technical-requests', [TechnicalRequestController::class, 'myUnitRequests']);
     Route::get('royalties', [RoyaltyController::class, 'myUnitRoyalties']);
-    Route::patch('royalties/{royalty}/mark-paid', [RoyaltyController::class, 'markAsPaid']);
     Route::get('royalties/statistics', [RoyaltyController::class, 'myUnitRoyaltyStatistics']);
+    Route::get('royalties/export', [RoyaltyController::class, 'exportMyUnitRoyalties']);
+    Route::patch('royalties/{royalty}/mark-paid', [RoyaltyController::class, 'markAsPaid']);
 
     // Statistics for unit manager
     Route::get('statistics', [UnitController::class, 'myUnitStatistics']);
