@@ -198,13 +198,13 @@ const isFormValid = computed(() => {
               </VCol>
 
               <VCol cols="12" md="6">
-                <AppTextField v-model="form.state" label="State/Province" placeholder="California"
+                <AppTextField v-model="form.state" label="State/Province" placeholder="Riyadh"
                   :error-messages="errorMessages?.state" required />
               </VCol>
 
               <!-- City -->
               <VCol cols="12">
-                <AppTextField v-model="form.city" label="City" placeholder="Los Angeles"
+                <AppTextField v-model="form.city" label="City" placeholder="Riyadh"
                   :error-messages="errorMessages?.city" required />
               </VCol>
 
