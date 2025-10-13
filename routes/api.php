@@ -431,6 +431,8 @@ Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('v1/unit-manager'
     // Unit manager can only access their unit data
     Route::get('unit', [UnitController::class, 'myUnit']);
     Route::get('tasks', [TaskController::class, 'myUnitTasks']);
+    Route::get('my-tasks', [FranchiseeDashboardController::class, 'myTasks']);
+    Route::patch('my-tasks/{taskId}/status', [FranchiseeDashboardController::class, 'updateMyTaskStatus']);
     Route::get('transactions', [TransactionController::class, 'myUnitTransactions']);
     Route::get('revenues', [RevenueController::class, 'myUnitRevenues']);
     Route::get('technical-requests', [TechnicalRequestController::class, 'myUnitRequests']);

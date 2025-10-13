@@ -1908,6 +1908,115 @@ class FranchiseeDashboardController extends Controller
     }
 
     /**
+     * Get all tasks for the current franchisee (unit tasks + assigned tasks)
+     */
+    public function myTasks(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $unit = Unit::where('franchisee_id', $user->id)->first();
+
+        if (! $unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No unit found for current user',
+            ], 404);
+        }
+
+        // Get all tasks related to this unit or assigned to the user
+        $tasks = \App\Models\Task::with(['assignedTo', 'createdBy', 'unit', 'franchise'])
+            ->where(function ($query) use ($unit, $user) {
+                $query->where('unit_id', $unit->id)
+                    ->orWhere('assigned_to', $user->id)
+                    ->orWhere('created_by', $user->id);
+            })
+            ->orderBy('due_date', 'asc')
+            ->orderBy('priority', 'desc')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'description' => $task->description,
+                    'category' => $task->category, // This uses the accessor that maps type to category
+                    'assignedTo' => $task->assignedTo ? $task->assignedTo->name : 'Unassigned',
+                    'unitName' => $task->unit ? $task->unit->branch_name : 'N/A',
+                    'startDate' => $task->started_at ? $task->started_at->format('Y-m-d') : $task->created_at->format('Y-m-d'),
+                    'dueDate' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
+                    'priority' => $task->priority,
+                    'status' => $task->status,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $tasks,
+            'message' => 'Tasks retrieved successfully',
+        ]);
+    }
+
+    /**
+     * Update task status for my tasks
+     */
+    public function updateMyTaskStatus(Request $request, $taskId): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:pending,in_progress,completed,cancelled,on_hold',
+        ]);
+
+        $user = $request->user();
+        $unit = Unit::where('franchisee_id', $user->id)->first();
+
+        if (! $unit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No unit found for current user',
+            ], 404);
+        }
+
+        $task = \App\Models\Task::where(function ($query) use ($unit, $user) {
+            $query->where('unit_id', $unit->id)
+                ->orWhere('assigned_to', $user->id)
+                ->orWhere('created_by', $user->id);
+        })->find($taskId);
+
+        if (! $task) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Task not found or you do not have permission to update it',
+            ], 404);
+        }
+
+        $task->update(['status' => $validated['status']]);
+
+        // Update completed_at timestamp if status is completed
+        if ($validated['status'] === 'completed' && ! $task->completed_at) {
+            $task->update(['completed_at' => now()]);
+        }
+
+        // Update started_at timestamp if status is in_progress and not already started
+        if ($validated['status'] === 'in_progress' && ! $task->started_at) {
+            $task->update(['started_at' => now()]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'description' => $task->description,
+                'category' => $task->category,
+                'assignedTo' => $task->assignedTo ? $task->assignedTo->name : 'Unassigned',
+                'unitName' => $task->unit ? $task->unit->branch_name : 'N/A',
+                'startDate' => $task->started_at ? $task->started_at->format('Y-m-d') : $task->created_at->format('Y-m-d'),
+                'dueDate' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
+                'priority' => $task->priority,
+                'status' => $task->status,
+            ],
+            'message' => 'Task status updated successfully',
+        ]);
+    }
+
+    /**
      * Get role display name
      */
     private function getRoleDisplayName(string $role): string

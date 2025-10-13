@@ -262,6 +262,19 @@ export const franchiseeDashboardApi = {
     return await $api<ApiResponse<UnitTask[]>>(url)
   },
 
+  // Get my tasks (all tasks assigned to or created by current user)
+  async getMyTasks(): Promise<ApiResponse<UnitTask[]>> {
+    return await $api<ApiResponse<UnitTask[]>>(`${API_URL}/my-tasks`)
+  },
+
+  // Update my task status
+  async updateMyTaskStatus(taskId: number, status: string): Promise<ApiResponse<UnitTask>> {
+    return await $api<ApiResponse<UnitTask>>(`${API_URL}/my-tasks/${taskId}/status`, {
+      method: 'PATCH',
+      body: { status },
+    })
+  },
+
   // Get unit staff members
   async getUnitStaff(unitId?: number): Promise<ApiResponse<UnitStaff[]>> {
     const url = unitId ? `${API_URL}/units/staff/${unitId}` : `${API_URL}/units/staff`
