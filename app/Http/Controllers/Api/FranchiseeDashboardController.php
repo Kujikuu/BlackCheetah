@@ -1146,7 +1146,7 @@ class FranchiseeDashboardController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255|unique:staff,email,'.$staffId,
+            'email' => 'sometimes|email|max:255|unique:staff,email,' . $staffId,
             'phone' => 'sometimes|nullable|string|max:20',
             'jobTitle' => 'sometimes|string|max:100',
             'department' => 'sometimes|nullable|string|max:100',
@@ -1694,7 +1694,7 @@ class FranchiseeDashboardController extends Controller
             'fileSize' => 'required|string|max:50',
             'type' => 'required|string|max:100',
             'status' => 'sometimes|in:approved,pending,rejected',
-            'comment' => 'sometimes|string|max:500',
+            'comment' => 'nullable|string|max:500',
         ]);
 
         $documents = $unit->documents ?? [];

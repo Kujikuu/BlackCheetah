@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
-import misc404 from '@images/pages/404.png'
 import miscMaskDark from '@images/pages/misc-mask-dark.png'
 import miscMaskLight from '@images/pages/misc-mask-light.png'
 
@@ -17,16 +16,10 @@ definePage({
 
 <template>
   <div class="misc-wrapper">
-    <ErrorHeader
-      status-code="404"
-      title="Page Not Found ⚠️"
-      description="We couldn't find the page you are looking for."
-    />
+    <ErrorHeader status-code="404" title="Page Not Found ⚠️"
+      description="We couldn't find the page you are looking for." />
 
-    <VBtn
-      to="/"
-      class="mb-11"
-    >
+    <VBtn to="/" class="mb-11">
       Back to Home
     </VBtn>
 
@@ -45,8 +38,8 @@ definePage({
       :src="authThemeMask"
       alt="misc-footer-img"
       height="320"
-    >
-  </div> -->
+    > -->
+  </div>
 </template>
 
 <style lang="scss">
