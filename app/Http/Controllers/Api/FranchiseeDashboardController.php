@@ -2387,15 +2387,44 @@ class FranchiseeDashboardController extends Controller
         ]);
 
         if ($validated['category'] === 'sales') {
-            // Create revenue with line item
+            // Find the product
             $product = Product::where('franchise_id', $unit->franchise_id)
                 ->where('name', $validated['product'])
                 ->first();
 
-            $unitPrice = $product ? (float) $product->unit_price : 0;
+            if (! $product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+
+            // Check inventory
+            $inventory = \App\Models\Inventory::where('unit_id', $unit->id)
+                ->where('product_id', $product->id)
+                ->first();
+
+            if (! $inventory) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not available in your unit inventory',
+                ], 400);
+            }
+
             $quantity = (int) $validated['quantitySold'];
+
+            // Validate stock availability
+            if ($inventory->quantity < $quantity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient stock. Only {$inventory->quantity} units available",
+                ], 400);
+            }
+
+            $unitPrice = (float) $product->unit_price;
             $saleAmount = $unitPrice * $quantity;
 
+            // Create revenue with line item
             $revenue = Revenue::create([
                 'revenue_number' => 'REV' . now()->timestamp . rand(1000, 9999),
                 'franchise_id' => $unit->franchise_id,
@@ -2422,6 +2451,10 @@ class FranchiseeDashboardController extends Controller
                 ],
             ]);
 
+            // Update inventory - reduce stock quantity
+            $inventory->decrement('quantity', $quantity);
+            $inventory->refresh(); // Refresh to get the updated quantity
+
             return response()->json([
                 'success' => true,
                 'message' => 'Sales data added successfully',
@@ -2432,6 +2465,7 @@ class FranchiseeDashboardController extends Controller
                     'unitPrice' => $unitPrice,
                     'quantitySold' => $quantity,
                     'sale' => $saleAmount,
+                    'remainingStock' => $inventory->quantity,
                 ],
             ], 201);
         } else {

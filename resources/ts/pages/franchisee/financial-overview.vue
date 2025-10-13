@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type {
   AddFinancialDataPayload,
-  FinancialOverviewData
+  FinancialOverviewData,
+  UnitProduct
 } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 import { computed, onMounted, ref } from 'vue'
@@ -31,6 +32,9 @@ const isLoading = ref(false)
 // Financial data
 const financialData = ref<FinancialOverviewData | null>(null)
 
+// Unit products
+const unitProducts = ref<UnitProduct[]>([])
+
 // Form data
 const addDataForm = ref<AddDataForm>({
   product: '',
@@ -58,6 +62,19 @@ const loadFinancialData = async () => {
   }
 }
 
+// Load unit products from API
+const loadUnitProducts = async () => {
+  try {
+    const response = await franchiseeDashboardApi.getUnitProducts()
+    if (response.success) {
+      unitProducts.value = response.data
+    }
+  }
+  catch (error) {
+    console.error('Error loading unit products:', error)
+  }
+}
+
 // Computed properties for data
 const salesData = computed(() => financialData.value?.sales || [])
 const expenseData = computed(() => financialData.value?.expenses || [])
@@ -66,21 +83,46 @@ const profitData = computed(() => financialData.value?.profit || [])
 // Load data on mount
 onMounted(() => {
   loadFinancialData()
+  loadUnitProducts()
 })
 
-// Product options for sales form
-const productOptions = [
-  'Burger Deluxe',
-  'Chicken Wings',
-  'Caesar Salad',
-  'Fish & Chips',
-  'Pasta Carbonara',
-  'Grilled Salmon',
-  'Beef Steak',
-  'Vegetarian Pizza',
-  'Chicken Sandwich',
-  'Greek Salad',
-]
+// Computed product options from unit stock
+const productOptions = computed(() => {
+  return unitProducts.value
+    .filter(product => product.status === 'active' && product.stock > 0)
+    .map(product => ({
+      title: `${product.name} (${product.stock} in stock)`,
+      value: product.name,
+      stock: product.stock,
+    }))
+})
+
+// Get selected product's stock
+const selectedProductStock = computed(() => {
+  if (!addDataForm.value.product)
+    return 0
+  const product = unitProducts.value.find(p => p.name === addDataForm.value.product)
+  return product?.stock || 0
+})
+
+// Validate quantity against available stock
+const isQuantityValid = computed(() => {
+  if (selectedCategory.value !== 'sales')
+    return true
+  return addDataForm.value.quantitySold > 0
+    && addDataForm.value.quantitySold <= selectedProductStock.value
+})
+
+// Error message for quantity validation
+const quantityErrorMessage = computed(() => {
+  if (!addDataForm.value.product)
+    return ''
+  if (addDataForm.value.quantitySold === 0)
+    return 'Quantity must be greater than 0'
+  if (addDataForm.value.quantitySold > selectedProductStock.value)
+    return `Cannot exceed available stock (${selectedProductStock.value} units)`
+  return ''
+})
 
 // Expense category options
 const expenseCategoryOptions = [
@@ -188,6 +230,11 @@ const resetForm = () => {
 }
 
 const saveData = async () => {
+  // Validate quantity for sales
+  if (selectedCategory.value === 'sales' && !isQuantityValid.value) {
+    return
+  }
+
   isLoading.value = true
   try {
     const payload: AddFinancialDataPayload = {
@@ -207,14 +254,19 @@ const saveData = async () => {
 
     const response = await franchiseeDashboardApi.addFinancialData(payload)
     if (response.success) {
-      // Reload data to get updated list
+      // Reload data to get updated list and fresh stock quantities
       await loadFinancialData()
+      await loadUnitProducts()
       isAddDataModalVisible.value = false
       resetForm()
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error saving data:', error)
+    // Handle specific error messages from backend
+    if (error.response?.data?.message) {
+      alert(error.response.data.message)
+    }
   }
   finally {
     isLoading.value = false
@@ -476,14 +528,19 @@ const handleImport = () => {
             <template v-if="selectedCategory === 'sales'">
               <VCol cols="12">
                 <VSelect v-model="addDataForm.product" :items="productOptions" label="Product" variant="outlined"
-                  required />
+                  item-title="title" item-value="value" :loading="unitProducts.length === 0"
+                  :disabled="unitProducts.length === 0"
+                  :hint="unitProducts.length === 0 ? 'No products available in stock' : ''" persistent-hint required />
               </VCol>
               <VCol cols="12">
                 <VTextField v-model="addDataForm.date" label="Date" type="date" variant="outlined" required />
               </VCol>
               <VCol cols="12">
                 <VTextField v-model.number="addDataForm.quantitySold" label="Quantity Sold" type="number"
-                  variant="outlined" required />
+                  variant="outlined" required :min="1" :max="selectedProductStock" :error="!!quantityErrorMessage"
+                  :error-messages="quantityErrorMessage"
+                  :hint="selectedProductStock > 0 ? `Available stock: ${selectedProductStock} units` : ''"
+                  persistent-hint :disabled="!addDataForm.product" />
               </VCol>
             </template>
 
@@ -511,7 +568,8 @@ const handleImport = () => {
         <VBtn variant="outlined" @click="isAddDataModalVisible = false">
           Cancel
         </VBtn>
-        <VBtn color="primary" @click="saveData">
+        <VBtn color="primary" @click="saveData" :disabled="selectedCategory === 'sales' && !isQuantityValid"
+          :loading="isLoading">
           Save
         </VBtn>
       </VCardActions>
