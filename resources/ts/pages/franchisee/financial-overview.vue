@@ -30,6 +30,7 @@ const importCategory = ref('sales')
 const isLoading = ref(false)
 const isEditMode = ref(false)
 const editItemId = ref<string>('')
+const dateFilter = ref<'daily' | 'monthly' | 'yearly'>('monthly')
 
 // Financial data
 const financialData = ref<FinancialOverviewData | null>(null)
@@ -194,25 +195,63 @@ const filteredExpenseData = computed(() => {
 })
 
 const filteredProfitData = computed(() => {
-  if (!searchQuery.value)
-    return profitData.value
+  let data = filteredProfitByPeriod.value
 
-  return profitData.value.filter(item =>
-    item.date.includes(searchQuery.value),
-  )
+  if (searchQuery.value) {
+    data = data.filter(item =>
+      item.date.includes(searchQuery.value),
+    )
+  }
+
+  return data
 })
 
-// Computed stat cards data
+// Filter options
+const dateFilterOptions = [
+  { title: 'Daily', value: 'daily' },
+  { title: 'Monthly', value: 'monthly' },
+  { title: 'Yearly', value: 'yearly' },
+]
+
+// Helper function to check if date is within filter period
+const isDateInFilterPeriod = (dateString: string): boolean => {
+  const itemDate = new Date(dateString)
+  const now = new Date()
+
+  if (dateFilter.value === 'daily') {
+    return itemDate.toDateString() === now.toDateString()
+  } else if (dateFilter.value === 'monthly') {
+    return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear()
+  } else if (dateFilter.value === 'yearly') {
+    return itemDate.getFullYear() === now.getFullYear()
+  }
+  return true
+}
+
+// Filtered data by date period
+const filteredSalesByPeriod = computed(() => {
+  return salesData.value.filter(item => isDateInFilterPeriod(item.dateOfSale))
+})
+
+const filteredExpensesByPeriod = computed(() => {
+  return expenseData.value.filter(item => isDateInFilterPeriod(item.dateOfExpense))
+})
+
+const filteredProfitByPeriod = computed(() => {
+  return profitData.value.filter(item => isDateInFilterPeriod(item.date))
+})
+
+// Computed stat cards data (filtered by period)
 const totalSales = computed(() => {
-  return salesData.value.reduce((sum, item) => sum + item.sale, 0)
+  return filteredSalesByPeriod.value.reduce((sum, item) => sum + item.sale, 0)
 })
 
 const totalExpenses = computed(() => {
-  return expenseData.value.reduce((sum, item) => sum + item.amount, 0)
+  return filteredExpensesByPeriod.value.reduce((sum, item) => sum + item.amount, 0)
 })
 
 const totalProfit = computed(() => {
-  return profitData.value.reduce((sum, item) => sum + item.profit, 0)
+  return filteredProfitByPeriod.value.reduce((sum, item) => sum + item.profit, 0)
 })
 
 // Methods
@@ -399,6 +438,8 @@ const handleImport = () => {
             <VBtn color="primary" prepend-icon="tabler-plus" @click="openAddDataModal(activeTab)">
               Add Data
             </VBtn>
+            <VSelect v-model="dateFilter" :items="dateFilterOptions" item-title="title" item-value="value"
+              density='comfortable' style="min-width: 120px;" variant="outlined" />
           </div>
         </div>
       </VCol>
