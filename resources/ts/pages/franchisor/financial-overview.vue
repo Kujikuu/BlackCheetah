@@ -192,26 +192,26 @@ const tableHeaders = [
 // Headers for different tabs
 const salesHeaders = [
   { title: 'Product', key: 'product', sortable: true },
-  { title: 'Unit Price', key: 'unitPrice', sortable: true },
+  { title: 'Unit Price (SAR)', key: 'unitPrice', sortable: true },
   { title: 'Quantity', key: 'quantity', sortable: true },
-  { title: 'Sale Amount', key: 'sale', sortable: true },
+  { title: 'Sale Amount (SAR)', key: 'sale', sortable: true },
   { title: 'Date', key: 'date', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
 const expensesHeaders = [
   { title: 'Category', key: 'expenseCategory', sortable: true },
-  { title: 'Amount', key: 'amount', sortable: true },
+  { title: 'Amount (SAR)', key: 'amount', sortable: true },
   { title: 'Description', key: 'description', sortable: true },
   { title: 'Date', key: 'date', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
 const profitHeaders = [
-  { title: 'Date', key: 'date', sortable: true },
-  { title: 'Total Sales', key: 'totalSales', sortable: true },
-  { title: 'Total Expenses', key: 'totalExpenses', sortable: true },
-  { title: 'Profit', key: 'profit', sortable: true },
+  { title: 'Period', key: 'date', sortable: true },
+  { title: 'Revenue (SAR)', key: 'totalSales', sortable: true },
+  { title: 'Expenses (SAR)', key: 'totalExpenses', sortable: true },
+  { title: 'Net Profit (SAR)', key: 'profit', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
@@ -306,11 +306,11 @@ const loadTableData = async () => {
     const filters = {
       search: searchQuery.value || undefined,
       page: page.value,
-      perPage: itemsPerPage.value,
+      per_page: itemsPerPage.value,
       sortBy: sortBy.value,
       sortOrder: orderBy.value,
       period: selectedPeriod.value,
-      unit: selectedUnit.value === 'all' ? undefined : selectedUnit.value,
+      unit_id: selectedUnit.value === 'all' ? undefined : selectedUnit.value,
     }
 
     switch (activeTab.value) {
@@ -567,10 +567,28 @@ const deleteItem = async (id: string | number) => {
   }
 }
 
-const editItem = (id: string | number) => {
-  console.log('Editing item:', id)
+const viewItem = (id: string | number) => {
+  const numericId = typeof id === 'string' ? Number.parseInt(id, 10) : id
 
-  // Implementation for edit functionality
+  // Find the item in the current data
+  let item
+  switch (activeTab.value) {
+    case 'sales':
+      item = salesData.value.find(s => s.id === numericId)
+      break
+    case 'expenses':
+      item = expensesData.value.find(e => e.id === numericId)
+      break
+    case 'profit':
+      item = profitData.value.find(p => p.id === numericId)
+      break
+  }
+
+  if (item) {
+    console.log(`Viewing ${activeTab.value} item:`, item)
+    // TODO: Open a modal or navigate to detail page
+    // For now, just log the item details
+  }
 }
 
 const resolveProfitVariant = (profit: number) => {
@@ -609,14 +627,6 @@ onMounted(() => {
           Manage your financial data across sales, expenses, and profit
         </p>
       </div>
-      <div class="d-flex gap-3">
-        <VBtn variant="outlined" prepend-icon="tabler-upload" @click="openImportModal">
-          Import
-        </VBtn>
-        <VBtn prepend-icon="tabler-plus" @click="openAddDataModal">
-          Add Data
-        </VBtn>
-      </div>
     </div>
 
     <!-- Tabs -->
@@ -635,39 +645,28 @@ onMounted(() => {
     <!-- Main Data Table Card -->
     <VCard class="mb-6">
       <VCardText class="d-flex flex-wrap gap-4">
-        <div class="me-3 d-flex gap-3">
+        <div class="me-3 d-flex gap-3 align-center">
+          <span class="text-body-2 text-disabled">Show:</span>
           <AppSelect :model-value="itemsPerPage" :items="[
             { value: 10, title: '10' },
             { value: 25, title: '25' },
             { value: 50, title: '50' },
             { value: 100, title: '100' },
-            { value: -1, title: 'All' },
           ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
-
-          <!-- Bulk Actions -->
-          <VBtn v-if="selectedRows.length > 0" variant="tonal" color="error" @click="bulkDelete">
-            <VIcon icon="tabler-trash" class="me-2" />
-            Delete Selected ({{ selectedRows.length }})
-          </VBtn>
         </div>
         <VSpacer />
 
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- Search -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField v-model="searchQuery" :placeholder="`Search ${activeTab}...`" />
+            <AppTextField v-model="searchQuery" :placeholder="`Search ${activeTab}...`"
+              prepend-inner-icon="tabler-search" />
           </div>
 
           <!-- Export button -->
-          <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload" :disabled="!currentSelectedRows.length"
+          <VBtn variant="tonal" color="secondary" prepend-icon="tabler-download" :disabled="!currentSelectedRows.length"
             @click="exportData">
-            Export
-          </VBtn>
-
-          <!-- Delete button -->
-          <VBtn variant="tonal" color="error" prepend-icon="tabler-trash" :disabled="!currentSelectedRows.length"
-            @click="deleteSelected">
-            Delete Selected
+            Export Selected
           </VBtn>
         </div>
       </VCardText>
@@ -697,6 +696,12 @@ onMounted(() => {
         <template v-if="activeTab === 'sales'" #item.unitPrice="{ item }">
           <div class="text-body-1 text-high-emphasis">
             {{ formatCurrency((item as SalesData).unitPrice) }}
+          </div>
+        </template>
+
+        <template v-if="activeTab === 'sales'" #item.quantity="{ item }">
+          <div class="text-body-1 text-high-emphasis">
+            {{ (item as SalesData).quantity }}
           </div>
         </template>
 
@@ -732,59 +737,75 @@ onMounted(() => {
         <template v-if="activeTab === 'profit'" #item.date="{ item }">
           <div class="d-flex align-center gap-x-2">
             <VIcon icon="tabler-calendar" size="22" color="info" />
-            <div class="text-body-1 text-high-emphasis">
+            <div class="text-body-1 text-high-emphasis font-weight-medium">
               {{ (item as ProfitData).date }}
             </div>
           </div>
         </template>
 
         <template v-if="activeTab === 'profit'" #item.totalSales="{ item }">
-          <div class="text-body-1 text-high-emphasis">
-            {{ formatCurrency((item as ProfitData).totalSales) }}
+          <div class="d-flex flex-column">
+            <span class="text-body-1 text-high-emphasis font-weight-medium">
+              {{ formatCurrency((item as ProfitData).totalSales) }}
+            </span>
+            <span class="text-caption text-success">
+              <VIcon icon="tabler-arrow-up" size="14" />
+              Revenue
+            </span>
           </div>
         </template>
 
         <template v-if="activeTab === 'profit'" #item.totalExpenses="{ item }">
-          <div class="text-body-1 text-high-emphasis">
-            {{ formatCurrency((item as ProfitData).totalExpenses) }}
+          <div class="d-flex flex-column">
+            <span class="text-body-1 text-high-emphasis font-weight-medium">
+              {{ formatCurrency((item as ProfitData).totalExpenses) }}
+            </span>
+            <span class="text-caption text-error">
+              <VIcon icon="tabler-arrow-down" size="14" />
+              Costs
+            </span>
           </div>
         </template>
 
         <template v-if="activeTab === 'profit'" #item.profit="{ item }">
-          <VChip :color="resolveProfitVariant((item as ProfitData).profit)" size="small" label>
-            {{ formatCurrency((item as ProfitData).profit) }}
-          </VChip>
+          <div class="d-flex flex-column align-end">
+            <VChip :color="resolveProfitVariant((item as ProfitData).profit)" size="small" label
+              class="font-weight-bold">
+              {{ formatCurrency((item as ProfitData).profit) }} <span class="text-xs">SAR</span>
+            </VChip>
+            <span class="text-caption text-disabled mt-1">
+              {{ ((item as ProfitData).profit / (item as ProfitData).totalSales * 100).toFixed(1) }}% margin
+            </span>
+          </div>
         </template>
 
-        <!-- Actions -->
-        <template #item.actions="{ item }">
-          <IconBtn @click="deleteItem(item.id)">
-            <VIcon icon="tabler-trash" />
-          </IconBtn>
+        <!-- Actions for Sales Tab -->
+        <template v-if="activeTab === 'sales'" #item.actions="{ item }">
+          <VBtn icon variant="text" color="primary" size="small" @click="viewItem(item.id)">
+            <VIcon icon="tabler-eye" />
+            <VTooltip activator="parent" location="top">
+              View Sale Details
+            </VTooltip>
+          </VBtn>
+        </template>
 
-          <IconBtn @click="editItem(item.id)">
-            <VIcon icon="tabler-edit" />
-          </IconBtn>
+        <!-- Actions for Expenses Tab -->
+        <template v-if="activeTab === 'expenses'" #item.actions="{ item }">
+          <VBtn icon variant="text" color="primary" size="small" @click="viewItem(item.id)">
+            <VIcon icon="tabler-eye" />
+            <VTooltip activator="parent" location="top">
+              View Expense Details
+            </VTooltip>
+          </VBtn>
+        </template>
 
-          <VBtn icon variant="text" color="medium-emphasis">
-            <VIcon icon="tabler-dots-vertical" />
-            <VMenu activator="parent">
-              <VList>
-                <VListItem @click="editItem(item.id)">
-                  <template #prepend>
-                    <VIcon icon="tabler-edit" />
-                  </template>
-                  <VListItemTitle>Edit</VListItemTitle>
-                </VListItem>
-
-                <VListItem @click="deleteItem(item.id)">
-                  <template #prepend>
-                    <VIcon icon="tabler-trash" />
-                  </template>
-                  <VListItemTitle>Delete</VListItemTitle>
-                </VListItem>
-              </VList>
-            </VMenu>
+        <!-- Actions for Profit Tab -->
+        <template v-if="activeTab === 'profit'" #item.actions="{ item }">
+          <VBtn icon variant="text" color="primary" size="small" @click="viewItem(item.id)">
+            <VIcon icon="tabler-eye" />
+            <VTooltip activator="parent" location="top">
+              View Profit Details
+            </VTooltip>
           </VBtn>
         </template>
 
