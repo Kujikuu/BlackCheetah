@@ -73,12 +73,7 @@ const pricingPlans = [
       <div class="pricing-plans">
         <!-- 👉 Headers  -->
         <div class="headers d-flex justify-center flex-column align-center flex-wrap">
-          <VChip
-            label
-            color="primary"
-            class="mb-4"
-            size="small"
-          >
+          <VChip label color="primary" class="mb-4" size="small">
             Pricing Plans
           </VChip>
           <h4 class="d-flex align-center text-h4 mb-1 flex-wrap justify-center">
@@ -100,17 +95,11 @@ const pricingPlans = [
         </div>
         <!-- 👉 Annual and monthly price toggler -->
         <div class="d-flex align-center justify-center mx-auto mt-6 mb-16">
-          <VLabel
-            for="pricing-plan-toggle"
-            class="me-3"
-          >
+          <VLabel for="pricing-plan-toggle" class="me-3">
             Pay Monthly
           </VLabel>
           <div class="position-relative">
-            <VSwitch
-              id="pricing-plan-toggle"
-              v-model="annualMonthlyPlanPriceToggler"
-            >
+            <VSwitch id="pricing-plan-toggle" v-model="annualMonthlyPlanPriceToggler">
               <template #label>
                 <div class="text-body-1">
                   Pay Annually
@@ -118,12 +107,7 @@ const pricingPlans = [
               </template>
             </VSwitch>
             <div class="position-absolute pricing-plan-arrow d-md-flex d-none">
-              <VImg
-                :src="pricingPlanArrow"
-                class="flip-in-rtl"
-                width="60"
-                height="42"
-              />
+              <VImg :src="pricingPlanArrow" class="flip-in-rtl" width="60" height="42" />
               <div class="text-no-wrap text-body-1 font-weight-medium">
                 Save 25%
               </div>
@@ -131,18 +115,10 @@ const pricingPlans = [
           </div>
         </div>
         <VRow>
-          <VCol
-            v-for="(plan, index) in pricingPlans"
-            :key="index"
-          >
+          <VCol v-for="(plan, index) in pricingPlans" :key="index">
             <VCard :style="plan.current ? 'border:2px solid rgb(var(--v-theme-primary))' : ''">
               <VCardText class="pa-8 pt-12">
-                <VImg
-                  :src="plan.image"
-                  width="88"
-                  height="88"
-                  class="mx-auto mb-8"
-                />
+                <VImg :src="plan.image" width="88" height="88" class="mx-auto mb-8" />
                 <h4 class="text-h4 text-center">
                   {{ plan.title }}
                 </h4>
@@ -155,30 +131,16 @@ const pricingPlans = [
                   </div>
 
                   <!-- 👉 Annual Price -->
-                  <span
-                    v-show="annualMonthlyPlanPriceToggler"
-                    class="annual-price-text position-absolute text-sm text-disabled"
-                  >
-                    {{ plan.yearlyPrice === 0 ? 'free' : `USD ${plan.yearlyPrice}/Year` }}
+                  <span v-show="annualMonthlyPlanPriceToggler"
+                    class="annual-price-text position-absolute text-sm text-disabled">
+                    {{ plan.yearlyPrice === 0 ? 'free' : `SAR ${plan.yearlyPrice}/Year` }}
                   </span>
                 </div>
                 <VList class="card-list">
-                  <VListItem
-                    v-for="(item, i) in plan.features"
-                    :key="i"
-                  >
+                  <VListItem v-for="(item, i) in plan.features" :key="i">
                     <template #prepend>
-                      <VAvatar
-                        size="16"
-                        :variant="!plan.current ? 'tonal' : 'elevated'"
-                        color="primary"
-                        class="me-3"
-                      >
-                        <VIcon
-                          icon="tabler-check"
-                          size="12"
-                          :color="!plan.current ? 'primary' : 'white'"
-                        />
+                      <VAvatar size="16" :variant="!plan.current ? 'tonal' : 'elevated'" color="primary" class="me-3">
+                        <VIcon icon="tabler-check" size="12" :color="!plan.current ? 'primary' : 'white'" />
                       </VAvatar>
                       <h6 class="text-h6">
                         {{ item }}
@@ -186,12 +148,8 @@ const pricingPlans = [
                     </template>
                   </VListItem>
                 </VList>
-                <VBtn
-                  block
-                  :variant="plan.current ? 'elevated' : 'tonal'"
-                  class="mt-8"
-                  :to="{ name: 'front-pages-payment' }"
-                >
+                <VBtn block :variant="plan.current ? 'elevated' : 'tonal'" class="mt-8"
+                  :to="{ name: 'front-pages-payment' }">
                   Get Started
                 </VBtn>
               </VCardText>
