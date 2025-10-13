@@ -5,6 +5,7 @@ import { accountSettingsApi } from '@/services/api/account-settings'
 const refInputEl = ref<HTMLElement>()
 const isLoading = ref(false)
 const isSaving = ref(false)
+const isUploadingAvatar = ref(false)
 const accountData = ref<UserProfile | null>(null)
 const accountDataLocal = ref({
   avatarImg: '',
@@ -14,6 +15,7 @@ const accountDataLocal = ref({
   phone: '',
   timezone: '(GMT+03:00) Riyadh',
 })
+const uploadStatus = ref<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' })
 
 const timezones = [
   '(GMT+03:00) Riyadh',
@@ -77,17 +79,43 @@ const resetForm = () => {
   }
 }
 
-// changeAvatar function
+// changeAvatar function with instant preview
 const changeAvatar = async (file: Event) => {
   const { files } = file.target as HTMLInputElement
 
   if (files && files.length) {
-    try {
-      isSaving.value = true
+    const selectedFile = files[0]
 
-      // Upload to server
-      const response = await accountSettingsApi.uploadAvatar(files[0])
+    // Validate file size (800KB max)
+    if (selectedFile.size > 800 * 1024) {
+      uploadStatus.value = { type: 'error', message: 'File size must be less than 800KB' }
+      setTimeout(() => uploadStatus.value = { type: null, message: '' }, 5000)
+      return
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif']
+    if (!allowedTypes.includes(selectedFile.type)) {
+      uploadStatus.value = { type: 'error', message: 'Only JPG, PNG, and GIF files are allowed' }
+      setTimeout(() => uploadStatus.value = { type: null, message: '' }, 5000)
+      return
+    }
+
+    try {
+      // Show instant preview using FileReader
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        accountDataLocal.value.avatarImg = e.target?.result as string
+      }
+      reader.readAsDataURL(selectedFile)
+
+      // Upload to server in background
+      isUploadingAvatar.value = true
+      uploadStatus.value = { type: null, message: 'Uploading...' }
+
+      const response = await accountSettingsApi.uploadAvatar(selectedFile)
       if (response.success) {
+        // Update with server URL
         accountDataLocal.value.avatarImg = response.data.avatar
         if (accountData.value) {
           accountData.value.avatar = response.data.avatar
@@ -101,13 +129,25 @@ const changeAvatar = async (file: Event) => {
             avatar: response.data.avatar,
           }
         }
+
+        uploadStatus.value = { type: 'success', message: 'Avatar uploaded successfully!' }
+        setTimeout(() => uploadStatus.value = { type: null, message: '' }, 3000)
       }
     }
-    catch (error) {
+    catch (error: any) {
       console.error('Error uploading avatar:', error)
+      uploadStatus.value = {
+        type: 'error',
+        message: error.response?.data?.message || 'Failed to upload avatar'
+      }
+      // Reload original avatar on error
+      if (accountData.value?.avatar) {
+        accountDataLocal.value.avatarImg = accountData.value.avatar
+      }
+      setTimeout(() => uploadStatus.value = { type: null, message: '' }, 5000)
     }
     finally {
-      isSaving.value = false
+      isUploadingAvatar.value = false
     }
   }
 }
@@ -115,7 +155,9 @@ const changeAvatar = async (file: Event) => {
 // reset avatar image
 const resetAvatar = async () => {
   try {
-    isSaving.value = true
+    isUploadingAvatar.value = true
+    uploadStatus.value = { type: null, message: 'Removing avatar...' }
+
     await accountSettingsApi.deleteAvatar()
     accountDataLocal.value.avatarImg = ''
     if (accountData.value) {
@@ -130,12 +172,20 @@ const resetAvatar = async () => {
         avatar: null,
       }
     }
+
+    uploadStatus.value = { type: 'success', message: 'Avatar removed successfully!' }
+    setTimeout(() => uploadStatus.value = { type: null, message: '' }, 3000)
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error deleting avatar:', error)
+    uploadStatus.value = {
+      type: 'error',
+      message: error.response?.data?.message || 'Failed to remove avatar'
+    }
+    setTimeout(() => uploadStatus.value = { type: null, message: '' }, 5000)
   }
   finally {
-    isSaving.value = false
+    isUploadingAvatar.value = false
   }
 }
 
@@ -183,34 +233,52 @@ onMounted(() => {
   <VRow>
     <VCol cols="12">
       <VCard title="Profile Details" :loading="isLoading">
-        <VCardText class="d-flex">
-          <!-- Avatar -->
-          <VAvatar rounded size="100" class="me-6" :image="accountDataLocal.avatarImg">
-            <span v-if="!accountDataLocal.avatarImg" class="text-5xl font-weight-medium">
-              {{ accountDataLocal.name.charAt(0).toUpperCase() }}
-            </span>
-          </VAvatar>
-
-          <!-- Upload Photo -->
-          <div class="d-flex flex-column justify-center gap-4">
-            <div class="d-flex flex-wrap gap-2">
-              <VBtn color="primary" :loading="isSaving" :disabled="isLoading" @click="refInputEl?.click()">
-                <VIcon icon="tabler-cloud-upload" class="d-sm-none" />
-                <span class="d-none d-sm-block">Upload new photo</span>
-              </VBtn>
-
-              <input ref="refInputEl" type="file" name="file" accept=".jpeg,.png,.jpg,GIF" hidden @input="changeAvatar">
-
-              <VBtn type="reset" color="secondary" variant="outlined" :loading="isSaving" :disabled="isLoading"
-                @click="resetAvatar">
-                Reset
-              </VBtn>
+        <VCardText class="d-flex flex-column gap-4">
+          <div class="d-flex align-center">
+            <!-- Avatar with loading overlay -->
+            <div class="position-relative me-6">
+              <VAvatar rounded size="100" :image="accountDataLocal.avatarImg">
+                <span v-if="!accountDataLocal.avatarImg" class="text-5xl font-weight-medium">
+                  {{ accountDataLocal.name.charAt(0).toUpperCase() }}
+                </span>
+              </VAvatar>
+              <!-- Loading overlay -->
+              <div v-if="isUploadingAvatar"
+                class="position-absolute top-0 start-0 w-100 h-100 d-flex align-center justify-center"
+                style="background: rgba(0,0,0,0.5); border-radius: 8px;">
+                <VProgressCircular indeterminate color="white" size="32" />
+              </div>
             </div>
 
-            <p class="text-body-1 mb-0">
-              Allowed JPG, GIF or PNG. Max size of 800K
-            </p>
+            <!-- Upload Photo -->
+            <div class="d-flex flex-column justify-center gap-4">
+              <div class="d-flex flex-wrap gap-2">
+                <VBtn color="primary" :loading="isUploadingAvatar" :disabled="isLoading || isUploadingAvatar"
+                  @click="refInputEl?.click()">
+                  <VIcon icon="tabler-cloud-upload" class="d-sm-none" />
+                  <span class="d-none d-sm-block">Upload new photo</span>
+                </VBtn>
+
+                <input ref="refInputEl" type="file" name="file" accept=".jpeg,.png,.jpg,.gif" hidden
+                  @input="changeAvatar">
+
+                <VBtn type="reset" color="secondary" variant="outlined" :loading="isUploadingAvatar"
+                  :disabled="isLoading || isUploadingAvatar || !accountDataLocal.avatarImg" @click="resetAvatar">
+                  Reset
+                </VBtn>
+              </div>
+
+              <p class="text-body-1 mb-0">
+                Allowed JPG, GIF or PNG. Max size of 800K
+              </p>
+            </div>
           </div>
+
+          <!-- Upload Status Alert -->
+          <VAlert v-if="uploadStatus.message" :type="uploadStatus.type || 'info'" variant="tonal" closable
+            @click:close="uploadStatus = { type: null, message: '' }">
+            {{ uploadStatus.message }}
+          </VAlert>
         </VCardText>
 
         <VDivider />

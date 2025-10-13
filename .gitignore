@@ -1,8 +1,8 @@
 /.phpunit.cache
 /node_modules
-/public/build
+# /public/build - Commented out: Keep build files for shared hosting deployment
 /public/hot
-/public/storage
+# /public/storage - Commented out: Now using /public/uploads instead (no symlink needed)
 /storage/*.key
 /storage/pail
 /vendor

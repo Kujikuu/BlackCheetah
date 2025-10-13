@@ -47,6 +47,16 @@ return [
             'report' => false,
         ],
 
+        // Direct public uploads - works on shared hosting without symlinks
+        'uploads' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'url' => env('APP_URL').'/uploads',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         'private' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

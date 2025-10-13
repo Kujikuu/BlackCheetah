@@ -25,7 +25,7 @@ class AccountSettingsController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
-                'avatar' => $user->avatar ? asset('storage/'.$user->avatar) : null,
+                'avatar' => $user->avatar ? asset('uploads/'.$user->avatar) : null,
                 'role' => $user->role,
                 'status' => $user->status,
                 'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
@@ -93,7 +93,7 @@ class AccountSettingsController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
-                'avatar' => $user->avatar ? asset('storage/'.$user->avatar) : null,
+                'avatar' => $user->avatar ? asset('uploads/'.$user->avatar) : null,
                 'role' => $user->role,
                 'status' => $user->status,
                 'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
@@ -185,15 +185,19 @@ class AccountSettingsController extends Controller
         }
 
         try {
-            // Delete old avatar if exists
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
+            // Delete old avatar if exists (check both disks for backward compatibility)
+            if ($user->avatar) {
+                if (Storage::disk('uploads')->exists($user->avatar)) {
+                    Storage::disk('uploads')->delete($user->avatar);
+                } elseif (Storage::disk('public')->exists($user->avatar)) {
+                    Storage::disk('public')->delete($user->avatar);
+                }
             }
 
-            // Store new avatar with original extension
+            // Store new avatar with unique filename using 'uploads' disk (no symlink needed)
             $extension = $file->getClientOriginalExtension();
             $filename = 'avatar_'.time().'_'.$user->id.'.'.$extension;
-            $path = $file->storeAs('avatars', $filename, 'public');
+            $path = $file->storeAs('avatars', $filename, 'uploads');
 
             // Update user record
             $user->update(['avatar' => $path]);
@@ -201,7 +205,8 @@ class AccountSettingsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'avatar' => asset('storage/'.$path),
+                    'avatar' => asset('uploads/'.$path),
+                    'avatar_path' => $path,
                 ],
                 'message' => 'Avatar uploaded successfully',
             ]);
@@ -221,7 +226,12 @@ class AccountSettingsController extends Controller
         $user = $request->user();
 
         if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
+            // Try both disks for backward compatibility
+            if (Storage::disk('uploads')->exists($user->avatar)) {
+                Storage::disk('uploads')->delete($user->avatar);
+            } elseif (Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
             $user->update(['avatar' => null]);
         }
 
