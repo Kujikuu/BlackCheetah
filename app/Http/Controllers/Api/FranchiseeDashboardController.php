@@ -2318,7 +2318,7 @@ class FranchiseeDashboardController extends Controller
         return $transactions->map(function ($transaction) {
             return [
                 'id' => (string) $transaction->id,
-                'expenseCategory' => $transaction->category ?? 'Other',
+                'expenseCategory' => $this->mapEnumToExpenseCategory($transaction->category ?? 'other'),
                 'dateOfExpense' => $transaction->transaction_date->format('Y-m-d'),
                 'amount' => (float) $transaction->amount,
                 'description' => $transaction->description ?? '',
@@ -2359,6 +2359,47 @@ class FranchiseeDashboardController extends Controller
         }
 
         return array_values($profitData);
+    }
+
+    /**
+     * Map frontend expense category to database enum value
+     */
+    private function mapExpenseCategoryToEnum(string $category): string
+    {
+        $categoryMap = [
+            'Food Supplies' => 'cost_of_goods',
+            'Utilities' => 'utilities',
+            'Staff Wages' => 'labor',
+            'Marketing' => 'marketing',
+            'Equipment Maintenance' => 'equipment',
+            'Rent' => 'rent',
+            'Insurance' => 'insurance',
+            'Cleaning Supplies' => 'supplies',
+            'Office Supplies' => 'supplies',
+            'Transportation' => 'other',
+        ];
+
+        return $categoryMap[$category] ?? 'other';
+    }
+
+    /**
+     * Map database enum value to frontend expense category
+     */
+    private function mapEnumToExpenseCategory(string $enumValue): string
+    {
+        $reverseMap = [
+            'cost_of_goods' => 'Food Supplies',
+            'utilities' => 'Utilities',
+            'labor' => 'Staff Wages',
+            'marketing' => 'Marketing',
+            'equipment' => 'Equipment Maintenance',
+            'rent' => 'Rent',
+            'insurance' => 'Insurance',
+            'supplies' => 'Office Supplies',
+            'other' => 'Transportation',
+        ];
+
+        return $reverseMap[$enumValue] ?? 'Other';
     }
 
     /**
@@ -2476,7 +2517,7 @@ class FranchiseeDashboardController extends Controller
                 'unit_id' => $unit->id,
                 'user_id' => $user->id,
                 'type' => 'expense',
-                'category' => $validated['expenseCategory'],
+                'category' => $this->mapExpenseCategoryToEnum($validated['expenseCategory']),
                 'amount' => $validated['amount'],
                 'currency' => 'SAR',
                 'description' => $validated['description'] ?? '',
@@ -2489,7 +2530,7 @@ class FranchiseeDashboardController extends Controller
                 'message' => 'Expense data added successfully',
                 'data' => [
                     'id' => (string) $transaction->id,
-                    'expenseCategory' => $transaction->category,
+                    'expenseCategory' => $validated['expenseCategory'], // Return the original user-friendly name
                     'dateOfExpense' => $validated['date'],
                     'amount' => (float) $validated['amount'],
                     'description' => $validated['description'] ?? '',
