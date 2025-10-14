@@ -8,12 +8,13 @@ interface NotificationStats {
 }
 
 interface BackendNotification {
-  id: number
+  id: string
   type: string
   notifiable_type: string
   notifiable_id: number
   data: {
     title?: string
+    message?: string
     subtitle?: string
     icon?: string
     img?: string
@@ -45,19 +46,21 @@ export const useNotifications = () => {
   const stats = ref<NotificationStats>({ total: 0, unread: 0, read: 0 })
 
   // Transform backend notification to frontend format
-  const transformNotification = (backendNotification: BackendNotification): Notification => {
+  const transformNotification = (backendNotification: BackendNotification): any => {
     const data = backendNotification.data || {}
 
     return {
       id: backendNotification.id,
       title: data.title || 'Notification',
-      subtitle: data.subtitle || '',
+      subtitle: data.message || data.subtitle || '',
       time: formatTime(backendNotification.created_at),
       color: data.color || 'primary',
       isSeen: !!backendNotification.read_at,
-      icon: data.icon,
+      icon: data.icon || 'tabler-bell',
       img: data.img,
       text: data.text,
+      data: backendNotification.data,
+      created_at: backendNotification.created_at,
     }
   }
 
@@ -114,7 +117,7 @@ export const useNotifications = () => {
   }
 
   // Mark single notification as read
-  const markAsRead = async (notificationIds: number[]) => {
+  const markAsRead = async (notificationIds: (number | string)[]) => {
     try {
       if (notificationIds.length === 1) {
         await $api(`/v1/notifications/${notificationIds[0]}/read`, {
@@ -143,7 +146,7 @@ export const useNotifications = () => {
   }
 
   // Mark single notification as unread
-  const markAsUnread = async (notificationIds: number[]) => {
+  const markAsUnread = async (notificationIds: (number | string)[]) => {
     try {
       if (notificationIds.length === 1) {
         await $api(`/v1/notifications/${notificationIds[0]}/unread`, {
@@ -193,7 +196,7 @@ export const useNotifications = () => {
   }
 
   // Remove notification
-  const removeNotification = async (notificationId: number) => {
+  const removeNotification = async (notificationId: number | string) => {
     try {
       await $api(`/v1/notifications/${notificationId}`, {
         method: 'DELETE',
@@ -214,7 +217,7 @@ export const useNotifications = () => {
   }
 
   // Handle notification click
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = async (notification: any) => {
     if (!notification.isSeen) {
       await markAsRead([notification.id])
     }

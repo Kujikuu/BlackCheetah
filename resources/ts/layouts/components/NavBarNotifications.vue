@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type { Notification } from '@layouts/types'
 import { useNotifications } from '@/composables/useNotifications'
+import type { Notification } from '@layouts/types'
 
 const {
   notifications,
@@ -23,7 +23,7 @@ onMounted(async () => {
   }
 })
 
-const removeNotification = async (notificationId: number) => {
+const removeNotification = async (notificationId: number | string) => {
   try {
     await removeNotificationApi(notificationId)
   } catch (error) {
@@ -31,7 +31,7 @@ const removeNotification = async (notificationId: number) => {
   }
 }
 
-const markRead = async (notificationIds: number[]) => {
+const markRead = async (notificationIds: (number | string)[]) => {
   try {
     await markAsRead(notificationIds)
   } catch (error) {
@@ -39,7 +39,7 @@ const markRead = async (notificationIds: number[]) => {
   }
 }
 
-const markUnRead = async (notificationIds: number[]) => {
+const markUnRead = async (notificationIds: (number | string)[]) => {
   try {
     await markAsUnread(notificationIds)
   } catch (error) {
@@ -57,11 +57,6 @@ const handleNotificationClick = async (notification: Notification) => {
 </script>
 
 <template>
-  <Notifications
-    :notifications="notifications"
-    @remove="removeNotification"
-    @read="markRead"
-    @unread="markUnRead"
-    @click:notification="handleNotificationClick"
-  />
+  <Notifications :notifications="notifications" @remove="removeNotification" @read="markRead" @unread="markUnRead"
+    @click:notification="handleNotificationClick" />
 </template>
