@@ -109,6 +109,23 @@ class Task extends Model
         return $typeToCategoryMap[$this->type] ?? 'Other';
     }
 
+    public function getCategoryForSales(): string
+    {
+        // Map database type to sales-specific categories
+        $typeToCategoryMap = [
+            'lead_management' => 'Lead Management',
+            'sales' => 'Sales',
+            'market_research' => 'Market Research',
+            'onboarding' => 'Onboarding',
+            'operations' => 'Operations',
+            'training' => 'Training',
+            'marketing' => 'Marketing',
+            'other' => 'Other',
+        ];
+
+        return $typeToCategoryMap[$this->type] ?? 'Other';
+    }
+
     public function getAssignedToUserAttribute()
     {
         return $this->assignedTo;

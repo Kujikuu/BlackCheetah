@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->enum('type', ['onboarding', 'training', 'compliance', 'maintenance', 'marketing', 'operations', 'finance', 'support', 'other']);
+            $table->enum('type', ['onboarding', 'training', 'compliance', 'maintenance', 'marketing', 'operations', 'finance', 'support', 'other', 'lead_management', 'sales', 'market_research']);
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
             $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled', 'on_hold'])->default('pending');
             $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');

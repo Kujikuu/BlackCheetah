@@ -572,6 +572,11 @@ Route::middleware(['auth:sanctum', 'role:sales'])->prefix('v1/sales')->group(fun
     Route::post('leads/import', [LeadController::class, 'importCsv']);
     Route::get('leads/export', [LeadController::class, 'exportCsv']);
     Route::delete('leads/bulk-delete', [LeadController::class, 'bulkDelete']);
+
+    // Task management for sales users
+    Route::get('tasks', [TaskController::class, 'mySalesTasks']);
+    Route::get('tasks/statistics', [TaskController::class, 'salesTasksStatistics']);
+    Route::patch('tasks/{task}/status', [TaskController::class, 'updateSalesTaskStatus']);
 });
 
 // Admin routes (requires admin role)

@@ -437,4 +437,181 @@ class TaskController extends Controller
             'message' => 'Assigned tasks retrieved successfully',
         ]);
     }
+
+    /**
+     * Get sales user's tasks with statistics
+     */
+    public function mySalesTasks(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Get franchise for the sales user
+        $franchise = Franchise::where('franchisor_id', $user->franchise_id)
+            ->orWhere('id', $user->franchise_id)
+            ->first();
+
+        if (! $franchise) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No franchise found for current user',
+            ], 404);
+        }
+
+        // Build query for tasks assigned to this sales user
+        $query = Task::where('assigned_to', $user->id)
+            ->where('franchise_id', $franchise->id)
+            ->with(['franchise', 'unit', 'assignedTo', 'createdBy', 'lead']);
+
+        // Apply filters
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->has('category')) {
+            $categoryToTypeMap = [
+                'Lead Management' => 'lead_management',
+                'Sales' => 'sales',
+                'Market Research' => 'market_research',
+                'Onboarding' => 'onboarding',
+                'Operations' => 'operations',
+                'Training' => 'training',
+                'Marketing' => 'marketing',
+            ];
+
+            $type = $categoryToTypeMap[$request->category] ?? null;
+            if ($type) {
+                $query->where('type', $type);
+            }
+        }
+
+        // Apply sorting
+        $sortBy = $request->get('sort_by', 'due_date');
+        $sortOrder = $request->get('sort_order', 'asc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        // Get paginated tasks
+        $perPage = $request->get('per_page', 15);
+        $tasks = $query->paginate($perPage);
+
+        // Transform tasks for frontend
+        $transformedTasks = $tasks->map(function ($task) {
+            return [
+                'id' => $task->id,
+                'title' => $task->title,
+                'description' => $task->description,
+                'category' => $task->getCategoryForSales(),
+                'assignedTo' => $task->assignedTo ? $task->assignedTo->name : 'Unassigned',
+                'unitName' => $task->unit ? $task->unit->name : 'N/A',
+                'startDate' => $task->created_at->format('Y-m-d'),
+                'dueDate' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
+                'priority' => $task->priority,
+                'status' => $task->status,
+                'leadId' => $task->lead_id,
+                'leadName' => $task->lead ? "{$task->lead->first_name} {$task->lead->last_name}" : null,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $transformedTasks,
+            'pagination' => [
+                'total' => $tasks->total(),
+                'perPage' => $tasks->perPage(),
+                'currentPage' => $tasks->currentPage(),
+                'lastPage' => $tasks->lastPage(),
+            ],
+            'message' => 'Tasks retrieved successfully',
+        ]);
+    }
+
+    /**
+     * Get sales tasks statistics
+     */
+    public function salesTasksStatistics(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Get franchise for the sales user
+        $franchise = Franchise::where('franchisor_id', $user->franchise_id)
+            ->orWhere('id', $user->franchise_id)
+            ->first();
+
+        if (! $franchise) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No franchise found for current user',
+            ], 404);
+        }
+
+        // Get tasks for this sales user
+        $allTasks = Task::where('assigned_to', $user->id)
+            ->where('franchise_id', $franchise->id)
+            ->get();
+
+        $totalTasks = $allTasks->count();
+        $completedTasks = $allTasks->where('status', 'completed')->count();
+        $inProgressTasks = $allTasks->where('status', 'in_progress')->count();
+
+        // Calculate due/overdue tasks
+        $today = now();
+        $dueTasks = $allTasks->filter(function ($task) use ($today) {
+            return $task->due_date &&
+                   $task->due_date->lte($today) &&
+                   $task->status !== 'completed';
+        })->count();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'totalTasks' => $totalTasks,
+                'completedTasks' => $completedTasks,
+                'inProgressTasks' => $inProgressTasks,
+                'dueTasks' => $dueTasks,
+            ],
+            'message' => 'Statistics retrieved successfully',
+        ]);
+    }
+
+    /**
+     * Update sales user's task status
+     */
+    public function updateSalesTaskStatus(Request $request, Task $task): JsonResponse
+    {
+        $user = $request->user();
+
+        // Verify the task belongs to this user
+        if ($task->assigned_to !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to update this task',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,in_progress,completed',
+        ]);
+
+        $task->status = $validated['status'];
+
+        // Set timestamps based on status
+        if ($validated['status'] === 'in_progress' && ! $task->started_at) {
+            $task->started_at = now();
+        }
+
+        if ($validated['status'] === 'completed' && ! $task->completed_at) {
+            $task->completed_at = now();
+        }
+
+        $task->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => $task,
+            'message' => 'Task status updated successfully',
+        ]);
+    }
 }

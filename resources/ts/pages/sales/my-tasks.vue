@@ -1,125 +1,62 @@
 <script setup lang="ts">
+import { taskApi, type Task, type TaskStatistics } from '@/services/api/task'
+
 // 👉 Router
 const router = useRouter()
 
 // 👉 Modal states
 const isViewTaskModalVisible = ref(false)
 const isStatusChangeModalVisible = ref(false)
-const selectedTask = ref<any>(null)
+const selectedTask = ref<Task | null>(null)
 
-// 👉 Mock all tasks data (combined franchisee and sales)
-const allTasksData = ref([
-  {
-    id: 1,
-    title: 'Monthly Inventory Check',
-    description: 'Complete monthly inventory audit and report',
-    category: 'Operations',
-    assignedTo: 'John Smith (Downtown Coffee Hub)',
-    unitName: 'Downtown Coffee Hub',
-    startDate: '2024-01-01',
-    dueDate: '2024-01-31',
-    priority: 'high',
-    status: 'completed',
-  },
-  {
-    id: 2,
-    title: 'Staff Training Session',
-    description: 'Conduct quarterly staff training on new procedures',
-    category: 'Training',
-    assignedTo: 'Sarah Johnson (Uptown Cafe)',
-    unitName: 'Uptown Cafe',
-    startDate: '2024-01-15',
-    dueDate: '2024-01-30',
-    priority: 'medium',
-    status: 'in_progress',
-  },
-  {
-    id: 3,
-    title: 'Equipment Maintenance',
-    description: 'Schedule and complete equipment maintenance',
-    category: 'Maintenance',
-    assignedTo: 'Mike Wilson (Central Plaza)',
-    unitName: 'Central Plaza',
-    startDate: '2024-01-20',
-    dueDate: '2024-02-05',
-    priority: 'high',
-    status: 'pending',
-  },
-  {
-    id: 4,
-    title: 'Marketing Campaign Review',
-    description: 'Review and approve local marketing materials',
-    category: 'Marketing',
-    assignedTo: 'Lisa Brown (Westside Branch)',
-    unitName: 'Westside Branch',
-    startDate: '2024-01-25',
-    dueDate: '2024-02-10',
-    priority: 'medium',
-    status: 'pending',
-  },
-  {
-    id: 5,
-    title: 'Lead Follow-up Campaign',
-    description: 'Follow up with potential franchisees from last quarter',
-    category: 'Lead Management',
-    assignedTo: 'Alex Rodriguez (Sales Associate)',
-    unitName: 'N/A',
-    startDate: '2024-01-10',
-    dueDate: '2024-01-25',
-    priority: 'high',
-    status: 'in_progress',
-  },
-  {
-    id: 6,
-    title: 'Franchise Presentation Prep',
-    description: 'Prepare presentation materials for upcoming franchise expo',
-    category: 'Sales',
-    assignedTo: 'Emma Thompson (Senior Sales)',
-    unitName: 'N/A',
-    startDate: '2024-01-12',
-    dueDate: '2024-02-01',
-    priority: 'high',
-    status: 'pending',
-  },
-  {
-    id: 7,
-    title: 'Territory Analysis',
-    description: 'Analyze potential markets for franchise expansion',
-    category: 'Market Research',
-    assignedTo: 'David Chen (Sales Manager)',
-    unitName: 'N/A',
-    startDate: '2024-01-18',
-    dueDate: '2024-02-15',
-    priority: 'medium',
-    status: 'pending',
-  },
-  {
-    id: 8,
-    title: 'Client Onboarding',
-    description: 'Complete onboarding process for new franchisee',
-    category: 'Onboarding',
-    assignedTo: 'Rachel Green (Sales Associate)',
-    unitName: 'N/A',
-    startDate: '2024-01-05',
-    dueDate: '2024-01-20',
-    priority: 'high',
-    status: 'completed',
-  },
-])
+// 👉 Data and loading states
+const allTasksData = ref<Task[]>([])
+const statistics = ref<TaskStatistics>({
+  totalTasks: 0,
+  completedTasks: 0,
+  inProgressTasks: 0,
+  dueTasks: 0,
+})
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 
 // 👉 Computed stats for all tasks
-const totalTasks = computed(() => allTasksData.value.length)
-const completedTasks = computed(() => allTasksData.value.filter(task => task.status === 'completed').length)
-const inProgressTasks = computed(() => allTasksData.value.filter(task => task.status === 'in_progress').length)
+const totalTasks = computed(() => statistics.value.totalTasks)
+const completedTasks = computed(() => statistics.value.completedTasks)
+const inProgressTasks = computed(() => statistics.value.inProgressTasks)
+const dueTasks = computed(() => statistics.value.dueTasks)
 
-const dueTasks = computed(() => {
-  const today = new Date()
+// 👉 Fetch tasks and statistics
+const fetchTasks = async () => {
+  try {
+    isLoading.value = true
+    error.value = null
 
-  return allTasksData.value.filter(task => {
-    const dueDate = new Date(task.dueDate)
+    const [tasksResponse, statsResponse] = await Promise.all([
+      taskApi.getMyTasks(),
+      taskApi.getStatistics(),
+    ])
 
-    return dueDate <= today && task.status !== 'completed'
-  }).length
+    console.log('Tasks Response:', tasksResponse)
+    console.log('Stats Response:', statsResponse)
+
+    allTasksData.value = tasksResponse.data
+    statistics.value = statsResponse
+
+    console.log('Statistics value:', statistics.value)
+  }
+  catch (err: any) {
+    console.error('Error fetching tasks:', err)
+    error.value = err.message || 'Failed to load tasks'
+  }
+  finally {
+    isLoading.value = false
+  }
+}
+
+// 👉 Fetch on mount
+onMounted(() => {
+  fetchTasks()
 })
 
 // 👉 Functions
@@ -162,22 +99,35 @@ const viewTask = (task: any) => {
   isViewTaskModalVisible.value = true
 }
 
-const changeTaskStatus = (task: any) => {
+const changeTaskStatus = (task: Task) => {
   selectedTask.value = { ...task }
   isStatusChangeModalVisible.value = true
 }
 
-const updateTaskStatus = (newStatus: string) => {
+const updateTaskStatus = async (newStatus: string) => {
   if (!selectedTask.value)
     return
 
-  // Update task status in combined data array
-  const index = allTasksData.value.findIndex(task => task.id === selectedTask.value.id)
-  if (index !== -1)
-    allTasksData.value[index].status = newStatus
+  try {
+    // Update task status via API
+    await taskApi.updateTaskStatus(selectedTask.value.id, newStatus)
 
-  isStatusChangeModalVisible.value = false
-  selectedTask.value = null
+    // Update local data
+    const index = allTasksData.value.findIndex(task => task.id === selectedTask.value!.id)
+    if (index !== -1) {
+      allTasksData.value[index].status = newStatus as any
+    }
+
+    // Refresh statistics
+    await fetchTasks()
+
+    isStatusChangeModalVisible.value = false
+    selectedTask.value = null
+  }
+  catch (err: any) {
+    console.error('Error updating task status:', err)
+    error.value = err.message || 'Failed to update task status'
+  }
 }
 </script>
 
@@ -199,22 +149,11 @@ const updateTaskStatus = (newStatus: string) => {
 
     <!-- Stats Cards -->
     <VRow class="mb-6">
-      <VCol
-        cols="12"
-        md="3"
-      >
+      <VCol cols="12" md="3">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="primary"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-checklist"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="primary" variant="tonal">
+              <VIcon icon="tabler-checklist" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -227,22 +166,11 @@ const updateTaskStatus = (newStatus: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol
-        cols="12"
-        md="3"
-      >
+      <VCol cols="12" md="3">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="success"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-check"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="success" variant="tonal">
+              <VIcon icon="tabler-check" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -255,22 +183,11 @@ const updateTaskStatus = (newStatus: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol
-        cols="12"
-        md="3"
-      >
+      <VCol cols="12" md="3">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="warning"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-clock"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="warning" variant="tonal">
+              <VIcon icon="tabler-clock" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -283,22 +200,11 @@ const updateTaskStatus = (newStatus: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol
-        cols="12"
-        md="3"
-      >
+      <VCol cols="12" md="3">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="error"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-alert-circle"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="error" variant="tonal">
+              <VIcon icon="tabler-alert-circle" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -313,6 +219,11 @@ const updateTaskStatus = (newStatus: string) => {
       </VCol>
     </VRow>
 
+    <!-- Error Alert -->
+    <VAlert v-if="error" type="error" variant="tonal" closable class="mb-6" @click:close="error = null">
+      {{ error }}
+    </VAlert>
+
     <!-- Tasks Table -->
     <VCard>
       <VCardItem class="pb-4">
@@ -321,12 +232,8 @@ const updateTaskStatus = (newStatus: string) => {
 
       <VDivider />
 
-      <VDataTable
-        :items="allTasksData"
-        :headers="taskHeaders"
-        class="text-no-wrap"
-        item-value="id"
-      >
+      <VDataTable :items="allTasksData" :headers="taskHeaders" :loading="isLoading" class="text-no-wrap"
+        item-value="id">
         <!-- Task Info -->
         <template #item.taskInfo="{ item }">
           <div>
@@ -341,36 +248,21 @@ const updateTaskStatus = (newStatus: string) => {
 
         <!-- Priority -->
         <template #item.priority="{ item }">
-          <VChip
-            :color="resolvePriorityVariant(item.priority)"
-            size="small"
-            label
-            class="text-capitalize"
-          >
+          <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
             {{ item.priority }}
           </VChip>
         </template>
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip
-            :color="resolveStatusVariant(item.status)"
-            size="small"
-            label
-            class="text-capitalize"
-          >
+          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
             {{ item.status }}
           </VChip>
         </template>
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <VBtn
-            icon
-            variant="text"
-            color="medium-emphasis"
-            size="small"
-          >
+          <VBtn icon variant="text" color="medium-emphasis" size="small">
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
@@ -394,10 +286,7 @@ const updateTaskStatus = (newStatus: string) => {
     </VCard>
 
     <!-- View Task Modal -->
-    <VDialog
-      v-model="isViewTaskModalVisible"
-      max-width="600"
-    >
+    <VDialog v-model="isViewTaskModalVisible" max-width="600">
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
           Task Details
@@ -405,10 +294,7 @@ const updateTaskStatus = (newStatus: string) => {
 
         <VDivider />
 
-        <VCardText
-          v-if="selectedTask"
-          class="pa-6"
-        >
+        <VCardText v-if="selectedTask" class="pa-6">
           <VRow>
             <VCol cols="12">
               <h6 class="text-h6 mb-2">
@@ -418,10 +304,7 @@ const updateTaskStatus = (newStatus: string) => {
                 {{ selectedTask.description }}
               </p>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Category
               </div>
@@ -429,10 +312,7 @@ const updateTaskStatus = (newStatus: string) => {
                 {{ selectedTask.category }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Start Date
               </div>
@@ -440,10 +320,7 @@ const updateTaskStatus = (newStatus: string) => {
                 {{ selectedTask.startDate }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Due Date
               </div>
@@ -451,35 +328,19 @@ const updateTaskStatus = (newStatus: string) => {
                 {{ selectedTask.dueDate }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Priority
               </div>
-              <VChip
-                :color="resolvePriorityVariant(selectedTask.priority)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
+              <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label class="text-capitalize">
                 {{ selectedTask.priority }}
               </VChip>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Status
               </div>
-              <VChip
-                :color="resolveStatusVariant(selectedTask.status)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
+              <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize">
                 {{ selectedTask.status }}
               </VChip>
             </VCol>
@@ -490,11 +351,7 @@ const updateTaskStatus = (newStatus: string) => {
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isViewTaskModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isViewTaskModalVisible = false">
             Close
           </VBtn>
         </VCardActions>
@@ -502,10 +359,7 @@ const updateTaskStatus = (newStatus: string) => {
     </VDialog>
 
     <!-- Status Change Modal -->
-    <VDialog
-      v-model="isStatusChangeModalVisible"
-      max-width="400"
-    >
+    <VDialog v-model="isStatusChangeModalVisible" max-width="400">
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
           Change Task Status
@@ -513,49 +367,31 @@ const updateTaskStatus = (newStatus: string) => {
 
         <VDivider />
 
-        <VCardText
-          v-if="selectedTask"
-          class="pa-6"
-        >
+        <VCardText v-if="selectedTask" class="pa-6">
           <div class="mb-4">
             <h6 class="text-base font-weight-medium mb-2">
               {{ selectedTask.title }}
             </h6>
             <div class="text-body-2 text-disabled">
               Current Status:
-              <VChip
-                :color="resolveStatusVariant(selectedTask.status)"
-                size="small"
-                label
-                class="text-capitalize ml-2"
-              >
+              <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize ml-2">
                 {{ selectedTask.status }}
               </VChip>
             </div>
           </div>
 
-          <VSelect
-            label="New Status"
-            :items="[
-              { title: 'Pending', value: 'pending' },
-              { title: 'In Progress', value: 'in_progress' },
-              { title: 'Completed', value: 'completed' },
-            ]"
-            :model-value="selectedTask.status"
-            required
-            @update:model-value="updateTaskStatus"
-          />
+          <VSelect label="New Status" :items="[
+            { title: 'Pending', value: 'pending' },
+            { title: 'In Progress', value: 'in_progress' },
+            { title: 'Completed', value: 'completed' },
+          ]" :model-value="selectedTask.status" required @update:model-value="updateTaskStatus" />
         </VCardText>
 
         <VDivider />
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isStatusChangeModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isStatusChangeModalVisible = false">
             Cancel
           </VBtn>
         </VCardActions>
