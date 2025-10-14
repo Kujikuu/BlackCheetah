@@ -37,9 +37,6 @@ const fetchTasks = async () => {
       taskApi.getStatistics(),
     ])
 
-    console.log('Tasks Response:', tasksResponse)
-    console.log('Stats Response:', statsResponse)
-
     if (tasksResponse.success) {
       allTasksData.value = tasksResponse.data
     }
@@ -47,8 +44,6 @@ const fetchTasks = async () => {
     if (statsResponse.success) {
       statistics.value = statsResponse.data
     }
-
-    console.log('Statistics value:', statistics.value)
   }
   catch (err: any) {
     console.error('Error fetching tasks:', err)
