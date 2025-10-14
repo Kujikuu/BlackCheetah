@@ -47,7 +47,17 @@ export const useNotifications = () => {
 
   // Transform backend notification to frontend format
   const transformNotification = (backendNotification: BackendNotification): any => {
-    const data = backendNotification.data || {}
+    // Parse data if it's a string (sometimes comes as JSON string from API)
+    let data = backendNotification.data
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data)
+      } catch (e) {
+        console.error('Failed to parse notification data:', e)
+        data = {}
+      }
+    }
+    data = data || {}
 
     return {
       id: backendNotification.id,
@@ -59,7 +69,7 @@ export const useNotifications = () => {
       icon: data.icon || 'tabler-bell',
       img: data.img,
       text: data.text,
-      data: backendNotification.data,
+      data: data,
       created_at: backendNotification.created_at,
       read_at: backendNotification.read_at,
     }

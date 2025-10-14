@@ -35,13 +35,13 @@ interface ApiResponse {
   success: boolean
   data: {
     stats: {
-      total_sales: number
+      total_sales: string | number
       sales_change: number
-      total_expenses: number
+      total_expenses: string | number
       expenses_change: number
-      net_profit: number
+      net_profit: string | number
       profit_change: number
-      profit_margin: number
+      profit_margin: string | number
       margin_change: number
     }
     top_stores_sales?: Array<{ name: string; sales: number }>
@@ -68,6 +68,7 @@ const salesChartSeries = ref<ChartSeries[]>([{ name: 'Sales', data: [] }])
 const expensesChartSeries = ref<ChartSeries[]>([{ name: 'Expenses', data: [] }])
 const profitChartSeries = ref<ChartSeries[]>([{ name: 'Profit', data: [] }])
 const royaltyChartSeries = ref<ChartSeries[]>([{ name: 'Royalty', data: [] }])
+const monthLabels = ref<string[]>([])
 
 const monthlyBreakdownData = ref<Array<{
   month: string
@@ -76,6 +77,12 @@ const monthlyBreakdownData = ref<Array<{
   royalties: number
   profit: number
 }>>([])
+
+// Helper function to safely convert to number
+const toNumber = (value: string | number): number => {
+  if (typeof value === 'number') return value
+  return parseFloat(value) || 0
+}
 
 // 👉 Watch for API data changes
 watch(financeData, newData => {
@@ -89,7 +96,7 @@ watch(financeData, newData => {
         icon: 'tabler-currency-riyal',
         color: 'primary',
         title: 'Total Sales',
-        value: formatCurrency(parseFloat(data.stats.total_sales) || 0),
+        value: formatCurrency(toNumber(data.stats.total_sales)),
         change: data.stats.sales_change,
         isHover: false,
       },
@@ -97,7 +104,7 @@ watch(financeData, newData => {
         icon: 'tabler-receipt',
         color: 'error',
         title: 'Total Expenses',
-        value: formatCurrency(parseFloat(data.stats.total_expenses) || 0),
+        value: formatCurrency(toNumber(data.stats.total_expenses)),
         change: data.stats.expenses_change,
         isHover: false,
       },
@@ -105,7 +112,7 @@ watch(financeData, newData => {
         icon: 'tabler-chart-line',
         color: 'success',
         title: 'Net Profit',
-        value: formatCurrency(parseFloat(data.stats.net_profit) || 0),
+        value: formatCurrency(toNumber(data.stats.net_profit)),
         change: data.stats.profit_change,
         isHover: false,
       },
@@ -113,7 +120,7 @@ watch(financeData, newData => {
         icon: 'tabler-percentage',
         color: 'warning',
         title: 'Profit Margin',
-        value: `${parseFloat(data.stats.profit_margin) || 0}%`,
+        value: `${toNumber(data.stats.profit_margin).toFixed(2)}%`,
         change: data.stats.margin_change,
         isHover: false,
       },
@@ -123,7 +130,7 @@ watch(financeData, newData => {
     if (data.top_stores_sales && data.top_stores_sales.length > 0) {
       topStoresSalesSeries.value = [{
         name: 'Sales',
-        data: data.top_stores_sales.map((store: any) => parseFloat(store.sales) || 0),
+        data: data.top_stores_sales.map((store: any) => toNumber(store.sales)),
       }]
       topStoreNames.value = data.top_stores_sales.map((store: any) => store.name || 'Unknown Store')
     }
@@ -132,7 +139,7 @@ watch(financeData, newData => {
     if (data.top_stores_royalty && data.top_stores_royalty.length > 0) {
       topStoresRoyaltySeries.value = [{
         name: 'Royalty',
-        data: data.top_stores_royalty.map((store: any) => parseFloat(store.royalty) || 0),
+        data: data.top_stores_royalty.map((store: any) => toNumber(store.royalty)),
       }]
       // Update store names if not already set from sales
       if (topStoreNames.value.length === 0) {
@@ -141,18 +148,20 @@ watch(financeData, newData => {
     }
 
     // Update sales chart series
-    if (data.sales_chart) {
+    if (data.sales_chart && data.sales_chart.length > 0) {
       salesChartSeries.value = [{
         name: 'Sales',
-        data: data.sales_chart.map((item: any) => parseFloat(item.amount) || 0),
+        data: data.sales_chart.map((item: any) => toNumber(item.amount)),
       }]
+      // Extract month labels from sales chart
+      monthLabels.value = data.sales_chart.map((item: any) => item.month)
     }
 
     // Update expenses chart series
     if (data.expenses_chart) {
       expensesChartSeries.value = [{
         name: 'Expenses',
-        data: data.expenses_chart.map((item: any) => parseFloat(item.amount) || 0),
+        data: data.expenses_chart.map((item: any) => toNumber(item.amount)),
       }]
     }
 
@@ -160,7 +169,7 @@ watch(financeData, newData => {
     if (data.profit_chart) {
       profitChartSeries.value = [{
         name: 'Profit',
-        data: data.profit_chart.map((item: any) => parseFloat(item.amount) || 0),
+        data: data.profit_chart.map((item: any) => toNumber(item.amount)),
       }]
     }
 
@@ -168,7 +177,7 @@ watch(financeData, newData => {
     if (data.royalty_chart) {
       royaltyChartSeries.value = [{
         name: 'Royalty',
-        data: data.royalty_chart.map((item: any) => parseFloat(item.amount) || 0),
+        data: data.royalty_chart.map((item: any) => toNumber(item.amount)),
       }]
     }
 
@@ -405,7 +414,7 @@ const summarySeries = computed(() => [
   },
 ])
 
-const summaryConfig = {
+const summaryConfig = computed(() => ({
   chart: {
     type: 'line',
     stacked: false,
@@ -460,7 +469,7 @@ const summaryConfig = {
     enabled: false,
   },
   xaxis: {
-    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    categories: monthLabels.value.length > 0 ? monthLabels.value : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     labels: {
       style: {
         colors: labelColor,
@@ -494,17 +503,17 @@ const summaryConfig = {
       },
     },
   },
-}
+}))
 
 // 👉 Summary Table Data
 const summaryTableData = computed(() => {
   // Use API data only - no fallback
   return monthlyBreakdownData.value.map(item => ({
     month: item.month,
-    sales: formatCurrency(parseFloat(item.sales) || 0),
-    expenses: formatCurrency(parseFloat(item.expenses) || 0),
-    royalties: formatCurrency(parseFloat(item.royalties) || 0),
-    profit: formatCurrency(parseFloat(item.profit) || 0),
+    sales: formatCurrency(toNumber(item.sales)),
+    expenses: formatCurrency(toNumber(item.expenses)),
+    royalties: formatCurrency(toNumber(item.royalties)),
+    profit: formatCurrency(toNumber(item.profit)),
   }))
 })
 
@@ -591,13 +600,13 @@ const summaryHeaders = [
     <VRow class="mb-6">
       <VCol cols="12">
         <VCard>
-          <VCardItem title="Financial Summary" subtitle="Yearly overview of sales, expenses, royalties and profit">
+          <!-- <VCardItem title="Financial Summary" subtitle="Yearly overview of sales, expenses, royalties and profit">
             <template #append>
               <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
                 2024
               </VBtn>
             </template>
-          </VCardItem>
+          </VCardItem> -->
 
           <VCardText>
             <VueApexCharts type="line" height="400" :options="summaryConfig" :series="summarySeries" />
