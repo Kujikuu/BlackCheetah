@@ -127,9 +127,16 @@ export const royaltyApi = {
       formData.append('attachment', paymentData.attachment)
     }
 
+    // Use POST with _method override for file uploads, as PATCH doesn't work well with FormData
+    formData.append('_method', 'PATCH')
+
     return await $api<ApiResponse<RoyaltyRecord>>(`${getApiUrl()}/${id}/mark-paid`, {
-      method: 'PATCH',
+      method: 'POST',
       body: formData,
+      headers: {
+        // Let the browser set the Content-Type with boundary for FormData
+        'Content-Type': undefined as any,
+      },
     })
   },
 

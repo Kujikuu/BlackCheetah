@@ -57,6 +57,12 @@ const isStatisticsLoading = ref(false)
 const isTableLoading = ref(false)
 const isUnitsLoading = ref(false)
 
+// View modal states
+const isViewSaleDialogVisible = ref(false)
+const isViewExpenseDialogVisible = ref(false)
+const viewedSale = ref<any>(null)
+const viewedExpense = ref<any>(null)
+
 // API data
 const chartData = ref<ChartData>({ categories: [], series: [] })
 
@@ -584,9 +590,21 @@ const viewItem = (id: string | number) => {
   }
 
   if (item) {
-    console.log(`Viewing ${activeTab.value} item:`, item)
-    // TODO: Open a modal or navigate to detail page
-    // For now, just log the item details
+    // Open appropriate modal based on tab
+    switch (activeTab.value) {
+      case 'sales':
+        viewedSale.value = item
+        isViewSaleDialogVisible.value = true
+        break
+      case 'expense':
+        viewedExpense.value = item
+        isViewExpenseDialogVisible.value = true
+        break
+      case 'profit':
+        // Profit items might not need a detail view, or create one if needed
+        console.log('Viewing profit item:', item)
+        break
+    }
   }
 }
 
@@ -978,6 +996,308 @@ onMounted(() => {
           </VBtn>
           <VBtn color="primary" :loading="isLoading" :disabled="!importFile" @click="submitImport">
             Import
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- View Sale Details Dialog -->
+    <VDialog v-model="isViewSaleDialogVisible" max-width="700">
+      <VCard v-if="viewedSale">
+        <VCardItem>
+          <VCardTitle>Sale Details</VCardTitle>
+          <template #append>
+            <VChip color="success" size="small" variant="tonal">
+              {{ viewedSale.referenceNumber || `REV-${String(viewedSale.id).padStart(6, '0')}` }}
+            </VChip>
+          </template>
+        </VCardItem>
+
+        <VDivider class="mb-4" />
+
+        <VCardText>
+          <VRow>
+            <!-- Product Information -->
+            <VCol cols="12">
+              <h6 class="text-h6 mb-4 text-primary">
+                <VIcon icon="tabler-shopping-cart" class="me-2" />
+                Product Information
+              </h6>
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Product Name
+                </div>
+                <div class="font-weight-medium text-h6">
+                  {{ viewedSale.product }}
+                </div>
+              </div>
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Sale Date
+                </div>
+                <div class="font-weight-medium">
+                  {{ new Date(viewedSale.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  }) }}
+                </div>
+              </div>
+            </VCol>
+
+            <!-- <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Store Location
+                </div>
+                <div class="font-weight-medium">
+                  {{ viewedSale.unitName || 'N/A' }}
+                </div>
+              </div>
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Customer
+                </div>
+                <div class="font-weight-medium">
+                  {{ viewedSale.customerName || 'N/A' }}
+                </div>
+              </div>
+            </VCol> -->
+
+            <!-- Financial Details -->
+            <VCol cols="12">
+              <VDivider class="my-4" />
+              <h6 class="text-h6 mb-4 text-primary">
+                <VIcon icon="tabler-report-money" class="me-2" />
+                Financial Details
+              </h6>
+            </VCol>
+
+            <VCol cols="12" md="4">
+              <VCard variant="tonal" color="info" class="pa-4">
+                <div class="text-center">
+                  <VIcon icon="tabler-tag" size="32" class="mb-2" />
+                  <div class="text-body-2 text-medium-emphasis mb-1">
+                    Unit Price
+                  </div>
+                  <div class="text-h6 font-weight-bold">
+                    {{ Number(viewedSale.unitPrice).toFixed(2) }} SAR
+                  </div>
+                </div>
+              </VCard>
+            </VCol>
+
+            <VCol cols="12" md="4">
+              <VCard variant="tonal" color="warning" class="pa-4">
+                <div class="text-center">
+                  <VIcon icon="tabler-stack" size="32" class="mb-2" />
+                  <div class="text-body-2 text-medium-emphasis mb-1">
+                    Quantity
+                  </div>
+                  <div class="text-h6 font-weight-bold">
+                    {{ viewedSale.quantity }}
+                  </div>
+                </div>
+              </VCard>
+            </VCol>
+
+            <VCol cols="12" md="4">
+              <VCard variant="tonal" color="success" class="pa-4">
+                <div class="text-center">
+                  <VIcon icon="tabler-coins" size="32" class="mb-2" />
+                  <div class="text-body-2 text-medium-emphasis mb-1">
+                    Total Sale
+                  </div>
+                  <div class="text-h6 font-weight-bold">
+                    {{ Number(viewedSale.sale).toFixed(2) }} SAR
+                  </div>
+                </div>
+              </VCard>
+            </VCol>
+
+            <!-- Calculation Breakdown -->
+            <VCol cols="12">
+              <VDivider class="my-4" />
+              <h6 class="text-h6 mb-4 text-primary">
+                <VIcon icon="tabler-calculator" class="me-2" />
+                Calculation
+              </h6>
+            </VCol>
+
+            <VCol cols="12">
+              <VTable density="compact">
+                <tbody>
+                  <tr>
+                    <td class="font-weight-medium">
+                      Unit Price:
+                    </td>
+                    <td class="text-end">
+                      {{ Number(viewedSale.unitPrice).toFixed(2) }} SAR
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="font-weight-medium">
+                      Quantity:
+                    </td>
+                    <td class="text-end">
+                      × {{ viewedSale.quantity }}
+                    </td>
+                  </tr>
+                  <tr class="bg-success-lighten-5">
+                    <td class="font-weight-bold text-success">
+                      Total Amount:
+                    </td>
+                    <td class="text-end font-weight-bold text-success">
+                      {{ Number(viewedSale.sale).toFixed(2) }} SAR
+                    </td>
+                  </tr>
+                </tbody>
+              </VTable>
+            </VCol>
+          </VRow>
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isViewSaleDialogVisible = false">
+            Close
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- View Expense Details Dialog -->
+    <VDialog v-model="isViewExpenseDialogVisible" max-width="700">
+      <VCard v-if="viewedExpense">
+        <VCardItem>
+          <VCardTitle>Expense Details</VCardTitle>
+          <template #append>
+            <VChip color="error" size="small" variant="tonal">
+              {{ viewedExpense.referenceNumber || `EXP-${String(viewedExpense.id).padStart(6, '0')}` }}
+            </VChip>
+          </template>
+        </VCardItem>
+
+        <VDivider class="mb-4" />
+
+        <VCardText>
+          <VRow>
+            <!-- Expense Information -->
+            <VCol cols="12">
+              <h6 class="text-h6 mb-4 text-primary">
+                <VIcon icon="tabler-receipt" class="me-2" />
+                Expense Information
+              </h6>
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Category
+                </div>
+                <VChip color="error" size="small" variant="tonal" class="text-capitalize">
+                  {{ viewedExpense.expenseCategory }}
+                </VChip>
+              </div>
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Expense Date
+                </div>
+                <div class="font-weight-medium">
+                  {{ new Date(viewedExpense.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  }) }}
+                </div>
+              </div>
+            </VCol>
+
+            <!-- <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Store Location
+                </div>
+                <div class="font-weight-medium">
+                  {{ viewedExpense.unitName || 'N/A' }}
+                </div>
+              </div>
+            </VCol>
+
+            <VCol cols="12" md="6">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Payment Method
+                </div>
+                <div class="font-weight-medium text-capitalize">
+                  {{ viewedExpense.paymentMethod ? viewedExpense.paymentMethod.replace('_', ' ') : 'N/A' }}
+                </div>
+              </div>
+            </VCol> -->
+
+            <VCol cols="12" v-if="viewedExpense.vendorName">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Vendor
+                </div>
+                <div class="font-weight-medium">
+                  {{ viewedExpense.vendorName }}
+                </div>
+              </div>
+            </VCol>
+
+            <VCol cols="12">
+              <div class="mb-4">
+                <div class="text-body-2 text-medium-emphasis mb-1">
+                  Description
+                </div>
+                <div class="font-weight-medium">
+                  {{ viewedExpense.description || 'No description provided' }}
+                </div>
+              </div>
+            </VCol>
+
+            <!-- Financial Details -->
+            <VCol cols="12">
+              <VDivider class="my-4" />
+              <h6 class="text-h6 mb-4 text-primary">
+                <VIcon icon="tabler-report-money" class="me-2" />
+                Amount
+              </h6>
+            </VCol>
+
+            <VCol cols="12">
+              <VCard variant="tonal" color="error" class="pa-6">
+                <div class="text-center">
+                  <VIcon icon="tabler-currency-dollar" size="48" class="mb-3" />
+                  <div class="text-body-1 text-medium-emphasis mb-2">
+                    Expense Amount
+                  </div>
+                  <div class="text-h4 font-weight-bold">
+                    {{ Number(viewedExpense.amount).toFixed(2) }} SAR
+                  </div>
+                </div>
+              </VCard>
+            </VCol>
+          </VRow>
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn color="secondary" variant="tonal" @click="isViewExpenseDialogVisible = false">
+            Close
           </VBtn>
         </VCardActions>
       </VCard>
