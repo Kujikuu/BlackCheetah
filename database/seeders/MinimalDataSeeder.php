@@ -131,6 +131,18 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created franchise');
 
+        // Link sales associates and franchisee to franchise
+        $this->command->info('Linking users to franchise...');
+
+        foreach ($salesAssociates as $associate) {
+            $associate->update(['franchise_id' => $franchise->id]);
+        }
+
+        $franchisee->update(['franchise_id' => $franchise->id]);
+        $sales->update(['franchise_id' => $franchise->id]);
+
+        $this->command->info('✅ Linked sales associates and franchisee to franchise');
+
         // 3. Create 1 Unit linked to franchisee
         $this->command->info('Creating unit...');
 
@@ -192,8 +204,9 @@ class MinimalDataSeeder extends Seeder
         // 5. Create Inventory Management for 5 products
         $this->command->info('Creating inventory...');
 
+        $inventoryRecords = [];
         foreach ($products as $index => $product) {
-            Inventory::create([
+            $inventoryRecords[] = Inventory::create([
                 'unit_id' => $unit->id,
                 'product_id' => $product->id,
                 'quantity' => 100 + ($index * 20), // 100, 120, 140, 160, 180
@@ -203,34 +216,40 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created inventory for 5 products');
 
-        // 6. Create 5 Sales (Revenues)
-        $this->command->info('Creating sales...');
+        // 6. Create 5 Sales (Revenues) for each inventory product
+        $this->command->info('Creating sales for unit inventory...');
 
-        for ($i = 1; $i <= 5; $i++) {
-            $product = $products[($i - 1) % 5];
+        foreach ($products as $i => $product) {
             $quantity = rand(2, 5);
             $unitPrice = $product->unit_price;
             $grossAmount = $unitPrice * $quantity;
 
+            // Create revenue record
             Revenue::create([
                 'franchise_id' => $franchise->id,
                 'unit_id' => $unit->id,
                 'user_id' => $franchisee->id,
-                'revenue_number' => 'REV-' . str_pad($i, 6, '0', STR_PAD_LEFT),
+                'revenue_number' => 'REV-' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
                 'type' => 'sales',
                 'amount' => $grossAmount,
                 'tax_amount' => $grossAmount * 0.15, // 15% VAT
                 'net_amount' => $grossAmount * 1.15,
                 'revenue_date' => Carbon::now()->subDays(rand(1, 30)),
-                'description' => $product->name,
-                'customer_name' => 'Customer ' . $i,
-                'customer_email' => 'customer' . $i . '@example.com',
+                'description' => $product->name . ' - Unit Inventory Sale',
+                'customer_name' => 'Customer ' . ($i + 1),
+                'customer_email' => 'customer' . ($i + 1) . '@example.com',
                 'payment_method' => ['cash', 'credit_card', 'mada'][rand(0, 2)],
                 'status' => 'verified',
             ]);
+
+            // Reduce inventory quantity using DB update
+            DB::table('unit_product_inventories')
+                ->where('unit_id', $unit->id)
+                ->where('product_id', $product->id)
+                ->decrement('quantity', $quantity);
         }
 
-        $this->command->info('✅ Created 5 sales');
+        $this->command->info('✅ Created 5 sales for unit inventory products and reduced stock');
 
         // 7. Create 5 Expenses
         $this->command->info('Creating expenses...');

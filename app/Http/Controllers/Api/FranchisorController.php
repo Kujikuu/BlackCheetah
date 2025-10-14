@@ -518,7 +518,7 @@ class FranchisorController extends Controller
                         'id' => $lead->id,
                         'title' => "New lead: {$lead->first_name} {$lead->last_name}",
                         'description' => "Lead from {$lead->lead_source}",
-                        'week' => 'Week ' . Carbon::parse($lead->created_at)->weekOfYear,
+                        'week' => 'Week '.Carbon::parse($lead->created_at)->weekOfYear,
                         'date' => Carbon::parse($lead->created_at)->format('M d, Y'),
                         'status' => $lead->status === 'new' ? 'scheduled' : ($lead->status === 'converted' ? 'completed' : $lead->status),
                         'icon' => 'tabler-user-plus',
@@ -537,7 +537,7 @@ class FranchisorController extends Controller
                         'id' => $task->id,
                         'title' => "Task assigned: {$task->title}",
                         'description' => $task->description,
-                        'week' => 'Week ' . Carbon::parse($task->created_at)->weekOfYear,
+                        'week' => 'Week '.Carbon::parse($task->created_at)->weekOfYear,
                         'date' => Carbon::parse($task->created_at)->format('M d, Y'),
                         'status' => $task->status === 'pending' ? 'scheduled' : $task->status,
                         'icon' => 'tabler-checklist',
@@ -558,7 +558,7 @@ class FranchisorController extends Controller
                         'id' => $request->id,
                         'title' => "Technical request: {$request->title}",
                         'description' => $request->description,
-                        'week' => 'Week ' . Carbon::parse($request->created_at)->weekOfYear,
+                        'week' => 'Week '.Carbon::parse($request->created_at)->weekOfYear,
                         'date' => Carbon::parse($request->created_at)->format('M d, Y'),
                         'status' => $request->status === 'pending' ? 'scheduled' : $request->status,
                         'icon' => 'tabler-tool',
@@ -650,9 +650,13 @@ class FranchisorController extends Controller
                 ], 404);
             }
 
+            // Get franchisees who have units in this franchise OR are directly linked to this franchise
             $query = User::where('role', 'franchisee')
-                ->whereHas('franchise', function ($q) use ($franchise) {
-                    $q->where('franchisor_id', $franchise->id);
+                ->where(function ($q) use ($franchise) {
+                    $q->where('franchise_id', $franchise->id)
+                        ->orWhereHas('units', function ($unitQuery) use ($franchise) {
+                            $unitQuery->where('franchise_id', $franchise->id);
+                        });
                 });
 
             // Apply search filter
@@ -991,7 +995,7 @@ class FranchisorController extends Controller
 
             $validatedData = $request->validate([
                 'name' => 'sometimes|required|string|max:255',
-                'email' => 'sometimes|required|email|unique:users,email,' . $id,
+                'email' => 'sometimes|required|email|unique:users,email,'.$id,
                 'phone' => 'sometimes|required|string|max:20',
                 'status' => 'sometimes|required|in:active,inactive',
                 'country' => 'nullable|string|max:100',
@@ -1218,7 +1222,7 @@ class FranchisorController extends Controller
                 'description' => null, // Will be filled later
                 'website' => $validatedData['franchiseDetails']['franchiseDetails']['website'],
                 'logo' => $validatedData['franchiseDetails']['franchiseDetails']['logo'],
-                'business_registration_number' => 'BRN-' . strtoupper(uniqid()) . '-' . $user->id, // Generate unique business registration number
+                'business_registration_number' => 'BRN-'.strtoupper(uniqid()).'-'.$user->id, // Generate unique business registration number
                 'tax_id' => $validatedData['franchiseDetails']['legalDetails']['taxId'],
                 'business_type' => $validatedData['franchiseDetails']['legalDetails']['businessStructure'],
                 'established_date' => null, // Will be filled later
@@ -1651,7 +1655,7 @@ class FranchisorController extends Controller
 
             // Store the logo file
             $logoPath = $request->file('logo')->store('franchise-logos', 'public');
-            $logoUrl = asset('storage/' . $logoPath);
+            $logoUrl = asset('storage/'.$logoPath);
 
             // Update franchise with new logo URL
             $franchise->update(['logo' => $logoUrl]);
@@ -1750,12 +1754,12 @@ class FranchisorController extends Controller
                 $baseCode = 'UNIT';
             }
 
-            $unitCode = $prefix . '-' . $baseCode;
+            $unitCode = $prefix.'-'.$baseCode;
             $counter = 1;
 
             // Ensure uniqueness
             while (Unit::where('unit_code', $unitCode)->exists()) {
-                $unitCode = $prefix . '-' . $baseCode . $counter;
+                $unitCode = $prefix.'-'.$baseCode.$counter;
                 $counter++;
             }
 
@@ -1781,7 +1785,7 @@ class FranchisorController extends Controller
             ]);
 
             // Send email notification with login credentials
-            $loginUrl = env('APP_URL') . '/login';
+            $loginUrl = env('APP_URL').'/login';
             $franchisee->notify(new \App\Notifications\NewFranchiseeCredentials($temporaryPassword, $unitCode, $loginUrl));
 
             DB::commit();
