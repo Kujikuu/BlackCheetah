@@ -1439,7 +1439,7 @@ const resolveStatusVariant = (status: string) => {
               </VCol>
               <VCol cols="12" md="4">
                 <AppTextField v-model.number="selectedProduct.unit_price" label="Unit Price" type="number"
-                  placeholder="0.00" prefix="$" step="0.01" />
+                  placeholder="0.00" prefix="SAR" step="0.01" />
               </VCol>
               <VCol cols="12" md="4">
                 <AppTextField v-model.number="selectedProduct.stock" label="Stock Quantity" type="number"

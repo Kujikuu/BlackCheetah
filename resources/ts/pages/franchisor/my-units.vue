@@ -72,9 +72,13 @@ const unitHeaders = [
 
 // 👉 Status options
 const statusOptions = [
+  { title: 'Planning', value: 'planning' },
+  { title: 'Construction', value: 'construction' },
+  { title: 'Training', value: 'training' },
   { title: 'Active', value: 'active' },
   { title: 'Pending', value: 'pending' },
-  { title: 'Inactive', value: 'inactive' },
+  { title: 'Temporarily Closed', value: 'temporarily_closed' },
+  { title: 'Permanently Closed', value: 'permanently_closed' },
 ]
 
 // 👉 Status variant resolver
@@ -249,7 +253,7 @@ const changeUnitStatus = async () => {
             </p>
           </div>
           <VBtn color="primary" prepend-icon="tabler-plus" :loading="loading" @click="addFranchisee">
-            Add Franchisee & Unit
+            Add Franchisee
           </VBtn>
         </div>
       </VCol>
@@ -455,7 +459,7 @@ const changeUnitStatus = async () => {
             <VCardTitle>All Franchise Units</VCardTitle>
             <template #append>
               <VBtn color="primary" prepend-icon="tabler-plus" :loading="loading" @click="addFranchisee">
-                Add Franchisee & Unit
+                Add Franchisee
               </VBtn>
             </template>
           </VCardItem>
@@ -539,9 +543,12 @@ const changeUnitStatus = async () => {
 
             <!-- Royalty Percentage -->
             <template #item.royaltyPercentage="{ item }">
-              <div class="text-body-1 font-weight-medium">
+              <!-- <div class="text-body-1 font-weight-medium">
                 {{ item.royaltyPercentage }}%
-              </div>
+              </div> -->
+              <VChip v-if="item.royaltyPercentage > 0" color="primary" size="small" class="mt-1">
+                {{ item.royaltyPercentage }}% Royalty
+              </VChip>
             </template>
 
             <!-- Contract Period -->

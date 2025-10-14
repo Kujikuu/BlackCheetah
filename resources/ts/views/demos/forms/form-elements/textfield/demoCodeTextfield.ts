@@ -651,7 +651,7 @@ const time = ref('04:56')
       <AppTextField
         v-model="amount"
         label="Amount"
-        prefix="$"
+        prefix="SAR"
         type="number"
         placeholder="10.05"
       />
@@ -701,7 +701,7 @@ const time = ref('04:56')
       <AppTextField
         v-model="amount"
         label="Amount"
-        prefix="$"
+        prefix="SAR"
         type="number"
         placeholder="10.05"
       />

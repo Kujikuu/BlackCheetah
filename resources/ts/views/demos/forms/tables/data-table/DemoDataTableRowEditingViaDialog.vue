@@ -104,25 +104,14 @@ onMounted(() => {
 
 <template>
   <!-- 👉 Datatable  -->
-  <VDataTable
-    :headers="headers"
-    :items="userList"
-    :items-per-page="5"
-  >
+  <VDataTable :headers="headers" :items="userList" :items-per-page="5">
     <!-- full name -->
     <template #item.fullName="{ item }">
       <div class="d-flex align-center">
         <!-- avatar -->
-        <VAvatar
-          size="32"
-          :color="item.avatar ? '' : 'primary'"
-          :class="item.avatar ? '' : 'v-avatar-light-bg primary--text'"
-          :variant="!item.avatar ? 'tonal' : undefined"
-        >
-          <VImg
-            v-if="item.avatar"
-            :src="item.avatar"
-          />
+        <VAvatar size="32" :color="item.avatar ? '' : 'primary'"
+          :class="item.avatar ? '' : 'v-avatar-light-bg primary--text'" :variant="!item.avatar ? 'tonal' : undefined">
+          <VImg v-if="item.avatar" :src="item.avatar" />
           <span v-else>{{ avatarText(item.fullName) }}</span>
         </VAvatar>
 
@@ -135,10 +124,7 @@ onMounted(() => {
 
     <!-- status -->
     <template #item.status="{ item }">
-      <VChip
-        :color="resolveStatusVariant(item.status).color"
-        size="small"
-      >
+      <VChip :color="resolveStatusVariant(item.status).color" size="small">
         {{ resolveStatusVariant(item.status).text }}
       </VChip>
     </template>
@@ -157,10 +143,7 @@ onMounted(() => {
   </VDataTable>
 
   <!-- 👉 Edit Dialog  -->
-  <VDialog
-    v-model="editDialog"
-    max-width="600px"
-  >
+  <VDialog v-model="editDialog" max-width="600px">
     <VCard title="Edit Item">
       <VCardText>
         <div class="text-body-1 mb-6">
@@ -168,93 +151,44 @@ onMounted(() => {
         </div>
         <VRow>
           <!-- fullName -->
-          <VCol
-            cols="12"
-            sm="6"
-          >
-            <AppTextField
-              v-model="editedItem.fullName"
-              label="User name"
-            />
+          <VCol cols="12" sm="6">
+            <AppTextField v-model="editedItem.fullName" label="User name" />
           </VCol>
 
           <!-- email -->
-          <VCol
-            cols="12"
-            sm="6"
-          >
-            <AppTextField
-              v-model="editedItem.email"
-              label="Email"
-            />
+          <VCol cols="12" sm="6">
+            <AppTextField v-model="editedItem.email" label="Email" />
           </VCol>
 
           <!-- salary -->
-          <VCol
-            cols="12"
-            sm="6"
-          >
-            <AppTextField
-              v-model="editedItem.salary"
-              label="Salary"
-              prefix="$"
-              type="number"
-            />
+          <VCol cols="12" sm="6">
+            <AppTextField v-model="editedItem.salary" label="Salary" prefix="SAR" type="number" />
           </VCol>
 
           <!-- age -->
-          <VCol
-            cols="12"
-            sm="6"
-          >
-            <AppTextField
-              v-model="editedItem.age"
-              label="Age"
-              type="number"
-            />
+          <VCol cols="12" sm="6">
+            <AppTextField v-model="editedItem.age" label="Age" type="number" />
           </VCol>
 
           <!-- start date -->
-          <VCol
-            cols="12"
-            sm="6"
-          >
-            <AppTextField
-              v-model="editedItem.startDate"
-              label="Date"
-            />
+          <VCol cols="12" sm="6">
+            <AppTextField v-model="editedItem.startDate" label="Date" />
           </VCol>
 
           <!-- status -->
-          <VCol
-            cols="12"
-            sm="6"
-          >
-            <AppSelect
-              v-model="editedItem.status"
-              :items="selectedOptions"
-              item-title="text"
-              item-value="value"
-              label="Standard"
-            />
+          <VCol cols="12" sm="6">
+            <AppSelect v-model="editedItem.status" :items="selectedOptions" item-title="text" item-value="value"
+              label="Standard" />
           </VCol>
         </VRow>
       </VCardText>
 
       <VCardText>
         <div class="self-align-end d-flex gap-4 justify-end">
-          <VBtn
-            color="error"
-            variant="outlined"
-            @click="close"
-          >
+          <VBtn color="error" variant="outlined" @click="close">
             Cancel
           </VBtn>
-          <VBtn
-            color="success"
-            variant="elevated"
-            @click="save"
-          >
+          <VBtn color="success" variant="elevated" @click="save">
             Save
           </VBtn>
         </div>
@@ -263,25 +197,14 @@ onMounted(() => {
   </VDialog>
 
   <!-- 👉 Delete Dialog  -->
-  <VDialog
-    v-model="deleteDialog"
-    max-width="500px"
-  >
+  <VDialog v-model="deleteDialog" max-width="500px">
     <VCard title="Are you sure you want to delete this item?">
       <VCardText>
         <div class="d-flex justify-center gap-4">
-          <VBtn
-            color="error"
-            variant="outlined"
-            @click="closeDelete"
-          >
+          <VBtn color="error" variant="outlined" @click="closeDelete">
             Cancel
           </VBtn>
-          <VBtn
-            color="success"
-            variant="elevated"
-            @click="deleteItemConfirm"
-          >
+          <VBtn color="success" variant="elevated" @click="deleteItemConfirm">
             OK
           </VBtn>
         </div>

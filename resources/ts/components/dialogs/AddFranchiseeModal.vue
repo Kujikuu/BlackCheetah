@@ -214,7 +214,7 @@ const onDialogModelValueUpdate = (val: boolean) => {
               <VForm>
                 <VRow>
                   <VCol cols="12">
-                    <AppTextField v-model="formData.name" label="Unit Name" placeholder="Enter unit name"
+                    <AppTextField v-model="formData.name" label="Branch Name" placeholder="Enter Branch name"
                       :rules="[requiredValidator]" />
                   </VCol>
 
@@ -256,7 +256,8 @@ const onDialogModelValueUpdate = (val: boolean) => {
                   </VCol>
 
                   <VCol cols="12" md="6">
-                    <AppTextField v-model="formData.postalCode" label="Postal Code" placeholder="Enter postal code" />
+                    <AppTextField v-model="formData.postalCode" label="Postal Code" hidden
+                      placeholder="Enter postal code" />
                   </VCol>
                 </VRow>
               </VForm>
@@ -288,7 +289,7 @@ const onDialogModelValueUpdate = (val: boolean) => {
 
                   <VCol cols="12" md="4">
                     <AppTextField v-model="formData.monthlyRent" label="Monthly Rent" placeholder="Enter monthly rent"
-                      type="number" prefix="$" />
+                      type="number" prefix="SAR" />
                   </VCol>
                 </VRow>
               </VForm>

@@ -2398,7 +2398,7 @@ onMounted(() => {
             <AppTextField
               v-model="editedItem.salary"
               label="Salary"
-              prefix="$"
+              prefix="SAR"
               type="number"
             />
           </VCol>
@@ -2737,7 +2737,7 @@ onMounted(() => {
             <AppTextField
               v-model="editedItem.salary"
               label="Salary"
-              prefix="$"
+              prefix="SAR"
               type="number"
             />
           </VCol>
