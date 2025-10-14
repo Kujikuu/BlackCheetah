@@ -2,14 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Franchise;
 use App\Models\Lead;
 use App\Models\Note;
 use App\Models\User;
-use App\Models\Franchise;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class NoteApiTest extends TestCase
@@ -17,7 +15,9 @@ class NoteApiTest extends TestCase
     use RefreshDatabase, WithFaker;
 
     private User $user;
+
     private Lead $lead;
+
     private Franchise $franchise;
 
     protected function setUp(): void
@@ -96,7 +96,7 @@ class NoteApiTest extends TestCase
             'user_id' => $this->user->id,
         ]);
 
-        $response = $this->getJson('/api/v1/notes?lead_id=' . $this->lead->id);
+        $response = $this->getJson('/api/v1/notes?lead_id='.$this->lead->id);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -133,7 +133,7 @@ class NoteApiTest extends TestCase
             'user_id' => $this->user->id,
         ]);
 
-        $response = $this->getJson('/api/v1/notes/' . $note->id);
+        $response = $this->getJson('/api/v1/notes/'.$note->id);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -158,7 +158,7 @@ class NoteApiTest extends TestCase
             'description' => 'Updated note description.',
         ];
 
-        $response = $this->putJson('/api/v1/notes/' . $note->id, $updateData);
+        $response = $this->putJson('/api/v1/notes/'.$note->id, $updateData);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -185,7 +185,7 @@ class NoteApiTest extends TestCase
             'user_id' => $this->user->id,
         ]);
 
-        $response = $this->deleteJson('/api/v1/notes/' . $note->id);
+        $response = $this->deleteJson('/api/v1/notes/'.$note->id);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -211,7 +211,7 @@ class NoteApiTest extends TestCase
             'description' => 'Updated note description.',
         ];
 
-        $response = $this->putJson('/api/v1/notes/' . $note->id, $updateData);
+        $response = $this->putJson('/api/v1/notes/'.$note->id, $updateData);
 
         $response->assertStatus(403)
             ->assertJson([
@@ -228,7 +228,7 @@ class NoteApiTest extends TestCase
             'user_id' => $otherUser->id,
         ]);
 
-        $response = $this->deleteJson('/api/v1/notes/' . $note->id);
+        $response = $this->deleteJson('/api/v1/notes/'.$note->id);
 
         $response->assertStatus(403)
             ->assertJson([
@@ -241,9 +241,9 @@ class NoteApiTest extends TestCase
     {
         // Remove authentication for this test
         $this->app['auth']->forgetGuards();
-        
+
         // Make request without authentication
-        $response = $this->getJson('/api/v1/notes?lead_id=' . $this->lead->id);
+        $response = $this->getJson('/api/v1/notes?lead_id='.$this->lead->id);
         $response->assertStatus(401);
     }
 
@@ -265,5 +265,124 @@ class NoteApiTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['lead_id']);
+    }
+
+    public function test_franchisor_can_edit_sales_user_notes(): void
+    {
+        // Create a sales user belonging to the franchisor's franchise
+        $salesUser = User::factory()->create([
+            'role' => 'sales',
+            'status' => 'active',
+            'franchise_id' => $this->franchise->id,
+        ]);
+
+        // Create a note by the sales user
+        $note = Note::factory()->create([
+            'lead_id' => $this->lead->id,
+            'user_id' => $salesUser->id,
+            'title' => 'Sales User Note',
+            'description' => 'Note created by sales user',
+        ]);
+
+        // Franchisor should be able to update the note
+        $updateData = [
+            'title' => 'Updated by Franchisor',
+            'description' => 'Franchisor updated this note',
+            '_method' => 'PUT',
+        ];
+
+        $response = $this->postJson("/api/v1/notes/{$note->id}", $updateData);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Note updated successfully',
+            ]);
+
+        $this->assertDatabaseHas('notes', [
+            'id' => $note->id,
+            'title' => 'Updated by Franchisor',
+            'description' => 'Franchisor updated this note',
+        ]);
+    }
+
+    public function test_franchisor_can_delete_sales_user_notes(): void
+    {
+        // Create a sales user belonging to the franchisor's franchise
+        $salesUser = User::factory()->create([
+            'role' => 'sales',
+            'status' => 'active',
+            'franchise_id' => $this->franchise->id,
+        ]);
+
+        // Create a note by the sales user
+        $note = Note::factory()->create([
+            'lead_id' => $this->lead->id,
+            'user_id' => $salesUser->id,
+            'title' => 'Sales User Note',
+            'description' => 'Note created by sales user',
+        ]);
+
+        // Franchisor should be able to delete the note
+        $response = $this->deleteJson("/api/v1/notes/{$note->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Note deleted successfully',
+            ]);
+
+        $this->assertDatabaseMissing('notes', [
+            'id' => $note->id,
+        ]);
+    }
+
+    public function test_franchisor_cannot_edit_notes_from_other_franchises(): void
+    {
+        // Create another franchise with another franchisor
+        $otherFranchisor = User::factory()->create([
+            'role' => 'franchisor',
+            'status' => 'active',
+        ]);
+
+        $otherFranchise = Franchise::factory()->create([
+            'franchisor_id' => $otherFranchisor->id,
+        ]);
+
+        // Create a sales user for the other franchise
+        $otherSalesUser = User::factory()->create([
+            'role' => 'sales',
+            'status' => 'active',
+            'franchise_id' => $otherFranchise->id,
+        ]);
+
+        // Create a lead for the other franchise
+        $otherLead = Lead::factory()->create([
+            'franchise_id' => $otherFranchise->id,
+            'assigned_to' => $otherSalesUser->id,
+        ]);
+
+        // Create a note by the other sales user
+        $note = Note::factory()->create([
+            'lead_id' => $otherLead->id,
+            'user_id' => $otherSalesUser->id,
+            'title' => 'Other Sales User Note',
+            'description' => 'Note from another franchise',
+        ]);
+
+        // Current franchisor should NOT be able to update this note
+        $updateData = [
+            'title' => 'Trying to update',
+            'description' => 'Should not work',
+            '_method' => 'PUT',
+        ];
+
+        $response = $this->postJson("/api/v1/notes/{$note->id}", $updateData);
+
+        $response->assertStatus(403)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Unauthorized to edit this note',
+            ]);
     }
 }

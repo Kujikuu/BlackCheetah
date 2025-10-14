@@ -118,14 +118,17 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
     });
 
     // Lead Management Routes
-    Route::apiResource('leads', LeadController::class);
     Route::prefix('leads')->group(function () {
         Route::get('statistics', [LeadController::class, 'statistics']);
+        Route::post('bulk-delete', [LeadController::class, 'bulkDelete']);
+        Route::post('import-csv', [LeadController::class, 'importCsv']);
+        Route::get('export-csv', [LeadController::class, 'exportCsv']);
         Route::patch('{lead}/convert', [LeadController::class, 'convert']);
         Route::patch('{lead}/mark-lost', [LeadController::class, 'markAsLost']);
         Route::patch('{lead}/assign', [LeadController::class, 'assign']);
         Route::post('{lead}/notes', [LeadController::class, 'addNote']);
     });
+    Route::apiResource('leads', LeadController::class);
 
     // Note Management Routes
     Route::prefix('notes')->group(function () {
@@ -134,7 +137,7 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
         Route::get('{note}', [NoteController::class, 'show']); // Get specific note
         Route::put('{note}', [NoteController::class, 'update']); // Update note
         Route::delete('{note}', [NoteController::class, 'destroy']); // Delete note
-        Route::delete('{note}/attachments', [NoteController::class, 'removeAttachment']); // Remove attachment
+        Route::delete('{note}/attachments/{attachmentIndex}', [NoteController::class, 'removeAttachment']); // Remove attachment
     });
 
     // Unit Management Routes

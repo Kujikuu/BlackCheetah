@@ -12,6 +12,53 @@ use Illuminate\Support\Facades\Storage;
 class NoteController extends Controller
 {
     /**
+     * Check if the authenticated user can manage a note.
+     * Users can manage notes if they are:
+     * - The creator of the note
+     * - An admin
+     * - A franchisor managing notes from their sales team
+     */
+    protected function canManageNote(Note $note): bool
+    {
+        $user = Auth::user();
+
+        // Admin can manage all notes
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        // Creator can manage their own notes
+        if ($note->user_id === $user->id) {
+            return true;
+        }
+
+        // Franchisor can manage notes from their sales team
+        if ($user->hasRole('franchisor')) {
+            // Load the note creator if not already loaded
+            if (! $note->relationLoaded('user')) {
+                $note->load('user');
+            }
+
+            $noteCreator = $note->user;
+
+            // Check if the note creator belongs to this franchisor's franchise
+            if ($noteCreator && $noteCreator->franchise_id) {
+                // Load the franchisor's franchise if not already loaded
+                if (! $user->relationLoaded('franchise')) {
+                    $user->load('franchise');
+                }
+
+                $franchise = $user->franchise;
+                if ($franchise && $noteCreator->franchise_id === $franchise->id) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Display a listing of notes for a specific lead.
      */
     public function index(Request $request): JsonResponse
@@ -93,8 +140,8 @@ class NoteController extends Controller
      */
     public function update(Request $request, Note $note): JsonResponse
     {
-        // Check if user can edit this note (only creator or admin)
-        if ($note->user_id !== Auth::id() && ! Auth::user()->hasRole('admin')) {
+        // Check if user can edit this note
+        if (! $this->canManageNote($note)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to edit this note',
@@ -128,7 +175,7 @@ class NoteController extends Controller
             'attachments' => $attachmentPaths,
         ]);
 
-        $note->load('user:id,first_name,last_name');
+        $note->load('user:id,name,email');
 
         return response()->json([
             'success' => true,
@@ -142,8 +189,8 @@ class NoteController extends Controller
      */
     public function destroy(Note $note): JsonResponse
     {
-        // Check if user can delete this note (only creator or admin)
-        if ($note->user_id !== Auth::id() && ! Auth::user()->hasRole('admin')) {
+        // Check if user can delete this note
+        if (! $this->canManageNote($note)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to delete this note',
@@ -170,24 +217,19 @@ class NoteController extends Controller
     /**
      * Remove an attachment from a note.
      */
-    public function removeAttachment(Note $note, Request $request): JsonResponse
+    public function removeAttachment(Note $note, int $attachmentIndex): JsonResponse
     {
         // Check if user can edit this note
-        if ($note->user_id !== Auth::id() && ! Auth::user()->hasRole('admin')) {
+        if (! $this->canManageNote($note)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to edit this note',
             ], 403);
         }
 
-        $request->validate([
-            'attachment_index' => 'required|integer|min:0',
-        ]);
-
         $attachments = $note->attachments ?? [];
-        $index = $request->attachment_index;
 
-        if (! isset($attachments[$index])) {
+        if (! isset($attachments[$attachmentIndex])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Attachment not found',
@@ -195,12 +237,12 @@ class NoteController extends Controller
         }
 
         // Delete the file
-        if (isset($attachments[$index]['path'])) {
-            Storage::disk('public')->delete($attachments[$index]['path']);
+        if (isset($attachments[$attachmentIndex]['path'])) {
+            Storage::disk('public')->delete($attachments[$attachmentIndex]['path']);
         }
 
         // Remove from array
-        array_splice($attachments, $index, 1);
+        array_splice($attachments, $attachmentIndex, 1);
 
         $note->update(['attachments' => $attachments]);
 

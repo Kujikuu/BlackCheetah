@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
+import { leadApi, type Lead, type LeadStatistic } from '@/services/api/lead'
 
 // 👉 Store
 const searchQuery = ref('')
@@ -11,18 +12,30 @@ const selectedLeadForNote = ref<number | null>(null)
 const isImportDialogVisible = ref(false)
 const isDeleteDialogVisible = ref(false)
 const leadToDelete = ref<number | null>(null)
+const loading = ref(false)
+const error = ref<string | null>(null)
 
 // Data table options
 const itemsPerPage = ref(10)
 const page = ref(1)
 const sortBy = ref()
 const orderBy = ref()
-const selectedRows = ref([])
+const selectedRows = ref<number[]>([])
 
 // Update data table options
 const updateOptions = (options: any) => {
   sortBy.value = options.sortBy[0]?.key
   orderBy.value = options.sortBy[0]?.order
+  fetchLeads()
+}
+
+// Helper functions
+const prefixWithPlus = (value: number) => {
+  return value > 0 ? `+${value}` : value
+}
+
+const avatarText = (name: string) => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase()
 }
 
 // Headers
@@ -40,70 +53,64 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Mock data - Replace with actual API call
-const leadsData = ref({
-  leads: [
-    {
-      id: 1,
-      firstName: 'John',
-      lastName: 'Smith',
-      email: 'john.smith@example.com',
-      phone: '+1 234-567-8900',
-      company: 'Tech Corp',
-      country: 'USA',
-      state: 'California',
-      city: 'San Francisco',
-      source: 'Website',
-      status: 'qualified',
-      owner: 'Sarah Johnson',
-      lastContacted: '2024-01-15',
-      scheduledMeeting: '2024-01-20',
-    },
-    {
-      id: 2,
-      firstName: 'Emily',
-      lastName: 'Davis',
-      email: 'emily.d@example.com',
-      phone: '+1 234-567-8901',
-      company: 'Business Inc',
-      country: 'USA',
-      state: 'New York',
-      city: 'New York',
-      source: 'Referral',
-      status: 'unqualified',
-      owner: 'John Smith',
-      lastContacted: '2024-01-14',
-      scheduledMeeting: null,
-    },
-    {
-      id: 3,
-      firstName: 'Michael',
-      lastName: 'Brown',
-      email: 'michael.b@example.com',
-      phone: '+1 234-567-8902',
-      company: 'Solutions LLC',
-      country: 'Canada',
-      state: 'Ontario',
-      city: 'Toronto',
-      source: 'Social Media',
-      status: 'qualified',
-      owner: 'Sarah Johnson',
-      lastContacted: '2024-01-13',
-      scheduledMeeting: '2024-01-18',
-    },
-  ],
-  total: 3,
+// Data state
+const leadsData = ref<Lead[]>([])
+const totalLeads = ref(0)
+const statsData = ref<LeadStatistic[]>([])
+
+const leads = computed(() => leadsData.value)
+
+// Fetch leads from API
+const fetchLeads = async () => {
+  try {
+    loading.value = true
+    error.value = null
+
+    const response = await leadApi.getLeads({
+      status: selectedStatus.value,
+      source: selectedSource.value,
+      owner: selectedOwner.value,
+      search: searchQuery.value,
+      itemsPerPage: itemsPerPage.value,
+      page: page.value,
+      sortBy: sortBy.value,
+      orderBy: orderBy.value,
+    })
+
+    if (response.success) {
+      leadsData.value = response.leads
+      totalLeads.value = response.total
+    }
+  } catch (err: any) {
+    error.value = err.message || 'Failed to fetch leads'
+    console.error('Error fetching leads:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Fetch statistics
+const fetchStatistics = async () => {
+  try {
+    const response = await leadApi.getStatistics()
+    if (response.success) {
+      statsData.value = response.data
+    }
+  } catch (err: any) {
+    console.error('Error fetching statistics:', err)
+  }
+}
+
+// Watch for filter changes
+watch([searchQuery, selectedStatus, selectedSource, selectedOwner, page, itemsPerPage], () => {
+  fetchLeads()
 })
 
-const leads = computed(() => leadsData.value.leads)
-const totalLeads = computed(() => leadsData.value.total)
-
-// 👉 Stats
-const statsData = ref([
-  { title: 'Total Leads', value: '1,245', change: 15, icon: 'tabler-users', iconColor: 'primary' },
-  { title: 'Qualified', value: '847', change: 22, icon: 'tabler-user-check', iconColor: 'success' },
-  { title: 'Unqualified', value: '398', change: -8, icon: 'tabler-user-x', iconColor: 'error' },
-])
+// Initial load
+onMounted(() => {
+  fetchLeads()
+  fetchStatistics()
+})
 
 // 👉 search filters
 const sources = [
@@ -144,18 +151,54 @@ const deleteLead = async () => {
   if (leadToDelete.value === null)
     return
 
-  // TODO: Implement API call
-  const index = leadsData.value.leads.findIndex(lead => lead.id === leadToDelete.value)
-  if (index !== -1)
-    leadsData.value.leads.splice(index, 1)
+  try {
+    loading.value = true
+    const response = await leadApi.deleteLead(leadToDelete.value)
 
-  // Delete from selectedRows
-  const selectedIndex = selectedRows.value.findIndex(row => row === leadToDelete.value)
-  if (selectedIndex !== -1)
-    selectedRows.value.splice(selectedIndex, 1)
+    if (response.success) {
+      // Remove from local data
+      const index = leadsData.value.findIndex((lead: Lead) => lead.id === leadToDelete.value)
+      if (index !== -1)
+        leadsData.value.splice(index, 1)
 
-  isDeleteDialogVisible.value = false
-  leadToDelete.value = null
+      // Remove from selectedRows
+      const selectedIndex = selectedRows.value.findIndex((row: number) => row === leadToDelete.value)
+      if (selectedIndex !== -1)
+        selectedRows.value.splice(selectedIndex, 1)
+
+      totalLeads.value--
+    }
+  } catch (err: any) {
+    console.error('Error deleting lead:', err)
+    error.value = err.message || 'Failed to delete lead'
+  } finally {
+    loading.value = false
+    isDeleteDialogVisible.value = false
+    leadToDelete.value = null
+  }
+}
+
+// Bulk delete
+const bulkDelete = async () => {
+  if (selectedRows.value.length === 0)
+    return
+
+  try {
+    loading.value = true
+    const response = await leadApi.bulkDelete(selectedRows.value)
+
+    if (response.success) {
+      // Refresh leads list
+      await fetchLeads()
+      await fetchStatistics()
+      selectedRows.value = []
+    }
+  } catch (err: any) {
+    console.error('Error bulk deleting leads:', err)
+    error.value = err.message || 'Failed to delete leads'
+  } finally {
+    loading.value = false
+  }
 }
 
 // 👉 Import CSV
@@ -168,7 +211,7 @@ const handleFileUpload = (event: Event) => {
 }
 
 const downloadExampleCSV = () => {
-  const csvContent = 'First Name,Last Name,Email,Phone,Company,Country,State,City,Lead Source,Lead Status,Lead Owner\nJohn,Doe,john.doe@example.com,+1234567890,Example Corp,USA,California,Los Angeles,Website,Qualified,Sarah Johnson'
+  const csvContent = 'First Name,Last Name,Email,Phone,Company,Country,State,City,Lead Source,Lead Status,Lead Owner\nJohn,Doe,john.doe@example.com,+1234567890,Example Corp,USA,California,Los Angeles,Website,qualified,Sarah Johnson'
   const blob = new Blob([csvContent], { type: 'text/csv' })
   const url = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -179,39 +222,43 @@ const downloadExampleCSV = () => {
   window.URL.revokeObjectURL(url)
 }
 
-const importCSV = () => {
+const importCSV = async () => {
   if (!csvFile.value) {
-    // Show error message
+    error.value = 'Please select a CSV file'
     return
   }
 
-  // TODO: Implement CSV import logic
-  console.log('Importing CSV:', csvFile.value)
-  isImportDialogVisible.value = false
-  csvFile.value = null
+  try {
+    loading.value = true
+    const response = await leadApi.importCsv(csvFile.value)
+
+    if (response.success) {
+      // Refresh leads list and statistics
+      await fetchLeads()
+      await fetchStatistics()
+      isImportDialogVisible.value = false
+      csvFile.value = null
+    }
+  } catch (err: any) {
+    console.error('Error importing CSV:', err)
+    error.value = err.message || 'Failed to import CSV'
+  } finally {
+    loading.value = false
+  }
 }
 
 // 👉 Export functionality
 const exportLeads = () => {
-  const dataToExport = selectedRows.value.length > 0
-    ? leads.value.filter(lead => selectedRows.value.includes(lead.id))
-    : leads.value
+  const exportIds = selectedRows.value.length > 0 ? selectedRows.value : undefined
+  const exportUrl = leadApi.exportCsv(exportIds)
 
-  const csvContent = [
-    'First Name,Last Name,Company,Email,Phone,City,State,Source,Status,Owner,Last Contacted',
-    ...dataToExport.map(lead =>
-      `"${lead.firstName}","${lead.lastName}","${lead.company}","${lead.email}","${lead.phone}","${lead.city}","${lead.state}","${lead.source}","${lead.status}","${lead.owner}","${lead.lastContacted}"`,
-    ),
-  ].join('\n')
-
-  const blob = new Blob([csvContent], { type: 'text/csv' })
-  const url = window.URL.createObjectURL(blob)
+  // Create a temporary link and trigger download
   const a = document.createElement('a')
-
-  a.href = url
+  a.href = exportUrl
   a.download = `leads_${selectedRows.value.length > 0 ? 'selected' : 'all'}_${new Date().toISOString().split('T')[0]}.csv`
+  document.body.appendChild(a)
   a.click()
-  window.URL.revokeObjectURL(url)
+  document.body.removeChild(a)
 }
 
 // 👉 Add note functionality
@@ -229,7 +276,7 @@ const onNoteAdded = () => {
 const router = useRouter()
 
 const navigateToAddLead = () => {
-  router.push({ name: 'franchisor-add-lead' })
+  router.push({ name: 'sales-add-lead' })
 }
 </script>
 
@@ -356,11 +403,9 @@ const navigateToAddLead = () => {
               <span>{{ avatarText(`${item.firstName} ${item.lastName}`) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
-              <h6 class="text-base font-weight-medium">
-                <RouterLink :to="{ name: 'sales-leads-id', params: { id: item.id } }" class="text-link">
-                  {{ item.firstName }} {{ item.lastName }}
-                </RouterLink>
-              </h6>
+              <RouterLink :to="{ name: 'sales-leads-id', params: { id: item.id } }" class="text-link">
+                {{ item.firstName }} {{ item.lastName }}
+              </RouterLink>
             </div>
           </div>
         </template>
@@ -427,13 +472,6 @@ const navigateToAddLead = () => {
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem :to="{ name: 'sales-leads-id', params: { id: item.id } }">
-                  <template #prepend>
-                    <VIcon icon="tabler-eye" />
-                  </template>
-                  <VListItemTitle>View & Edit</VListItemTitle>
-                </VListItem>
-
                 <VListItem @click="openAddNoteModal(item.id)">
                   <template #prepend>
                     <VIcon icon="tabler-note" />

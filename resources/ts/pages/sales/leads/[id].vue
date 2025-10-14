@@ -2,9 +2,10 @@
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
 import EditNoteModal from '@/components/franchisor/EditNoteModal.vue'
 import ViewNoteModal from '@/components/franchisor/ViewNoteModal.vue'
+import { leadApi, type Lead } from '@/services/api/lead'
 import { avatarText } from '@core/utils/formatters'
 
-const route = useRoute('franchisor-lead-view-id')
+const route = useRoute('sales-lead-view-id')
 const leadId = computed(() => Number(route.params.id))
 
 const currentTab = ref('overview')
@@ -17,7 +18,7 @@ const noteToDelete = ref<number | null>(null)
 const isEditMode = ref(false)
 
 // Lead data from API
-const leadData = ref<any>(null)
+const leadData = ref<Lead | null>(null)
 const isLoadingLead = ref(false)
 
 // Fetch lead data
@@ -25,36 +26,10 @@ const fetchLeadData = async () => {
   try {
     isLoadingLead.value = true
 
-    const response = await $api(`/v1/franchisor/leads/${leadId.value}`, {
-      method: 'GET',
-    })
+    const response = await leadApi.getLead(leadId.value)
 
-    if (response.success) {
-      // Map API response to frontend format
-      leadData.value = {
-        id: response.data.id,
-        firstName: response.data.first_name,
-        lastName: response.data.last_name,
-        email: response.data.email,
-        phone: response.data.phone,
-        company: response.data.company_name || response.data.company,
-        country: response.data.country,
-        state: response.data.state || response.data.address,
-        city: response.data.city,
-        source: response.data.lead_source,
-        status: response.data.status,
-        owner: response.data.assignedUser?.name || 'Unassigned',
-        lastContacted: response.data.last_contact_date,
-        scheduledMeeting: response.data.next_follow_up_date,
-        note: response.data.notes,
-        priority: response.data.priority,
-        estimatedInvestment: response.data.estimated_investment,
-        franchiseFeeQuoted: response.data.franchise_fee_quoted,
-        expectedDecisionDate: response.data.expected_decision_date,
-        contactAttempts: response.data.contact_attempts,
-        interests: response.data.interests,
-        documents: response.data.documents,
-      }
+    if (response.success && response.data) {
+      leadData.value = response.data
     }
   }
   catch (error) {
@@ -219,32 +194,10 @@ const saveLead = async () => {
   try {
     isSavingLead.value = true
 
-    // Map frontend data to API format
-    const updateData = {
-      first_name: leadData.value.firstName,
-      last_name: leadData.value.lastName,
-      email: leadData.value.email,
-      phone: leadData.value.phone,
-      company: leadData.value.company,
-      country: leadData.value.country,
-      state: leadData.value.state,
-      city: leadData.value.city,
-      source: leadData.value.source,
-      status: leadData.value.status,
-      notes: leadData.value.note,
-      priority: leadData.value.priority,
-      estimated_investment: leadData.value.estimatedInvestment,
-      franchise_fee_quoted: leadData.value.franchiseFeeQuoted,
-      expected_decision_date: leadData.value.expectedDecisionDate,
-    }
-
-    const response = await $api(`/v1/franchisor/leads/${leadId.value}`, {
-      method: 'PUT',
-      body: updateData,
-    })
+    const response = await leadApi.updateLead(leadId.value, leadData.value)
 
     if (response.success) {
-      // Update local data with response
+      // Refresh lead data from server
       await fetchLeadData()
       isEditMode.value = false
 

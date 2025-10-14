@@ -11,51 +11,93 @@ use Illuminate\Support\Facades\Auth;
 class LeadController extends Controller
 {
     /**
+     * Get franchise ID for the current user based on their role
+     */
+    private function getUserFranchiseId($user): ?int
+    {
+        if ($user->hasRole('admin')) {
+            // Admins can see all, no franchise restriction
+            return null;
+        } elseif ($user->hasRole('franchisor')) {
+            // Franchisors own franchises
+            $franchise = \App\Models\Franchise::where('franchisor_id', $user->id)->first();
+
+            return $franchise?->id;
+        } else {
+            // All other roles use franchise_id from users table
+            return $user->franchise_id;
+        }
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request): JsonResponse
     {
+        $user = Auth::user();
+        $franchiseId = $this->getUserFranchiseId($user);
+
+        // If not admin and no franchise found, return error
+        if (! $user->hasRole('admin') && ! $franchiseId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No franchise found for this user',
+            ], 404);
+        }
+
         $query = Lead::with(['franchise', 'assignedUser']);
 
+        // Scope to user's franchise (unless admin)
+        if ($franchiseId) {
+            $query->where('franchise_id', $franchiseId);
+        }
+
         // Apply filters
-        if ($request->has('status')) {
+        if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);
         }
 
-        if ($request->has('source')) {
+        if ($request->has('source') && $request->source) {
             $query->where('lead_source', $request->source);
         }
 
-        if ($request->has('priority')) {
-            $query->where('priority', $request->priority);
+        if ($request->has('owner') && $request->owner) {
+            $query->whereHas('assignedUser', function ($q) use ($request) {
+                $q->where('name', 'like', '%'.str_replace('_', ' ', $request->owner).'%');
+            });
         }
 
-        if ($request->has('franchise_id')) {
-            $query->where('franchise_id', $request->franchise_id);
-        }
-
-        if ($request->has('assigned_to')) {
-            $query->where('assigned_to', $request->assigned_to);
-        }
-
-        if ($request->has('search')) {
+        if ($request->has('search') && $request->search) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('company', 'like', "%{$search}%");
+                    ->orWhere('company_name', 'like', "%{$search}%");
             });
         }
 
         // Apply sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sortBy = $request->get('sortBy', 'created_at');
+        $sortOrder = $request->get('orderBy', 'desc');
+
+        // Map frontend field names to database columns
+        $sortMapping = [
+            'name' => 'first_name',
+            'company' => 'company_name',
+            'lastContacted' => 'last_contact_date',
+        ];
+
+        $sortColumn = $sortMapping[$sortBy] ?? $sortBy;
+        $query->orderBy($sortColumn, $sortOrder);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('itemsPerPage', 10);
+        if ($perPage == -1) {
+            $perPage = $query->count();
+        }
+
         $leads = $query->paginate($perPage);
 
         // Transform the data to match frontend expectations
@@ -68,32 +110,23 @@ class LeadController extends Controller
                 'phone' => $lead->phone,
                 'company' => $lead->company_name,
                 'country' => $lead->country,
-                'state' => $lead->address, // Using address as state for now
+                'state' => $lead->address,
                 'city' => $lead->city,
-                'source' => $lead->lead_source,
+                'source' => ucfirst(str_replace('_', ' ', $lead->lead_source)),
                 'status' => $lead->status,
                 'owner' => $lead->assignedUser ? $lead->assignedUser->name : 'Unassigned',
-                'lastContacted' => $lead->last_contact_date ? $lead->last_contact_date->format('Y-m-d') : 'Never',
-                'priority' => $lead->priority,
-                'estimatedInvestment' => $lead->estimated_investment,
-                'franchiseFeeQuoted' => $lead->franchise_fee_quoted,
-                'notes' => $lead->notes,
-                'expectedDecisionDate' => $lead->expected_decision_date,
-                'nextFollowUpDate' => $lead->next_follow_up_date,
-                'contactAttempts' => $lead->contact_attempts,
-                'interests' => $lead->interests,
-                'documents' => $lead->documents,
-                'communicationLog' => $lead->communication_log,
+                'lastContacted' => $lead->last_contact_date ? $lead->last_contact_date->format('Y-m-d') : null,
+                'scheduledMeeting' => $lead->next_follow_up_date ? $lead->next_follow_up_date->format('Y-m-d') : null,
             ];
         });
 
         return response()->json([
             'success' => true,
-            'data' => $transformedLeads,
+            'leads' => $transformedLeads,
             'total' => $leads->total(),
-            'current_page' => $leads->currentPage(),
-            'per_page' => $leads->perPage(),
-            'last_page' => $leads->lastPage(),
+            'currentPage' => $leads->currentPage(),
+            'perPage' => $leads->perPage(),
+            'lastPage' => $leads->lastPage(),
             'message' => 'Leads retrieved successfully',
         ]);
     }
@@ -124,9 +157,9 @@ class LeadController extends Controller
 
         // Get the current user's franchise
         $user = Auth::user();
-        $franchise = \App\Models\Franchise::where('franchisor_id', $user->id)->first();
+        $franchiseId = $this->getUserFranchiseId($user);
 
-        if (!$franchise) {
+        if (! $franchiseId) {
             return response()->json([
                 'success' => false,
                 'message' => 'No franchise found for this user',
@@ -136,7 +169,7 @@ class LeadController extends Controller
         // Map fields to match database schema
         $validated['lead_source'] = $validated['source'];
         $validated['company_name'] = $validated['company'];
-        $validated['franchise_id'] = $franchise->id;
+        $validated['franchise_id'] = $franchiseId;
         unset($validated['source'], $validated['company']);
 
         $lead = Lead::create($validated);
@@ -305,16 +338,16 @@ class LeadController extends Controller
     {
         try {
             $user = Auth::user();
-            $franchise = \App\Models\Franchise::where('franchisor_id', $user->id)->first();
+            $franchiseId = $this->getUserFranchiseId($user);
 
-            if (! $franchise) {
+            if (! $franchiseId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No franchise found for this user',
                 ], 404);
             }
 
-            $query = Lead::where('franchise_id', $franchise->id)
+            $query = Lead::where('franchise_id', $franchiseId)
                 ->with(['assignedUser:id,name,email']);
 
             // Apply search filter
@@ -395,27 +428,81 @@ class LeadController extends Controller
      */
     public function statistics(Request $request): JsonResponse
     {
+        $user = Auth::user();
+        $franchiseId = $this->getUserFranchiseId($user);
+
         $query = Lead::query();
 
-        // Apply franchise filter if provided
-        if ($request->has('franchise_id')) {
-            $query->where('franchise_id', $request->franchise_id);
+        // Scope to user's franchise (unless admin)
+        if ($franchiseId) {
+            $query->where('franchise_id', $franchiseId);
         }
 
+        $totalLeads = (clone $query)->count();
+        $qualifiedLeads = (clone $query)->where('status', 'qualified')->count();
+        $unqualifiedLeads = (clone $query)->where('status', 'unqualified')->count();
+
+        // Calculate month-over-month changes
+        $lastMonthTotal = (clone $query)->whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
+            ->count();
+        $currentMonthTotal = (clone $query)->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        $lastMonthQualified = (clone $query)->where('status', 'qualified')
+            ->whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
+            ->count();
+        $currentMonthQualified = (clone $query)->where('status', 'qualified')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        $lastMonthUnqualified = (clone $query)->where('status', 'unqualified')
+            ->whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
+            ->count();
+        $currentMonthUnqualified = (clone $query)->where('status', 'unqualified')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        // Calculate percentage changes
+        $totalChange = $lastMonthTotal > 0 ?
+            round((($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100, 0) :
+            ($currentMonthTotal > 0 ? 100 : 0);
+
+        $qualifiedChange = $lastMonthQualified > 0 ?
+            round((($currentMonthQualified - $lastMonthQualified) / $lastMonthQualified) * 100, 0) :
+            ($currentMonthQualified > 0 ? 100 : 0);
+
+        $unqualifiedChange = $lastMonthUnqualified > 0 ?
+            round((($currentMonthUnqualified - $lastMonthUnqualified) / $lastMonthUnqualified) * 100, 0) :
+            ($currentMonthUnqualified > 0 ? 100 : 0);
+
         $stats = [
-            'total_leads' => $query->count(),
-            'new_leads' => $query->where('status', 'new')->count(),
-            'qualified_leads' => $query->where('status', 'qualified')->count(),
-            'converted_leads' => $query->where('status', 'converted')->count(),
-            'lost_leads' => $query->where('status', 'lost')->count(),
-            'conversion_rate' => $query->count() > 0 ?
-                round(($query->where('status', 'converted')->count() / $query->count()) * 100, 2) : 0,
-            'leads_by_source' => $query->groupBy('lead_source')
-                ->selectRaw('lead_source, count(*) as count')
-                ->pluck('count', 'lead_source'),
-            'leads_by_priority' => $query->groupBy('priority')
-                ->selectRaw('priority, count(*) as count')
-                ->pluck('count', 'priority'),
+            [
+                'title' => 'Total Leads',
+                'value' => number_format($totalLeads),
+                'change' => (int) $totalChange,
+                'icon' => 'tabler-users',
+                'iconColor' => 'primary',
+            ],
+            [
+                'title' => 'Qualified',
+                'value' => number_format($qualifiedLeads),
+                'change' => (int) $qualifiedChange,
+                'icon' => 'tabler-user-check',
+                'iconColor' => 'success',
+            ],
+            [
+                'title' => 'Unqualified',
+                'value' => number_format($unqualifiedLeads),
+                'change' => (int) $unqualifiedChange,
+                'icon' => 'tabler-user-x',
+                'iconColor' => 'error',
+            ],
         ];
 
         return response()->json([
@@ -423,5 +510,179 @@ class LeadController extends Controller
             'data' => $stats,
             'message' => 'Lead statistics retrieved successfully',
         ]);
+    }
+
+    /**
+     * Bulk delete leads
+     */
+    public function bulkDelete(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:leads,id',
+        ]);
+
+        $user = Auth::user();
+        $franchiseId = $this->getUserFranchiseId($user);
+
+        $query = Lead::whereIn('id', $validated['ids']);
+
+        // Scope to user's franchise (unless admin)
+        if ($franchiseId) {
+            $query->where('franchise_id', $franchiseId);
+        }
+
+        $deleted = $query->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$deleted} lead(s) deleted successfully",
+        ]);
+    }
+
+    /**
+     * Import leads from CSV
+     */
+    public function importCsv(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:10240',
+        ]);
+
+        $user = Auth::user();
+        $franchiseId = $this->getUserFranchiseId($user);
+
+        if (! $franchiseId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No franchise found for this user',
+            ], 404);
+        }
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+
+        // Read header row
+        $header = fgetcsv($handle);
+
+        $imported = 0;
+        $errors = [];
+
+        while (($row = fgetcsv($handle)) !== false) {
+            try {
+                $data = array_combine($header, $row);
+
+                Lead::create([
+                    'franchise_id' => $franchiseId,
+                    'first_name' => $data['First Name'] ?? '',
+                    'last_name' => $data['Last Name'] ?? '',
+                    'email' => $data['Email'] ?? '',
+                    'phone' => $data['Phone'] ?? '',
+                    'company_name' => $data['Company'] ?? null,
+                    'country' => $data['Country'] ?? null,
+                    'address' => $data['State'] ?? null,
+                    'city' => $data['City'] ?? null,
+                    'lead_source' => strtolower(str_replace(' ', '_', $data['Lead Source'] ?? 'other')),
+                    'status' => strtolower($data['Lead Status'] ?? 'new'),
+                    'assigned_to' => $this->findUserByName($data['Lead Owner'] ?? null),
+                ]);
+
+                $imported++;
+            } catch (\Exception $e) {
+                $errors[] = "Row {$imported}: ".$e->getMessage();
+            }
+        }
+
+        fclose($handle);
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$imported} lead(s) imported successfully",
+            'errors' => $errors,
+        ]);
+    }
+
+    /**
+     * Export leads to CSV
+     */
+    public function exportCsv(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $user = Auth::user();
+        $franchiseId = $this->getUserFranchiseId($user);
+
+        $query = Lead::with(['assignedUser']);
+
+        // Scope to user's franchise (unless admin)
+        if (! $franchiseId && ! $user->hasRole('admin')) {
+            abort(404, 'No franchise found for this user');
+        }
+
+        if ($franchiseId) {
+            $query->where('franchise_id', $franchiseId);
+        }
+
+        // Filter by selected IDs if provided
+        if ($request->has('ids') && is_array($request->ids) && count($request->ids) > 0) {
+            $query->whereIn('id', $request->ids);
+        }
+
+        $leads = $query->get();
+
+        $fileName = 'leads_'.now()->format('Y-m-d_His').'.csv';
+
+        return response()->streamDownload(function () use ($leads) {
+            $handle = fopen('php://output', 'w');
+
+            // Write header
+            fputcsv($handle, [
+                'First Name',
+                'Last Name',
+                'Company',
+                'Email',
+                'Phone',
+                'City',
+                'State',
+                'Source',
+                'Status',
+                'Owner',
+                'Last Contacted',
+            ]);
+
+            // Write data
+            foreach ($leads as $lead) {
+                fputcsv($handle, [
+                    $lead->first_name,
+                    $lead->last_name,
+                    $lead->company_name,
+                    $lead->email,
+                    $lead->phone,
+                    $lead->city,
+                    $lead->address,
+                    $lead->lead_source,
+                    $lead->status,
+                    $lead->assignedUser ? $lead->assignedUser->name : 'Unassigned',
+                    $lead->last_contact_date ? $lead->last_contact_date->format('Y-m-d') : '',
+                ]);
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ]);
+    }
+
+    /**
+     * Helper method to find user by name
+     */
+    private function findUserByName(?string $name): ?int
+    {
+        if (! $name) {
+            return null;
+        }
+
+        $user = \App\Models\User::where('name', 'like', "%{$name}%")->first();
+
+        return $user ? $user->id : null;
     }
 }

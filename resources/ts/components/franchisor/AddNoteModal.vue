@@ -35,13 +35,20 @@ const handleFileUpload = (event: Event) => {
 
 const onSubmit = async () => {
   try {
+    // Create FormData to handle file uploads
+    const formData = new FormData()
+    formData.append('lead_id', String(props.leadId))
+    formData.append('title', noteTitle.value)
+    formData.append('description', noteDescription.value)
+
+    // Append all attachments
+    attachments.value.forEach((file) => {
+      formData.append('attachments[]', file)
+    })
+
     const response = await $api('/v1/notes', {
       method: 'POST',
-      body: {
-        lead_id: props.leadId,
-        title: noteTitle.value,
-        description: noteDescription.value,
-      },
+      body: formData,
     })
 
     if (response.success) {

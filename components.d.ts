@@ -373,6 +373,7 @@ declare module 'vue' {
     DialogCloseBtn: typeof import('./resources/ts/@core/components/DialogCloseBtn.vue')['default']
     DocumentActionModal: typeof import('./resources/ts/components/dialogs/DocumentActionModal.vue')['default']
     DropZone: typeof import('./resources/ts/@core/components/DropZone.vue')['default']
+    EditNoteModal: typeof import('./resources/ts/components/franchisor/EditNoteModal.vue')['default']
     EnableOneTimePasswordDialog: typeof import('./resources/ts/components/dialogs/EnableOneTimePasswordDialog.vue')['default']
     ErrorHeader: typeof import('./resources/ts/components/ErrorHeader.vue')['default']
     I18n: typeof import('./resources/ts/@core/components/I18n.vue')['default']
@@ -399,6 +400,7 @@ declare module 'vue' {
     TwoFactorAuthDialog: typeof import('./resources/ts/components/dialogs/TwoFactorAuthDialog.vue')['default']
     UserInfoEditDialog: typeof import('./resources/ts/components/dialogs/UserInfoEditDialog.vue')['default']
     UserUpgradePlanDialog: typeof import('./resources/ts/components/dialogs/UserUpgradePlanDialog.vue')['default']
+    ViewNoteModal: typeof import('./resources/ts/components/franchisor/ViewNoteModal.vue')['default']
     VueApexCharts: typeof import('vue3-apexcharts')['default']
   }
 }
