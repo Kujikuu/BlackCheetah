@@ -487,9 +487,9 @@ class MinimalDataSeeder extends Seeder
             Task::create([
                 'title' => $data[0],
                 'description' => $data[1],
-                'type' => ['training', 'finance', 'compliance', 'marketing', 'operations'][$i],
-                'priority' => ['medium', 'high', 'medium', 'low', 'high'][$i],
-                'status' => ['pending', 'in_progress', 'pending', 'pending', 'in_progress'][$i],
+                'type' => ['onboarding', 'training', 'compliance', 'maintenance', 'marketing', 'operations', 'finance', 'support', 'other'][$i],
+                'priority' => ['low', 'medium', 'high', 'urgent'][$i],
+                'status' => ['pending', 'in_progress', 'completed', 'cancelled', 'on_hold'][$i],
                 'assigned_to' => $data[2],
                 'created_by' => $franchisor->id,
                 'franchise_id' => $franchise->id,

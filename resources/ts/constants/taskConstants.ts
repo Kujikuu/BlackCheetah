@@ -1,14 +1,15 @@
 // Task Management Constants for Consistency
 
 export const TASK_CATEGORIES = [
-  'Operations',
+  'Onboarding',
   'Training',
+  'Compliance',
   'Maintenance',
   'Marketing',
+  'Operations',
   'Finance',
-  'HR',
-  'Quality Control',
-  'Customer Service',
+  'Support',
+  'Other',
 ] as const
 
 // @deprecated - This constant is no longer used for task assignment.
@@ -29,10 +30,13 @@ export const PRIORITY_OPTIONS = [
   { title: 'Low', value: 'low' },
   { title: 'Medium', value: 'medium' },
   { title: 'High', value: 'high' },
+  { title: 'Urgent', value: 'urgent' },
 ] as const
 
 export const STATUS_OPTIONS = [
   { title: 'Pending', value: 'pending' },
+  { title: 'On Hold', value: 'on_hold' },
+  { title: 'Cancelled', value: 'cancelled' },
   { title: 'In Progress', value: 'in_progress' },
   { title: 'Completed', value: 'completed' },
 ] as const

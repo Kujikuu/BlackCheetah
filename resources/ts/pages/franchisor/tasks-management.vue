@@ -945,10 +945,6 @@ onMounted(async () => {
             <VCol cols="12" md="6">
               <VTextField v-model="selectedTask.actualHours" label="Actual Hours" type="number" min="0" />
             </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedTask.completionPercentage" label="Completion %" type="number" min="0"
-                max="100" />
-            </VCol>
           </VRow>
         </VCardText>
 

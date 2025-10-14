@@ -164,7 +164,6 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
         Route::patch('{task}/complete', [TaskController::class, 'complete']);
         Route::patch('{task}/start', [TaskController::class, 'start']);
         Route::patch('{task}/assign', [TaskController::class, 'assign']);
-        Route::patch('{task}/progress', [TaskController::class, 'updateProgress']);
     });
 
     // Admin Technical Request Routes (must be before general resource routes)
@@ -382,7 +381,6 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::patch('tasks/{task}/assign', [TaskController::class, 'assign']);
     Route::patch('tasks/{task}/complete', [TaskController::class, 'complete']);
     Route::patch('tasks/{task}/start', [TaskController::class, 'start']);
-    Route::patch('tasks/{task}/progress', [TaskController::class, 'updateProgress']);
 
     // Technical requests for franchisor network
     Route::get('technical-requests', [TechnicalRequestController::class, 'myRequests']);
@@ -541,7 +539,6 @@ Route::middleware(['auth:sanctum', 'role:sales'])->prefix('v1/employee')->group(
     Route::get('technical-requests', [TechnicalRequestController::class, 'myAssignedRequests']);
 
     // Employee can update their assigned tasks
-    Route::patch('tasks/{task}/progress', [TaskController::class, 'updateProgress']);
     Route::patch('tasks/{task}/complete', [TaskController::class, 'complete']);
 
     // Employee can respond to technical requests
