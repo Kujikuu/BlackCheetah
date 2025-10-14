@@ -93,22 +93,22 @@ const dialogModelValueUpdate = (val: boolean) => {
           <VRow>
             <!-- 👉 First Name -->
             <VCol cols="12" md="6">
-              <AppTextField v-model="userData.fullName.split(' ')[0]" label="First Name" placeholder="John" />
+              <AppTextField v-model="userData.fullName.split(' ')[0]" label="First Name" placeholder="First Name" />
             </VCol>
 
             <!-- 👉 Last Name -->
             <VCol cols="12" md="6">
-              <AppTextField v-model="userData.fullName.split(' ')[1]" label="Last Name" placeholder="Doe" />
+              <AppTextField v-model="userData.fullName.split(' ')[1]" label="Last Name" placeholder="Last Name" />
             </VCol>
 
             <!-- 👉 Username -->
             <VCol cols="12">
-              <AppTextField v-model="userData.username" label="Username" placeholder="john.doe.007" />
+              <AppTextField v-model="userData.username" label="Username" placeholder="Username" />
             </VCol>
 
             <!-- 👉 Billing Email -->
             <VCol cols="12" md="6">
-              <AppTextField v-model="userData.email" label="Email" placeholder="johndoe@email.com" />
+              <AppTextField v-model="userData.email" label="Email" placeholder="Email" />
             </VCol>
 
             <!-- 👉 Status -->

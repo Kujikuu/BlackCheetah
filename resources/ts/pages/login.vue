@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { h } from 'vue'
-import { useDisplay } from 'vuetify'
+import type { Rule } from '@/plugins/casl/ability'
+import { useAbility } from '@/plugins/casl/useAbility'
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-import type { Rule } from '@/plugins/casl/ability'
-import { useAbility } from '@/plugins/casl/useAbility'
+import { h } from 'vue'
+import { useDisplay } from 'vuetify'
 
 definePage({
   meta: {
@@ -95,23 +95,15 @@ const login = async () => {
   <div class="auth-wrapper d-flex align-center justify-center pa-4">
     <div class="position-relative my-sm-16">
       <!-- 👉 Top shape -->
-      <VNodeRenderer
-        :nodes="h('div', { innerHTML: authV1TopShape })"
-        class="text-primary auth-v1-top-shape d-none d-sm-block"
-      />
+      <VNodeRenderer :nodes="h('div', { innerHTML: authV1TopShape })"
+        class="text-primary auth-v1-top-shape d-none d-sm-block" />
 
       <!-- 👉 Bottom shape -->
-      <VNodeRenderer
-        :nodes="h('div', { innerHTML: authV1BottomShape })"
-        class="text-primary auth-v1-bottom-shape d-none d-sm-block"
-      />
+      <VNodeRenderer :nodes="h('div', { innerHTML: authV1BottomShape })"
+        class="text-primary auth-v1-bottom-shape d-none d-sm-block" />
 
       <!-- 👉 Auth Card -->
-      <VCard
-        class="auth-card"
-        max-width="460"
-        :class="smAndUp ? 'pa-6' : 'pa-0'"
-      >
+      <VCard class="auth-card" max-width="460" :class="smAndUp ? 'pa-6' : 'pa-0'">
         <VCardItem class="justify-center">
           <VCardTitle>
             <RouterLink to="/">
@@ -138,96 +130,57 @@ const login = async () => {
           <VForm @submit.prevent="login">
             <VRow>
               <VCol cols="12">
-                <VAlert
-                  v-if="errorMessages?.general"
-                  type="error"
-                  variant="tonal"
-                  class="mb-4"
-                >
+                <VAlert v-if="errorMessages?.general" type="error" variant="tonal" class="mb-4">
                   {{ errorMessages?.general }}
                 </VAlert>
               </VCol>
               <!-- email -->
               <VCol cols="12">
-                <AppTextField
-                  v-model="form.email"
-                  autofocus
-                  label="Email or Username"
-                  type="email"
-                  :error-messages="errorMessages?.email"
-                  placeholder="johndoe@email.com"
-                />
+                <AppTextField v-model="form.email" autofocus label="Email or Username" type="email"
+                  :error-messages="errorMessages?.email" placeholder="Email or Username" />
               </VCol>
 
               <!-- password -->
               <VCol cols="12">
-                <AppTextField
-                  v-model="form.password"
-                  label="Password"
-                  placeholder="············"
-                  :type="isPasswordVisible ? 'text' : 'password'"
-                  autocomplete="password"
+                <AppTextField v-model="form.password" label="Password" placeholder="············"
+                  :type="isPasswordVisible ? 'text' : 'password'" autocomplete="password"
                   :error-messages="errorMessages?.password"
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
-                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
-                />
+                  @click:append-inner="isPasswordVisible = !isPasswordVisible" />
 
                 <!-- remember me checkbox -->
                 <div class="d-flex align-center justify-space-between flex-wrap my-6">
-                  <VCheckbox
-                    v-model="form.remember"
-                    label="Remember me"
-                  />
+                  <VCheckbox v-model="form.remember" label="Remember me" />
 
-                  <RouterLink
-                    class="text-primary"
-                    :to="{ name: 'forgot-password' }"
-                  >
+                  <RouterLink class="text-primary" :to="{ name: 'forgot-password' }">
                     Forgot Password?
                   </RouterLink>
                 </div>
 
                 <!-- login button -->
-                <VBtn
-                  block
-                  type="submit"
-                  :loading="loading"
-                  :disabled="loading"
-                >
+                <VBtn block type="submit" :loading="loading" :disabled="loading">
                   Login
                 </VBtn>
               </VCol>
 
               <!-- create account -->
-              <VCol
-                cols="12"
-                class="text-body-1 text-center"
-              >
+              <VCol cols="12" class="text-body-1 text-center">
                 <span class="d-inline-block">
                   New on our platform?
                 </span>
-                <RouterLink
-                  class="text-primary ms-1 d-inline-block text-body-1"
-                  :to="{ name: 'register' }"
-                >
+                <RouterLink class="text-primary ms-1 d-inline-block text-body-1" :to="{ name: 'register' }">
                   Create an account
                 </RouterLink>
               </VCol>
 
-              <VCol
-                cols="12"
-                class="d-flex align-center"
-              >
+              <VCol cols="12" class="d-flex align-center">
                 <VDivider />
                 <span class="mx-4 text-high-emphasis">or</span>
                 <VDivider />
               </VCol>
 
               <!-- auth providers -->
-              <VCol
-                cols="12"
-                class="text-center"
-              >
+              <VCol cols="12" class="text-center">
                 <AuthProvider />
               </VCol>
             </VRow>

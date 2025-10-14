@@ -89,93 +89,52 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
 </script>
 
 <template>
-  <VNavigationDrawer
-    temporary
-    location="end"
-    :model-value="props.isDrawerOpen"
-    width="400"
-    @update:model-value="handleDrawerModelValueUpdate"
-  >
+  <VNavigationDrawer temporary location="end" :model-value="props.isDrawerOpen" width="400"
+    @update:model-value="handleDrawerModelValueUpdate">
     <!-- Header -->
-    <AppDrawerHeaderSection
-      :title="props.franchisor ? 'Edit Franchisor' : 'Add New Franchisor'"
-      @cancel="handleDrawerModelValueUpdate(false)"
-    />
+    <AppDrawerHeaderSection :title="props.franchisor ? 'Edit Franchisor' : 'Add New Franchisor'"
+      @cancel="handleDrawerModelValueUpdate(false)" />
 
     <VDivider />
 
     <VCard flat>
       <VCardText>
-        <VForm
-          ref="refForm"
-          v-model="isFormValid"
-          @submit.prevent="onSubmit"
-        >
+        <VForm ref="refForm" v-model="isFormValid" @submit.prevent="onSubmit">
           <VRow>
             <!-- Full Name -->
             <VCol cols="12">
-              <AppTextField
-                v-model="formData.fullName"
-                label="Full Name"
-                placeholder="John Doe"
-                :rules="[requiredValidator]"
-              />
+              <AppTextField v-model="formData.fullName" label="Full Name" placeholder="Name"
+                :rules="[requiredValidator]" />
             </VCol>
 
             <!-- Email -->
             <VCol cols="12">
-              <AppTextField
-                v-model="formData.email"
-                label="Email"
-                type="email"
-                placeholder="john.doe@example.com"
-                :rules="[requiredValidator, emailValidator]"
-              />
+              <AppTextField v-model="formData.email" label="Email" type="email" placeholder="john.doe@example.com"
+                :rules="[requiredValidator, emailValidator]" />
             </VCol>
 
             <!-- Franchise Name -->
             <VCol cols="12">
-              <AppTextField
-                v-model="formData.franchiseName"
-                label="Franchise Name"
-                placeholder="Acme Corporation"
-                :rules="[requiredValidator]"
-              />
+              <AppTextField v-model="formData.franchiseName" label="Franchise Name" placeholder="Acme Corporation"
+                :rules="[requiredValidator]" />
             </VCol>
 
             <!-- Plan -->
             <VCol cols="12">
-              <AppSelect
-                v-model="formData.plan"
-                label="Plan"
-                :items="plans"
-                :rules="[requiredValidator]"
-              />
+              <AppSelect v-model="formData.plan" label="Plan" :items="plans" :rules="[requiredValidator]" />
             </VCol>
 
             <!-- Status -->
             <VCol cols="12">
-              <AppSelect
-                v-model="formData.status"
-                label="Status"
-                :items="statusOptions"
-                :rules="[requiredValidator]"
-              />
+              <AppSelect v-model="formData.status" label="Status" :items="statusOptions" :rules="[requiredValidator]" />
             </VCol>
 
             <!-- Submit and Cancel -->
             <VCol cols="12">
-              <VBtn
-                type="submit"
-                class="me-3"
-              >
+              <VBtn type="submit" class="me-3">
                 {{ props.franchisor ? 'Update' : 'Submit' }}
               </VBtn>
-              <VBtn
-                variant="outlined"
-                color="secondary"
-                @click="handleDrawerModelValueUpdate(false)"
-              >
+              <VBtn variant="outlined" color="secondary" @click="handleDrawerModelValueUpdate(false)">
                 Cancel
               </VBtn>
             </VCol>

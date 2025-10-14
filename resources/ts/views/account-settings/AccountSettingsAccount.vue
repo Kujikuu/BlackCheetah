@@ -289,7 +289,7 @@ onMounted(() => {
             <VRow>
               <!-- Full Name -->
               <VCol cols="12" md="12">
-                <AppTextField v-model="accountDataLocal.name" label="Full Name" placeholder="John Doe" />
+                <AppTextField v-model="accountDataLocal.name" label="Full Name" placeholder="Name" />
               </VCol>
 
               <!-- Email -->

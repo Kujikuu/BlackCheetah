@@ -53,17 +53,17 @@ watch(formData, () => {
 
       <VCol cols="12" sm="6">
         <!-- 👉 First Name -->
-        <AppTextField v-model="formData.firstName" label="First Name" placeholder="John" />
+        <AppTextField v-model="formData.firstName" label="First Name" placeholder="First Name" />
       </VCol>
 
       <VCol cols="12" sm="6">
         <!-- 👉 Last Name -->
-        <AppTextField v-model="formData.lastName" label="Last Name" placeholder="Doe" />
+        <AppTextField v-model="formData.lastName" label="Last Name" placeholder="Last Name" />
       </VCol>
 
       <VCol cols="12" sm="6">
         <!-- 👉 Username -->
-        <AppTextField v-model="formData.username" label="Username" placeholder="Johndoe" />
+        <AppTextField v-model="formData.username" label="Username" placeholder="Username" />
       </VCol>
 
       <VCol cols="12" sm="6">
@@ -74,12 +74,12 @@ watch(formData, () => {
 
       <VCol cols="12" sm="6">
         <!-- 👉 Email -->
-        <AppTextField v-model="formData.email" type="email" label="Email" placeholder="john.doe@email.com" />
+        <AppTextField v-model="formData.email" type="email" label="Email" placeholder="Email" />
       </VCol>
 
       <VCol cols="12" sm="6">
         <!-- 👉 Contact -->
-        <AppTextField v-model="formData.contact" type="number" label="Contact" placeholder="+966 50 123 4567" />
+        <AppTextField v-model="formData.contact" type="number" label="Contact" placeholder="Contact" />
       </VCol>
     </VRow>
   </VForm>

@@ -52,11 +52,7 @@ const isPricingPlanDialogVisible = ref(false)
       <div class="d-flex justify-center align-center payment-card">
         <VCard width="100%">
           <VRow>
-            <VCol
-              cols="12"
-              md="7"
-              :class="$vuetify.display.mdAndUp ? 'border-e' : 'border-b'"
-            >
+            <VCol cols="12" md="7" :class="$vuetify.display.mdAndUp ? 'border-e' : 'border-b'">
               <VCardText class="pa-8 pe-5">
                 <!-- Checkout header -->
                 <div>
@@ -64,22 +60,16 @@ const isPricingPlanDialogVisible = ref(false)
                     Checkout
                   </h4>
                   <div class="text-body-1">
-                    All plans include 40+ advanced tools and features to boost your product. Choose the best plan to fit your needs.
+                    All plans include 40+ advanced tools and features to boost your product. Choose the best plan to fit
+                    your needs.
                   </div>
                 </div>
 
-                <CustomRadios
-                  v-model:selected-radio="selectedRadio"
-                  :radio-content="radioContent"
-                  :grid-column="{ cols: '12', sm: '6' }"
-                  class="my-8"
-                >
+                <CustomRadios v-model:selected-radio="selectedRadio" :radio-content="radioContent"
+                  :grid-column="{ cols: '12', sm: '6' }" class="my-8">
                   <template #default="{ item }">
                     <div class="d-flex align-center gap-x-4 ms-3">
-                      <img
-                        :src="item.images"
-                        height="34"
-                      >
+                      <img :src="item.images" height="34">
                       <h6 class="text-h6">
                         {{ item.title }}
                       </h6>
@@ -94,107 +84,50 @@ const isPricingPlanDialogVisible = ref(false)
                   </h4>
                   <VForm>
                     <VRow>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
-                        <AppTextField
-                          label="Email Address"
-                          type="email"
-                          placeholder="johndoe@email.com"
-                        />
+                      <VCol cols="12" md="6">
+                        <AppTextField label="Email Address" type="email" placeholder="Email" />
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
-                        <AppTextField
-                          label="Password"
-                          type="password"
-                          placeholder="············"
-                          autocomplete="on"
-                        />
+                      <VCol cols="12" md="6">
+                        <AppTextField label="Password" type="password" placeholder="············" autocomplete="on" />
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
-                        <AppSelect
-                          v-model="selectedCountry"
-                          label="Billing Country"
-                          :items="['USA', 'Canada', 'UK', 'AUS']"
-                        />
+                      <VCol cols="12" md="6">
+                        <AppSelect v-model="selectedCountry" label="Billing Country"
+                          :items="['USA', 'Canada', 'UK', 'AUS']" />
                       </VCol>
-                      <VCol
-                        cols="12"
-                        md="6"
-                      >
-                        <AppTextField
-                          label="Billing Zip/Postal Code"
-                          type="number"
-                          placeholder="129211"
-                        />
+                      <VCol cols="12" md="6">
+                        <AppTextField label="Billing Zip/Postal Code" type="number" placeholder="129211" />
                       </VCol>
                     </VRow>
                   </VForm>
                 </div>
 
                 <!-- Credit card info -->
-                <div
-                  class="mb-8"
-                  :class="selectedRadio === 'paypal' ? 'd-none' : 'd-block'"
-                >
+                <div class="mb-8" :class="selectedRadio === 'paypal' ? 'd-none' : 'd-block'">
                   <h4 class="text-h4 mb-6">
                     Credit Card Info
                   </h4>
                   <VRow>
                     <VCol cols="12">
-                      <AppTextField
-                        label="Card Number"
-                        placeholder="8787 2345 3458"
-                        type="number"
-                      />
+                      <AppTextField label="Card Number" placeholder="8787 2345 3458" type="number" />
                     </VCol>
 
-                    <VCol
-                      cols="12"
-                      md="4"
-                    >
-                      <AppTextField
-                        label="Card Holder"
-                        placeholder="John Doe"
-                      />
+                    <VCol cols="12" md="4">
+                      <AppTextField label="Card Holder" placeholder="Name on Card" />
                     </VCol>
 
-                    <VCol
-                      cols="12"
-                      md="4"
-                    >
-                      <AppTextField
-                        label="Exp. date"
-                        placeholder="05/2020"
-                      />
+                    <VCol cols="12" md="4">
+                      <AppTextField label="Exp. date" placeholder="05/2020" />
                     </VCol>
 
-                    <VCol
-                      cols="12"
-                      md="4"
-                    >
-                      <AppTextField
-                        label="CVV"
-                        type="number"
-                        placeholder="784"
-                      />
+                    <VCol cols="12" md="4">
+                      <AppTextField label="CVV" type="number" placeholder="784" />
                     </VCol>
                   </VRow>
                 </div>
               </VCardText>
             </VCol>
 
-            <VCol
-              cols="12"
-              md="5"
-            >
+            <VCol cols="12" md="5">
               <VCardText class="pa-8 ps-5">
                 <!-- order summary -->
                 <div class="mb-8">
@@ -206,10 +139,7 @@ const isPricingPlanDialogVisible = ref(false)
                   </div>
                 </div>
 
-                <VCard
-                  flat
-                  color="rgba(var(--v-theme-on-surface), var(--v-hover-opacity))"
-                >
+                <VCard flat color="rgba(var(--v-theme-on-surface), var(--v-hover-opacity))">
                   <VCardText>
                     <div class="text-body-1">
                       A simple start for everyone
@@ -217,11 +147,7 @@ const isPricingPlanDialogVisible = ref(false)
                     <h1 class="text-h1 my-4">
                       $59.99<span class="text-body-1 font-weight-medium">/month</span>
                     </h1>
-                    <VBtn
-                      variant="tonal"
-                      block
-                      @click="isPricingPlanDialogVisible = !isPricingPlanDialogVisible"
-                    >
+                    <VBtn variant="tonal" block @click="isPricingPlanDialogVisible = !isPricingPlanDialogVisible">
                       Change Plan
                     </VBtn>
                   </VCardText>
@@ -249,22 +175,16 @@ const isPricingPlanDialogVisible = ref(false)
                   </div>
                 </div>
 
-                <VBtn
-                  block
-                  color="success"
-                  class="mb-8"
-                >
+                <VBtn block color="success" class="mb-8">
                   <template #append>
-                    <VIcon
-                      icon="tabler-arrow-right"
-                      class="flip-in-rtl"
-                    />
+                    <VIcon icon="tabler-arrow-right" class="flip-in-rtl" />
                   </template>
                   Proceed With Payment
                 </VBtn>
 
                 <div class="text-body-1">
-                  By continuing, you accept to our Terms of Services and Privacy Policy. Please note that payments are non-refundable.
+                  By continuing, you accept to our Terms of Services and Privacy Policy. Please note that payments are
+                  non-refundable.
                 </div>
               </VCardText>
             </VCol>

@@ -46,11 +46,8 @@ const dialogModelValueUpdate = (val: boolean) => {
 </script>
 
 <template>
-  <VDialog
-    :width="$vuetify.display.smAndDown ? 'auto' : 600"
-    :model-value="props.isDialogVisible"
-    @update:model-value="dialogModelValueUpdate"
-  >
+  <VDialog :width="$vuetify.display.smAndDown ? 'auto' : 600" :model-value="props.isDialogVisible"
+    @update:model-value="dialogModelValueUpdate">
     <!-- Dialog close btn -->
     <DialogCloseBtn @click="dialogModelValueUpdate(false)" />
 
@@ -72,76 +69,36 @@ const dialogModelValueUpdate = (val: boolean) => {
           <VRow>
             <!-- 👉 Card Number -->
             <VCol cols="12">
-              <AppTextField
-                v-model="cardDetails.number"
-                label="Card Number"
-                placeholder="1356 3215 6548 7898"
-                type="number"
-              />
+              <AppTextField v-model="cardDetails.number" label="Card Number" placeholder="1356 3215 6548 7898"
+                type="number" />
             </VCol>
 
             <!-- 👉 Card Name -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                v-model="cardDetails.name"
-                label="Name"
-                placeholder="John Doe"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField v-model="cardDetails.name" label="Name" placeholder="Name on Card" />
             </VCol>
 
             <!-- 👉 Card Expiry -->
-            <VCol
-              cols="12"
-              md="3"
-            >
-              <AppTextField
-                v-model="cardDetails.expiry"
-                label="Expiry Date"
-                placeholder="MM/YY"
-              />
+            <VCol cols="12" md="3">
+              <AppTextField v-model="cardDetails.expiry" label="Expiry Date" placeholder="MM/YY" />
             </VCol>
 
             <!-- 👉 Card CVV -->
-            <VCol
-              cols="12"
-              md="3"
-            >
-              <AppTextField
-                v-model="cardDetails.cvv"
-                type="number"
-                label="CVV Code"
-                placeholder="654"
-              />
+            <VCol cols="12" md="3">
+              <AppTextField v-model="cardDetails.cvv" type="number" label="CVV Code" placeholder="654" />
             </VCol>
 
             <!-- 👉 Card Primary Set -->
             <VCol cols="12">
-              <VSwitch
-                v-model="cardDetails.isPrimary"
-                label="Save Card for future billing?"
-              />
+              <VSwitch v-model="cardDetails.isPrimary" label="Save Card for future billing?" />
             </VCol>
 
             <!-- 👉 Card actions -->
-            <VCol
-              cols="12"
-              class="text-center"
-            >
-              <VBtn
-                class="me-4"
-                type="submit"
-                @click="formSubmit"
-              >
+            <VCol cols="12" class="text-center">
+              <VBtn class="me-4" type="submit" @click="formSubmit">
                 Submit
               </VBtn>
-              <VBtn
-                color="secondary"
-                variant="tonal"
-                @click="$emit('update:isDialogVisible', false)"
-              >
+              <VBtn color="secondary" variant="tonal" @click="$emit('update:isDialogVisible', false)">
                 Cancel
               </VBtn>
             </VCol>

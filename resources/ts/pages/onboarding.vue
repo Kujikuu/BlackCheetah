@@ -181,7 +181,7 @@ const isFormValid = computed(() => {
 
               <!-- Full Name -->
               <VCol cols="12">
-                <AppTextField v-model="form.name" autofocus label="Full Name" placeholder="John Doe"
+                <AppTextField v-model="form.name" autofocus label="Full Name" placeholder="Name"
                   :error-messages="errorMessages?.name" required />
               </VCol>
 
