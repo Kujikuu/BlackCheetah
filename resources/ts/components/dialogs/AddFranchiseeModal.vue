@@ -255,10 +255,10 @@ const onDialogModelValueUpdate = (val: boolean) => {
                     </VAlert>
                   </VCol>
 
-                  <VCol cols="12" md="6">
+                  <!-- <VCol cols="12" md="6">
                     <AppTextField v-model="formData.postalCode" label="Postal Code" hidden
                       placeholder="Enter postal code" />
-                  </VCol>
+                  </VCol> -->
                 </VRow>
               </VForm>
             </VStepperWindowItem>

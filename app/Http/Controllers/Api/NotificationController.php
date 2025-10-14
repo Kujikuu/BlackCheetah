@@ -32,14 +32,11 @@ class NotificationController extends Controller
         $transformedNotifications = $notifications->getCollection()->map(function ($notification) {
             return [
                 'id' => $notification->id,
-                'title' => $notification->data['title'] ?? 'Notification',
-                'subtitle' => $notification->data['subtitle'] ?? '',
-                'icon' => $notification->data['icon'] ?? 'tabler-bell',
-                'color' => $notification->data['color'] ?? 'primary',
-                'time' => $notification->created_at->diffForHumans(),
-                'isSeen' => ! is_null($notification->read_at),
-                'url' => $notification->data['url'] ?? null,
+                'type' => $notification->type,
+                'data' => $notification->data,
+                'read_at' => $notification->read_at,
                 'created_at' => $notification->created_at->toISOString(),
+                'isSeen' => ! is_null($notification->read_at),
             ];
         });
 

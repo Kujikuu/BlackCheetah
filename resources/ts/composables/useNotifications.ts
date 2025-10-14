@@ -61,6 +61,7 @@ export const useNotifications = () => {
       text: data.text,
       data: backendNotification.data,
       created_at: backendNotification.created_at,
+      read_at: backendNotification.read_at,
     }
   }
 
