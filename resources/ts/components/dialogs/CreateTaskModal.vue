@@ -7,6 +7,7 @@ interface Props {
   currentTab?: 'franchisee' | 'sales'
   defaultAssignedTo?: string
   unitId?: string
+  disableAssignedTo?: boolean
 }
 
 interface Emit {
@@ -159,7 +160,8 @@ watch(() => props.currentTab, async newTab => {
             <!-- Assigned To -->
             <VCol cols="12" md="6">
               <VSelect v-model="taskForm.assignedTo" label="Assigned To" placeholder="Select user" :items="userOptions"
-                :loading="usersLoading" :rules="[requiredRule]" item-title="title" item-value="value" required />
+                :loading="usersLoading" :rules="[requiredRule]" item-title="title" item-value="value"
+                :disabled="props.disableAssignedTo" required />
             </VCol>
 
             <!-- Start Date -->

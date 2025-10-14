@@ -110,6 +110,7 @@ const loadUnitData = async () => {
       unitData.value = {
         id: response.data.id,
         branchName: response.data.unit_name || 'Unnamed Unit',
+        franchiseeId: response.data.franchisee?.id,
         franchiseeName: response.data.franchisee?.name || 'Unassigned',
         email: response.data.franchisee?.email || 'unassigned@example.com',
         contactNumber: response.data.franchisee?.phone || response.data.phone || 'Not available',
@@ -1538,6 +1539,7 @@ watch(() => unitData.value, () => {
 
       <!-- Modals -->
       <CreateTaskModal v-model:is-dialog-visible="isAddTaskModalVisible" current-tab="franchisee"
+        :default-assigned-to="unitData?.franchiseeId?.toString()" :unit-id="unitId" :disable-assigned-to="true"
         @task-created="onTaskCreated" />
 
       <AddDocumentModal v-model:is-dialog-visible="isAddDocumentModalVisible" @document-added="onDocumentAdded" />
@@ -1711,10 +1713,6 @@ watch(() => unitData.value, () => {
           </VCardActions>
         </VCard>
       </VDialog>
-
-      <!-- Create Task Modal -->
-      <CreateTaskModal v-model:is-dialog-visible="isAddTaskModalVisible"
-        :default-assigned-to="unitData?.franchiseeId?.toString()" :unit-id="unitId" @task-created="onTaskCreated" />
     </div> <!-- End of content div -->
   </section>
 </template>
