@@ -3,30 +3,8 @@ import AssignLeadModal from '@/components/dialogs/AssignLeadModal.vue'
 import ConvertLeadModal from '@/components/dialogs/ConvertLeadModal.vue'
 import MarkAsLostModal from '@/components/dialogs/MarkAsLostModal.vue'
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
+import { leadApi, type Lead } from '@/services/api/lead'
 import { avatarText, prefixWithPlus } from '@core/utils/formatters'
-
-// 👉 Types
-interface Lead {
-  id: number
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  company: string
-  country: string
-  state: string
-  city: string
-  source: string
-  status: string
-  owner: string
-  lastContacted: string
-  scheduledMeeting?: string
-}
-
-interface LeadsData {
-  leads: Lead[]
-  total: number
-}
 
 // 👉 Store
 const searchQuery = ref('')
@@ -65,46 +43,37 @@ const headers = [
 ]
 
 // Real data from API
-const leadsData = ref<LeadsData>({
-  leads: [],
-  total: 0,
-})
-
-const leads = computed(() => leadsData.value.leads)
-const totalLeads = computed(() => leadsData.value.total)
+const leads = ref<Lead[]>([])
+const totalLeads = ref(0)
 
 // 👉 API Functions
 const fetchLeads = async () => {
   try {
     isLoading.value = true
 
-    const params = new URLSearchParams({
-      page: page.value.toString(),
-      per_page: itemsPerPage.value.toString(),
-    })
+    const filters: any = {
+      page: page.value,
+      itemsPerPage: itemsPerPage.value,
+    }
 
     if (searchQuery.value)
-      params.append('search', searchQuery.value)
+      filters.search = searchQuery.value
     if (selectedStatus.value)
-      params.append('status', selectedStatus.value)
+      filters.status = selectedStatus.value
     if (selectedSource.value)
-      params.append('source', selectedSource.value)
+      filters.source = selectedSource.value
     if (selectedOwner.value)
-      params.append('owner', selectedOwner.value)
+      filters.owner = selectedOwner.value
     if (sortBy.value)
-      params.append('sort_by', sortBy.value)
+      filters.sortBy = sortBy.value
     if (orderBy.value)
-      params.append('sort_order', orderBy.value)
+      filters.orderBy = orderBy.value
 
-    const response = await $api(`/v1/franchisor/leads?${params.toString()}`, {
-      method: 'GET',
-    })
+    const response = await leadApi.getLeads(filters)
 
     if (response.success) {
-      leadsData.value = {
-        leads: response.data || [],
-        total: response.total || 0,
-      }
+      leads.value = response.leads || []
+      totalLeads.value = response.total || 0
     }
   }
   catch (error) {
@@ -127,43 +96,10 @@ const statsData = ref([
 // Fetch stats
 const fetchStats = async () => {
   try {
-    const response = await $api('/v1/franchisor/dashboard/leads', {
-      method: 'GET',
-    })
+    const response = await leadApi.getStatistics()
 
     if (response.success) {
-      const stats = response.data.stats
-
-      statsData.value = [
-        {
-          title: 'Total Leads',
-          value: stats.total_leads?.toString() || '0',
-          change: stats.total_leads_change || 0,
-          icon: 'tabler-users',
-          iconColor: 'primary',
-        },
-        {
-          title: 'Pending',
-          value: stats.pending_leads?.toString() || '0',
-          change: stats.pending_leads_change || 0,
-          icon: 'tabler-clock',
-          iconColor: 'warning',
-        },
-        {
-          title: 'Won',
-          value: stats.won_leads?.toString() || '0',
-          change: stats.won_leads_change || 0,
-          icon: 'tabler-user-check',
-          iconColor: 'success',
-        },
-        {
-          title: 'Lost',
-          value: stats.lost_leads?.toString() || '0',
-          change: stats.lost_leads_change || 0,
-          icon: 'tabler-user-x',
-          iconColor: 'error',
-        },
-      ]
+      statsData.value = response.data
     }
   }
   catch (error) {
@@ -263,9 +199,7 @@ const deleteLead = async () => {
     return
 
   try {
-    const response = await $api(`/v1/franchisor/leads/${leadToDelete.value}`, {
-      method: 'DELETE',
-    })
+    const response = await leadApi.deleteLead(leadToDelete.value)
 
     if (response.success) {
       // Refresh the leads list
@@ -283,6 +217,26 @@ const deleteLead = async () => {
   finally {
     isDeleteDialogVisible.value = false
     leadToDelete.value = null
+  }
+}
+
+// 👉 Bulk delete
+const bulkDelete = async () => {
+  if (selectedRows.value.length === 0)
+    return
+
+  try {
+    const response = await leadApi.bulkDelete(selectedRows.value)
+
+    if (response.success) {
+      // Refresh leads list
+      await fetchLeads()
+      await fetchStats()
+      selectedRows.value = []
+    }
+  }
+  catch (error) {
+    console.error('Error bulk deleting leads:', error)
   }
 }
 

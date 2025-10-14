@@ -214,6 +214,78 @@ const saveLead = async () => {
     isSavingLead.value = false
   }
 }
+
+// Get current user data
+const userData = useCookie('userData')
+const currentUser = computed(() => userData.value as any)
+
+// Set owner to current user on mount if creating new lead
+onMounted(() => {
+  if (leadData.value && currentUser.value) {
+    // If owner is not set or is 'Unassigned', set to current user
+    if (!leadData.value.owner || leadData.value.owner === 'Unassigned') {
+      leadData.value.owner = currentUser.value.name
+    }
+  }
+})
+
+// Dropdown options
+const countries = [
+  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
+  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
+  { title: 'Qatar', value: 'Qatar' },
+  { title: 'Kuwait', value: 'Kuwait' },
+  { title: 'Oman', value: 'Oman' },
+  { title: 'Bahrain', value: 'Bahrain' },
+  { title: 'Jordan', value: 'Jordan' },
+  { title: 'Lebanon', value: 'Lebanon' },
+  { title: 'Egypt', value: 'Egypt' },
+  { title: 'Iraq', value: 'Iraq' },
+  { title: 'Syria', value: 'Syria' },
+  { title: 'Palestine', value: 'Palestine' },
+  { title: 'Yemen', value: 'Yemen' },
+]
+
+const usStates = [
+  { title: 'Riyadh', value: 'Riyadh' },
+  { title: 'Makkah', value: 'Makkah' },
+  { title: 'Medina', value: 'Medina' },
+  { title: 'Eastern Province', value: 'Eastern Province' },
+  { title: 'Asir', value: 'Asir' },
+  { title: 'Tabuk', value: 'Tabuk' },
+  { title: 'Hail', value: 'Hail' },
+  { title: 'Northern Borders', value: 'Northern Borders' },
+  { title: 'Jazan', value: 'Jazan' },
+  { title: 'Najran', value: 'Najran' },
+  { title: 'Al Bahah', value: 'Al Bahah' },
+  { title: 'Al Jawf', value: 'Al Jawf' },
+]
+
+const leadSources = [
+  { title: 'Website', value: 'website' },
+  { title: 'Referral', value: 'referral' },
+  { title: 'Social Media', value: 'social_media' },
+  { title: 'Advertisement', value: 'advertisement' },
+  { title: 'Cold Call', value: 'cold_call' },
+  { title: 'Event', value: 'event' },
+  { title: 'Other', value: 'other' },
+]
+
+const leadStatuses = [
+  { title: 'New', value: 'new' },
+  { title: 'Contacted', value: 'contacted' },
+  { title: 'Qualified', value: 'qualified' },
+  { title: 'Unqualified', value: 'unqualified' },
+  { title: 'Converted', value: 'converted' },
+  { title: 'Lost', value: 'lost' },
+]
+
+const priorities = [
+  { title: 'Low', value: 'low' },
+  { title: 'Medium', value: 'medium' },
+  { title: 'High', value: 'high' },
+  { title: 'Urgent', value: 'urgent' },
+]
 </script>
 
 <template>
@@ -277,81 +349,160 @@ const saveLead = async () => {
       <VWindow v-model="currentTab" class="disable-tab-transition">
         <!-- Overview Tab -->
         <VWindowItem value="overview">
-          <VCard>
-            <VCardText>
-              <VRow>
-                <VCol cols="12" md="6">
-                  <h6 class="text-h6 mb-4">
-                    Contact Information
-                  </h6>
+          <VRow>
+            <!-- Left Column -->
+            <VCol cols="12" lg="8">
+              <!-- Personal & Contact Information -->
+              <VCard class="mb-6">
+                <VCardItem>
+                  <VCardTitle>Personal & Contact Information</VCardTitle>
+                </VCardItem>
+                <VDivider />
+                <VCardText>
                   <VRow>
-                    <VCol cols="12">
+                    <VCol cols="12" md="6">
+                      <AppTextField v-model="leadData.firstName" label="First Name" :readonly="!isEditMode" />
+                    </VCol>
+                    <VCol cols="12" md="6">
+                      <AppTextField v-model="leadData.lastName" label="Last Name" :readonly="!isEditMode" />
+                    </VCol>
+                    <VCol cols="12" md="6">
                       <AppTextField v-model="leadData.email" label="Email" :readonly="!isEditMode" />
                     </VCol>
-                    <VCol cols="12">
+                    <VCol cols="12" md="6">
                       <AppTextField v-model="leadData.phone" label="Phone" :readonly="!isEditMode" />
                     </VCol>
                     <VCol cols="12">
                       <AppTextField v-model="leadData.company" label="Company" :readonly="!isEditMode" />
                     </VCol>
                   </VRow>
-                </VCol>
+                </VCardText>
+              </VCard>
 
-                <VCol cols="12" md="6">
-                  <h6 class="text-h6 mb-4">
-                    Location
-                  </h6>
+              <!-- Location Information -->
+              <VCard class="mb-6">
+                <VCardItem>
+                  <VCardTitle>Location</VCardTitle>
+                </VCardItem>
+                <VDivider />
+                <VCardText>
                   <VRow>
-                    <VCol cols="12">
+                    <VCol cols="12" md="4">
+                      <AppSelect v-if="isEditMode" v-model="leadData.country" label="Country"
+                        placeholder="Select Country" :items="countries" />
+                      <AppTextField v-else v-model="leadData.country" label="Country" readonly />
+                    </VCol>
+                    <VCol cols="12" md="4">
+                      <AppSelect v-if="isEditMode" v-model="leadData.state" label="State" placeholder="Select State"
+                        :items="usStates" />
+                      <AppTextField v-else v-model="leadData.state" label="State" readonly />
+                    </VCol>
+                    <VCol cols="12" md="4">
                       <AppTextField v-model="leadData.city" label="City" :readonly="!isEditMode" />
                     </VCol>
-                    <VCol cols="12">
-                      <AppTextField v-model="leadData.state" label="State" :readonly="!isEditMode" />
+                  </VRow>
+                </VCardText>
+              </VCard>
+
+              <!-- Financial Details -->
+              <VCard class="mb-6">
+                <VCardItem>
+                  <VCardTitle>Financial Details</VCardTitle>
+                </VCardItem>
+                <VDivider />
+                <VCardText>
+                  <VRow>
+                    <VCol cols="12" md="4">
+                      <AppTextField v-model="leadData.estimatedInvestment" label="Estimated Investment" type="number"
+                        prefix="SAR" :readonly="!isEditMode" />
                     </VCol>
-                    <VCol cols="12">
-                      <AppTextField v-model="leadData.country" label="Country" :readonly="!isEditMode" />
+                    <VCol cols="12" md="4">
+                      <AppTextField v-model="leadData.franchiseFeeQuoted" label="Franchise Fee Quoted" type="number"
+                        prefix="SAR" :readonly="!isEditMode" />
+                    </VCol>
+                    <VCol cols="12" md="4">
+                      <AppDateTimePicker v-if="isEditMode" v-model="leadData.expectedDecisionDate"
+                        label="Expected Decision Date" placeholder="Select Date" />
+                      <AppTextField v-else v-model="leadData.expectedDecisionDate" label="Expected Decision Date"
+                        readonly />
                     </VCol>
                   </VRow>
-                </VCol>
+                </VCardText>
+              </VCard>
 
-                <VCol cols="12" md="6">
-                  <h6 class="text-h6 mb-4">
-                    Lead Details
-                  </h6>
+              <!-- Additional Notes -->
+              <VCard>
+                <VCardItem>
+                  <VCardTitle>Additional Notes</VCardTitle>
+                </VCardItem>
+                <VDivider />
+                <VCardText>
+                  <AppTextarea v-model="leadData.note" label="Notes"
+                    placeholder="Add any additional notes about this lead..." rows="4" :readonly="!isEditMode" />
+                </VCardText>
+              </VCard>
+            </VCol>
+
+            <!-- Right Column -->
+            <VCol cols="12" lg="4">
+              <!-- Lead Management -->
+              <VCard class="mb-6">
+                <VCardItem>
+                  <VCardTitle>Lead Management</VCardTitle>
+                </VCardItem>
+                <VDivider />
+                <VCardText>
                   <VRow>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.source" label="Source" :readonly="!isEditMode" />
+                      <AppSelect v-if="isEditMode" v-model="leadData.status" label="Status" placeholder="Select Status"
+                        :items="leadStatuses" />
+                      <AppTextField v-else v-model="leadData.status" label="Status" readonly class="text-capitalize" />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.owner" label="Owner" :readonly="!isEditMode" />
+                      <AppSelect v-if="isEditMode" v-model="leadData.priority" label="Priority"
+                        placeholder="Select Priority" :items="priorities" />
+                      <AppTextField v-else v-model="leadData.priority" label="Priority" readonly
+                        class="text-capitalize" />
+                    </VCol>
+                    <VCol cols="12">
+                      <AppSelect v-if="isEditMode" v-model="leadData.source" label="Source" placeholder="Select Source"
+                        :items="leadSources" />
+                      <AppTextField v-else v-model="leadData.source" label="Source" readonly />
+                    </VCol>
+                    <VCol cols="12">
+                      <AppTextField v-model="leadData.owner" label="Assigned To (You)" readonly />
                     </VCol>
                   </VRow>
-                </VCol>
+                </VCardText>
+              </VCard>
 
-                <VCol cols="12" md="6">
-                  <h6 class="text-h6 mb-4">
-                    Timeline
-                  </h6>
+              <!-- Timeline & Engagement -->
+              <VCard>
+                <VCardItem>
+                  <VCardTitle>Timeline & Engagement</VCardTitle>
+                </VCardItem>
+                <VDivider />
+                <VCardText>
                   <VRow>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.lastContacted" label="Last Contacted" :readonly="!isEditMode" />
+                      <AppDateTimePicker v-if="isEditMode" v-model="leadData.lastContacted" label="Last Contacted"
+                        placeholder="Select Date" />
+                      <AppTextField v-else v-model="leadData.lastContacted" label="Last Contacted" readonly />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.scheduledMeeting" label="Scheduled Meeting"
+                      <AppDateTimePicker v-if="isEditMode" v-model="leadData.scheduledMeeting" label="Next Follow-up"
+                        placeholder="Select Date" />
+                      <AppTextField v-else v-model="leadData.scheduledMeeting" label="Next Follow-up" readonly />
+                    </VCol>
+                    <VCol cols="12">
+                      <AppTextField v-model="leadData.contactAttempts" label="Contact Attempts" type="number"
                         :readonly="!isEditMode" />
                     </VCol>
                   </VRow>
-                </VCol>
-
-                <VCol cols="12">
-                  <h6 class="text-h6 mb-4">
-                    Notes
-                  </h6>
-                  <AppTextarea v-model="leadData.note" label="Additional Notes" rows="4" :readonly="!isEditMode" />
-                </VCol>
-              </VRow>
-            </VCardText>
-          </VCard>
+                </VCardText>
+              </VCard>
+            </VCol>
+          </VRow>
         </VWindowItem>
 
         <!-- Notes Tab -->

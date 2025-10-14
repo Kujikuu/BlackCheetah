@@ -364,17 +364,8 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::get('units/statistics', [FranchisorController::class, 'unitsStatistics']);
     Route::get('units/{unitId}/staff', [FranchisorController::class, 'getUnitStaff']);
 
-    // Lead management for franchisor
-    Route::get('leads', [LeadController::class, 'myLeads']);
-    Route::get('leads/statistics', [LeadController::class, 'statistics']);
-    Route::get('leads/{lead}', [LeadController::class, 'show']);
-    Route::post('leads', [LeadController::class, 'store']);
-    Route::put('leads/{lead}', [LeadController::class, 'update']);
-    Route::delete('leads/{lead}', [LeadController::class, 'destroy']);
-    Route::patch('leads/{lead}/assign', [LeadController::class, 'assign']);
-    Route::patch('leads/{lead}/convert', [LeadController::class, 'convert']);
-    Route::patch('leads/{lead}/mark-lost', [LeadController::class, 'markAsLost']);
-    Route::post('leads/{lead}/notes', [LeadController::class, 'addNote']);
+    // Task management for franchisor
+    Route::get('tasks', [TaskController::class, 'myTasks']);
 
     // Task management for franchisor
     Route::get('tasks', [TaskController::class, 'myTasks']);
@@ -438,6 +429,21 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::get('performance/ratings', [UnitPerformanceController::class, 'ratings']);
     Route::get('performance/export', [UnitPerformanceController::class, 'export']);
     Route::get('performance/units', [UnitPerformanceController::class, 'units']);
+
+    // Lead management for franchisor (manage sales team leads)
+    Route::get('leads', [LeadController::class, 'index']);
+    Route::get('leads/statistics', [LeadController::class, 'statistics']);
+    Route::get('leads/{lead}', [LeadController::class, 'show']);
+    Route::post('leads', [LeadController::class, 'store']);
+    Route::put('leads/{lead}', [LeadController::class, 'update']);
+    Route::delete('leads/{lead}', [LeadController::class, 'destroy']);
+    Route::patch('leads/{lead}/assign', [LeadController::class, 'assign']);
+    Route::patch('leads/{lead}/convert', [LeadController::class, 'convert']);
+    Route::patch('leads/{lead}/mark-lost', [LeadController::class, 'markAsLost']);
+    Route::post('leads/{lead}/notes', [LeadController::class, 'addNote']);
+    Route::post('leads/import', [LeadController::class, 'importCsv']);
+    Route::get('leads/export', [LeadController::class, 'exportCsv']);
+    Route::delete('leads/bulk-delete', [LeadController::class, 'bulkDelete']);
 });
 
 // Unit Manager routes (requires franchisee role)
@@ -547,6 +553,25 @@ Route::middleware(['auth:sanctum', 'role:sales'])->prefix('v1/employee')->group(
     // Employee can respond to technical requests
     Route::post('technical-requests/{technicalRequest}/respond', [TechnicalRequestController::class, 'respond']);
     Route::patch('technical-requests/{technicalRequest}/resolve', [TechnicalRequestController::class, 'resolve']);
+});
+
+// Sales routes (requires sales role) - Lead Management
+Route::middleware(['auth:sanctum', 'role:sales'])->prefix('v1/sales')->group(function () {
+
+    // Lead management for sales users
+    Route::get('leads', [LeadController::class, 'myLeads']);
+    Route::get('leads/statistics', [LeadController::class, 'statistics']);
+    Route::get('leads/{lead}', [LeadController::class, 'show']);
+    Route::post('leads', [LeadController::class, 'store']);
+    Route::put('leads/{lead}', [LeadController::class, 'update']);
+    Route::delete('leads/{lead}', [LeadController::class, 'destroy']);
+    Route::patch('leads/{lead}/assign', [LeadController::class, 'assign']);
+    Route::patch('leads/{lead}/convert', [LeadController::class, 'convert']);
+    Route::patch('leads/{lead}/mark-lost', [LeadController::class, 'markAsLost']);
+    Route::post('leads/{lead}/notes', [LeadController::class, 'addNote']);
+    Route::post('leads/import', [LeadController::class, 'importCsv']);
+    Route::get('leads/export', [LeadController::class, 'exportCsv']);
+    Route::delete('leads/bulk-delete', [LeadController::class, 'bulkDelete']);
 });
 
 // Admin routes (requires admin role)

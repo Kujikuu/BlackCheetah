@@ -1,7 +1,24 @@
 import { $api } from '@/utils/api'
 
-// Base API URL
-const API_URL = '/v1/leads'
+// Get base API URL based on user role
+const getBaseUrl = (): string => {
+    const userDataCookie = useCookie('userData')
+    const userData = userDataCookie.value as any
+    const userRole = userData?.role
+
+    // Sales users use /v1/sales/leads
+    if (userRole === 'sales') {
+        return '/v1/sales/leads'
+    }
+
+    // Franchisors use /v1/franchisor/leads
+    if (userRole === 'franchisor') {
+        return '/v1/franchisor/leads'
+    }
+
+    // Admin and others use /v1/leads
+    return '/v1/leads'
+}
 
 // Type definitions
 export interface Lead {
@@ -75,7 +92,7 @@ class LeadApi {
      * Get lead statistics
      */
     async getStatistics(): Promise<StatisticsResponse> {
-        return await $api<StatisticsResponse>(`${API_URL}/statistics`)
+        return await $api<StatisticsResponse>(`${getBaseUrl()}/statistics`)
     }
 
     /**
@@ -94,7 +111,8 @@ class LeadApi {
         if (filters.orderBy) params.append('orderBy', filters.orderBy)
 
         const queryString = params.toString()
-        const url = queryString ? `${API_URL}?${queryString}` : API_URL
+        const baseUrl = getBaseUrl()
+        const url = queryString ? `${baseUrl}?${queryString}` : baseUrl
 
         return await $api<LeadsResponse>(url)
     }
@@ -103,7 +121,7 @@ class LeadApi {
      * Get single lead by ID
      */
     async getLead(id: number): Promise<ApiResponse<Lead>> {
-        const response = await $api<any>(`${API_URL}/${id}`)
+        const response = await $api<any>(`${getBaseUrl()}/${id}`)
 
         // Transform snake_case to camelCase
         if (response.success && response.data) {
@@ -140,7 +158,7 @@ class LeadApi {
      * Create new lead
      */
     async createLead(data: Partial<Lead>): Promise<ApiResponse<Lead>> {
-        return await $api<ApiResponse<Lead>>(API_URL, {
+        return await $api<ApiResponse<Lead>>(getBaseUrl(), {
             method: 'POST',
             body: data,
         })
@@ -169,7 +187,7 @@ class LeadApi {
         if (data.franchiseFeeQuoted !== undefined) backendData.franchise_fee_quoted = data.franchiseFeeQuoted
         if (data.expectedDecisionDate !== undefined) backendData.expected_decision_date = data.expectedDecisionDate
 
-        return await $api<ApiResponse<Lead>>(`${API_URL}/${id}`, {
+        return await $api<ApiResponse<Lead>>(`${getBaseUrl()}/${id}`, {
             method: 'PUT',
             body: backendData,
         })
@@ -179,7 +197,7 @@ class LeadApi {
      * Delete lead
      */
     async deleteLead(id: number): Promise<ApiResponse> {
-        return await $api<ApiResponse>(`${API_URL}/${id}`, {
+        return await $api<ApiResponse>(`${getBaseUrl()}/${id}`, {
             method: 'DELETE',
         })
     }
@@ -188,7 +206,7 @@ class LeadApi {
      * Bulk delete leads
      */
     async bulkDelete(ids: number[]): Promise<ApiResponse> {
-        return await $api<ApiResponse>(`${API_URL}/bulk-delete`, {
+        return await $api<ApiResponse>(`${getBaseUrl()}/bulk-delete`, {
             method: 'POST',
             body: { ids },
         })
@@ -201,7 +219,7 @@ class LeadApi {
         const formData = new FormData()
         formData.append('file', file)
 
-        return await $api<ApiResponse>(`${API_URL}/import-csv`, {
+        return await $api<ApiResponse>(`${getBaseUrl()}/import`, {
             method: 'POST',
             body: formData,
         })
@@ -211,6 +229,7 @@ class LeadApi {
      * Export leads to CSV
      */
     exportCsv(ids?: number[]): string {
+        const baseUrl = getBaseUrl()
         const params = new URLSearchParams()
         if (ids && ids.length > 0) {
             ids.forEach(id => params.append('ids[]', id.toString()))
@@ -218,15 +237,15 @@ class LeadApi {
 
         const queryString = params.toString()
         return queryString
-            ? `${API_URL}/export-csv?${queryString}`
-            : `${API_URL}/export-csv`
+            ? `${baseUrl}/export?${queryString}`
+            : `${baseUrl}/export`
     }
 
     /**
      * Add note to lead
      */
     async addNote(leadId: number, note: { content: string }): Promise<ApiResponse> {
-        return await $api<ApiResponse>(`${API_URL}/${leadId}/notes`, {
+        return await $api<ApiResponse>(`${getBaseUrl()}/${leadId}/notes`, {
             method: 'POST',
             body: note,
         })

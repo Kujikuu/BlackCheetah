@@ -62,20 +62,19 @@ const states = [
     </VCol>
 
     <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.firstName" label="First Name" placeholder="John" />
+      <AppTextField v-model="localFormData.firstName" label="First Name" placeholder="First Name" />
     </VCol>
 
     <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.lastName" label="Last Name" placeholder="Doe" />
+      <AppTextField v-model="localFormData.lastName" label="Last Name" placeholder="Last Name" />
     </VCol>
 
     <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.email" label="Email Address" type="email"
-        placeholder="john.doe@example.com" />
+      <AppTextField v-model="localFormData.email" label="Email Address" type="email" placeholder="Email Address" />
     </VCol>
 
     <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.contactNumber" label="Contact Number" placeholder="+966 50 123 4567" />
+      <AppTextField v-model="localFormData.contactNumber" label="Contact Number" placeholder="Contact Number" />
     </VCol>
 
     <VCol cols="12" md="6">
@@ -87,11 +86,11 @@ const states = [
     </VCol>
 
     <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.city" label="City" placeholder="San Francisco" />
+      <AppTextField v-model="localFormData.city" label="City" placeholder="City" />
     </VCol>
 
     <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.companyName" label="Company Name" placeholder="Tech Corp" />
+      <AppTextField v-model="localFormData.companyName" label="Company Name" placeholder="Company Name" />
     </VCol>
   </VRow>
 </template>

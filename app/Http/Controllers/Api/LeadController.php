@@ -108,11 +108,11 @@ class LeadController extends Controller
                 'lastName' => $lead->last_name,
                 'email' => $lead->email,
                 'phone' => $lead->phone,
-                'company' => $lead->company_name,
+                'company' => $lead->company_name ?? '',
                 'country' => $lead->country,
-                'state' => $lead->address,
+                'state' => $lead->address ?? '',
                 'city' => $lead->city,
-                'source' => ucfirst(str_replace('_', ' ', $lead->lead_source)),
+                'source' => $lead->lead_source, // Keep original value for consistency
                 'status' => $lead->status,
                 'owner' => $lead->assignedUser ? $lead->assignedUser->name : 'Unassigned',
                 'lastContacted' => $lead->last_contact_date ? $lead->last_contact_date->format('Y-m-d') : null,
@@ -408,11 +408,12 @@ class LeadController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $leads->items(),
+                'leads' => $leads->items(),
                 'total' => $leads->total(),
-                'per_page' => $leads->perPage(),
-                'current_page' => $leads->currentPage(),
-                'last_page' => $leads->lastPage(),
+                'perPage' => $leads->perPage(),
+                'currentPage' => $leads->currentPage(),
+                'lastPage' => $leads->lastPage(),
+                'message' => 'Leads retrieved successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
