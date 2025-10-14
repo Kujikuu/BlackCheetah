@@ -20,7 +20,7 @@ interface BackendNotification {
     img?: string
     text?: string
     color?: string
-  }
+  } | string  // Can be object or JSON string from API
   read_at: string | null
   created_at: string
   updated_at: string
@@ -48,16 +48,16 @@ export const useNotifications = () => {
   // Transform backend notification to frontend format
   const transformNotification = (backendNotification: BackendNotification): any => {
     // Parse data if it's a string (sometimes comes as JSON string from API)
-    let data = backendNotification.data
-    if (typeof data === 'string') {
+    let parsedData: any = backendNotification.data
+    if (typeof parsedData === 'string') {
       try {
-        data = JSON.parse(data)
+        parsedData = JSON.parse(parsedData)
       } catch (e) {
         console.error('Failed to parse notification data:', e)
-        data = {}
+        parsedData = {}
       }
     }
-    data = data || {}
+    const data = parsedData || {}
 
     return {
       id: backendNotification.id,

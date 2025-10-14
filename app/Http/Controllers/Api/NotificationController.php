@@ -30,10 +30,13 @@ class NotificationController extends Controller
 
         // Transform notifications for frontend
         $transformedNotifications = $notifications->getCollection()->map(function ($notification) {
+            // Ensure data is decoded as array (DatabaseNotification stores it as JSON string)
+            $data = is_string($notification->data) ? json_decode($notification->data, true) : $notification->data;
+
             return [
                 'id' => $notification->id,
                 'type' => $notification->type,
-                'data' => $notification->data,
+                'data' => $data,
                 'read_at' => $notification->read_at,
                 'created_at' => $notification->created_at->toISOString(),
                 'isSeen' => ! is_null($notification->read_at),

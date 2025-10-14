@@ -108,7 +108,6 @@ const toggleReadUnread = (isSeen: boolean, Id: number | string) => {
         <!-- 👉 Notifications list -->
         <PerfectScrollbar :options="{ wheelPropagation: false }" style="max-block-size: 23.75rem;">
           <VList class="notification-list rounded-0 py-0">
-            {{ console.log('Rendering notifications:', props.notifications) }}
             <template v-for="(notification, index) in props.notifications" :key="notification.id">
               <VDivider v-if="index > 0" />
               <VListItem link lines="one" min-height="66px" class="list-item-hover-class"
