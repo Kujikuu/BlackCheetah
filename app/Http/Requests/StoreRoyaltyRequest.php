@@ -15,6 +15,62 @@ class StoreRoyaltyRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Map frontend billing frequency to database fee type
+        // Frontend sends 'type' with value 'monthly' or 'quarterly' (billing frequency)
+        // Database expects 'type' with value 'royalty', 'marketing_fee', 'technology_fee', or 'other' (fee type)
+        // We'll store the billing frequency separately and set type to 'royalty'
+        if ($this->has('type') && in_array($this->input('type'), ['monthly', 'quarterly'])) {
+            $this->merge([
+                'billing_frequency' => $this->input('type'), // Store original for validation
+                'type' => 'royalty', // Override with correct database type
+            ]);
+        } else {
+            // If type is not provided or is already a valid database type, use 'royalty' as default
+            $this->merge([
+                'type' => 'royalty',
+            ]);
+        }
+
+        // Calculate period dates based on period_year and period_month
+        if ($this->has('period_year') && $this->has('period_month')) {
+            $year = $this->input('period_year');
+            $month = $this->input('period_month');
+
+            $this->merge([
+                'period_start_date' => date('Y-m-d', strtotime("$year-$month-01")),
+                'period_end_date' => date('Y-m-t', strtotime("$year-$month-01")),
+            ]);
+        }
+
+        // Map frontend field names to backend field names
+        if ($this->has('base_revenue')) {
+            $this->merge(['gross_revenue' => $this->input('base_revenue')]);
+        }
+        if ($this->has('royalty_rate')) {
+            $this->merge(['royalty_percentage' => $this->input('royalty_rate')]);
+        }
+        if ($this->has('marketing_fee_rate')) {
+            $this->merge(['marketing_fee_percentage' => $this->input('marketing_fee_rate')]);
+        }
+
+        // Set is_auto_generated to false by default for manually created royalties
+        if (! $this->has('is_auto_generated')) {
+            $this->merge(['is_auto_generated' => false]);
+        }
+
+        // Generate royalty number if not provided
+        if (! $this->has('royalty_number')) {
+            $this->merge([
+                'royalty_number' => 'ROY' . date('Ymd') . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT),
+            ]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -25,10 +81,10 @@ class StoreRoyaltyRequest extends FormRequest
             'franchise_id' => ['required', 'integer', 'exists:franchises,id'],
             'unit_id' => ['nullable', 'integer', 'exists:units,id'],
             'franchisee_id' => ['required', 'integer', 'exists:users,id'],
-            'type' => ['required', 'string', 'in:monthly,quarterly'],
-            'period_year' => ['required', 'integer', 'min:2020', 'max:'.(date('Y') + 1)],
-            'period_month' => ['nullable', 'integer', 'min:1', 'max:12', 'required_if:type,monthly'],
-            'period_quarter' => ['nullable', 'integer', 'min:1', 'max:4', 'required_if:type,quarterly'],
+            'billing_frequency' => ['required', 'string', 'in:monthly,quarterly'],
+            'period_year' => ['required', 'integer', 'min:2020', 'max:' . (date('Y') + 1)],
+            'period_month' => ['nullable', 'integer', 'min:1', 'max:12', 'required_if:billing_frequency,monthly'],
+            'period_quarter' => ['nullable', 'integer', 'min:1', 'max:4', 'required_if:billing_frequency,quarterly'],
             'base_revenue' => ['required', 'numeric', 'min:0', 'max:999999999.99'],
             'royalty_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'royalty_amount' => ['nullable', 'numeric', 'min:0'],
@@ -58,8 +114,8 @@ class StoreRoyaltyRequest extends FormRequest
             'franchisee_id.required' => 'Franchisee selection is required.',
             'franchisee_id.exists' => 'Selected franchisee does not exist.',
             'unit_id.exists' => 'Selected unit does not exist.',
-            'type.required' => 'Royalty type is required.',
-            'type.in' => 'Royalty type must be either monthly or quarterly.',
+            'billing_frequency.required' => 'Billing frequency is required.',
+            'billing_frequency.in' => 'Billing frequency must be either monthly or quarterly.',
             'period_year.required' => 'Period year is required.',
             'period_year.min' => 'Period year must be at least 2020.',
             'period_year.max' => 'Period year cannot be more than next year.',
