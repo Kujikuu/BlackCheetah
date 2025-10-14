@@ -483,13 +483,17 @@ class MinimalDataSeeder extends Seeder
             ['Review Contract Terms', 'Review and sign contract amendments', $franchisee->id],
         ];
 
+        $priorities = ['low', 'medium', 'high', 'urgent', 'medium'];
+        $statuses = ['pending', 'in_progress', 'completed', 'cancelled', 'on_hold'];
+        $types = ['onboarding', 'training', 'compliance', 'maintenance', 'marketing'];
+
         foreach ($taskData as $i => $data) {
             Task::create([
                 'title' => $data[0],
                 'description' => $data[1],
-                'type' => ['onboarding', 'training', 'compliance', 'maintenance', 'marketing', 'operations', 'finance', 'support', 'other'][$i],
-                'priority' => ['low', 'medium', 'high', 'urgent'][$i],
-                'status' => ['pending', 'in_progress', 'completed', 'cancelled', 'on_hold'][$i],
+                'type' => $types[$i],
+                'priority' => $priorities[$i],
+                'status' => $statuses[$i],
                 'assigned_to' => $data[2],
                 'created_by' => $franchisor->id,
                 'franchise_id' => $franchise->id,
