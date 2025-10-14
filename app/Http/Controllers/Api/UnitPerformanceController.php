@@ -9,6 +9,7 @@ use App\Models\UnitPerformance;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UnitPerformanceController extends Controller
 {
@@ -55,6 +56,7 @@ class UnitPerformanceController extends Controller
 
     /**
      * Get performance data formatted for charts
+     * Calculates metrics in real-time from source tables
      */
     public function chartData(Request $request): JsonResponse
     {
@@ -71,7 +73,7 @@ class UnitPerformanceController extends Controller
         }
 
         $periodType = $request->get('period_type', 'monthly');
-        $unitId = $request->get('unit_id'); // null for all units aggregated - used in individual unit data
+        $unitId = $request->get('unit_id'); // null for all units aggregated
 
         // Calculate date range based on period type
         $startDate = $this->getStartDate($periodType);
@@ -91,7 +93,10 @@ class UnitPerformanceController extends Controller
         // Add unit-specific datasets
         foreach ($units as $unit) {
             $chartData['datasets'][$unit->id] = [
-                'revenue' => [], 'expenses' => [], 'royalties' => [], 'profit' => [],
+                'revenue' => [],
+                'expenses' => [],
+                'royalties' => [],
+                'profit' => [],
             ];
         }
 
@@ -103,28 +108,38 @@ class UnitPerformanceController extends Controller
         foreach ($periods as $index => $periodLabel) {
             $periodDate = $this->getPeriodDate($periodType, $startDate, $index);
 
+            // Calculate metrics from source tables for this period
+            [$year, $month] = $this->extractYearMonth($periodDate, $periodType);
+
             // Get aggregated data for all units
-            $aggregatedPerformance = UnitPerformance::query()
-                ->forFranchise($franchise->id)
-                ->forPeriod($periodType)
-                ->whereNotNull('unit_id') // Only include specific units
-                ->where('period_date', $periodDate->toDateString())
-                ->get();
+            $allRevenue = 0;
+            $allExpenses = 0;
+            $allRoyalties = 0;
 
-            $chartData['datasets']['all']['revenue'][] = $aggregatedPerformance->sum('revenue');
-            $chartData['datasets']['all']['expenses'][] = $aggregatedPerformance->sum('expenses');
-            $chartData['datasets']['all']['royalties'][] = $aggregatedPerformance->sum('royalties');
-            $chartData['datasets']['all']['profit'][] = $aggregatedPerformance->sum('profit');
-
-            // Get individual unit data
             foreach ($units as $unit) {
-                $unitPerformance = $aggregatedPerformance->where('unit_id', $unit->id)->first();
+                // Calculate revenue for this unit and period
+                $revenue = $this->calculateRevenue($unit->id, $year, $month, $periodType, $periodDate);
+                $expenses = $this->calculateExpenses($unit->id, $year, $month, $periodType, $periodDate);
+                $royalties = $this->calculateRoyalties($unit->id, $year, $month, $periodType, $periodDate);
+                $profit = $revenue - $expenses;
 
-                $chartData['datasets'][$unit->id]['revenue'][] = $unitPerformance ? $unitPerformance->revenue : 0;
-                $chartData['datasets'][$unit->id]['expenses'][] = $unitPerformance ? $unitPerformance->expenses : 0;
-                $chartData['datasets'][$unit->id]['royalties'][] = $unitPerformance ? $unitPerformance->royalties : 0;
-                $chartData['datasets'][$unit->id]['profit'][] = $unitPerformance ? $unitPerformance->profit : 0;
+                // Add to aggregated totals
+                $allRevenue += $revenue;
+                $allExpenses += $expenses;
+                $allRoyalties += $royalties;
+
+                // Store unit-specific data
+                $chartData['datasets'][$unit->id]['revenue'][] = $revenue;
+                $chartData['datasets'][$unit->id]['expenses'][] = $expenses;
+                $chartData['datasets'][$unit->id]['royalties'][] = $royalties;
+                $chartData['datasets'][$unit->id]['profit'][] = $profit;
             }
+
+            // Store aggregated data
+            $chartData['datasets']['all']['revenue'][] = $allRevenue;
+            $chartData['datasets']['all']['expenses'][] = $allExpenses;
+            $chartData['datasets']['all']['royalties'][] = $allRoyalties;
+            $chartData['datasets']['all']['profit'][] = $allRevenue - $allExpenses;
         }
 
         return response()->json([
@@ -135,7 +150,7 @@ class UnitPerformanceController extends Controller
     }
 
     /**
-     * Get top performing units
+     * Get top performing units - calculated in real-time
      */
     public function topPerformers(Request $request): JsonResponse
     {
@@ -154,31 +169,50 @@ class UnitPerformanceController extends Controller
         $periodType = $request->get('period_type', 'monthly');
         $limit = $request->get('limit', 3);
 
-        // Get most recent period
-        $startDate = $this->getStartDate($periodType);
-        $endDate = now();
+        // Get current and previous period dates
+        $currentDate = now();
+        [$currentYear, $currentMonth] = [$currentDate->year, $currentDate->month];
 
-        $topPerformers = UnitPerformance::query()
-            ->forFranchise($franchise->id)
-            ->forPeriod($periodType)
-            ->whereNotNull('unit_id')
-            ->inDateRange($startDate, $endDate)
-            ->with(['unit'])
-            ->orderByDate('desc')
-            ->byRevenue('desc')
-            ->limit($limit * 2) // Get more to calculate growth
-            ->get()
-            ->unique('unit_id')
+        $previousDate = $currentDate->copy()->subMonth();
+        [$previousYear, $previousMonth] = [$previousDate->year, $previousDate->month];
+
+        // Get all units for this franchise
+        $units = Unit::where('franchise_id', $franchise->id)->get();
+
+        $performanceData = [];
+
+        foreach ($units as $unit) {
+            // Calculate current period revenue
+            $currentRevenue = $this->calculateRevenue($unit->id, $currentYear, $currentMonth, $periodType, $currentDate);
+
+            // Calculate previous period revenue for growth rate
+            $previousRevenue = $this->calculateRevenue($unit->id, $previousYear, $previousMonth, $periodType, $previousDate);
+
+            // Calculate growth rate
+            $growthRate = $previousRevenue > 0
+                ? (($currentRevenue - $previousRevenue) / $previousRevenue) * 100
+                : 0;
+
+            $performanceData[] = [
+                'id' => $unit->id,
+                'name' => $unit->unit_name,
+                'location' => $unit->city ?? 'Unknown',
+                'revenue' => number_format($currentRevenue, 2) . ' SAR',
+                'revenue_value' => $currentRevenue,
+                'growth' => ($growthRate >= 0 ? '+' : '') . number_format($growthRate, 1) . '%',
+            ];
+        }
+
+        // Sort by revenue and take top performers
+        $topPerformers = collect($performanceData)
+            ->sortByDesc('revenue_value')
             ->take($limit)
-            ->map(function ($performance) {
-                return [
-                    'id' => $performance->unit->id,
-                    'name' => $performance->unit->unit_name,
-                    'location' => $performance->unit->city ?? 'Unknown',
-                    'revenue' => number_format($performance->revenue, 2).' SAR',
-                    'growth' => '+'.number_format($performance->growth_rate, 1).'%',
-                ];
-            });
+            ->map(function ($item) {
+                unset($item['revenue_value']); // Remove helper field
+
+                return $item;
+            })
+            ->values();
 
         return response()->json([
             'success' => true,
@@ -188,7 +222,7 @@ class UnitPerformanceController extends Controller
     }
 
     /**
-     * Get customer satisfaction statistics
+     * Get customer satisfaction statistics - calculated in real-time from reviews
      */
     public function customerSatisfaction(Request $request): JsonResponse
     {
@@ -206,39 +240,53 @@ class UnitPerformanceController extends Controller
 
         $periodType = $request->get('period_type', 'monthly');
 
-        // Get most recent period
-        $startDate = $this->getStartDate($periodType);
-        $endDate = now();
+        // Get current and previous period dates
+        $currentDate = now();
+        $currentStart = match ($periodType) {
+            'daily' => $currentDate->copy()->startOfDay(),
+            'monthly' => $currentDate->copy()->startOfMonth(),
+            'yearly' => $currentDate->copy()->startOfYear(),
+            default => $currentDate->copy()->startOfMonth(),
+        };
 
-        $performances = UnitPerformance::query()
-            ->forFranchise($franchise->id)
-            ->forPeriod($periodType)
-            ->whereNotNull('unit_id')
-            ->inDateRange($startDate, $endDate)
-            ->get();
+        $previousStart = match ($periodType) {
+            'daily' => $currentDate->copy()->subDay()->startOfDay(),
+            'monthly' => $currentDate->copy()->subMonth()->startOfMonth(),
+            'yearly' => $currentDate->copy()->subYear()->startOfYear(),
+            default => $currentDate->copy()->subMonth()->startOfMonth(),
+        };
 
-        if ($performances->isEmpty()) {
-            $satisfactionData = [
-                'score' => 0,
-                'max_score' => 5.0,
-                'total_reviews' => 0,
-                'trend' => '0',
-            ];
-        } else {
-            $currentPeriod = $performances->last();
-            $previousPeriod = $performances->count() > 1 ? $performances[$performances->count() - 2] : null;
+        $previousEnd = $currentStart->copy()->subSecond();
 
-            $currentScore = $currentPeriod->customer_rating;
-            $previousScore = $previousPeriod ? $previousPeriod->customer_rating : $currentScore;
-            $trend = $currentScore - $previousScore;
+        // Get all units for this franchise
+        $unitIds = Unit::where('franchise_id', $franchise->id)->pluck('id');
 
-            $satisfactionData = [
-                'score' => $currentScore,
-                'max_score' => 5.0,
-                'total_reviews' => $performances->sum('customer_reviews_count'),
-                'trend' => ($trend >= 0 ? '+' : '').number_format($trend, 1),
-            ];
-        }
+        // Calculate current period ratings
+        $currentRatings = DB::table('reviews')
+            ->whereIn('unit_id', $unitIds)
+            ->where('created_at', '>=', $currentStart)
+            ->where('created_at', '<=', $currentDate)
+            ->selectRaw('AVG(rating) as avg_rating, COUNT(*) as review_count')
+            ->first();
+
+        // Calculate previous period ratings for trend
+        $previousRatings = DB::table('reviews')
+            ->whereIn('unit_id', $unitIds)
+            ->where('created_at', '>=', $previousStart)
+            ->where('created_at', '<=', $previousEnd)
+            ->selectRaw('AVG(rating) as avg_rating')
+            ->first();
+
+        $currentScore = $currentRatings->avg_rating ? (float) $currentRatings->avg_rating : 0;
+        $previousScore = $previousRatings->avg_rating ? (float) $previousRatings->avg_rating : $currentScore;
+        $trend = $currentScore - $previousScore;
+
+        $satisfactionData = [
+            'score' => round($currentScore, 2),
+            'max_score' => 5.0,
+            'total_reviews' => (int) $currentRatings->review_count,
+            'trend' => ($trend >= 0 ? '+' : '') . number_format($trend, 1),
+        ];
 
         return response()->json([
             'success' => true,
@@ -248,7 +296,7 @@ class UnitPerformanceController extends Controller
     }
 
     /**
-     * Get top and lowest rated units
+     * Get top and lowest rated units - calculated in real-time from reviews
      */
     public function ratings(Request $request): JsonResponse
     {
@@ -266,40 +314,36 @@ class UnitPerformanceController extends Controller
 
         $periodType = $request->get('period_type', 'monthly');
 
-        // Get most recent period
+        // Get period date range
         $startDate = $this->getStartDate($periodType);
         $endDate = now();
 
-        $recentPerformances = UnitPerformance::query()
-            ->forFranchise($franchise->id)
-            ->forPeriod($periodType)
-            ->whereNotNull('unit_id')
-            ->inDateRange($startDate, $endDate)
-            ->with(['unit'])
-            ->orderByDate('desc')
-            ->byRating('desc')
-            ->get();
+        // Get all units with their ratings
+        $units = Unit::where('franchise_id', $franchise->id)->with('franchisee')->get();
 
-        $topRated = $recentPerformances->first();
-        $lowestRated = $recentPerformances->last();
+        $unitRatings = [];
+
+        foreach ($units as $unit) {
+            $ratingData = $this->calculateRating($unit->id, $startDate, $endDate);
+
+            if ($ratingData['count'] > 0) {
+                $unitRatings[] = [
+                    'id' => $unit->id,
+                    'name' => $unit->unit_name,
+                    'location' => $unit->city ?? 'Unknown',
+                    'rating' => $ratingData['rating'],
+                    'reviews' => $ratingData['count'],
+                    'manager' => $unit->franchisee?->name ?? 'Unknown',
+                ];
+            }
+        }
+
+        // Sort by rating
+        $sortedRatings = collect($unitRatings)->sortByDesc('rating')->values();
 
         $ratingsData = [
-            'top_rated' => $topRated ? [
-                'id' => $topRated->unit->id,
-                'name' => $topRated->unit->unit_name,
-                'location' => $topRated->unit->city ?? 'Unknown',
-                'rating' => $topRated->customer_rating,
-                'reviews' => $topRated->customer_reviews_count,
-                'manager' => $topRated->unit->franchisee?->name ?? 'Unknown',
-            ] : null,
-            'lowest_rated' => $lowestRated && $lowestRated->id !== $topRated?->id ? [
-                'id' => $lowestRated->unit->id,
-                'name' => $lowestRated->unit->unit_name,
-                'location' => $lowestRated->unit->city ?? 'Unknown',
-                'rating' => $lowestRated->customer_rating,
-                'reviews' => $lowestRated->customer_reviews_count,
-                'manager' => $lowestRated->unit->franchisee?->name ?? 'Unknown',
-            ] : null,
+            'top_rated' => $sortedRatings->first(),
+            'lowest_rated' => $sortedRatings->count() > 1 ? $sortedRatings->last() : null,
         ];
 
         return response()->json([
@@ -487,6 +531,99 @@ class UnitPerformanceController extends Controller
                 'start' => $startDate->format('Y-m-d'),
                 'end' => $endDate->format('Y-m-d'),
             ],
+        ];
+    }
+
+    /**
+     * Extract year and month from period date based on period type
+     */
+    private function extractYearMonth(Carbon $periodDate, string $periodType): array
+    {
+        return [$periodDate->year, $periodDate->month];
+    }
+
+    /**
+     * Calculate revenue for a unit in a given period from revenues table
+     */
+    private function calculateRevenue(int $unitId, int $year, int $month, string $periodType, Carbon $periodDate): float
+    {
+        $query = DB::table('revenues')
+            ->where('unit_id', $unitId);
+
+        if ($periodType === 'monthly') {
+            $query->where('period_year', $year)
+                ->where('period_month', $month);
+        } elseif ($periodType === 'yearly') {
+            $query->where('period_year', $year);
+        } elseif ($periodType === 'daily') {
+            $query->whereDate('created_at', $periodDate->toDateString());
+        }
+
+        return (float) $query->sum('amount');
+    }
+
+    /**
+     * Calculate expenses for a unit in a given period from transactions table
+     */
+    private function calculateExpenses(int $unitId, int $year, int $month, string $periodType, Carbon $periodDate): float
+    {
+        $query = DB::table('transactions')
+            ->where('unit_id', $unitId)
+            ->where('type', 'expense');
+
+        if ($periodType === 'monthly') {
+            $query->whereYear('transaction_date', $year)
+                ->whereMonth('transaction_date', $month);
+        } elseif ($periodType === 'yearly') {
+            $query->whereYear('transaction_date', $year);
+        } elseif ($periodType === 'daily') {
+            $query->whereDate('transaction_date', $periodDate->toDateString());
+        }
+
+        return (float) $query->sum('amount');
+    }
+
+    /**
+     * Calculate royalties for a unit in a given period from royalties table
+     */
+    private function calculateRoyalties(int $unitId, int $year, int $month, string $periodType, Carbon $periodDate): float
+    {
+        $query = DB::table('royalties')
+            ->where('unit_id', $unitId);
+
+        if ($periodType === 'monthly') {
+            $query->where('period_year', $year)
+                ->where('period_month', $month);
+        } elseif ($periodType === 'yearly') {
+            $query->where('period_year', $year);
+        } elseif ($periodType === 'daily') {
+            $query->whereDate('created_at', $periodDate->toDateString());
+        }
+
+        return (float) $query->sum('total_amount');
+    }
+
+    /**
+     * Calculate average rating for a unit from reviews table
+     */
+    private function calculateRating(int $unitId, ?Carbon $startDate = null, ?Carbon $endDate = null): array
+    {
+        $query = DB::table('reviews')
+            ->where('unit_id', $unitId);
+
+        if ($startDate) {
+            $query->where('created_at', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('created_at', '<=', $endDate);
+        }
+
+        $avgRating = (float) $query->avg('rating');
+        $reviewCount = (int) $query->count();
+
+        return [
+            'rating' => round($avgRating, 2),
+            'count' => $reviewCount,
         ];
     }
 }

@@ -173,8 +173,13 @@ const chartSeries = computed(() => {
 const fetchUnits = async () => {
   try {
     const response = await $api<ApiResponse<Unit[]>>(`${API_BASE}/units`)
-    if (response.success)
+    if (response.success) {
       franchiseeUnits.value = response.data
+      // Ensure selectedUnit is set to 'all' if not already set or invalid
+      if (!selectedUnit.value || !response.data.find(u => u.id === selectedUnit.value)) {
+        selectedUnit.value = 'all'
+      }
+    }
   }
   catch (err) {
     console.error('Error fetching units:', err)
