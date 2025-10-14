@@ -44,6 +44,7 @@ export interface TaskStatistics {
 }
 
 export interface TaskListResponse {
+    success: boolean
     data: Task[]
     pagination: {
         total: number
@@ -51,6 +52,19 @@ export interface TaskListResponse {
         currentPage: number
         lastPage: number
     }
+    message: string
+}
+
+export interface TaskStatisticsResponse {
+    success: boolean
+    data: TaskStatistics
+    message: string
+}
+
+export interface TaskResponse {
+    success: boolean
+    data: Task
+    message: string
 }
 
 export interface TaskFilters {
@@ -79,53 +93,43 @@ export const taskApi = {
         const queryString = params.toString()
         const url = queryString ? `${baseUrl}?${queryString}` : baseUrl
 
-        const response: any = await $api(url, {
+        return await $api<TaskListResponse>(url, {
             method: 'GET',
         })
-
-        // Backend returns { success, data, pagination, message }
-        return {
-            data: response.data || [],
-            pagination: response.pagination || { total: 0, perPage: 15, currentPage: 1, lastPage: 1 },
-        }
     },
 
     /**
      * Get task statistics for the current user
      */
-    async getStatistics(): Promise<TaskStatistics> {
+    async getStatistics(): Promise<TaskStatisticsResponse> {
         const baseUrl = getBaseUrl()
 
-        const response: any = await $api(`${baseUrl}/statistics`, {
+        return await $api<TaskStatisticsResponse>(`${baseUrl}/statistics`, {
             method: 'GET',
         })
-
-        return response.data || response
     },
 
     /**
      * Update task status
      */
-    async updateTaskStatus(taskId: number, status: string): Promise<Task> {
+    async updateTaskStatus(taskId: number, status: string): Promise<TaskResponse> {
         const baseUrl = getBaseUrl()
 
-        const response: any = await $api(`${baseUrl}/${taskId}/status`, {
+        return await $api<TaskResponse>(`${baseUrl}/${taskId}/status`, {
             method: 'PATCH',
             body: {
                 status,
             },
         })
-
-        return response.data || response
     },
 
     /**
      * Get a single task by ID
      */
-    async getTask(taskId: number): Promise<Task> {
+    async getTask(taskId: number): Promise<TaskResponse> {
         const baseUrl = getBaseUrl()
 
-        return await $api(`${baseUrl}/${taskId}`, {
+        return await $api<TaskResponse>(`${baseUrl}/${taskId}`, {
             method: 'GET',
         })
     },

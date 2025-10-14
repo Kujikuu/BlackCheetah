@@ -40,8 +40,13 @@ const fetchTasks = async () => {
     console.log('Tasks Response:', tasksResponse)
     console.log('Stats Response:', statsResponse)
 
-    allTasksData.value = tasksResponse.data
-    statistics.value = statsResponse
+    if (tasksResponse.success) {
+      allTasksData.value = tasksResponse.data
+    }
+
+    if (statsResponse.success) {
+      statistics.value = statsResponse.data
+    }
 
     console.log('Statistics value:', statistics.value)
   }
@@ -110,19 +115,24 @@ const updateTaskStatus = async (newStatus: string) => {
 
   try {
     // Update task status via API
-    await taskApi.updateTaskStatus(selectedTask.value.id, newStatus)
+    const response = await taskApi.updateTaskStatus(selectedTask.value.id, newStatus)
 
-    // Update local data
-    const index = allTasksData.value.findIndex(task => task.id === selectedTask.value!.id)
-    if (index !== -1) {
-      allTasksData.value[index].status = newStatus as any
+    if (response.success) {
+      // Update local data
+      const index = allTasksData.value.findIndex(task => task.id === selectedTask.value!.id)
+      if (index !== -1) {
+        allTasksData.value[index].status = newStatus as any
+      }
+
+      // Refresh statistics
+      await fetchTasks()
+
+      isStatusChangeModalVisible.value = false
+      selectedTask.value = null
     }
-
-    // Refresh statistics
-    await fetchTasks()
-
-    isStatusChangeModalVisible.value = false
-    selectedTask.value = null
+    else {
+      error.value = response.message || 'Failed to update task status'
+    }
   }
   catch (err: any) {
     console.error('Error updating task status:', err)
