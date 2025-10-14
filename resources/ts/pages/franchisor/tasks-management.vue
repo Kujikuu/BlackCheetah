@@ -60,7 +60,6 @@ const loadFranchiseeTasks = async () => {
         status: task.status || 'pending',
         estimatedHours: task.estimated_hours || 0,
         actualHours: task.actual_hours || 0,
-        completionPercentage: task.completion_percentage || 0,
         createdAt: task.created_at,
         updatedAt: task.updated_at,
       }))
@@ -113,7 +112,6 @@ const loadSalesTasks = async () => {
         status: task.status || 'pending',
         estimatedHours: task.estimated_hours || 0,
         actualHours: task.actual_hours || 0,
-        completionPercentage: task.completion_percentage || 0,
         createdAt: task.created_at,
         updatedAt: task.updated_at,
       }))
@@ -247,7 +245,6 @@ const onTaskCreated = async (task: any) => {
         status: response.data.status || 'pending',
         estimatedHours: response.data.estimated_hours || 0,
         actualHours: response.data.actual_hours || 0,
-        completionPercentage: response.data.completion_percentage || 0,
         createdAt: response.data.created_at,
         updatedAt: response.data.updated_at,
       }
@@ -344,7 +341,6 @@ const saveTask = async () => {
         due_date: selectedTask.value.dueDate,
         estimated_hours: selectedTask.value.estimatedHours,
         actual_hours: selectedTask.value.actualHours,
-        completion_percentage: selectedTask.value.completionPercentage,
       },
     })
 
@@ -362,7 +358,6 @@ const saveTask = async () => {
         status: response.data.status || selectedTask.value.status,
         estimatedHours: response.data.estimated_hours || selectedTask.value.estimatedHours,
         actualHours: response.data.actual_hours || selectedTask.value.actualHours,
-        completionPercentage: response.data.completion_percentage || selectedTask.value.completionPercentage,
         createdAt: response.data.created_at,
         updatedAt: response.data.updated_at,
       }

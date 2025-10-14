@@ -27,7 +27,6 @@ class Task extends Model
         'completed_at',
         'estimated_hours',
         'actual_hours',
-        'completion_percentage',
         'checklist',
         'attachments',
         'notes',

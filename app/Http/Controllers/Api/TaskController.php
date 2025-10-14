@@ -102,7 +102,6 @@ class TaskController extends Controller
                 'due_date' => 'nullable|date|after_or_equal:today',
                 'estimated_hours' => 'nullable|numeric|min:0',
                 'actual_hours' => 'nullable|numeric|min:0',
-                'completion_percentage' => 'nullable|integer|min:0|max:100',
                 'attachments' => 'nullable|array',
                 'checklist' => 'nullable|array',
                 'dependencies' => 'nullable|array',
@@ -190,7 +189,6 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
             'estimated_hours' => 'nullable|numeric|min:0',
             'actual_hours' => 'nullable|numeric|min:0',
-            'completion_percentage' => 'nullable|integer|min:0|max:100',
             'attachments' => 'nullable|array',
             'checklist' => 'nullable|array',
             'dependencies' => 'nullable|array',
@@ -249,7 +247,6 @@ class TaskController extends Controller
 
         $task->update([
             'status' => 'completed',
-            'completion_percentage' => 100,
             'completed_at' => now(),
             'actual_hours' => $validated['actual_hours'] ?? $task->actual_hours,
             'notes' => $validated['completion_notes'] ?
