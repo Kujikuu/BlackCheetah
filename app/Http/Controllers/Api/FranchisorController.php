@@ -405,71 +405,43 @@ class FranchisorController extends Controller
                 ], 404);
             }
 
-            $type = $request->get('type', 'franchisee'); // franchisee or unit
+            // Fetch tasks by role
+            $franchiseeTasks = Task::where('franchise_id', $franchise->id)
+                ->whereHas('assignedTo', function ($q) {
+                    $q->where('role', 'franchisee');
+                })
+                ->with(['assignedTo', 'createdBy'])
+                ->get();
 
-            if ($type === 'franchisee') {
-                // Tasks assigned to franchisees under this franchisor
-                $query = Task::where('created_by', $user->id)
-                    ->whereHas('assignedUser', function ($q) {
-                        $q->where('role', 'franchisee');
-                    });
-            } else {
-                // Tasks assigned to units under this franchisor
-                $query = Task::where('created_by', $user->id)
-                    ->whereHas('unit.franchise', function ($q) use ($franchise) {
-                        $q->where('franchisor_id', $franchise->id);
-                    });
-            }
+            $salesTasks = Task::where('franchise_id', $franchise->id)
+                ->whereHas('assignedTo', function ($q) {
+                    $q->where('role', 'sales');
+                })
+                ->with(['assignedTo', 'createdBy'])
+                ->get();
 
-            // Apply filters
-            if ($request->has('status') && $request->status) {
-                $query->where('status', $request->status);
-            }
+            // Staff tasks (placeholder for now)
+            $staffTasks = collect([]);
 
-            if ($request->has('priority') && $request->priority) {
-                $query->where('priority', $request->priority);
-            }
+            // Calculate statistics for each role
+            $stats = [
+                'franchisee' => $this->calculateTaskStats($franchiseeTasks),
+                'sales' => $this->calculateTaskStats($salesTasks),
+                'staff' => $this->calculateTaskStats($staffTasks),
+            ];
 
-            if ($request->has('search') && $request->search) {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-                });
-            }
-
-            // Apply sorting
-            $sort = $this->parseSortParams($request);
-            $query->orderBy($sort['column'], $sort['order']);
-
-            // Pagination
-            $perPage = $request->get('perPage', 10);
-            $tasks = $query->with(['assignedUser', 'unit'])->paginate($perPage);
-
-            // Task statistics
-            $totalTasks = Task::where('created_by', $user->id)->count();
-            $pendingTasks = Task::where('created_by', $user->id)->where('status', 'pending')->count();
-            $inProgressTasks = Task::where('created_by', $user->id)->where('status', 'in_progress')->count();
-            $completedTasks = Task::where('created_by', $user->id)->where('status', 'completed')->count();
-
-            // Tasks by priority
-            $tasksByPriority = Task::where('created_by', $user->id)
-                ->groupBy('priority')
-                ->selectRaw('priority, COUNT(*) as count')
-                ->get()
-                ->pluck('count', 'priority');
+            // Transform tasks for frontend
+            $tasks = [
+                'franchisee' => $this->transformTasks($franchiseeTasks),
+                'sales' => $this->transformTasks($salesTasks),
+                'staff' => $this->transformTasks($staffTasks),
+            ];
 
             return response()->json([
                 'success' => true,
                 'data' => [
+                    'stats' => $stats,
                     'tasks' => $tasks,
-                    'statistics' => [
-                        'total' => $totalTasks,
-                        'pending' => $pendingTasks,
-                        'inProgress' => $inProgressTasks,
-                        'completed' => $completedTasks,
-                    ],
-                    'tasksByPriority' => $tasksByPriority,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -479,6 +451,41 @@ class FranchisorController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function calculateTaskStats($tasks): array
+    {
+        $total = $tasks->count();
+        $completed = $tasks->where('status', 'completed')->count();
+        $inProgress = $tasks->where('status', 'in_progress')->count();
+        $due = $tasks->filter(function ($task) {
+            return $task->due_date && Carbon::parse($task->due_date)->isPast() && $task->status !== 'completed';
+        })->count();
+
+        return [
+            'total' => $total,
+            'total_change' => 0, // Placeholder for historical comparison
+            'completed' => $completed,
+            'completed_change' => 0,
+            'in_progress' => $inProgress,
+            'in_progress_change' => 0,
+            'due' => $due,
+            'due_change' => 0,
+        ];
+    }
+
+    private function transformTasks($tasks): array
+    {
+        return $tasks->map(function ($task) {
+            return [
+                'id' => $task->id,
+                'task' => $task->title,
+                'assigned_to' => $task->assignedTo->name ?? 'Unassigned',
+                'priority' => $task->priority,
+                'status' => $task->status,
+                'due_date' => $task->due_date ? Carbon::parse($task->due_date)->format('Y-m-d') : null,
+            ];
+        })->toArray();
     }
 
     /**
@@ -511,7 +518,7 @@ class FranchisorController extends Controller
                         'id' => $lead->id,
                         'title' => "New lead: {$lead->first_name} {$lead->last_name}",
                         'description' => "Lead from {$lead->lead_source}",
-                        'week' => 'Week '.Carbon::parse($lead->created_at)->weekOfYear,
+                        'week' => 'Week ' . Carbon::parse($lead->created_at)->weekOfYear,
                         'date' => Carbon::parse($lead->created_at)->format('M d, Y'),
                         'status' => $lead->status === 'new' ? 'scheduled' : ($lead->status === 'converted' ? 'completed' : $lead->status),
                         'icon' => 'tabler-user-plus',
@@ -530,7 +537,7 @@ class FranchisorController extends Controller
                         'id' => $task->id,
                         'title' => "Task assigned: {$task->title}",
                         'description' => $task->description,
-                        'week' => 'Week '.Carbon::parse($task->created_at)->weekOfYear,
+                        'week' => 'Week ' . Carbon::parse($task->created_at)->weekOfYear,
                         'date' => Carbon::parse($task->created_at)->format('M d, Y'),
                         'status' => $task->status === 'pending' ? 'scheduled' : $task->status,
                         'icon' => 'tabler-checklist',
@@ -551,7 +558,7 @@ class FranchisorController extends Controller
                         'id' => $request->id,
                         'title' => "Technical request: {$request->title}",
                         'description' => $request->description,
-                        'week' => 'Week '.Carbon::parse($request->created_at)->weekOfYear,
+                        'week' => 'Week ' . Carbon::parse($request->created_at)->weekOfYear,
                         'date' => Carbon::parse($request->created_at)->format('M d, Y'),
                         'status' => $request->status === 'pending' ? 'scheduled' : $request->status,
                         'icon' => 'tabler-tool',
@@ -984,7 +991,7 @@ class FranchisorController extends Controller
 
             $validatedData = $request->validate([
                 'name' => 'sometimes|required|string|max:255',
-                'email' => 'sometimes|required|email|unique:users,email,'.$id,
+                'email' => 'sometimes|required|email|unique:users,email,' . $id,
                 'phone' => 'sometimes|required|string|max:20',
                 'status' => 'sometimes|required|in:active,inactive',
                 'country' => 'nullable|string|max:100',
@@ -1211,7 +1218,7 @@ class FranchisorController extends Controller
                 'description' => null, // Will be filled later
                 'website' => $validatedData['franchiseDetails']['franchiseDetails']['website'],
                 'logo' => $validatedData['franchiseDetails']['franchiseDetails']['logo'],
-                'business_registration_number' => 'BRN-'.strtoupper(uniqid()).'-'.$user->id, // Generate unique business registration number
+                'business_registration_number' => 'BRN-' . strtoupper(uniqid()) . '-' . $user->id, // Generate unique business registration number
                 'tax_id' => $validatedData['franchiseDetails']['legalDetails']['taxId'],
                 'business_type' => $validatedData['franchiseDetails']['legalDetails']['businessStructure'],
                 'established_date' => null, // Will be filled later
@@ -1644,7 +1651,7 @@ class FranchisorController extends Controller
 
             // Store the logo file
             $logoPath = $request->file('logo')->store('franchise-logos', 'public');
-            $logoUrl = asset('storage/'.$logoPath);
+            $logoUrl = asset('storage/' . $logoPath);
 
             // Update franchise with new logo URL
             $franchise->update(['logo' => $logoUrl]);
@@ -1743,12 +1750,12 @@ class FranchisorController extends Controller
                 $baseCode = 'UNIT';
             }
 
-            $unitCode = $prefix.'-'.$baseCode;
+            $unitCode = $prefix . '-' . $baseCode;
             $counter = 1;
 
             // Ensure uniqueness
             while (Unit::where('unit_code', $unitCode)->exists()) {
-                $unitCode = $prefix.'-'.$baseCode.$counter;
+                $unitCode = $prefix . '-' . $baseCode . $counter;
                 $counter++;
             }
 
@@ -1774,7 +1781,7 @@ class FranchisorController extends Controller
             ]);
 
             // Send email notification with login credentials
-            $loginUrl = env('APP_URL').'/login';
+            $loginUrl = env('APP_URL') . '/login';
             $franchisee->notify(new \App\Notifications\NewFranchiseeCredentials($temporaryPassword, $unitCode, $loginUrl));
 
             DB::commit();

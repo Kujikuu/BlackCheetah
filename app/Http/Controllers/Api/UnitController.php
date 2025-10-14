@@ -354,15 +354,60 @@ class UnitController extends Controller
             $baseCode = 'UNIT';
         }
 
-        $code = $prefix.'-'.$baseCode;
+        $code = $prefix . '-' . $baseCode;
         $counter = 1;
 
         // Ensure uniqueness
         while (Unit::where('unit_code', $code)->exists()) {
-            $code = $prefix.'-'.$baseCode.$counter;
+            $code = $prefix . '-' . $baseCode . $counter;
             $counter++;
         }
 
         return $code;
+    }
+
+    /**
+     * Get staff members for a unit
+     */
+    public function getStaff($unitId): JsonResponse
+    {
+        try {
+            $unit = Unit::findOrFail($unitId);
+
+            // Get staff with pivot data
+            $staff = $unit->staff()->withPivot(['role', 'assigned_date', 'is_primary'])->get();
+
+            // Transform the data
+            $transformedStaff = $staff->map(function ($staffMember) {
+                return [
+                    'id' => $staffMember->id,
+                    'name' => $staffMember->name,
+                    'email' => $staffMember->email,
+                    'phone' => $staffMember->phone,
+                    'jobTitle' => $staffMember->job_title,
+                    'department' => $staffMember->department,
+                    'status' => $staffMember->status,
+                    'employmentType' => $staffMember->employment_type,
+                    'hireDate' => $staffMember->hire_date,
+                    'shiftTime' => $staffMember->shift_start && $staffMember->shift_end
+                        ? $staffMember->shift_start->format('g:i A') . ' - ' . $staffMember->shift_end->format('g:i A')
+                        : 'Not set',
+                    'role' => $staffMember->pivot->role,
+                    'assignedDate' => $staffMember->pivot->assigned_date,
+                    'isPrimary' => $staffMember->pivot->is_primary,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $transformedStaff,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch staff data',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

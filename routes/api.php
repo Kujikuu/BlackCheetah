@@ -152,6 +152,9 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
             Route::put('{product}', [\App\Http\Controllers\Api\UnitInventoryController::class, 'update']);
             Route::delete('{product}', [\App\Http\Controllers\Api\UnitInventoryController::class, 'destroy']);
         });
+
+        // Staff routes for a unit
+        Route::get('{unit}/staff', [UnitController::class, 'getStaff']);
     });
 
     // Task Management Routes

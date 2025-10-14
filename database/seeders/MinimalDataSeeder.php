@@ -19,6 +19,7 @@ use App\Models\Unit;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class MinimalDataSeeder extends Seeder
@@ -335,6 +336,10 @@ class MinimalDataSeeder extends Seeder
             // Assign each lead to a different sales associate
             $assignedSales = $salesAssociates[$i % count($salesAssociates)];
 
+            // Create leads with varied timestamps (from 1 hour to 30 days ago)
+            $daysAgo = [0, 1, 3, 7, 15][$i]; // Varied days ago
+            $createdAt = Carbon::now()->subDays($daysAgo)->subHours(rand(0, 23));
+
             Lead::create([
                 'franchise_id' => $franchise->id,
                 'assigned_to' => $assignedSales->id,
@@ -349,6 +354,8 @@ class MinimalDataSeeder extends Seeder
                 'priority' => ['low', 'medium', 'high'][rand(0, 2)],
                 'estimated_investment' => rand(100000, 500000),
                 'notes' => 'Interested in franchise opportunity',
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
             ]);
         }
 
@@ -381,18 +388,18 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created 5 documents');
 
-        // Create 5 Staff members
+        // Create 5 Staff members and link them to the unit
         $this->command->info('Creating staff...');
         $staffData = [
-            ['Khalid Ahmed', 'khalid@example.com', 'Store Manager'],
-            ['Layla Mohammed', 'layla@example.com', 'Assistant Manager'],
-            ['Yousef Ali', 'yousef@example.com', 'Sales Associate'],
-            ['Nora Hassan', 'nora@example.com', 'Cashier'],
-            ['Hassan Omar', 'hassan@example.com', 'Inventory Clerk'],
+            ['Khalid Ahmed', 'khalid@example.com', 'Store Manager', 'manager'],
+            ['Layla Mohammed', 'layla@example.com', 'Assistant Manager', 'assistant_manager'],
+            ['Yousef Ali', 'yousef@example.com', 'Sales Associate', 'sales_associate'],
+            ['Nora Hassan', 'nora@example.com', 'Cashier', 'cashier'],
+            ['Hassan Omar', 'hassan@example.com', 'Inventory Clerk', 'sales_associate'],
         ];
 
-        foreach ($staffData as $data) {
-            Staff::create([
+        foreach ($staffData as $index => $data) {
+            $staff = Staff::create([
                 'name' => $data[0],
                 'email' => $data[1],
                 'phone' => '+966' . rand(500000000, 599999999),
@@ -403,9 +410,20 @@ class MinimalDataSeeder extends Seeder
                 'employment_type' => 'full_time',
                 'status' => 'active',
             ]);
+
+            // Link staff to unit through pivot table
+            DB::table('staff_unit')->insert([
+                'staff_id' => $staff->id,
+                'unit_id' => $unit->id,
+                'role' => $data[3],
+                'assigned_date' => Carbon::now()->subMonths(rand(1, 12)),
+                'is_primary' => $index === 0, // First staff member is primary (manager)
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
-        $this->command->info('✅ Created 5 staff members');
+        $this->command->info('✅ Created 5 staff members and linked them to unit');
 
         // Create 5 Customer Reviews
         $this->command->info('Creating reviews...');

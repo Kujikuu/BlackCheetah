@@ -275,7 +275,7 @@ const loadStaffData = async () => {
   staffError.value = null
 
   try {
-    const response = await $api<{ success: boolean; data: any }>(`/v1/franchisor/units/${unitId.value}/staff`)
+    const response = await $api<{ success: boolean; data: any }>(`/v1/units/${unitId.value}/staff`)
 
     if (response.success && response.data) {
       staffData.value = response.data.map((staff: any) => ({
