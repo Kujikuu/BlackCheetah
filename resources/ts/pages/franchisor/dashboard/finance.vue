@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { formatCurrency } from '@/@core/utils/formatters'
 
-// API composable
-const { data: financeData, execute: fetchFinanceData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/finance')
+// API composable - with immediate execution
+const { data: financeData, execute: fetchFinanceData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/finance', { immediate: true })
 
 const chartColors = {
   primary: '#9155FD',
@@ -63,6 +63,7 @@ interface ApiResponse {
 const financeStats = ref<FinanceStat[]>([])
 const topStoresSalesSeries = ref<ChartSeries[]>([{ name: 'Sales', data: [] }])
 const topStoresRoyaltySeries = ref<ChartSeries[]>([{ name: 'Royalty', data: [] }])
+const topStoreNames = ref<string[]>([])
 const salesChartSeries = ref<ChartSeries[]>([{ name: 'Sales', data: [] }])
 const expensesChartSeries = ref<ChartSeries[]>([{ name: 'Expenses', data: [] }])
 const profitChartSeries = ref<ChartSeries[]>([{ name: 'Profit', data: [] }])
@@ -88,7 +89,7 @@ watch(financeData, newData => {
         icon: 'tabler-currency-riyal',
         color: 'primary',
         title: 'Total Sales',
-        value: formatCurrency(data.stats.total_sales),
+        value: formatCurrency(parseFloat(data.stats.total_sales) || 0),
         change: data.stats.sales_change,
         isHover: false,
       },
@@ -96,7 +97,7 @@ watch(financeData, newData => {
         icon: 'tabler-receipt',
         color: 'error',
         title: 'Total Expenses',
-        value: formatCurrency(data.stats.total_expenses),
+        value: formatCurrency(parseFloat(data.stats.total_expenses) || 0),
         change: data.stats.expenses_change,
         isHover: false,
       },
@@ -104,7 +105,7 @@ watch(financeData, newData => {
         icon: 'tabler-chart-line',
         color: 'success',
         title: 'Net Profit',
-        value: formatCurrency(data.stats.net_profit),
+        value: formatCurrency(parseFloat(data.stats.net_profit) || 0),
         change: data.stats.profit_change,
         isHover: false,
       },
@@ -112,33 +113,38 @@ watch(financeData, newData => {
         icon: 'tabler-percentage',
         color: 'warning',
         title: 'Profit Margin',
-        value: `${data.stats.profit_margin}%`,
+        value: `${parseFloat(data.stats.profit_margin) || 0}%`,
         change: data.stats.margin_change,
         isHover: false,
       },
     ]
 
     // Update chart series for top stores sales
-    if (data.top_stores_sales) {
+    if (data.top_stores_sales && data.top_stores_sales.length > 0) {
       topStoresSalesSeries.value = [{
         name: 'Sales',
-        data: data.top_stores_sales.map((store: any) => store.sales),
+        data: data.top_stores_sales.map((store: any) => parseFloat(store.sales) || 0),
       }]
+      topStoreNames.value = data.top_stores_sales.map((store: any) => store.name || 'Unknown Store')
     }
 
     // Update chart series for top stores royalty
-    if (data.top_stores_royalty) {
+    if (data.top_stores_royalty && data.top_stores_royalty.length > 0) {
       topStoresRoyaltySeries.value = [{
         name: 'Royalty',
-        data: data.top_stores_royalty.map((store: any) => store.royalty),
+        data: data.top_stores_royalty.map((store: any) => parseFloat(store.royalty) || 0),
       }]
+      // Update store names if not already set from sales
+      if (topStoreNames.value.length === 0) {
+        topStoreNames.value = data.top_stores_royalty.map((store: any) => store.name || 'Unknown Store')
+      }
     }
 
     // Update sales chart series
     if (data.sales_chart) {
       salesChartSeries.value = [{
         name: 'Sales',
-        data: data.sales_chart.map((item: any) => item.amount),
+        data: data.sales_chart.map((item: any) => parseFloat(item.amount) || 0),
       }]
     }
 
@@ -146,7 +152,7 @@ watch(financeData, newData => {
     if (data.expenses_chart) {
       expensesChartSeries.value = [{
         name: 'Expenses',
-        data: data.expenses_chart.map((item: any) => item.amount),
+        data: data.expenses_chart.map((item: any) => parseFloat(item.amount) || 0),
       }]
     }
 
@@ -154,7 +160,7 @@ watch(financeData, newData => {
     if (data.profit_chart) {
       profitChartSeries.value = [{
         name: 'Profit',
-        data: data.profit_chart.map((item: any) => item.amount),
+        data: data.profit_chart.map((item: any) => parseFloat(item.amount) || 0),
       }]
     }
 
@@ -162,7 +168,7 @@ watch(financeData, newData => {
     if (data.royalty_chart) {
       royaltyChartSeries.value = [{
         name: 'Royalty',
-        data: data.royalty_chart.map((item: any) => item.amount),
+        data: data.royalty_chart.map((item: any) => parseFloat(item.amount) || 0),
       }]
     }
 
@@ -170,7 +176,7 @@ watch(financeData, newData => {
     if (data.monthly_breakdown)
       monthlyBreakdownData.value = data.monthly_breakdown
   }
-}, { immediate: true })
+})
 
 // Fallback data in case API fails
 const fallbackFinanceStats: FinanceStat[] = [
@@ -178,7 +184,7 @@ const fallbackFinanceStats: FinanceStat[] = [
     icon: 'tabler-currency-riyal',
     color: 'primary',
     title: 'Total Sales',
-    value: '$0',
+    value: 'SAR 0',
     change: 0,
     isHover: false,
   },
@@ -186,7 +192,7 @@ const fallbackFinanceStats: FinanceStat[] = [
     icon: 'tabler-receipt',
     color: 'error',
     title: 'Total Expenses',
-    value: '$0',
+    value: 'SAR 0',
     change: 0,
     isHover: false,
   },
@@ -194,7 +200,7 @@ const fallbackFinanceStats: FinanceStat[] = [
     icon: 'tabler-chart-line',
     color: 'success',
     title: 'Net Profit',
-    value: '$0',
+    value: 'SAR 0',
     change: 0,
     isHover: false,
   },
@@ -211,11 +217,6 @@ const fallbackFinanceStats: FinanceStat[] = [
 // Use fallback data if API data is not available
 const displayStats = computed(() => {
   return financeStats.value.length > 0 ? financeStats.value : fallbackFinanceStats
-})
-
-// 👉 Fetch data on component mount
-onMounted(() => {
-  fetchFinanceData()
 })
 
 // 👉 Top Stores by Sales Chart Configuration
@@ -247,7 +248,7 @@ const topStoresSalesConfig = computed(() => ({
   },
   colors: [chartColors.primary],
   xaxis: {
-    categories: ['Downtown Store', 'Mall Location', 'City Center', 'Westside Branch', 'Airport Plaza'],
+    categories: topStoreNames.value.length > 0 ? topStoreNames.value : ['No data available'],
     labels: {
       style: {
         colors: labelColor,
@@ -330,7 +331,7 @@ const topStoresRoyaltyConfig = computed(() => ({
   },
   colors: [chartColors.warning],
   xaxis: {
-    categories: ['Downtown Store', 'Mall Location', 'City Center', 'Westside Branch', 'Airport Plaza'],
+    categories: topStoreNames.value.length > 0 ? topStoreNames.value : ['No data available'],
     labels: {
       style: {
         colors: labelColor,
@@ -500,10 +501,10 @@ const summaryTableData = computed(() => {
   // Use API data only - no fallback
   return monthlyBreakdownData.value.map(item => ({
     month: item.month,
-    sales: formatCurrency(item.sales),
-    expenses: formatCurrency(item.expenses),
-    royalties: formatCurrency(item.royalties),
-    profit: formatCurrency(item.profit),
+    sales: formatCurrency(parseFloat(item.sales) || 0),
+    expenses: formatCurrency(parseFloat(item.expenses) || 0),
+    royalties: formatCurrency(parseFloat(item.royalties) || 0),
+    profit: formatCurrency(parseFloat(item.profit) || 0),
   }))
 })
 
