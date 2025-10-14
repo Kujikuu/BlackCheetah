@@ -160,8 +160,8 @@ class RoyaltyApiTest extends TestCase
         $paidAmount = $response->json('data.royalty_collected_till_date');
         $pendingAmount = $response->json('data.upcoming_royalties');
 
-        $this->assertEquals(10000, $paidAmount, 'Paid amount mismatch. Got: '.$paidAmount);
-        $this->assertEquals(5000, $pendingAmount, 'Pending amount mismatch. Got: '.$pendingAmount);
+        $this->assertEquals(10000, $paidAmount, 'Paid amount mismatch. Got: ' . $paidAmount);
+        $this->assertEquals(5000, $pendingAmount, 'Pending amount mismatch. Got: ' . $pendingAmount);
     }
 
     /** @test */
@@ -339,5 +339,109 @@ class RoyaltyApiTest extends TestCase
                     'status',
                 ],
             ]);
+    }
+
+    /** @test */
+    public function it_can_create_royalty_with_monthly_type()
+    {
+        // Prepare royalty data with 'monthly' type from frontend
+        $royaltyData = [
+            'franchise_id' => $this->franchise->id,
+            'unit_id' => $this->unit->id,
+            'franchisee_id' => $this->franchisee->id,
+            'type' => 'monthly', // Frontend sends 'monthly' or 'quarterly'
+            'period_year' => 2025,
+            'period_month' => 11,
+            'base_revenue' => 10000,
+            'royalty_rate' => 8.5,
+            'royalty_amount' => 850,
+            'marketing_fee_rate' => 2,
+            'marketing_fee_amount' => 200,
+            'technology_fee_amount' => 50,
+            'adjustments' => 0,
+            'total_amount' => 1100,
+            'due_date' => '2025-11-30',
+            'status' => 'pending',
+            'notes' => 'Test royalty creation with monthly type',
+        ];
+
+        // Make the request
+        $response = $this->postJson('/api/v1/royalties', $royaltyData);
+
+        // Assert the response
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'id',
+                    'royalty_number',
+                    'franchise_id',
+                    'unit_id',
+                    'franchisee_id',
+                    'type',
+                    'period_year',
+                    'period_month',
+                    'status',
+                ],
+                'message',
+            ]);
+
+        // Assert the database has the royalty with correct type
+        $this->assertDatabaseHas('royalties', [
+            'franchise_id' => $this->franchise->id,
+            'franchisee_id' => $this->franchisee->id,
+            'type' => 'royalty', // Should be transformed to 'royalty' in database
+            'period_year' => 2025,
+            'period_month' => 11,
+            'status' => 'pending',
+        ]);
+    }
+
+    /** @test */
+    public function it_can_create_royalty_with_quarterly_type()
+    {
+        // Prepare royalty data with 'quarterly' type from frontend
+        $royaltyData = [
+            'franchise_id' => $this->franchise->id,
+            'unit_id' => $this->unit->id,
+            'franchisee_id' => $this->franchisee->id,
+            'type' => 'quarterly', // Frontend sends 'quarterly'
+            'period_year' => 2025,
+            'period_quarter' => 4,
+            'base_revenue' => 30000,
+            'royalty_rate' => 8.5,
+            'royalty_amount' => 2550,
+            'marketing_fee_rate' => 2,
+            'marketing_fee_amount' => 600,
+            'technology_fee_amount' => 150,
+            'adjustments' => 0,
+            'total_amount' => 3300,
+            'due_date' => '2025-12-31',
+            'status' => 'pending',
+            'notes' => 'Test royalty creation with quarterly type',
+        ];
+
+        // Make the request
+        $response = $this->postJson('/api/v1/royalties', $royaltyData);
+
+        // Assert the response
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'id',
+                    'royalty_number',
+                    'type',
+                ],
+            ]);
+
+        // Assert the database has the royalty with correct type
+        $this->assertDatabaseHas('royalties', [
+            'franchise_id' => $this->franchise->id,
+            'franchisee_id' => $this->franchisee->id,
+            'type' => 'royalty', // Should be transformed to 'royalty' in database
+            'period_year' => 2025,
+            'status' => 'pending',
+        ]);
     }
 }
