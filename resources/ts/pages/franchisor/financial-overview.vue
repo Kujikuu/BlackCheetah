@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { formatCurrency } from '@/@core/utils/formatters'
 import { type ChartData, type ExpenseData, type FinancialStatistics, type ProfitData, type SalesData, type UnitPerformance, financialApi } from '@/services/api/financial'
+import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
 
@@ -99,6 +100,18 @@ const currentSelectedRows = computed(() => {
   }
 })
 
+const headingColor = 'rgba(var(--v-theme-on-background), var(--v-high-emphasis-opacity))'
+const labelColor = 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))'
+const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))'
+
+const chartColors = {
+  primary: '#9155FD',
+  warning: '#FFB400',
+  success: '#56CA00',
+  info: '#16B1FF',
+  error: '#FF4C51',
+}
+
 // Chart options
 const chartOptions = computed(() => {
   const currentTheme = vuetifyTheme.current.value.colors
@@ -119,7 +132,7 @@ const chartOptions = computed(() => {
       categories: chartData.value.categories,
       labels: {
         style: {
-          colors: `rgba(${currentTheme['on-surface']}, 0.6)`,
+          colors: labelColor,
           fontSize: '13px',
         },
       },
@@ -133,7 +146,7 @@ const chartOptions = computed(() => {
     yaxis: {
       labels: {
         style: {
-          colors: `rgba(${currentTheme['on-surface']}, 0.6)`,
+          colors: labelColor,
           fontSize: '13px',
         },
         formatter: (value: number) => `${(value / 1000).toFixed(0)}k SAR`,
@@ -144,17 +157,17 @@ const chartOptions = computed(() => {
       position: 'top',
       horizontalAlign: 'left',
       labels: {
-        colors: `rgba(${currentTheme['on-surface']}, 0.8)`,
+        colors: labelColor,
       },
     },
     colors: [
-      'rgba(var(--v-theme-success), 1)',
-      'rgba(var(--v-theme-error), 1)',
-      'rgba(var(--v-theme-warning), 1)',
-      'rgba(var(--v-theme-primary), 1)',
+      chartColors.success,
+      chartColors.error,
+      chartColors.warning,
+      chartColors.primary,
     ],
     grid: {
-      borderColor: `rgba(${currentTheme['on-surface']}, 0.12)`,
+      borderColor: borderColor,
       strokeDashArray: 5,
       padding: {
         top: -20,
@@ -875,7 +888,7 @@ onMounted(() => {
                 </h4>
               </div>
               <VAvatar color="primary" variant="tonal" size="56">
-                <VIcon icon="tabler-currency-riyal" size="28" />
+                <SaudiRiyal size="28" />
               </VAvatar>
             </div>
           </VCardText>

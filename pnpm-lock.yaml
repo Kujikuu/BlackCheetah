@@ -73,6 +73,9 @@ importers:
       jwt-decode:
         specifier: 4.0.0
         version: 4.0.0
+      lucide-vue-next:
+        specifier: ^0.546.0
+        version: 0.546.0(vue@3.5.14(typescript@5.8.3))
       mapbox-gl:
         specifier: 3.5.2
         version: 3.5.2
@@ -4066,6 +4069,11 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
+
+  lucide-vue-next@0.546.0:
+    resolution: {integrity: sha512-Ra4lNbm0m9uSb82ZBMCUg3c2xQ4qaU9b87fAFvFPoLC0/u7JxG5FJjhUFqfNfofk1xdZiDpF6EnCbaxTHXzLcw==}
+    peerDependencies:
+      vue: '>=3.0.1'
 
   m3u8-parser@6.2.0:
     resolution: {integrity: sha512-qlC00JTxYOxawcqg+RB8jbyNwL3foY/nCY61kyWP+RCuJE9APLeqB/nSlTjb4Mg0yRmyERgjswpdQxMvkeoDrg==}
@@ -10378,6 +10386,10 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lucide-vue-next@0.546.0(vue@3.5.14(typescript@5.8.3)):
+    dependencies:
+      vue: 3.5.14(typescript@5.8.3)
 
   m3u8-parser@6.2.0:
     dependencies:

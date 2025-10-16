@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { formatCurrency } from '@/@core/utils/formatters'
 import AddFranchiseeModal from '@/components/dialogs/AddFranchiseeModal.vue'
+import { SaudiRiyal } from 'lucide-vue-next'
+
 
 // 👉 Pagination helper
 const paginationMeta = (page: number, perPage: number, total: number) => {
@@ -339,7 +341,7 @@ const changeUnitStatus = async () => {
             <VCard>
               <VCardText class="d-flex align-center">
                 <VAvatar size="44" rounded color="info" variant="tonal">
-                  <VIcon icon="tabler-currency-riyal" size="26" />
+                  <SaudiRiyal size="26" />
                 </VAvatar>
                 <div class="ms-4">
                   <div class="text-body-2 text-disabled">

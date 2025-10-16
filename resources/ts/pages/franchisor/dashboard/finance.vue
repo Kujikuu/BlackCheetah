@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { formatCurrency } from '@/@core/utils/formatters'
+import { SaudiRiyal } from 'lucide-vue-next'
+import { useTheme } from 'vuetify'
 
 // API composable - with immediate execution
 const { data: financeData, execute: fetchFinanceData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/finance', { immediate: true })
-
+const vuetifyTheme = useTheme()
 const chartColors = {
   primary: '#9155FD',
   warning: '#FFB400',
@@ -93,7 +95,7 @@ watch(financeData, newData => {
     // Update finance stats
     financeStats.value = [
       {
-        icon: 'tabler-currency-riyal',
+        icon: SaudiRiyal,
         color: 'primary',
         title: 'Total Sales',
         value: formatCurrency(toNumber(data.stats.total_sales)),
@@ -190,7 +192,7 @@ watch(financeData, newData => {
 // Fallback data in case API fails
 const fallbackFinanceStats: FinanceStat[] = [
   {
-    icon: 'tabler-currency-riyal',
+    icon: SaudiRiyal,
     color: 'primary',
     title: 'Total Sales',
     value: 'SAR 0',
@@ -303,6 +305,7 @@ const topStoresSalesConfig = computed(() => ({
     },
   },
   tooltip: {
+    theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
     y: {
       formatter(val: number) {
         return `${val.toLocaleString()} SAR`
@@ -386,6 +389,7 @@ const topStoresRoyaltyConfig = computed(() => ({
     },
   },
   tooltip: {
+    theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
     y: {
       formatter(val: number) {
         return `${val.toLocaleString()} SAR`
@@ -450,7 +454,6 @@ const summaryConfig = computed(() => ({
       offsetX: -3,
     },
     fontSize: '14px',
-    fontFamily: 'Open Sans',
     fontWeight: 400,
     labels: {
       colors: headingColor,
@@ -497,6 +500,7 @@ const summaryConfig = computed(() => ({
     },
   },
   tooltip: {
+    theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
     y: {
       formatter(val: number) {
         return `${val.toLocaleString()} SAR`
@@ -531,9 +535,8 @@ const summaryHeaders = [
     <!-- 👉 Finance Statistics Cards -->
     <VRow class="mb-6">
       <VCol v-for="(data, index) in displayStats" :key="index" cols="12" md="3" sm="6">
-        <VCard class="finance-card-statistics cursor-pointer"
-          :style="data.isHover ? `border-block-end-color: rgb(var(--v-theme-${data.color}))` : `border-block-end-color: rgba(var(--v-theme-${data.color}),0.38)`"
-          @mouseenter="data.isHover = true" @mouseleave="data.isHover = false">
+        <VCard class="finance-card-statistics cursor-pointer" :style="borderColor" @mouseenter="data.isHover = true"
+          @mouseleave="data.isHover = false">
           <VCardText>
             <div class="d-flex align-center gap-x-4 mb-1">
               <VAvatar variant="tonal" :color="data.color" rounded>

@@ -2,6 +2,7 @@
 import type { ProductSalesItem, SalesWidgetData } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 import { getAreaChartSplineConfig } from '@core/libs/apex-chart/apexCharConfig'
+import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useTheme } from 'vuetify'
 
@@ -79,7 +80,7 @@ const loadDashboardData = async () => {
           value: formatCurrency(stats.totalSales),
           change: stats.salesChange,
           desc: 'This month sales',
-          icon: 'tabler-currency-riyal',
+          icon: SaudiRiyal,
           iconColor: 'primary',
         },
         {

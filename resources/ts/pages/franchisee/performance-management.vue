@@ -35,6 +35,18 @@ const loadPerformanceData = async () => {
 const topPerformingProductData = computed(() => performanceData.value?.productPerformance.topPerformingProductData || Array(12).fill(0))
 const lowPerformingProductData = computed(() => performanceData.value?.productPerformance.lowPerformingProductData || Array(12).fill(0))
 
+const headingColor = 'rgba(var(--v-theme-on-background), var(--v-high-emphasis-opacity))'
+const labelColor = 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))'
+const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))'
+
+const chartColors = {
+  primary: '#9155FD',
+  warning: '#FFB400',
+  success: '#56CA00',
+  info: '#16B1FF',
+  error: '#FF4C51',
+}
+
 // Product Performance Chart Options
 const productChartOptions = computed(() => {
   const currentTheme = vuetifyTheme.current.value.colors
@@ -65,7 +77,7 @@ const productChartOptions = computed(() => {
       categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       labels: {
         style: {
-          colors: `rgba(${currentTheme['on-surface']}, 0.6)`,
+          colors: labelColor,
           fontSize: '13px',
         },
       },
@@ -79,7 +91,7 @@ const productChartOptions = computed(() => {
     yaxis: {
       labels: {
         style: {
-          colors: `rgba(${currentTheme['on-surface']}, 0.6)`,
+          colors: labelColor,
           fontSize: '13px',
         },
       },
@@ -92,12 +104,12 @@ const productChartOptions = computed(() => {
       position: 'top',
       horizontalAlign: 'left',
       labels: {
-        colors: `rgba(${currentTheme['on-surface']}, 0.8)`,
+        colors: labelColor,
       },
     },
     colors: ['#FFA726', '#7B1FA2'],
     grid: {
-      borderColor: `rgba(${currentTheme['on-surface']}, 0.12)`,
+      borderColor: borderColor,
       strokeDashArray: 5,
     },
     tooltip: {

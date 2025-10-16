@@ -3,6 +3,8 @@
  * Tests for the main franchisor dashboard page component
  */
 
+import { SaudiRiyal } from "lucide-vue-next"
+
 describe('FranchisorIndex.vue', () => {
   it('should pass basic test', () => {
     expect(true).toBe(true)
@@ -52,7 +54,7 @@ describe('FranchisorIndex.vue', () => {
         value: `$${apiStats.currentMonthRevenue.toLocaleString()}`,
         change: apiStats.revenueChange,
         desc: 'This month\'s revenue',
-        icon: 'tabler-currency-riyal',
+        icon: SaudiRiyal,
         iconColor: 'warning',
       },
     ]
@@ -73,7 +75,7 @@ describe('FranchisorIndex.vue', () => {
         { title: 'Total Leads', value: '0', change: 0, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
         { title: 'Active Tasks', value: '0', change: 0, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
         { title: 'Sales Associates', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
-        { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: 'tabler-currency-riyal', iconColor: 'warning' },
+        { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: SaudiRiyal, iconColor: 'warning' },
       ]
       : []
 

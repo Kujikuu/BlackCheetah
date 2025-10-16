@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { FinanceWidgetData } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 
 const chartColors = {
@@ -23,7 +24,7 @@ const hasLoadedApiData = ref(false)
 // 👉 Finance Stats
 const financeStats = ref<FinanceWidgetData[]>([
   {
-    icon: 'tabler-currency-riyal',
+    icon: SaudiRiyal,
     color: 'primary',
     title: 'Total Sales',
     value: '$2,458,650',
@@ -86,7 +87,7 @@ const loadDashboardData = async () => {
       const stats = financeStatsResponse.data
       financeStats.value = [
         {
-          icon: 'tabler-currency-riyal',
+          icon: SaudiRiyal,
           color: 'primary',
           title: 'Total Sales',
           value: formatCurrency(stats.totalSales),

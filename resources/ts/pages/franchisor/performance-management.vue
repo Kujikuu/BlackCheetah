@@ -80,6 +80,18 @@ const API_BASE = '/api/v1/franchisor/performance'
 const topRatedFranchise = computed(() => ratingsData.value.top_rated)
 const lowestRatedFranchise = computed(() => ratingsData.value.lowest_rated)
 
+const headingColor = 'rgba(var(--v-theme-on-background), var(--v-high-emphasis-opacity))'
+const labelColor = 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))'
+const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))'
+
+const chartColors = {
+  primary: '#9155FD',
+  warning: '#FFB400',
+  success: '#56CA00',
+  info: '#16B1FF',
+  error: '#FF4C51',
+}
+
 // Chart options
 const chartOptions = computed(() => {
   const currentTheme = vuetifyTheme.current.value.colors
@@ -100,7 +112,7 @@ const chartOptions = computed(() => {
       categories: chartData.value.periods,
       labels: {
         style: {
-          colors: `rgba(${currentTheme['on-surface']}, 0.6)`,
+          colors: labelColor,
           fontSize: '13px',
         },
       },
@@ -114,7 +126,7 @@ const chartOptions = computed(() => {
     yaxis: {
       labels: {
         style: {
-          colors: `rgba(${currentTheme['on-surface']}, 0.6)`,
+          colors: labelColor,
           fontSize: '13px',
         },
         formatter: (value: number) => `${(value / 1000).toFixed(0)}k SAR`,
@@ -125,17 +137,12 @@ const chartOptions = computed(() => {
       position: 'top',
       horizontalAlign: 'left',
       labels: {
-        colors: `rgba(${currentTheme['on-surface']}, 0.8)`,
+        colors: headingColor,
       },
     },
-    colors: [
-      'rgba(var(--v-theme-success), 1)',
-      'rgba(var(--v-theme-error), 1)',
-      'rgba(var(--v-theme-warning), 1)',
-      'rgba(var(--v-theme-primary), 1)',
-    ],
+    colors: [chartColors.primary, chartColors.error, chartColors.warning, chartColors.success],
     grid: {
-      borderColor: `rgba(${currentTheme['on-surface']}, 0.12)`,
+      borderColor: borderColor,
       strokeDashArray: 5,
       padding: {
         top: -20,
@@ -145,7 +152,7 @@ const chartOptions = computed(() => {
       },
     },
     tooltip: {
-      theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
+      theme: currentTheme.dark ? 'dark' : 'light',
       y: {
         formatter: (value: number) => `${value.toLocaleString()} SAR`,
       },

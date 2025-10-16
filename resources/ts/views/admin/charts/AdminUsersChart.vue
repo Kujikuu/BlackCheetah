@@ -62,6 +62,18 @@ onMounted(() => {
   fetchChartData()
 })
 
+const headingColor = 'rgba(var(--v-theme-on-background), var(--v-high-emphasis-opacity))'
+const labelColor = 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))'
+const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))'
+
+const chartColors = {
+  primary: '#9155FD',
+  warning: '#FFB400',
+  success: '#56CA00',
+  info: '#16B1FF',
+  error: '#FF4C51',
+}
+
 const chartOptions = {
   chart: {
     type: 'area',
@@ -80,7 +92,7 @@ const chartOptions = {
   grid: {
     show: false,
   },
-  colors: [currentTheme.primary],
+  colors: [chartColors.primary],
   fill: {
     type: 'gradient',
     gradient: {
@@ -135,44 +147,21 @@ const chartOptions = {
       </VCardSubtitle>
     </VCardItem>
 
-    <VueApexCharts
-      :options="chartOptions"
-      :series="series"
-      :height="68"
-    />
+    <VueApexCharts :options="chartOptions" :series="series" :height="68" />
 
     <VCardText class="pt-1">
-      <div
-        v-if="isLoading"
-        class="d-flex align-center justify-space-between gap-x-2"
-      >
-        <VSkeletonLoader
-          type="text"
-          width="60px"
-          height="32px"
-        />
-        <VSkeletonLoader
-          type="text"
-          width="40px"
-        />
+      <div v-if="isLoading" class="d-flex align-center justify-space-between gap-x-2">
+        <VSkeletonLoader type="text" width="60px" height="32px" />
+        <VSkeletonLoader type="text" width="40px" />
       </div>
-      <div
-        v-else-if="error"
-        class="text-center text-error text-sm"
-      >
+      <div v-else-if="error" class="text-center text-error text-sm">
         {{ error }}
       </div>
-      <div
-        v-else
-        class="d-flex align-center justify-space-between gap-x-2"
-      >
+      <div v-else class="d-flex align-center justify-space-between gap-x-2">
         <h4 class="text-h4 text-center">
           {{ totalUsers.toLocaleString() }}
         </h4>
-        <span
-          class="text-sm"
-          :class="userGrowth >= 0 ? 'text-success' : 'text-error'"
-        >
+        <span class="text-sm" :class="userGrowth >= 0 ? 'text-success' : 'text-error'">
           {{ userGrowth >= 0 ? '+' : '' }}{{ userGrowth.toFixed(1) }}%
         </span>
       </div>

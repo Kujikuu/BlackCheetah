@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api/royalty'
+import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
+
+
 
 // Loading states
 const isLoading = ref(false)
@@ -274,7 +277,7 @@ onMounted(() => {
                 </h4>
               </div>
               <VAvatar color="success" variant="tonal" size="56">
-                <VIcon icon="tabler-currency-riyal" size="28" />
+                <SaudiRiyal size="28" />
               </VAvatar>
             </div>
           </VCardText>

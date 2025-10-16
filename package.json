@@ -34,6 +34,7 @@
     "destr": "2.0.5",
     "eslint-plugin-regexp": "2.7.0",
     "jwt-decode": "4.0.0",
+    "lucide-vue-next": "^0.546.0",
     "mapbox-gl": "3.5.2",
     "ofetch": "1.4.1",
     "pinia": "3.0.2",

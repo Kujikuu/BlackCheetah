@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useFranchisorDashboard } from '@/composables/useFranchisorDashboard'
+import { SaudiRiyal } from 'lucide-vue-next'
 
 // 👉 Add route meta for CASL protection
 definePage({
@@ -33,7 +34,7 @@ const dashboardStats = computed(() => {
       { title: 'Total Leads', value: '0', change: 0, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
       { title: 'Active Tasks', value: '0', change: 0, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
       { title: 'Sales Associates', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
-      { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: 'tabler-currency-riyal', iconColor: 'warning' },
+      { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: SaudiRiyal, iconColor: 'warning' },
     ]
   }
 
@@ -67,7 +68,7 @@ const dashboardStats = computed(() => {
       value: `$${apiStats.value.currentMonthRevenue.toLocaleString()}`,
       change: apiStats.value.revenueChange,
       desc: 'This month\'s revenue',
-      icon: 'tabler-currency-riyal',
+      icon: SaudiRiyal,
       iconColor: 'warning',
     },
   ]
