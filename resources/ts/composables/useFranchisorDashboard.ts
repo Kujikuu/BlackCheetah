@@ -113,11 +113,14 @@ export const useFranchisorDashboard = () => {
     try {
       const response = await $api<{ success: boolean; data: SalesAssociate[] }>('/v1/franchisor/sales-associates')
 
-      if (response.success)
+      if (response.success && Array.isArray(response.data))
         salesAssociates.value = response.data
+      else
+        salesAssociates.value = []
     }
     catch (err: any) {
       console.error('Sales associates error:', err)
+      salesAssociates.value = [] // Ensure salesAssociates is always an array
     }
   }
 
@@ -128,11 +131,14 @@ export const useFranchisorDashboard = () => {
     try {
       const response = await $api<{ success: boolean; data: Lead[] }>(`/v1/franchisor/leads?limit=${limit}`)
 
-      if (response.success)
+      if (response.success && Array.isArray(response.data))
         leads.value = response.data
+      else
+        leads.value = []
     }
     catch (err: any) {
       console.error('Leads error:', err)
+      leads.value = [] // Ensure leads is always an array
     }
   }
 
@@ -184,36 +190,40 @@ export const useFranchisorDashboard = () => {
   const generateRecentActivities = () => {
     const activities: RecentActivity[] = []
 
-    // Add recent leads
-    leads.value.slice(0, 3).forEach(lead => {
-      const fullName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Unknown Lead'
-      const createdAt = lead.created_at || new Date().toISOString()
-
-      activities.push({
-        id: lead.id,
-        type: 'lead',
-        title: `New lead: ${fullName}`,
-        time: formatTimeAgo(createdAt),
-        icon: 'tabler-user-plus',
-        color: 'primary',
-      })
-    })
-
-    // Add sales associate activities
-    salesAssociates.value.slice(0, 2).forEach(associate => {
-      if (associate.status === 'active') {
-        const createdAt = associate.created_at || new Date().toISOString()
+    // Add recent leads - ensure leads.value exists before calling slice
+    if (Array.isArray(leads.value) && leads.value.length > 0) {
+      leads.value.slice(0, 3).forEach(lead => {
+        const fullName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Unknown Lead'
+        const createdAt = lead.created_at || new Date().toISOString()
 
         activities.push({
-          id: associate.id,
-          type: 'team',
-          title: `${associate.name} is managing ${associate.leads_count} leads`,
+          id: lead.id,
+          type: 'lead',
+          title: `New lead: ${fullName}`,
           time: formatTimeAgo(createdAt),
-          icon: 'tabler-user-check',
-          color: 'info',
+          icon: 'tabler-user-plus',
+          color: 'primary',
         })
-      }
-    })
+      })
+    }
+
+    // Add sales associate activities - ensure salesAssociates.value exists before calling slice
+    if (Array.isArray(salesAssociates.value) && salesAssociates.value.length > 0) {
+      salesAssociates.value.slice(0, 2).forEach(associate => {
+        if (associate.status === 'active') {
+          const createdAt = associate.created_at || new Date().toISOString()
+
+          activities.push({
+            id: associate.id,
+            type: 'team',
+            title: `${associate.name} is managing ${associate.leads_count} leads`,
+            time: formatTimeAgo(createdAt),
+            icon: 'tabler-user-check',
+            color: 'info',
+          })
+        }
+      })
+    }
 
     // Add revenue activity if available
     if (dashboardStats.value?.currentMonthRevenue) {
