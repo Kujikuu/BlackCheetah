@@ -34,7 +34,7 @@ const dashboardStats = computed(() => {
       { title: 'Total Leads', value: '0', change: 0, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
       { title: 'Active Tasks', value: '0', change: 0, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
       { title: 'Sales Associates', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
-      { title: 'Monthly Revenue', value: '$0', change: 0, desc: 'This month\'s revenue', icon: SaudiRiyal, iconColor: 'warning' },
+      { title: 'Monthly Revenue', value: 'SAR0', change: 0, desc: 'This month\'s revenue', icon: SaudiRiyal, iconColor: 'warning' },
     ]
   }
 
@@ -65,7 +65,7 @@ const dashboardStats = computed(() => {
     },
     {
       title: 'Monthly Revenue',
-      value: `$${apiStats.value.currentMonthRevenue.toLocaleString()}`,
+      value: `SAR ${apiStats.value.currentMonthRevenue.toLocaleString()}`,
       change: apiStats.value.revenueChange,
       desc: 'This month\'s revenue',
       icon: SaudiRiyal,
