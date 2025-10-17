@@ -91,10 +91,12 @@ const chartColors = {
   info: '#16B1FF',
   error: '#FF4C51',
 }
+const currentTheme = vuetifyTheme.computedThemes.value
 
 // Chart options
+// const chartOptions = computed(() => getLineChartSimpleConfig(vuetifyTheme.current.value))
 const chartOptions = computed(() => {
-  const currentTheme = vuetifyTheme.current.value.colors
+
 
   return {
     chart: {

@@ -3,6 +3,7 @@ import type { FinanceWidgetData } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
+import { useTheme } from 'vuetify'
 
 const chartColors = {
   primary: '#9155FD',
@@ -146,6 +147,8 @@ onMounted(() => {
   loadDashboardData()
 })
 
+const themeColors = useTheme().computedThemes.value
+
 // Computed property to check if chart data is ready
 const isChartDataReady = computed(() => {
   return !loading.value &&
@@ -247,6 +250,7 @@ const summaryConfig = {
     },
   },
   tooltip: {
+    theme: themeColors.dark ? 'dark' : 'light',
     y: {
       formatter(val: number) {
         return new Intl.NumberFormat('en-US', {

@@ -1,5 +1,5 @@
-import type { ThemeInstance } from 'vuetify'
 import { hexToRgb } from '@core/utils/colorConverter'
+import type { ThemeInstance } from 'vuetify'
 
 // 👉 Colors variables
 const colorVariables = (themeColors: ThemeInstance['themes']['value']['colors']) => {
@@ -92,6 +92,7 @@ export const getLineChartSimpleConfig = (themeColors: ThemeInstance['themes']['v
       },
     },
     tooltip: {
+      theme: themeColors.dark ? 'dark' : 'light',
       custom(data: any) {
         return `<div class='bar-chart pa-2'>
           <span>${data.series[data.seriesIndex][data.dataPointIndex]}%</span>
@@ -134,7 +135,7 @@ export const getLineChartSimpleConfig = (themeColors: ThemeInstance['themes']['v
 }
 
 export const getBarChartConfig = (themeColors: ThemeInstance['themes']['value']['colors']) => {
-  const { themeBorderColor, themeDisabledTextColor } = colorVariables(themeColors)
+  const { themeBorderColor, themeDisabledTextColor, themeSecondaryTextColor } = colorVariables(themeColors)
 
   return {
     chart: {
@@ -172,6 +173,9 @@ export const getBarChartConfig = (themeColors: ThemeInstance['themes']['value'][
         style: { colors: themeDisabledTextColor, fontSize: '0.8125rem' },
       },
     },
+    tooltip: {
+      theme: themeColors.dark ? 'dark' : 'light',
+    }
   }
 }
 
@@ -205,7 +209,7 @@ export const getCandlestickChartConfig = (themeColors: ThemeInstance['themes']['
       },
     },
     yaxis: {
-      tooltip: { enabled: true },
+      tooltip: { enabled: true, theme: themeColors.dark ? 'dark' : 'light' },
       crosshairs: {
         stroke: { color: themeBorderColor },
       },
@@ -412,7 +416,13 @@ export const getAreaChartSplineConfig = (themeColors: ThemeInstance['themes']['v
       parentHeightOffset: 0,
       toolbar: { show: false },
     },
-    tooltip: { shared: false },
+    tooltip: {
+      shared: false,
+      theme: themeColors.dark ? 'dark' : 'light',
+      y: {
+        formatter: (value: number) => `${value.toLocaleString()} SAR`,
+      },
+    },
     dataLabels: { enabled: false },
     stroke: {
       show: false,

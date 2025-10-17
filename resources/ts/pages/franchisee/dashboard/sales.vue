@@ -294,6 +294,12 @@ onMounted(() => {
             xaxis: {
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             },
+            tooltip: {
+              theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
+              y: {
+                formatter: (value: number) => `${value.toLocaleString()} SAR`,
+              },
+            },
           }" :series="monthlyPerformanceData" />
           <div v-else class="text-center py-8">
             <VProgressCircular indeterminate color="primary" size="32" />

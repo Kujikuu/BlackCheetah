@@ -133,7 +133,7 @@ const fetchRoyalties = async () => {
     royaltyRecords.value = response.data.data
   }
   catch (error) {
-    console.error('Error fetching royalties:', error)
+
   }
   finally {
     isLoading.value = false
@@ -149,7 +149,7 @@ const fetchStatistics = async () => {
     statistics.value = response.data
   }
   catch (error) {
-    console.error('Error fetching statistics:', error)
+
   }
   finally {
     isLoadingStats.value = false
@@ -182,7 +182,7 @@ const performExport = async () => {
     isExportDialogVisible.value = false
   }
   catch (error) {
-    console.error('Error exporting royalties:', error)
+
   }
 }
 
@@ -224,7 +224,7 @@ const submitPayment = async () => {
     }
   }
   catch (error) {
-    console.error('Error marking royalty as paid:', error)
+
   }
 }
 
@@ -255,45 +255,45 @@ const formatDate = (dateString: string) => {
 const fetchFranchises = async () => {
   try {
     const response = await $api('/api/v1/franchisor/franchise')
-    console.log('Franchises response:', response)
+
     if (response.success && response.data) {
       // myFranchise returns a single franchise object, so wrap it in an array
       franchises.value = [response.data]
-      console.log('Franchises loaded:', franchises.value)
+
     }
   } catch (error) {
-    console.error('Error fetching franchises:', error)
+
   }
 }
 
 const fetchUnits = async () => {
   try {
     const response = await $api('/api/v1/franchisor/units')
-    console.log('Units response:', response)
+
     if (response.success && response.data) {
       // myUnits returns paginated data, extract the actual units from data.data
       units.value = response.data.data || []
-      console.log('Units loaded:', units.value)
+
     }
   } catch (error) {
-    console.error('Error fetching units:', error)
+
   }
 }
 
 const fetchFranchisees = async () => {
   try {
     const response = await $api('/api/v1/franchisor/franchisees')
-    console.log('Franchisees response:', response)
-    console.log('Franchisees response.data:', response.data)
-    console.log('Franchisees response.data.data:', response.data?.data)
+
+
+
     if (response.success && response.data) {
       // myFranchisees returns paginated data, extract the actual franchisees from data.data
       franchisees.value = response.data.data || []
-      console.log('Franchisees loaded:', franchisees.value)
-      console.log('Franchisees count:', franchisees.value.length)
+
+
     }
   } catch (error) {
-    console.error('Error fetching franchisees:', error)
+
   }
 }
 
@@ -332,15 +332,15 @@ const createRoyalty = async () => {
     // Validate form before submission
     const isValid = await validateForm()
     if (!isValid) {
-      console.error('Form validation failed')
+
       return
     }
 
     // Calculate amounts before submitting
     calculateAmounts()
 
-    // Debug: Log the data being sent
-    console.log('Creating royalty with data:', createRoyaltyData.value)
+
+
 
     // Prepare data for API - convert null to undefined for optional fields
     const apiData = {
@@ -364,10 +364,10 @@ const createRoyalty = async () => {
       await fetchStatistics()
 
       // Show success message (you might want to add a toast notification here)
-      console.log('Royalty created successfully')
+
     }
   } catch (error) {
-    console.error('Error creating royalty:', error)
+
     // Handle error (you might want to add error notification here)
   } finally {
     isCreating.value = false
@@ -540,7 +540,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
   const firstError = Object.values(errors)[0]?.[0]
   if (firstError) {
     // You can replace this with your preferred notification method
-    console.error('Validation Error:', firstError)
+
   }
 }
 </script>
