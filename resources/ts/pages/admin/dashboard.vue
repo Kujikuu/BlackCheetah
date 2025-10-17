@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CardStatisticsVertical from '@/@core/components/cards/CardStatisticsVertical.vue'
 import AdminRequestsChart from '@/views/admin/charts/AdminRequestsChart.vue'
 import AdminRevenueGrowth from '@/views/admin/charts/AdminRevenueGrowth.vue'
 import AdminUsersChart from '@/views/admin/charts/AdminUsersChart.vue'
@@ -9,11 +10,12 @@ import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
 
 interface StatData {
   title: string
-  value: string
-  change: number
-  desc: string
+  color?: string
   icon: string
-  iconColor: string
+  stats: string
+  height: number
+  series: unknown[]
+  chartOptions: unknown
 }
 
 interface RecentUser {
@@ -203,17 +205,9 @@ const avatarText = (name: string | null | undefined) => {
     </VRow>
 
     <!-- Error Alert -->
-    <VRow
-      v-if="error"
-      class="mb-6"
-    >
+    <VRow v-if="error" class="mb-6">
       <VCol cols="12">
-        <VAlert
-          type="error"
-          variant="tonal"
-          closable
-          @click:close="error = ''"
-        >
+        <VAlert type="error" variant="tonal" closable @click:close="error = ''">
           {{ error }}
         </VAlert>
       </VCol>
@@ -222,108 +216,35 @@ const avatarText = (name: string | null | undefined) => {
     <!-- Stats Cards -->
     <VRow class="mb-6">
       <template v-if="isLoading">
-        <VCol
-          v-for="i in 4"
-          :key="i"
-          cols="12"
-          md="3"
-          sm="6"
-        >
+        <VCol v-for="i in 4" :key="i" cols="12" md="3" sm="6">
           <VCard>
             <VCardText>
               <div class="d-flex justify-space-between">
                 <div class="d-flex flex-column gap-y-1">
-                  <VSkeletonLoader
-                    type="text"
-                    width="80px"
-                  />
-                  <VSkeletonLoader
-                    type="text"
-                    width="60px"
-                    height="32px"
-                  />
-                  <VSkeletonLoader
-                    type="text"
-                    width="120px"
-                  />
+                  <VSkeletonLoader type="text" width="80px" />
+                  <VSkeletonLoader type="text" width="60px" height="32px" />
+                  <VSkeletonLoader type="text" width="120px" />
                 </div>
-                <VSkeletonLoader
-                  type="avatar"
-                  size="42"
-                />
+                <VSkeletonLoader type="avatar" size="42" />
               </div>
             </VCardText>
           </VCard>
         </VCol>
       </template>
-      <template
-        v-for="(data, id) in statsData"
-        v-else
-        :key="id"
-      >
-        <VCol
-          cols="12"
-          md="3"
-          sm="6"
-        >
-          <VCard>
-            <VCardText>
-              <div class="d-flex justify-space-between">
-                <div class="d-flex flex-column gap-y-1">
-                  <div class="text-body-1 text-high-emphasis">
-                    {{ data.title }}
-                  </div>
-                  <div class="d-flex gap-x-2 align-center">
-                    <h4 class="text-h4">
-                      {{ data.value }}
-                    </h4>
-                    <div
-                      class="text-base"
-                      :class="data.change > 0 ? 'text-success' : 'text-error'"
-                    >
-                      ({{ prefixWithPlus(data.change) }}%)
-                    </div>
-                  </div>
-                  <div class="text-sm">
-                    {{ data.desc }}
-                  </div>
-                </div>
-                <VAvatar
-                  :color="data.iconColor"
-                  variant="tonal"
-                  rounded
-                  size="42"
-                >
-                  <VIcon
-                    :icon="data.icon"
-                    size="26"
-                  />
-                </VAvatar>
-              </div>
-            </VCardText>
-          </VCard>
-        </VCol>
-      </template>
+      <VCol v-for="stats in statsData" :key="stats.title" cols="12" md="3" sm="6">
+        <CardStatisticsVertical v-bind="stats" />
+      </VCol>
     </VRow>
 
     <!-- Charts Row -->
     <VRow class="mb-6">
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <AdminUsersChart />
       </VCol>
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <AdminRevenueGrowth />
       </VCol>
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <AdminRequestsChart />
       </VCol>
     </VRow>
@@ -337,12 +258,7 @@ const avatarText = (name: string | null | undefined) => {
             <VCardSubtitle>Latest registered users</VCardSubtitle>
 
             <template #append>
-              <VBtn
-                variant="outlined"
-                color="primary"
-                size="small"
-                :to="{ name: 'admin-users-franchisors' }"
-              >
+              <VBtn variant="outlined" color="primary" size="small" :to="{ name: 'admin-users-franchisors' }">
                 View All
               </VBtn>
             </template>
@@ -372,21 +288,12 @@ const avatarText = (name: string | null | undefined) => {
             </thead>
 
             <tbody>
-              <tr
-                v-for="user in recentUsers"
-                :key="user.id"
-              >
+              <tr v-for="user in recentUsers" :key="user.id">
                 <td>
                   <div class="d-flex align-center gap-x-4">
-                    <VAvatar
-                      size="34"
-                      :variant="!user.avatar ? 'tonal' : undefined"
-                      :color="!user.avatar ? resolveUserRoleVariant(user.role).color : undefined"
-                    >
-                      <VImg
-                        v-if="user.avatar"
-                        :src="user.avatar"
-                      />
+                    <VAvatar size="34" :variant="!user.avatar ? 'tonal' : undefined"
+                      :color="!user.avatar ? resolveUserRoleVariant(user.role).color : undefined">
+                      <VImg v-if="user.avatar" :src="user.avatar" />
                       <span v-else>{{ avatarText(user.fullName) }}</span>
                     </VAvatar>
                     <div class="d-flex flex-column">
@@ -401,23 +308,15 @@ const avatarText = (name: string | null | undefined) => {
                 </td>
                 <td>
                   <div class="d-flex align-center gap-x-2">
-                    <VIcon
-                      :size="22"
-                      :icon="resolveUserRoleVariant(user.role).icon"
-                      :color="resolveUserRoleVariant(user.role).color"
-                    />
+                    <VIcon :size="22" :icon="resolveUserRoleVariant(user.role).icon"
+                      :color="resolveUserRoleVariant(user.role).color" />
                     <div class="text-capitalize text-high-emphasis text-body-1">
                       {{ user.role }}
                     </div>
                   </div>
                 </td>
                 <td>
-                  <VChip
-                    :color="resolveUserStatusVariant(user.status)"
-                    size="small"
-                    label
-                    class="text-capitalize"
-                  >
+                  <VChip :color="resolveUserStatusVariant(user.status)" size="small" label class="text-capitalize">
                     {{ user.status }}
                   </VChip>
                 </td>
@@ -428,28 +327,16 @@ const avatarText = (name: string | null | undefined) => {
                 </td>
                 <td>
                   <div class="d-flex gap-1">
-                    <IconBtn
-                      size="small"
-                      @click="viewUser(user)"
-                    >
+                    <IconBtn size="small" @click="viewUser(user)">
                       <VIcon icon="tabler-eye" />
-                      <VTooltip
-                        activator="parent"
-                        location="top"
-                      >
+                      <VTooltip activator="parent" location="top">
                         View
                       </VTooltip>
                     </IconBtn>
 
-                    <IconBtn
-                      size="small"
-                      @click="editUser(user)"
-                    >
+                    <IconBtn size="small" @click="editUser(user)">
                       <VIcon icon="tabler-edit" />
-                      <VTooltip
-                        activator="parent"
-                        location="top"
-                      >
+                      <VTooltip activator="parent" location="top">
                         Edit
                       </VTooltip>
                     </IconBtn>
@@ -463,32 +350,19 @@ const avatarText = (name: string | null | undefined) => {
     </VRow>
 
     <!-- View User Dialog -->
-    <ViewUserDialog
-      v-model:is-dialog-open="isViewDialogVisible"
-      :user="selectedUser"
-      :user-type="selectedUser ? getUserTypeLabel(selectedUser.role) : 'User'"
-      @edit="handleEditFromView"
-    />
+    <ViewUserDialog v-model:is-dialog-open="isViewDialogVisible" :user="selectedUser"
+      :user-type="selectedUser ? getUserTypeLabel(selectedUser.role) : 'User'" @edit="handleEditFromView" />
 
     <!-- Edit Franchisor Drawer -->
-    <AddEditFranchisorDrawer
-      v-model:is-drawer-open="isEditFranchisorDrawerVisible"
-      :franchisor="selectedUser"
-      @franchisor-data="updateUser"
-    />
+    <AddEditFranchisorDrawer v-model:is-drawer-open="isEditFranchisorDrawerVisible" :franchisor="selectedUser"
+      @franchisor-data="updateUser" />
 
     <!-- Edit Franchisee Drawer -->
-    <AddEditFranchiseeDrawer
-      v-model:is-drawer-open="isEditFranchiseeDrawerVisible"
-      :franchisee="selectedUser"
-      @franchisee-data="updateUser"
-    />
+    <AddEditFranchiseeDrawer v-model:is-drawer-open="isEditFranchiseeDrawerVisible" :franchisee="selectedUser"
+      @franchisee-data="updateUser" />
 
     <!-- Edit Sales Drawer -->
-    <AddEditSalesDrawer
-      v-model:is-drawer-open="isEditSalesDrawerVisible"
-      :sales-user="selectedUser"
-      @sales-user-data="updateUser"
-    />
+    <AddEditSalesDrawer v-model:is-drawer-open="isEditSalesDrawerVisible" :sales-user="selectedUser"
+      @sales-user-data="updateUser" />
   </section>
 </template>

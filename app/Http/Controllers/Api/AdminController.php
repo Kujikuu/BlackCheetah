@@ -48,6 +48,38 @@ class AdminController extends Controller
     }
 
     /**
+     * Get theme color for primary
+     */
+    private function getPrimaryColor(): string
+    {
+        return '#696CFF'; // Default primary color
+    }
+
+    /**
+     * Get theme color for success
+     */
+    private function getSuccessColor(): string
+    {
+        return '#71DD37'; // Default success color
+    }
+
+    /**
+     * Get theme color for info
+     */
+    private function getInfoColor(): string
+    {
+        return '#03C3EC'; // Default info color
+    }
+
+    /**
+     * Get theme color for warning
+     */
+    private function getWarningColor(): string
+    {
+        return '#FFAB00'; // Default warning color
+    }
+
+    /**
      * Get admin dashboard statistics
      */
     public function dashboardStats(): JsonResponse
@@ -72,38 +104,324 @@ class AdminController extends Controller
             $franchiseesGrowth = $franchiseesLastMonth > 0 ? (($franchisees - $franchiseesLastMonth) / $franchiseesLastMonth) * 100 : 0;
             $salesUsersGrowth = $salesUsersLastMonth > 0 ? (($salesUsers - $salesUsersLastMonth) / $salesUsersLastMonth) * 100 : 0;
 
+            // Calculate chart data for last 7 days
+            $chartData = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $date = Carbon::now()->subDays($i);
+                $chartData[] = User::whereDate('created_at', $date->format('Y-m-d'))->count();
+            }
+
+            // Calculate franchisors chart data for last 7 days
+            $franchisorsChartData = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $date = Carbon::now()->subDays($i);
+                $franchisorsChartData[] = User::where('role', 'franchisor')
+                    ->whereDate('created_at', $date->format('Y-m-d'))
+                    ->count();
+            }
+
+            // Calculate franchisees chart data for last 7 days
+            $franchiseesChartData = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $date = Carbon::now()->subDays($i);
+                $franchiseesChartData[] = User::where('role', 'franchisee')
+                    ->whereDate('created_at', $date->format('Y-m-d'))
+                    ->count();
+            }
+
+            // Calculate sales users chart data for last 7 days
+            $salesChartData = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $date = Carbon::now()->subDays($i);
+                $salesChartData[] = User::where('role', 'sales')
+                    ->whereDate('created_at', $date->format('Y-m-d'))
+                    ->count();
+            }
+
             $stats = [
                 [
-                    'title' => 'Total Users',
-                    'value' => number_format($totalUsers),
-                    'change' => round($totalUsersGrowth, 1),
-                    'desc' => 'All registered users',
+                    'title' => 'All registered users',
+                    'color' => 'primary',
                     'icon' => 'tabler-users',
-                    'iconColor' => 'primary',
+                    'stats' => number_format($totalUsers),
+                    'height' => 90,
+                    'series' => [
+                        [
+                            'data' => $chartData,
+                        ],
+                    ],
+                    'chartOptions' => [
+                        'chart' => [
+                            'height' => 90,
+                            'type' => 'area',
+                            'toolbar' => [
+                                'show' => false,
+                            ],
+                            'sparkline' => [
+                                'enabled' => true,
+                            ],
+                        ],
+                        'tooltip' => [
+                            'enabled' => false,
+                        ],
+                        'markers' => [
+                            'colors' => 'transparent',
+                            'strokeColors' => 'transparent',
+                        ],
+                        'grid' => [
+                            'show' => false,
+                        ],
+                        'colors' => [$this->getPrimaryColor()],
+                        'fill' => [
+                            'type' => 'gradient',
+                            'gradient' => [
+                                'shadeIntensity' => 0.8,
+                                'opacityFrom' => 0.6,
+                                'opacityTo' => 0.1,
+                            ],
+                        ],
+                        'dataLabels' => [
+                            'enabled' => false,
+                        ],
+                        'stroke' => [
+                            'width' => 2,
+                            'curve' => 'smooth',
+                        ],
+                        'xaxis' => [
+                            'show' => true,
+                            'lines' => [
+                                'show' => false,
+                            ],
+                            'labels' => [
+                                'show' => false,
+                            ],
+                            'stroke' => [
+                                'width' => 0,
+                            ],
+                            'axisBorder' => [
+                                'show' => false,
+                            ],
+                        ],
+                        'yaxis' => [
+                            'stroke' => [
+                                'width' => 0,
+                            ],
+                            'show' => false,
+                        ],
+                    ],
                 ],
                 [
-                    'title' => 'Franchisors',
-                    'value' => number_format($franchisors),
-                    'change' => round($franchisorsGrowth, 1),
-                    'desc' => 'Active franchisors',
+                    'title' => 'Active franchisors',
+                    'color' => 'success',
                     'icon' => 'tabler-building-store',
-                    'iconColor' => 'success',
+                    'stats' => number_format($franchisors),
+                    'height' => 90,
+                    'series' => [
+                        [
+                            'data' => $franchisorsChartData,
+                        ],
+                    ],
+                    'chartOptions' => [
+                        'chart' => [
+                            'height' => 90,
+                            'type' => 'area',
+                            'toolbar' => [
+                                'show' => false,
+                            ],
+                            'sparkline' => [
+                                'enabled' => true,
+                            ],
+                        ],
+                        'tooltip' => [
+                            'enabled' => false,
+                        ],
+                        'markers' => [
+                            'colors' => 'transparent',
+                            'strokeColors' => 'transparent',
+                        ],
+                        'grid' => [
+                            'show' => false,
+                        ],
+                        'colors' => [$this->getSuccessColor()],
+                        'fill' => [
+                            'type' => 'gradient',
+                            'gradient' => [
+                                'shadeIntensity' => 0.8,
+                                'opacityFrom' => 0.6,
+                                'opacityTo' => 0.1,
+                            ],
+                        ],
+                        'dataLabels' => [
+                            'enabled' => false,
+                        ],
+                        'stroke' => [
+                            'width' => 2,
+                            'curve' => 'smooth',
+                        ],
+                        'xaxis' => [
+                            'show' => true,
+                            'lines' => [
+                                'show' => false,
+                            ],
+                            'labels' => [
+                                'show' => false,
+                            ],
+                            'stroke' => [
+                                'width' => 0,
+                            ],
+                            'axisBorder' => [
+                                'show' => false,
+                            ],
+                        ],
+                        'yaxis' => [
+                            'stroke' => [
+                                'width' => 0,
+                            ],
+                            'show' => false,
+                        ],
+                    ],
                 ],
                 [
-                    'title' => 'Franchisees',
-                    'value' => number_format($franchisees),
-                    'change' => round($franchiseesGrowth, 1),
-                    'desc' => 'Active franchisees',
+                    'title' => 'Active franchisees',
+                    'color' => 'info',
                     'icon' => 'tabler-user-check',
-                    'iconColor' => 'info',
+                    'stats' => number_format($franchisees),
+                    'height' => 90,
+                    'series' => [
+                        [
+                            'data' => $franchiseesChartData,
+                        ],
+                    ],
+                    'chartOptions' => [
+                        'chart' => [
+                            'height' => 90,
+                            'type' => 'area',
+                            'toolbar' => [
+                                'show' => false,
+                            ],
+                            'sparkline' => [
+                                'enabled' => true,
+                            ],
+                        ],
+                        'tooltip' => [
+                            'enabled' => false,
+                        ],
+                        'markers' => [
+                            'colors' => 'transparent',
+                            'strokeColors' => 'transparent',
+                        ],
+                        'grid' => [
+                            'show' => false,
+                        ],
+                        'colors' => [$this->getInfoColor()],
+                        'fill' => [
+                            'type' => 'gradient',
+                            'gradient' => [
+                                'shadeIntensity' => 0.8,
+                                'opacityFrom' => 0.6,
+                                'opacityTo' => 0.1,
+                            ],
+                        ],
+                        'dataLabels' => [
+                            'enabled' => false,
+                        ],
+                        'stroke' => [
+                            'width' => 2,
+                            'curve' => 'smooth',
+                        ],
+                        'xaxis' => [
+                            'show' => true,
+                            'lines' => [
+                                'show' => false,
+                            ],
+                            'labels' => [
+                                'show' => false,
+                            ],
+                            'stroke' => [
+                                'width' => 0,
+                            ],
+                            'axisBorder' => [
+                                'show' => false,
+                            ],
+                        ],
+                        'yaxis' => [
+                            'stroke' => [
+                                'width' => 0,
+                            ],
+                            'show' => false,
+                        ],
+                    ],
                 ],
                 [
-                    'title' => 'Sales Users',
-                    'value' => number_format($salesUsers),
-                    'change' => round($salesUsersGrowth, 1),
-                    'desc' => 'Sales team members',
+                    'title' => 'Sales team members',
+                    'color' => 'warning',
                     'icon' => 'tabler-chart-line',
-                    'iconColor' => 'warning',
+                    'stats' => number_format($salesUsers),
+                    'height' => 90,
+                    'series' => [
+                        [
+                            'data' => $salesChartData,
+                        ],
+                    ],
+                    'chartOptions' => [
+                        'chart' => [
+                            'height' => 90,
+                            'type' => 'area',
+                            'toolbar' => [
+                                'show' => false,
+                            ],
+                            'sparkline' => [
+                                'enabled' => true,
+                            ],
+                        ],
+                        'tooltip' => [
+                            'enabled' => false,
+                        ],
+                        'markers' => [
+                            'colors' => 'transparent',
+                            'strokeColors' => 'transparent',
+                        ],
+                        'grid' => [
+                            'show' => false,
+                        ],
+                        'colors' => [$this->getWarningColor()],
+                        'fill' => [
+                            'type' => 'gradient',
+                            'gradient' => [
+                                'shadeIntensity' => 0.8,
+                                'opacityFrom' => 0.6,
+                                'opacityTo' => 0.1,
+                            ],
+                        ],
+                        'dataLabels' => [
+                            'enabled' => false,
+                        ],
+                        'stroke' => [
+                            'width' => 2,
+                            'curve' => 'smooth',
+                        ],
+                        'xaxis' => [
+                            'show' => true,
+                            'lines' => [
+                                'show' => false,
+                            ],
+                            'labels' => [
+                                'show' => false,
+                            ],
+                            'stroke' => [
+                                'width' => 0,
+                            ],
+                            'axisBorder' => [
+                                'show' => false,
+                            ],
+                        ],
+                        'yaxis' => [
+                            'stroke' => [
+                                'width' => 0,
+                            ],
+                            'show' => false,
+                        ],
+                    ],
                 ],
             ];
 
