@@ -36,15 +36,30 @@ const tabs = [
       </p>
     </div>
 
-    <VTabs v-model="activeTab" class="v-tabs-pill">
-      <VTab v-for="item in tabs" :key="item.icon" :value="item.tab"
-        :to="{ name: 'account-settings-tab', params: { tab: item.tab } }">
-        <VIcon size="20" start :icon="item.icon" />
+    <VTabs
+      v-model="activeTab"
+      class="v-tabs-pill"
+    >
+      <VTab
+        v-for="item in tabs"
+        :key="item.icon"
+        :value="item.tab"
+        :to="{ name: 'account-settings-tab', params: { tab: item.tab } }"
+      >
+        <VIcon
+          size="20"
+          start
+          :icon="item.icon"
+        />
         {{ item.title }}
       </VTab>
     </VTabs>
 
-    <VWindow v-model="activeTab" class="mt-6 disable-tab-transition" :touch="false">
+    <VWindow
+      v-model="activeTab"
+      class="mt-6 disable-tab-transition"
+      :touch="false"
+    >
       <!-- Account -->
       <VWindowItem value="account">
         <AccountSettingsAccount />

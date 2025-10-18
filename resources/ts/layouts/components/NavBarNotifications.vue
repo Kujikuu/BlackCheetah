@@ -18,7 +18,8 @@ onMounted(async () => {
   try {
     await fetchNotifications()
     await fetchStats()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load notifications:', error)
   }
 })
@@ -26,7 +27,8 @@ onMounted(async () => {
 const removeNotification = async (notificationId: number | string) => {
   try {
     await removeNotificationApi(notificationId)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to remove notification:', error)
   }
 }
@@ -34,7 +36,8 @@ const removeNotification = async (notificationId: number | string) => {
 const markRead = async (notificationIds: (number | string)[]) => {
   try {
     await markAsRead(notificationIds)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to mark notifications as read:', error)
   }
 }
@@ -42,7 +45,8 @@ const markRead = async (notificationIds: (number | string)[]) => {
 const markUnRead = async (notificationIds: (number | string)[]) => {
   try {
     await markAsUnread(notificationIds)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to mark notifications as unread:', error)
   }
 }
@@ -50,13 +54,19 @@ const markUnRead = async (notificationIds: (number | string)[]) => {
 const handleNotificationClick = async (notification: Notification) => {
   try {
     await handleNotificationClickApi(notification)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to handle notification click:', error)
   }
 }
 </script>
 
 <template>
-  <Notifications :notifications="notifications" @remove="removeNotification" @read="markRead" @unread="markUnRead"
-    @click:notification="handleNotificationClick" />
+  <Notifications
+    :notifications="notifications"
+    @remove="removeNotification"
+    @read="markRead"
+    @unread="markUnRead"
+    @click:notification="handleNotificationClick"
+  />
 </template>

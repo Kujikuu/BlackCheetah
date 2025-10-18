@@ -55,9 +55,11 @@ const notificationSettings = ref([
 const loadNotifications = async () => {
   try {
     isLoading.value = true
+
     const response = await accountSettingsApi.getProfile()
     if (response.success && response.data.preferences?.notifications) {
       const prefs = response.data.preferences.notifications
+
       notificationSettings.value.forEach(setting => {
         const key = setting.key as keyof NotificationPreferences
         if (prefs[key]) {
@@ -83,8 +85,10 @@ const saveNotifications = async () => {
 
     // Build preferences object
     const preferences: NotificationPreferences = {}
+
     notificationSettings.value.forEach(setting => {
       const key = setting.key as keyof NotificationPreferences
+
       preferences[key] = {
         email: setting.email,
         browser: setting.browser,
@@ -127,7 +131,12 @@ onMounted(() => {
 
         <!-- Success Message -->
         <VCardText v-if="successMessage">
-          <VAlert variant="tonal" color="success" closable @click:close="successMessage = ''">
+          <VAlert
+            variant="tonal"
+            color="success"
+            closable
+            @click:close="successMessage = ''"
+          >
             {{ successMessage }}
           </VAlert>
         </VCardText>
@@ -152,7 +161,10 @@ onMounted(() => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="notification in notificationSettings" :key="notification.type">
+              <tr
+                v-for="notification in notificationSettings"
+                :key="notification.type"
+              >
                 <td class="text-body-1 text-high-emphasis">
                   {{ notification.type }}
                 </td>
@@ -173,7 +185,11 @@ onMounted(() => {
         <VDivider />
 
         <VCardText>
-          <VBtn :loading="isSaving" :disabled="isLoading" @click="saveNotifications">
+          <VBtn
+            :loading="isSaving"
+            :disabled="isLoading"
+            @click="saveNotifications"
+          >
             Save Changes
           </VBtn>
         </VCardText>

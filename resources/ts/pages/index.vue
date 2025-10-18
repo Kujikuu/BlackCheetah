@@ -16,6 +16,7 @@ const redirectToDashboard = () => {
   if (!userDataValue || !userDataValue.id || !userDataValue.role) {
     // If no valid user data, redirect to login
     router.push('/login')
+
     return
   }
 
@@ -35,7 +36,7 @@ const redirectToDashboard = () => {
       router.push('/sales/lead-management')
       break
     default:
-      // Fallback to login if role is unknown
+    // Fallback to login if role is unknown
       router.push('/login')
   }
 }
@@ -48,10 +49,9 @@ onMounted(async () => {
 })
 
 // Also redirect if userData changes (e.g., after login)
-watch(userData, (newUserData) => {
-  if (newUserData) {
+watch(userData, newUserData => {
+  if (newUserData)
     redirectToDashboard()
-  }
 }, { immediate: true })
 </script>
 

@@ -2,7 +2,7 @@
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
 import EditNoteModal from '@/components/franchisor/EditNoteModal.vue'
 import ViewNoteModal from '@/components/franchisor/ViewNoteModal.vue'
-import { leadApi, type Lead } from '@/services/api/lead'
+import { type Lead, leadApi } from '@/services/api/lead'
 import { avatarText } from '@core/utils/formatters'
 
 const route = useRoute('franchisor-lead-view-id')
@@ -28,9 +28,8 @@ const fetchLeadData = async () => {
 
     const response = await leadApi.getLead(leadId.value)
 
-    if (response.success && response.data) {
+    if (response.success && response.data)
       leadData.value = response.data
-    }
   }
   catch (error) {
     console.error('Error fetching lead data:', error)
@@ -303,9 +302,15 @@ const priorities = [
 <template>
   <section>
     <!-- 👉 Loading State -->
-    <VCard v-if="isLoadingLead" class="mb-6">
+    <VCard
+      v-if="isLoadingLead"
+      class="mb-6"
+    >
       <VCardText class="text-center py-10">
-        <VProgressCircular indeterminate color="primary" />
+        <VProgressCircular
+          indeterminate
+          color="primary"
+        />
         <div class="mt-4">
           Loading lead data...
         </div>
@@ -313,11 +318,18 @@ const priorities = [
     </VCard>
 
     <!-- 👉 Lead Header -->
-    <VCard v-else-if="leadData" class="mb-6">
+    <VCard
+      v-else-if="leadData"
+      class="mb-6"
+    >
       <VCardText>
         <div class="d-flex justify-space-between align-center flex-wrap gap-4">
           <div class="d-flex align-center gap-4">
-            <VAvatar size="80" variant="tonal" color="primary">
+            <VAvatar
+              size="80"
+              variant="tonal"
+              color="primary"
+            >
               <span class="text-h4">{{ avatarText(`${leadData.firstName} ${leadData.lastName}`) }}</span>
             </VAvatar>
             <div>
@@ -327,21 +339,41 @@ const priorities = [
               <div class="text-body-1 mb-1">
                 {{ leadData.company }}
               </div>
-              <VChip :color="leadData.status === 'qualified' ? 'success' : 'error'" size="small" label
-                class="text-capitalize">
+              <VChip
+                :color="leadData.status === 'qualified' ? 'success' : 'error'"
+                size="small"
+                label
+                class="text-capitalize"
+              >
                 {{ leadData.status }}
               </VChip>
             </div>
           </div>
           <div class="d-flex gap-2">
-            <VBtn v-if="!isEditMode" color="primary" prepend-icon="tabler-pencil" @click="toggleEditMode">
+            <VBtn
+              v-if="!isEditMode"
+              color="primary"
+              prepend-icon="tabler-pencil"
+              @click="toggleEditMode"
+            >
               Edit
             </VBtn>
-            <VBtn v-if="isEditMode" color="success" prepend-icon="tabler-check" :loading="isSavingLead"
-              :disabled="isSavingLead" @click="saveLead">
+            <VBtn
+              v-if="isEditMode"
+              color="success"
+              prepend-icon="tabler-check"
+              :loading="isSavingLead"
+              :disabled="isSavingLead"
+              @click="saveLead"
+            >
               Save
             </VBtn>
-            <VBtn v-if="isEditMode" color="secondary" variant="tonal" @click="toggleEditMode">
+            <VBtn
+              v-if="isEditMode"
+              color="secondary"
+              variant="tonal"
+              @click="toggleEditMode"
+            >
               Cancel
             </VBtn>
           </div>
@@ -351,19 +383,35 @@ const priorities = [
 
     <!-- 👉 Tabs -->
     <template v-if="leadData">
-      <VTabs v-model="currentTab" class="mb-6">
-        <VTab v-for="tab in tabs" :key="tab.value" :value="tab.value">
-          <VIcon :icon="tab.icon" start />
+      <VTabs
+        v-model="currentTab"
+        class="mb-6"
+      >
+        <VTab
+          v-for="tab in tabs"
+          :key="tab.value"
+          :value="tab.value"
+        >
+          <VIcon
+            :icon="tab.icon"
+            start
+          />
           {{ tab.title }}
         </VTab>
       </VTabs>
 
-      <VWindow v-model="currentTab" class="disable-tab-transition">
+      <VWindow
+        v-model="currentTab"
+        class="disable-tab-transition"
+      >
         <!-- Overview Tab -->
         <VWindowItem value="overview">
           <VRow>
             <!-- Left Column -->
-            <VCol cols="12" lg="8">
+            <VCol
+              cols="12"
+              lg="8"
+            >
               <!-- Personal & Contact Information -->
               <VCard class="mb-6">
                 <VCardItem>
@@ -372,20 +420,52 @@ const priorities = [
                 <VDivider />
                 <VCardText>
                   <VRow>
-                    <VCol cols="12" md="6">
-                      <AppTextField v-model="leadData.firstName" label="First Name" :readonly="!isEditMode" />
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
+                      <AppTextField
+                        v-model="leadData.firstName"
+                        label="First Name"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
-                    <VCol cols="12" md="6">
-                      <AppTextField v-model="leadData.lastName" label="Last Name" :readonly="!isEditMode" />
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
+                      <AppTextField
+                        v-model="leadData.lastName"
+                        label="Last Name"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
-                    <VCol cols="12" md="6">
-                      <AppTextField v-model="leadData.email" label="Email" :readonly="!isEditMode" />
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
+                      <AppTextField
+                        v-model="leadData.email"
+                        label="Email"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
-                    <VCol cols="12" md="6">
-                      <AppTextField v-model="leadData.phone" label="Phone" :readonly="!isEditMode" />
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
+                      <AppTextField
+                        v-model="leadData.phone"
+                        label="Phone"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.company" label="Company" :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.company"
+                        label="Company"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                   </VRow>
                 </VCardText>
@@ -399,18 +479,51 @@ const priorities = [
                 <VDivider />
                 <VCardText>
                   <VRow>
-                    <VCol cols="12" md="4">
-                      <AppSelect v-if="isEditMode" v-model="leadData.country" label="Country"
-                        placeholder="Select Country" :items="countries" />
-                      <AppTextField v-else v-model="leadData.country" label="Country" readonly />
+                    <VCol
+                      cols="12"
+                      md="4"
+                    >
+                      <AppSelect
+                        v-if="isEditMode"
+                        v-model="leadData.country"
+                        label="Country"
+                        placeholder="Select Country"
+                        :items="countries"
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.country"
+                        label="Country"
+                        readonly
+                      />
                     </VCol>
-                    <VCol cols="12" md="4">
-                      <AppSelect v-if="isEditMode" v-model="leadData.state" label="State" placeholder="Select State"
-                        :items="usStates" />
-                      <AppTextField v-else v-model="leadData.state" label="State" readonly />
+                    <VCol
+                      cols="12"
+                      md="4"
+                    >
+                      <AppSelect
+                        v-if="isEditMode"
+                        v-model="leadData.state"
+                        label="State"
+                        placeholder="Select State"
+                        :items="usStates"
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.state"
+                        label="State"
+                        readonly
+                      />
                     </VCol>
-                    <VCol cols="12" md="4">
-                      <AppTextField v-model="leadData.city" label="City" :readonly="!isEditMode" />
+                    <VCol
+                      cols="12"
+                      md="4"
+                    >
+                      <AppTextField
+                        v-model="leadData.city"
+                        label="City"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                   </VRow>
                 </VCardText>
@@ -424,19 +537,46 @@ const priorities = [
                 <VDivider />
                 <VCardText>
                   <VRow>
-                    <VCol cols="12" md="4">
-                      <AppTextField v-model="leadData.estimatedInvestment" label="Estimated Investment" type="number"
-                        prefix="SAR" :readonly="!isEditMode" />
+                    <VCol
+                      cols="12"
+                      md="4"
+                    >
+                      <AppTextField
+                        v-model="leadData.estimatedInvestment"
+                        label="Estimated Investment"
+                        type="number"
+                        prefix="SAR"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
-                    <VCol cols="12" md="4">
-                      <AppTextField v-model="leadData.franchiseFeeQuoted" label="Franchise Fee Quoted" type="number"
-                        prefix="SAR" :readonly="!isEditMode" />
+                    <VCol
+                      cols="12"
+                      md="4"
+                    >
+                      <AppTextField
+                        v-model="leadData.franchiseFeeQuoted"
+                        label="Franchise Fee Quoted"
+                        type="number"
+                        prefix="SAR"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
-                    <VCol cols="12" md="4">
-                      <AppDateTimePicker v-if="isEditMode" v-model="leadData.expectedDecisionDate"
-                        label="Expected Decision Date" placeholder="Select Date" />
-                      <AppTextField v-else v-model="leadData.expectedDecisionDate" label="Expected Decision Date"
-                        readonly />
+                    <VCol
+                      cols="12"
+                      md="4"
+                    >
+                      <AppDateTimePicker
+                        v-if="isEditMode"
+                        v-model="leadData.expectedDecisionDate"
+                        label="Expected Decision Date"
+                        placeholder="Select Date"
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.expectedDecisionDate"
+                        label="Expected Decision Date"
+                        readonly
+                      />
                     </VCol>
                   </VRow>
                 </VCardText>
@@ -449,14 +589,22 @@ const priorities = [
                 </VCardItem>
                 <VDivider />
                 <VCardText>
-                  <AppTextarea v-model="leadData.note" label="Notes"
-                    placeholder="Add any additional notes about this lead..." rows="4" :readonly="!isEditMode" />
+                  <AppTextarea
+                    v-model="leadData.note"
+                    label="Notes"
+                    placeholder="Add any additional notes about this lead..."
+                    rows="4"
+                    :readonly="!isEditMode"
+                  />
                 </VCardText>
               </VCard>
             </VCol>
 
             <!-- Right Column -->
-            <VCol cols="12" lg="4">
+            <VCol
+              cols="12"
+              lg="4"
+            >
               <!-- Lead Management -->
               <VCard class="mb-6">
                 <VCardItem>
@@ -466,25 +614,66 @@ const priorities = [
                 <VCardText>
                   <VRow>
                     <VCol cols="12">
-                      <AppSelect v-if="isEditMode" v-model="leadData.status" label="Status" placeholder="Select Status"
-                        :items="leadStatuses" />
-                      <AppTextField v-else v-model="leadData.status" label="Status" readonly class="text-capitalize" />
+                      <AppSelect
+                        v-if="isEditMode"
+                        v-model="leadData.status"
+                        label="Status"
+                        placeholder="Select Status"
+                        :items="leadStatuses"
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.status"
+                        label="Status"
+                        readonly
+                        class="text-capitalize"
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppSelect v-if="isEditMode" v-model="leadData.priority" label="Priority"
-                        placeholder="Select Priority" :items="priorities" />
-                      <AppTextField v-else v-model="leadData.priority" label="Priority" readonly
-                        class="text-capitalize" />
+                      <AppSelect
+                        v-if="isEditMode"
+                        v-model="leadData.priority"
+                        label="Priority"
+                        placeholder="Select Priority"
+                        :items="priorities"
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.priority"
+                        label="Priority"
+                        readonly
+                        class="text-capitalize"
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppSelect v-if="isEditMode" v-model="leadData.source" label="Source" placeholder="Select Source"
-                        :items="leadSources" />
-                      <AppTextField v-else v-model="leadData.source" label="Source" readonly />
+                      <AppSelect
+                        v-if="isEditMode"
+                        v-model="leadData.source"
+                        label="Source"
+                        placeholder="Select Source"
+                        :items="leadSources"
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.source"
+                        label="Source"
+                        readonly
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppSelect v-if="isEditMode" v-model="leadData.owner" label="Assigned To"
-                        placeholder="Select Owner" :items="salesAssociates" />
-                      <AppTextField v-else v-model="leadData.owner" label="Assigned To" readonly />
+                      <AppSelect
+                        v-if="isEditMode"
+                        v-model="leadData.owner"
+                        label="Assigned To"
+                        placeholder="Select Owner"
+                        :items="salesAssociates"
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.owner"
+                        label="Assigned To"
+                        readonly
+                      />
                     </VCol>
                   </VRow>
                 </VCardText>
@@ -499,18 +688,40 @@ const priorities = [
                 <VCardText>
                   <VRow>
                     <VCol cols="12">
-                      <AppDateTimePicker v-if="isEditMode" v-model="leadData.lastContacted" label="Last Contacted"
-                        placeholder="Select Date" />
-                      <AppTextField v-else v-model="leadData.lastContacted" label="Last Contacted" readonly />
+                      <AppDateTimePicker
+                        v-if="isEditMode"
+                        v-model="leadData.lastContacted"
+                        label="Last Contacted"
+                        placeholder="Select Date"
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.lastContacted"
+                        label="Last Contacted"
+                        readonly
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppDateTimePicker v-if="isEditMode" v-model="leadData.scheduledMeeting" label="Next Follow-up"
-                        placeholder="Select Date" />
-                      <AppTextField v-else v-model="leadData.scheduledMeeting" label="Next Follow-up" readonly />
+                      <AppDateTimePicker
+                        v-if="isEditMode"
+                        v-model="leadData.scheduledMeeting"
+                        label="Next Follow-up"
+                        placeholder="Select Date"
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.scheduledMeeting"
+                        label="Next Follow-up"
+                        readonly
+                      />
                     </VCol>
                     <VCol cols="12">
-                      <AppTextField v-model="leadData.contactAttempts" label="Contact Attempts" type="number"
-                        :readonly="!isEditMode" />
+                      <AppTextField
+                        v-model="leadData.contactAttempts"
+                        label="Contact Attempts"
+                        type="number"
+                        :readonly="!isEditMode"
+                      />
                     </VCol>
                   </VRow>
                 </VCardText>
@@ -525,7 +736,11 @@ const priorities = [
             <VCardItem class="pb-4">
               <VCardTitle>Notes</VCardTitle>
               <template #append>
-                <VBtn color="primary" prepend-icon="tabler-plus" @click="isAddNoteModalVisible = true">
+                <VBtn
+                  color="primary"
+                  prepend-icon="tabler-plus"
+                  @click="isAddNoteModalVisible = true"
+                >
                   Add Note
                 </VBtn>
               </template>
@@ -535,8 +750,15 @@ const priorities = [
 
             <VCardText>
               <VRow>
-                <VCol v-for="note in notesData" :key="note.id" cols="12">
-                  <VCard variant="tonal" class="mb-4">
+                <VCol
+                  v-for="note in notesData"
+                  :key="note.id"
+                  cols="12"
+                >
+                  <VCard
+                    variant="tonal"
+                    class="mb-4"
+                  >
                     <VCardText>
                       <div class="d-flex justify-space-between align-start mb-2">
                         <div>
@@ -548,10 +770,21 @@ const priorities = [
                           </h6>
                         </div>
                         <div class="d-flex gap-2">
-                          <VBtn icon size="small" variant="text" @click="editNote(note)">
+                          <VBtn
+                            icon
+                            size="small"
+                            variant="text"
+                            @click="editNote(note)"
+                          >
                             <VIcon icon="tabler-pencil" />
                           </VBtn>
-                          <VBtn icon size="small" variant="text" color="error" @click="confirmDeleteNote(note.id)">
+                          <VBtn
+                            icon
+                            size="small"
+                            variant="text"
+                            color="error"
+                            @click="confirmDeleteNote(note.id)"
+                          >
                             <VIcon icon="tabler-trash" />
                           </VBtn>
                         </div>
@@ -559,7 +792,11 @@ const priorities = [
                       <p class="text-body-2 mb-2">
                         {{ getExcerpt(note.description) }}
                       </p>
-                      <VBtn variant="text" size="small" @click="viewNote(note)">
+                      <VBtn
+                        variant="text"
+                        size="small"
+                        @click="viewNote(note)"
+                      >
                         Read More
                       </VBtn>
                     </VCardText>
@@ -573,17 +810,30 @@ const priorities = [
     </template>
 
     <!-- 👉 Add Note Modal -->
-    <AddNoteModal v-model:is-dialog-visible="isAddNoteModalVisible" :lead-id="leadId" @note-added="onNoteAdded" />
+    <AddNoteModal
+      v-model:is-dialog-visible="isAddNoteModalVisible"
+      :lead-id="leadId"
+      @note-added="onNoteAdded"
+    />
 
     <!-- 👉 View Note Modal -->
-    <ViewNoteModal v-model:is-dialog-visible="isViewNoteModalVisible" :note="selectedNote" />
+    <ViewNoteModal
+      v-model:is-dialog-visible="isViewNoteModalVisible"
+      :note="selectedNote"
+    />
 
     <!-- 👉 Edit Note Modal -->
-    <EditNoteModal v-model:is-dialog-visible="isEditNoteModalVisible" :note="selectedNote"
-      @note-updated="onNoteUpdated" />
+    <EditNoteModal
+      v-model:is-dialog-visible="isEditNoteModalVisible"
+      :note="selectedNote"
+      @note-updated="onNoteUpdated"
+    />
 
     <!-- 👉 Delete Note Confirmation Dialog -->
-    <VDialog v-model="isDeleteNoteDialogVisible" max-width="500">
+    <VDialog
+      v-model="isDeleteNoteDialogVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -595,10 +845,17 @@ const priorities = [
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteNoteDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteNoteDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" @click="deleteNote">
+          <VBtn
+            color="error"
+            @click="deleteNote"
+          >
             Delete
           </VBtn>
         </VCardActions>

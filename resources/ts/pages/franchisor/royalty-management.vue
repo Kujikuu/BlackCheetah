@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { royaltyApi, type PaymentData, type RoyaltyRecord, type RoyaltyStatistics } from '@/services/api/royalty'
-import { $api } from '@/utils/api'
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
-
-
+import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api/royalty'
+import { $api } from '@/utils/api'
 
 // Loading states
 const isLoading = ref(false)
@@ -63,6 +61,7 @@ const paymentData = ref<PaymentData>({
 
 // Data from API
 const royaltyRecords = ref<RoyaltyRecord[]>([])
+
 const statistics = ref<RoyaltyStatistics>({
   royalty_collected_till_date: 0,
   upcoming_royalties: 0,
@@ -127,9 +126,11 @@ const tableHeaders = [
 const fetchRoyalties = async () => {
   try {
     isLoading.value = true
+
     const response = await royaltyApi.getRoyalties({
       period: selectedPeriod.value,
     })
+
     royaltyRecords.value = response.data.data
   }
   catch (error) {
@@ -143,9 +144,11 @@ const fetchRoyalties = async () => {
 const fetchStatistics = async () => {
   try {
     isLoadingStats.value = true
+
     const response = await royaltyApi.getStatistics({
       period: selectedPeriod.value,
     })
+
     statistics.value = response.data
   }
   catch (error) {
@@ -172,6 +175,7 @@ const performExport = async () => {
     // Create download link
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
+
     link.href = url
     link.download = `royalty-data-${selectedPeriod.value}-${new Date().toISOString().split('T')[0]}.${exportFormat.value === 'csv' ? 'csv' : 'xlsx'}`
     document.body.appendChild(link)
@@ -259,9 +263,9 @@ const fetchFranchises = async () => {
     if (response.success && response.data) {
       // myFranchise returns a single franchise object, so wrap it in an array
       franchises.value = [response.data]
-
     }
-  } catch (error) {
+  }
+  catch (error) {
 
   }
 }
@@ -273,9 +277,9 @@ const fetchUnits = async () => {
     if (response.success && response.data) {
       // myUnits returns paginated data, extract the actual units from data.data
       units.value = response.data.data || []
-
     }
-  } catch (error) {
+  }
+  catch (error) {
 
   }
 }
@@ -284,15 +288,12 @@ const fetchFranchisees = async () => {
   try {
     const response = await $api('/api/v1/franchisor/franchisees')
 
-
-
     if (response.success && response.data) {
       // myFranchisees returns paginated data, extract the actual franchisees from data.data
       franchisees.value = response.data.data || []
-
-
     }
-  } catch (error) {
+  }
+  catch (error) {
 
   }
 }
@@ -308,17 +309,16 @@ const calculateAmounts = () => {
   createRoyaltyData.value.marketing_fee_amount = (baseRevenue * createRoyaltyData.value.marketing_fee_rate) / 100
 
   // Calculate technology fee amount (if rate-based)
-  if (createRoyaltyData.value.technology_fee_rate > 0) {
+  if (createRoyaltyData.value.technology_fee_rate > 0)
     createRoyaltyData.value.technology_fee_amount = (baseRevenue * createRoyaltyData.value.technology_fee_rate) / 100
-  }
 
   // Calculate total amount
-  createRoyaltyData.value.total_amount =
-    createRoyaltyData.value.royalty_amount +
-    createRoyaltyData.value.marketing_fee_amount +
-    createRoyaltyData.value.technology_fee_amount +
-    createRoyaltyData.value.other_fees +
-    createRoyaltyData.value.adjustments
+  createRoyaltyData.value.total_amount
+    = createRoyaltyData.value.royalty_amount
+    + createRoyaltyData.value.marketing_fee_amount
+    + createRoyaltyData.value.technology_fee_amount
+    + createRoyaltyData.value.other_fees
+    + createRoyaltyData.value.adjustments
 }
 
 // Create royalty function
@@ -331,16 +331,12 @@ const createRoyalty = async () => {
 
     // Validate form before submission
     const isValid = await validateForm()
-    if (!isValid) {
+    if (!isValid)
 
       return
-    }
 
     // Calculate amounts before submitting
     calculateAmounts()
-
-
-
 
     // Prepare data for API - convert null to undefined for optional fields
     const apiData = {
@@ -364,12 +360,13 @@ const createRoyalty = async () => {
       await fetchStatistics()
 
       // Show success message (you might want to add a toast notification here)
-
     }
-  } catch (error) {
+  }
+  catch (error) {
 
     // Handle error (you might want to add error notification here)
-  } finally {
+  }
+  finally {
     isCreating.value = false
   }
 }
@@ -439,29 +436,29 @@ const validationRules = {
   ],
   period_month: [
     (v: any) => {
-      if (createRoyaltyData.value.type === 'monthly') {
+      if (createRoyaltyData.value.type === 'monthly')
         return !!v || 'Period month is required for monthly royalties'
-      }
+
       return true
     },
     (v: any) => {
-      if (v && (v < 1 || v > 12)) {
+      if (v && (v < 1 || v > 12))
         return 'Period month must be between 1 and 12'
-      }
+
       return true
     },
   ],
   period_quarter: [
     (v: any) => {
-      if (createRoyaltyData.value.type === 'quarterly') {
+      if (createRoyaltyData.value.type === 'quarterly')
         return !!v || 'Period quarter is required for quarterly royalties'
-      }
+
       return true
     },
     (v: any) => {
-      if (v && (v < 1 || v > 4)) {
+      if (v && (v < 1 || v > 4))
         return 'Period quarter must be between 1 and 4'
-      }
+
       return true
     },
   ],
@@ -485,8 +482,10 @@ const validationRules = {
     (v: any) => {
       if (v) {
         const today = new Date().toISOString().split('T')[0]
+
         return v >= today || 'Due date cannot be in the past'
       }
+
       return true
     },
   ],
@@ -518,18 +517,20 @@ const formRef = ref()
 const validateForm = async () => {
   if (formRef.value) {
     const { valid } = await formRef.value.validate()
+
     isFormValid.value = valid
+
     return valid
   }
+
   return false
 }
 
 // Clear validation errors
 const clearValidationErrors = () => {
   validationErrors.value = {}
-  if (formRef.value) {
+  if (formRef.value)
     formRef.value.resetValidation()
-  }
 }
 
 // Handle API validation errors
@@ -563,18 +564,39 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
           <!-- Header Actions -->
           <div class="d-flex gap-3 align-center flex-wrap">
             <!-- Period Selector -->
-            <VSelect v-model="selectedPeriod" :items="periodOptions" item-title="title" item-value="value"
-              density="compact" style="min-width: 120px;" variant="outlined" />
+            <VSelect
+              v-model="selectedPeriod"
+              :items="periodOptions"
+              item-title="title"
+              item-value="value"
+              density="compact"
+              style="min-width: 120px;"
+              variant="outlined"
+            />
 
             <!-- Create Royalty Button -->
-            <VBtn color="success" variant="elevated" @click="openCreateRoyaltyModal">
-              <VIcon icon="tabler-plus" class="me-2" />
+            <VBtn
+              color="success"
+              variant="elevated"
+              @click="openCreateRoyaltyModal"
+            >
+              <VIcon
+                icon="tabler-plus"
+                class="me-2"
+              />
               Create Royalty
             </VBtn>
 
             <!-- Export Button -->
-            <VBtn color="primary" variant="elevated" @click="openExportDialog">
-              <VIcon icon="tabler-download" class="me-2" />
+            <VBtn
+              color="primary"
+              variant="elevated"
+              @click="openExportDialog"
+            >
+              <VIcon
+                icon="tabler-download"
+                class="me-2"
+              />
               Export
             </VBtn>
           </div>
@@ -585,7 +607,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
     <!-- Stat Cards -->
     <VRow class="mb-6">
       <!-- Royalty Collected Till Date -->
-      <VCol cols="12" md="6">
+      <VCol
+        cols="12"
+        md="6"
+      >
         <VCard>
           <VCardText>
             <div class="d-flex align-center justify-space-between">
@@ -600,7 +625,11 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
                   {{ royaltyCollectedTillDate.toLocaleString() }} SAR
                 </h4>
               </div>
-              <VAvatar color="success" variant="tonal" size="56">
+              <VAvatar
+                color="success"
+                variant="tonal"
+                size="56"
+              >
                 <SaudiRiyal size="28" />
               </VAvatar>
             </div>
@@ -609,7 +638,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
       </VCol>
 
       <!-- Upcoming Royalties -->
-      <VCol cols="12" md="6">
+      <VCol
+        cols="12"
+        md="6"
+      >
         <VCard>
           <VCardText>
             <div class="d-flex align-center justify-space-between">
@@ -624,8 +656,15 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
                   {{ upcomingRoyalties.toLocaleString() }} SAR
                 </h4>
               </div>
-              <VAvatar color="warning" variant="tonal" size="56">
-                <VIcon icon="tabler-clock" size="28" />
+              <VAvatar
+                color="warning"
+                variant="tonal"
+                size="56"
+              >
+                <VIcon
+                  icon="tabler-clock"
+                  size="28"
+                />
               </VAvatar>
             </div>
           </VCardText>
@@ -648,7 +687,12 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
 
           <VDivider />
 
-          <VDataTable :headers="tableHeaders" :items="royaltyRecords" :items-per-page="10" class="text-no-wrap">
+          <VDataTable
+            :headers="tableHeaders"
+            :items="royaltyRecords"
+            :items-per-page="10"
+            class="text-no-wrap"
+          >
             <!-- Billing Period Column -->
             <template #item.billingPeriod="{ item }">
               <div class="font-weight-medium">
@@ -686,7 +730,11 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
 
             <!-- Royalty Percentage Column -->
             <template #item.royaltyPercentage="{ item }">
-              <VChip size="small" variant="tonal" color="primary">
+              <VChip
+                size="small"
+                variant="tonal"
+                color="primary"
+              >
                 {{ item.royalty_percentage }}%
               </VChip>
             </template>
@@ -700,7 +748,12 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
 
             <!-- Status Column -->
             <template #item.status="{ item }">
-              <VChip :color="getStatusColor(item.status)" size="small" variant="tonal" class="text-capitalize">
+              <VChip
+                :color="getStatusColor(item.status)"
+                size="small"
+                variant="tonal"
+                class="text-capitalize"
+              >
                 {{ item.status }}
               </VChip>
             </template>
@@ -708,17 +761,41 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
             <!-- Actions Column -->
             <template #item.actions="{ item }">
               <div class="d-flex gap-2">
-                <VBtn icon size="small" color="info" variant="text" @click="viewRoyalty(item)">
-                  <VIcon icon="tabler-eye" size="20" />
-                  <VTooltip activator="parent" location="top">
+                <VBtn
+                  icon
+                  size="small"
+                  color="info"
+                  variant="text"
+                  @click="viewRoyalty(item)"
+                >
+                  <VIcon
+                    icon="tabler-eye"
+                    size="20"
+                  />
+                  <VTooltip
+                    activator="parent"
+                    location="top"
+                  >
                     View Details
                   </VTooltip>
                 </VBtn>
 
-                <VBtn v-if="item.status !== 'paid'" icon size="small" color="success" variant="text"
-                  @click="markAsCompleted(item)">
-                  <VIcon icon="tabler-check" size="20" />
-                  <VTooltip activator="parent" location="top">
+                <VBtn
+                  v-if="item.status !== 'paid'"
+                  icon
+                  size="small"
+                  color="success"
+                  variant="text"
+                  @click="markAsCompleted(item)"
+                >
+                  <VIcon
+                    icon="tabler-check"
+                    size="20"
+                  />
+                  <VTooltip
+                    activator="parent"
+                    location="top"
+                  >
                     Mark as Completed
                   </VTooltip>
                 </VBtn>
@@ -730,7 +807,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
     </VRow>
 
     <!-- Export Dialog -->
-    <VDialog v-model="isExportDialogVisible" max-width="500">
+    <VDialog
+      v-model="isExportDialogVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Export Royalty Data</VCardTitle>
@@ -739,20 +819,38 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
         <VCardText>
           <VRow>
             <VCol cols="12">
-              <VSelect v-model="exportDataType" :items="exportDataTypeOptions" item-title="title" item-value="value"
-                label="Data Type" variant="outlined" density="compact" />
+              <VSelect
+                v-model="exportDataType"
+                :items="exportDataTypeOptions"
+                item-title="title"
+                item-value="value"
+                label="Data Type"
+                variant="outlined"
+                density="compact"
+              />
             </VCol>
             <VCol cols="12">
-              <VSelect v-model="exportFormat" :items="exportFormatOptions" item-title="title" item-value="value"
-                label="Export Format" variant="outlined" density="compact" />
+              <VSelect
+                v-model="exportFormat"
+                :items="exportFormatOptions"
+                item-title="title"
+                item-value="value"
+                label="Export Format"
+                variant="outlined"
+                density="compact"
+              />
             </VCol>
           </VRow>
 
-          <VAlert type="info" variant="tonal" class="mt-4">
+          <VAlert
+            type="info"
+            variant="tonal"
+            class="mt-4"
+          >
             <div class="text-body-2">
               <strong>Current Selection:</strong><br>
               Period: {{ selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1) }}<br>
-              Data Type: {{exportDataTypeOptions.find(opt => opt.value === exportDataType)?.title}}<br>
+              Data Type: {{ exportDataTypeOptions.find(opt => opt.value === exportDataType)?.title }}<br>
               Format: {{ exportFormat.toUpperCase() }}
             </div>
           </VAlert>
@@ -760,10 +858,17 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isExportDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isExportDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" @click="performExport">
+          <VBtn
+            color="primary"
+            @click="performExport"
+          >
             Export Data
           </VBtn>
         </VCardActions>
@@ -771,116 +876,282 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
     </VDialog>
 
     <!-- Create Royalty Modal -->
-    <VDialog v-model="isCreateRoyaltyModalVisible" max-width="800" persistent>
+    <VDialog
+      v-model="isCreateRoyaltyModalVisible"
+      max-width="800"
+      persistent
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Create New Royalty Record</VCardTitle>
         </VCardItem>
 
         <VCardText>
-          <VForm ref="formRef" v-model="isFormValid" @submit.prevent="createRoyalty">
+          <VForm
+            ref="formRef"
+            v-model="isFormValid"
+            @submit.prevent="createRoyalty"
+          >
             <VRow>
               <!-- Franchise Selection -->
-              <VCol cols="12" md="6">
-                <VSelect v-model="createRoyaltyData.franchise_id" :items="franchises" item-title="business_name"
-                  item-value="id" label="Franchise *" variant="outlined" density="compact" required clearable
-                  :rules="validationRules.franchise_id" :error-messages="validationErrors.franchise_id" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VSelect
+                  v-model="createRoyaltyData.franchise_id"
+                  :items="franchises"
+                  item-title="business_name"
+                  item-value="id"
+                  label="Franchise *"
+                  variant="outlined"
+                  density="compact"
+                  required
+                  clearable
+                  :rules="validationRules.franchise_id"
+                  :error-messages="validationErrors.franchise_id"
+                />
               </VCol>
 
               <!-- Unit Selection -->
-              <VCol cols="12" md="6">
-                <VSelect v-model="createRoyaltyData.unit_id" :items="units" item-title="unit_name" item-value="id"
-                  label="Unit" variant="outlined" density="compact" clearable />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VSelect
+                  v-model="createRoyaltyData.unit_id"
+                  :items="units"
+                  item-title="unit_name"
+                  item-value="id"
+                  label="Unit"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                />
               </VCol>
 
               <!-- Franchisee Selection -->
-              <VCol cols="12" md="6">
-                <VSelect v-model="createRoyaltyData.franchisee_id" :items="franchisees" item-title="name"
-                  item-value="id" label="Franchisee *" variant="outlined" density="compact" required clearable
-                  :rules="validationRules.franchisee_id" :error-messages="validationErrors.franchisee_id" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VSelect
+                  v-model="createRoyaltyData.franchisee_id"
+                  :items="franchisees"
+                  item-title="name"
+                  item-value="id"
+                  label="Franchisee *"
+                  variant="outlined"
+                  density="compact"
+                  required
+                  clearable
+                  :rules="validationRules.franchisee_id"
+                  :error-messages="validationErrors.franchisee_id"
+                />
               </VCol>
 
               <!-- Royalty Type -->
-              <VCol cols="12" md="6">
-                <VSelect v-model="createRoyaltyData.type" :items="periodOptions" item-title="title" item-value="value"
-                  label="Royalty Type *" variant="outlined" density="compact" required :rules="validationRules.type"
-                  :error-messages="validationErrors.type" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VSelect
+                  v-model="createRoyaltyData.type"
+                  :items="periodOptions"
+                  item-title="title"
+                  item-value="value"
+                  label="Royalty Type *"
+                  variant="outlined"
+                  density="compact"
+                  required
+                  :rules="validationRules.type"
+                  :error-messages="validationErrors.type"
+                />
               </VCol>
 
               <!-- Period Year -->
-              <VCol cols="12" md="4">
-                <VTextField v-model.number="createRoyaltyData.period_year" label="Period Year *" type="number"
-                  variant="outlined" density="compact" required :rules="validationRules.period_year"
-                  :error-messages="validationErrors.period_year" />
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <VTextField
+                  v-model.number="createRoyaltyData.period_year"
+                  label="Period Year *"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  required
+                  :rules="validationRules.period_year"
+                  :error-messages="validationErrors.period_year"
+                />
               </VCol>
 
               <!-- Period Month (for monthly type) -->
-              <VCol cols="12" md="4" v-if="createRoyaltyData.type === 'monthly'">
-                <VTextField v-model.number="createRoyaltyData.period_month" label="Period Month *" type="number" min="1"
-                  max="12" variant="outlined" density="compact" required :rules="validationRules.period_month"
-                  :error-messages="validationErrors.period_month" />
+              <VCol
+                v-if="createRoyaltyData.type === 'monthly'"
+                cols="12"
+                md="4"
+              >
+                <VTextField
+                  v-model.number="createRoyaltyData.period_month"
+                  label="Period Month *"
+                  type="number"
+                  min="1"
+                  max="12"
+                  variant="outlined"
+                  density="compact"
+                  required
+                  :rules="validationRules.period_month"
+                  :error-messages="validationErrors.period_month"
+                />
               </VCol>
 
               <!-- Due Date -->
-              <VCol cols="12" md="4">
-                <VTextField v-model="createRoyaltyData.due_date" label="Due Date *" type="date" variant="outlined"
-                  density="compact" required :rules="validationRules.due_date"
-                  :error-messages="validationErrors.due_date" />
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <VTextField
+                  v-model="createRoyaltyData.due_date"
+                  label="Due Date *"
+                  type="date"
+                  variant="outlined"
+                  density="compact"
+                  required
+                  :rules="validationRules.due_date"
+                  :error-messages="validationErrors.due_date"
+                />
               </VCol>
 
               <!-- Base Revenue -->
-              <VCol cols="12" md="6">
-                <VTextField v-model.number="createRoyaltyData.base_revenue" label="Base Revenue (SAR) *" type="number"
-                  step="0.01" variant="outlined" density="compact" required @input="calculateAmounts"
-                  :rules="validationRules.base_revenue" :error-messages="validationErrors.base_revenue" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model.number="createRoyaltyData.base_revenue"
+                  label="Base Revenue (SAR) *"
+                  type="number"
+                  step="0.01"
+                  variant="outlined"
+                  density="compact"
+                  required
+                  :rules="validationRules.base_revenue"
+                  :error-messages="validationErrors.base_revenue"
+                  @input="calculateAmounts"
+                />
               </VCol>
 
               <!-- Royalty Rate -->
-              <VCol cols="12" md="6">
-                <VTextField v-model.number="createRoyaltyData.royalty_rate" label="Royalty Rate (%)" type="number"
-                  step="0.1" variant="outlined" density="compact" @input="calculateAmounts"
-                  :rules="validationRules.royalty_rate" :error-messages="validationErrors.royalty_rate" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model.number="createRoyaltyData.royalty_rate"
+                  label="Royalty Rate (%)"
+                  type="number"
+                  step="0.1"
+                  variant="outlined"
+                  density="compact"
+                  :rules="validationRules.royalty_rate"
+                  :error-messages="validationErrors.royalty_rate"
+                  @input="calculateAmounts"
+                />
               </VCol>
 
               <!-- Marketing Fee Rate -->
-              <VCol cols="12" md="6">
-                <VTextField v-model.number="createRoyaltyData.marketing_fee_rate" label="Marketing Fee Rate (%)"
-                  type="number" step="0.1" variant="outlined" density="compact" @input="calculateAmounts"
-                  :rules="validationRules.marketing_fee_rate" :error-messages="validationErrors.marketing_fee_rate" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model.number="createRoyaltyData.marketing_fee_rate"
+                  label="Marketing Fee Rate (%)"
+                  type="number"
+                  step="0.1"
+                  variant="outlined"
+                  density="compact"
+                  :rules="validationRules.marketing_fee_rate"
+                  :error-messages="validationErrors.marketing_fee_rate"
+                  @input="calculateAmounts"
+                />
               </VCol>
 
               <!-- Technology Fee Amount -->
-              <VCol cols="12" md="6">
-                <VTextField v-model.number="createRoyaltyData.technology_fee_amount" label="Technology Fee (SAR)"
-                  type="number" step="0.01" variant="outlined" density="compact" @input="calculateAmounts"
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model.number="createRoyaltyData.technology_fee_amount"
+                  label="Technology Fee (SAR)"
+                  type="number"
+                  step="0.01"
+                  variant="outlined"
+                  density="compact"
                   :rules="validationRules.technology_fee_amount"
-                  :error-messages="validationErrors.technology_fee_amount" />
+                  :error-messages="validationErrors.technology_fee_amount"
+                  @input="calculateAmounts"
+                />
               </VCol>
 
               <!-- Other Fees -->
-              <VCol cols="12" md="6">
-                <VTextField v-model.number="createRoyaltyData.other_fees" label="Other Fees (SAR)" type="number"
-                  step="0.01" variant="outlined" density="compact" @input="calculateAmounts"
-                  :rules="validationRules.other_fees" :error-messages="validationErrors.other_fees" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model.number="createRoyaltyData.other_fees"
+                  label="Other Fees (SAR)"
+                  type="number"
+                  step="0.01"
+                  variant="outlined"
+                  density="compact"
+                  :rules="validationRules.other_fees"
+                  :error-messages="validationErrors.other_fees"
+                  @input="calculateAmounts"
+                />
               </VCol>
 
               <!-- Adjustments -->
-              <VCol cols="12" md="6">
-                <VTextField v-model.number="createRoyaltyData.adjustments" label="Adjustments (SAR)" type="number"
-                  step="0.01" variant="outlined" density="compact" @input="calculateAmounts"
-                  :rules="validationRules.adjustments" :error-messages="validationErrors.adjustments" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model.number="createRoyaltyData.adjustments"
+                  label="Adjustments (SAR)"
+                  type="number"
+                  step="0.01"
+                  variant="outlined"
+                  density="compact"
+                  :rules="validationRules.adjustments"
+                  :error-messages="validationErrors.adjustments"
+                  @input="calculateAmounts"
+                />
               </VCol>
 
               <!-- Description -->
               <VCol cols="12">
-                <VTextarea v-model="createRoyaltyData.description" label="Description" variant="outlined"
-                  density="compact" rows="2" />
+                <VTextarea
+                  v-model="createRoyaltyData.description"
+                  label="Description"
+                  variant="outlined"
+                  density="compact"
+                  rows="2"
+                />
               </VCol>
 
               <!-- Notes -->
               <VCol cols="12">
-                <VTextarea v-model="createRoyaltyData.notes" label="Notes" variant="outlined" density="compact"
-                  rows="2" />
+                <VTextarea
+                  v-model="createRoyaltyData.notes"
+                  label="Notes"
+                  variant="outlined"
+                  density="compact"
+                  rows="2"
+                />
               </VCol>
             </VRow>
           </VForm>
@@ -888,10 +1159,19 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" :disabled="isCreating" @click="isCreateRoyaltyModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            :disabled="isCreating"
+            @click="isCreateRoyaltyModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" :loading="isCreating" @click="createRoyalty">
+          <VBtn
+            color="primary"
+            :loading="isCreating"
+            @click="createRoyalty"
+          >
             Create Royalty
           </VBtn>
         </VCardActions>
@@ -899,7 +1179,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
     </VDialog>
 
     <!-- Mark as Completed Modal -->
-    <VDialog v-model="isMarkCompletedModalVisible" max-width="600">
+    <VDialog
+      v-model="isMarkCompletedModalVisible"
+      max-width="600"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Mark Royalty as Completed</VCardTitle>
@@ -908,22 +1191,52 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
         <VCardText>
           <VForm @submit.prevent="submitPayment">
             <VRow>
-              <VCol cols="12" md="6">
-                <VTextField v-model.number="paymentData.amount_paid" label="Amount Paid (SAR)" type="number"
-                  variant="outlined" density="compact" :rules="[v => !!v || 'Amount is required']" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model.number="paymentData.amount_paid"
+                  label="Amount Paid (SAR)"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  :rules="[v => !!v || 'Amount is required']"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <VTextField v-model="paymentData.payment_date" label="Payment Date" type="date" variant="outlined"
-                  density="compact" :rules="[v => !!v || 'Payment date is required']" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model="paymentData.payment_date"
+                  label="Payment Date"
+                  type="date"
+                  variant="outlined"
+                  density="compact"
+                  :rules="[v => !!v || 'Payment date is required']"
+                />
               </VCol>
               <VCol cols="12">
-                <VSelect v-model="paymentData.payment_type" :items="paymentTypeOptions" item-title="title"
-                  item-value="value" label="Payment Type" variant="outlined" density="compact"
-                  :rules="[v => !!v || 'Payment type is required']" />
+                <VSelect
+                  v-model="paymentData.payment_type"
+                  :items="paymentTypeOptions"
+                  item-title="title"
+                  item-value="value"
+                  label="Payment Type"
+                  variant="outlined"
+                  density="compact"
+                  :rules="[v => !!v || 'Payment type is required']"
+                />
               </VCol>
               <VCol cols="12">
-                <VFileInput label="Attachment (Optional)" variant="outlined" density="compact"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" @change="handleFileUpload" />
+                <VFileInput
+                  label="Attachment (Optional)"
+                  variant="outlined"
+                  density="compact"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  @change="handleFileUpload"
+                />
                 <div class="text-caption text-medium-emphasis mt-1">
                   Supported formats: PDF, JPG, PNG, DOC, DOCX
                 </div>
@@ -934,10 +1247,17 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isMarkCompletedModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isMarkCompletedModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" @click="submitPayment">
+          <VBtn
+            color="primary"
+            @click="submitPayment"
+          >
             Mark as Completed
           </VBtn>
         </VCardActions>
@@ -945,7 +1265,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
     </VDialog>
 
     <!-- View Royalty Details Dialog -->
-    <VDialog v-model="isViewRoyaltyDialogVisible" max-width="700">
+    <VDialog
+      v-model="isViewRoyaltyDialogVisible"
+      max-width="700"
+    >
       <VCard v-if="viewedRoyalty">
         <VCardItem>
           <VCardTitle>Royalty Details</VCardTitle>
@@ -962,7 +1285,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               </h6>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Billing Period
@@ -973,7 +1299,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Due Date
@@ -984,7 +1313,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Franchisee Name
@@ -995,7 +1327,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Store Location
@@ -1014,10 +1349,21 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               </h6>
             </VCol>
 
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="info" class="pa-4">
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VCard
+                variant="tonal"
+                color="info"
+                class="pa-4"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-chart-line" size="32" class="mb-2" />
+                  <VIcon
+                    icon="tabler-chart-line"
+                    size="32"
+                    class="mb-2"
+                  />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Gross Sales
                   </div>
@@ -1028,10 +1374,21 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               </VCard>
             </VCol>
 
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="primary" class="pa-4">
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VCard
+                variant="tonal"
+                color="primary"
+                class="pa-4"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-percentage" size="32" class="mb-2" />
+                  <VIcon
+                    icon="tabler-percentage"
+                    size="32"
+                    class="mb-2"
+                  />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Royalty Rate
                   </div>
@@ -1042,10 +1399,21 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               </VCard>
             </VCol>
 
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="success" class="pa-4">
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VCard
+                variant="tonal"
+                color="success"
+                class="pa-4"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-coins" size="32" class="mb-2" />
+                  <VIcon
+                    icon="tabler-coins"
+                    size="32"
+                    class="mb-2"
+                  />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Royalty Amount
                   </div>
@@ -1064,21 +1432,34 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               </h6>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-2">
                   Payment Status
                 </div>
-                <VChip :color="getStatusColor(viewedRoyalty.status)" size="large" variant="tonal"
-                  class="text-capitalize">
-                  <VIcon :icon="viewedRoyalty.status === 'paid' ? 'tabler-check'
-                    : viewedRoyalty.status === 'pending' ? 'tabler-clock' : 'tabler-alert-triangle'" class="me-2" />
+                <VChip
+                  :color="getStatusColor(viewedRoyalty.status)"
+                  size="large"
+                  variant="tonal"
+                  class="text-capitalize"
+                >
+                  <VIcon
+                    :icon="viewedRoyalty.status === 'paid' ? 'tabler-check'
+                      : viewedRoyalty.status === 'pending' ? 'tabler-clock' : 'tabler-alert-triangle'"
+                    class="me-2"
+                  />
                   {{ viewedRoyalty.status }}
                 </VChip>
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-2">
                   Days Until Due
@@ -1144,12 +1525,22 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewRoyaltyDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewRoyaltyDialogVisible = false"
+          >
             Close
           </VBtn>
-          <VBtn v-if="viewedRoyalty.status !== 'paid'" color="primary"
-            @click="markAsCompleted(viewedRoyalty); isViewRoyaltyDialogVisible = false">
-            <VIcon icon="tabler-check" class="me-2" />
+          <VBtn
+            v-if="viewedRoyalty.status !== 'paid'"
+            color="primary"
+            @click="markAsCompleted(viewedRoyalty); isViewRoyaltyDialogVisible = false"
+          >
+            <VIcon
+              icon="tabler-check"
+              class="me-2"
+            />
             Mark as Completed
           </VBtn>
         </VCardActions>

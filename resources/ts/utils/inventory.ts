@@ -1,23 +1,23 @@
 export interface InventoryProductResponse {
-  id: number;
-  name: string;
-  description?: string;
-  unit_price?: number;
-  category?: string;
-  quantity?: number;
-  reorder_level?: number;
+  id: number
+  name: string
+  description?: string
+  unit_price?: number
+  category?: string
+  quantity?: number
+  reorder_level?: number
 }
 
 export interface InventoryProduct {
-  id: number;
-  name: string;
-  description: string;
-  unitPrice: number;
-  category: string;
-  status: string;
-  stock: number;
-  sku: string;
-  minimumStock: number;
+  id: number
+  name: string
+  description: string
+  unitPrice: number
+  category: string
+  status: string
+  stock: number
+  sku: string
+  minimumStock: number
 }
 
 /**
@@ -34,5 +34,5 @@ export function mapInventoryResponse(products: InventoryProductResponse[]): Inve
     stock: product.quantity ?? 0,
     sku: '',
     minimumStock: product.reorder_level ?? 0,
-  }));
+  }))
 }

@@ -164,20 +164,43 @@ const chartOptions = computed(() => {
     </VCardItem>
 
     <VCardText>
-      <VueApexCharts :options="chartOptions" :series="series" :height="62" />
+      <VueApexCharts
+        :options="chartOptions"
+        :series="series"
+        :height="62"
+      />
 
-      <div v-if="isLoading" class="d-flex align-center justify-space-between gap-x-2 mt-3">
-        <VSkeletonLoader type="text" width="60px" height="32px" />
-        <VSkeletonLoader type="text" width="40px" />
+      <div
+        v-if="isLoading"
+        class="d-flex align-center justify-space-between gap-x-2 mt-3"
+      >
+        <VSkeletonLoader
+          type="text"
+          width="60px"
+          height="32px"
+        />
+        <VSkeletonLoader
+          type="text"
+          width="40px"
+        />
       </div>
-      <div v-else-if="error" class="text-center text-error text-sm mt-3">
+      <div
+        v-else-if="error"
+        class="text-center text-error text-sm mt-3"
+      >
         {{ error }}
       </div>
-      <div v-else class="d-flex align-center justify-space-between gap-x-2 mt-3">
+      <div
+        v-else
+        class="d-flex align-center justify-space-between gap-x-2 mt-3"
+      >
         <h4 class="text-h4 text-center">
           {{ totalRequests.toLocaleString() }}
         </h4>
-        <div class="text-sm" :class="requestsGrowth >= 0 ? 'text-success' : 'text-error'">
+        <div
+          class="text-sm"
+          :class="requestsGrowth >= 0 ? 'text-success' : 'text-error'"
+        >
           {{ requestsGrowth >= 0 ? '+' : '' }}{{ requestsGrowth.toFixed(1) }}%
         </div>
       </div>

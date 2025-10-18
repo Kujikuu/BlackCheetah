@@ -1,6 +1,6 @@
+import type { RouteLocationNormalized } from 'vue-router'
 import { useAbility } from '@/plugins/casl/useAbility'
 import type { NavGroup } from '@layouts/types'
-import type { RouteLocationNormalized } from 'vue-router'
 
 /**
  * Returns ability result if ACL is configured or else just return true
@@ -23,8 +23,10 @@ export const can = (action: string | undefined, subject: string | undefined) => 
   if (!vm) {
     try {
       const { ability } = useAbility()
+
       return ability.can(action, subject)
-    } catch {
+    }
+    catch {
       return false
     }
   }

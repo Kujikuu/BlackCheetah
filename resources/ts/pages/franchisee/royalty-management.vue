@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api/royalty'
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
-
-
+import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api/royalty'
 
 // Loading states
 const isLoading = ref(false)
@@ -245,12 +243,26 @@ onMounted(() => {
           <!-- Header Actions -->
           <div class="d-flex gap-3 align-center flex-wrap">
             <!-- Period Selector -->
-            <VSelect v-model="selectedPeriod" :items="periodOptions" item-title="title" item-value="value"
-              density='comfortable' style="min-width: 120px;" variant="outlined" />
+            <VSelect
+              v-model="selectedPeriod"
+              :items="periodOptions"
+              item-title="title"
+              item-value="value"
+              density="comfortable"
+              style="min-width: 120px;"
+              variant="outlined"
+            />
 
             <!-- Export Button -->
-            <VBtn color="primary" variant="elevated" @click="openExportDialog">
-              <VIcon icon="tabler-download" class="me-2" />
+            <VBtn
+              color="primary"
+              variant="elevated"
+              @click="openExportDialog"
+            >
+              <VIcon
+                icon="tabler-download"
+                class="me-2"
+              />
               Export
             </VBtn>
           </div>
@@ -261,7 +273,10 @@ onMounted(() => {
     <!-- Stat Cards -->
     <VRow class="mb-6">
       <!-- Royalty Collected Till Date -->
-      <VCol cols="12" md="6">
+      <VCol
+        cols="12"
+        md="6"
+      >
         <VCard>
           <VCardText>
             <div class="d-flex align-center justify-space-between">
@@ -276,7 +291,11 @@ onMounted(() => {
                   {{ (royaltyCollectedTillDate || 0).toLocaleString() }} SAR
                 </h4>
               </div>
-              <VAvatar color="success" variant="tonal" size="56">
+              <VAvatar
+                color="success"
+                variant="tonal"
+                size="56"
+              >
                 <SaudiRiyal size="28" />
               </VAvatar>
             </div>
@@ -285,7 +304,10 @@ onMounted(() => {
       </VCol>
 
       <!-- Upcoming Royalties -->
-      <VCol cols="12" md="6">
+      <VCol
+        cols="12"
+        md="6"
+      >
         <VCard>
           <VCardText>
             <div class="d-flex align-center justify-space-between">
@@ -300,8 +322,15 @@ onMounted(() => {
                   {{ (upcomingRoyalties || 0).toLocaleString() }} SAR
                 </h4>
               </div>
-              <VAvatar color="warning" variant="tonal" size="56">
-                <VIcon icon="tabler-clock" size="28" />
+              <VAvatar
+                color="warning"
+                variant="tonal"
+                size="56"
+              >
+                <VIcon
+                  icon="tabler-clock"
+                  size="28"
+                />
               </VAvatar>
             </div>
           </VCardText>
@@ -324,7 +353,12 @@ onMounted(() => {
 
           <VDivider />
 
-          <VDataTable :headers="tableHeaders" :items="royaltyRecords" :items-per-page="10" class="text-no-wrap">
+          <VDataTable
+            :headers="tableHeaders"
+            :items="royaltyRecords"
+            :items-per-page="10"
+            class="text-no-wrap"
+          >
             <!-- Billing Period Column -->
             <template #item.billing_period="{ item }">
               <div class="font-weight-medium">
@@ -348,7 +382,11 @@ onMounted(() => {
 
             <!-- Royalty Percentage Column -->
             <template #item.royalty_percentage="{ item }">
-              <VChip size="small" variant="tonal" color="primary">
+              <VChip
+                size="small"
+                variant="tonal"
+                color="primary"
+              >
                 {{ item.royalty_percentage }}%
               </VChip>
             </template>
@@ -362,7 +400,12 @@ onMounted(() => {
 
             <!-- Status Column -->
             <template #item.status="{ item }">
-              <VChip :color="getStatusColor(item.status)" size="small" variant="tonal" class="text-capitalize">
+              <VChip
+                :color="getStatusColor(item.status)"
+                size="small"
+                variant="tonal"
+                class="text-capitalize"
+              >
                 {{ item.status }}
               </VChip>
             </template>
@@ -370,17 +413,41 @@ onMounted(() => {
             <!-- Actions Column -->
             <template #item.actions="{ item }">
               <div class="d-flex gap-2">
-                <VBtn icon size="small" color="info" variant="text" @click="viewRoyalty(item)">
-                  <VIcon icon="tabler-eye" size="20" />
-                  <VTooltip activator="parent" location="top">
+                <VBtn
+                  icon
+                  size="small"
+                  color="info"
+                  variant="text"
+                  @click="viewRoyalty(item)"
+                >
+                  <VIcon
+                    icon="tabler-eye"
+                    size="20"
+                  />
+                  <VTooltip
+                    activator="parent"
+                    location="top"
+                  >
                     View Details
                   </VTooltip>
                 </VBtn>
 
-                <VBtn v-if="item.status !== 'paid'" icon size="small" color="success" variant="text"
-                  @click="markAsCompleted(item)">
-                  <VIcon icon="tabler-check" size="20" />
-                  <VTooltip activator="parent" location="top">
+                <VBtn
+                  v-if="item.status !== 'paid'"
+                  icon
+                  size="small"
+                  color="success"
+                  variant="text"
+                  @click="markAsCompleted(item)"
+                >
+                  <VIcon
+                    icon="tabler-check"
+                    size="20"
+                  />
+                  <VTooltip
+                    activator="parent"
+                    location="top"
+                  >
                     Mark as Completed
                   </VTooltip>
                 </VBtn>
@@ -392,7 +459,10 @@ onMounted(() => {
     </VRow>
 
     <!-- Export Dialog -->
-    <VDialog v-model="isExportDialogVisible" max-width="500">
+    <VDialog
+      v-model="isExportDialogVisible"
+      max-width="500"
+    >
       <VCard class="text-center px-6 py-6">
         <VCardItem class="pb-4">
           <VCardTitle class="text-h6">
@@ -404,30 +474,56 @@ onMounted(() => {
         <VCardText>
           <VRow>
             <VCol cols="12">
-              <VSelect v-model="exportDataType" :items="exportDataTypeOptions" item-title="title" item-value="value"
-                label="Data Type" variant="outlined" density="compact" />
+              <VSelect
+                v-model="exportDataType"
+                :items="exportDataTypeOptions"
+                item-title="title"
+                item-value="value"
+                label="Data Type"
+                variant="outlined"
+                density="compact"
+              />
             </VCol>
             <VCol cols="12">
-              <VSelect v-model="exportFormat" :items="exportFormatOptions" item-title="title" item-value="value"
-                label="Export Format" variant="outlined" density="compact" />
+              <VSelect
+                v-model="exportFormat"
+                :items="exportFormatOptions"
+                item-title="title"
+                item-value="value"
+                label="Export Format"
+                variant="outlined"
+                density="compact"
+              />
             </VCol>
           </VRow>
 
-          <VAlert type="info" variant="tonal" class="mt-4">
+          <VAlert
+            type="info"
+            variant="tonal"
+            class="mt-4"
+          >
             <div class="text-body-2">
               <strong>Current Selection:</strong><br>
               Period: {{ selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1) }}<br>
-              Data Type: {{exportDataTypeOptions.find(opt => opt.value === exportDataType)?.title}}<br>
+              Data Type: {{ exportDataTypeOptions.find(opt => opt.value === exportDataType)?.title }}<br>
               Format: {{ exportFormat.toUpperCase() }}
             </div>
           </VAlert>
         </VCardText>
 
         <VCardText class="d-flex align-center justify-center gap-4">
-          <VBtn color="error" variant="outlined" @click="isExportDialogVisible = false">
+          <VBtn
+            color="error"
+            variant="outlined"
+            @click="isExportDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" variant="elevated" @click="performExport">
+          <VBtn
+            color="primary"
+            variant="elevated"
+            @click="performExport"
+          >
             Export Data
           </VBtn>
         </VCardText>
@@ -435,7 +531,10 @@ onMounted(() => {
     </VDialog>
 
     <!-- Mark as Completed Modal -->
-    <VDialog v-model="isMarkCompletedModalVisible" max-width="600">
+    <VDialog
+      v-model="isMarkCompletedModalVisible"
+      max-width="600"
+    >
       <VCard class="px-6 py-6">
         <VCardItem class="pb-4">
           <VCardTitle class="text-h6">
@@ -449,22 +548,52 @@ onMounted(() => {
         <VCardText>
           <VForm @submit.prevent="submitPayment">
             <VRow>
-              <VCol cols="12" md="6">
-                <VTextField v-model.number="paymentData.amount_paid" label="Amount Paid (SAR)" type="number"
-                  variant="outlined" density="compact" :rules="[v => !!v || 'Amount is required']" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model.number="paymentData.amount_paid"
+                  label="Amount Paid (SAR)"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  :rules="[v => !!v || 'Amount is required']"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <VTextField v-model="paymentData.payment_date" label="Payment Date" type="date" variant="outlined"
-                  density="compact" :rules="[v => !!v || 'Payment date is required']" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <VTextField
+                  v-model="paymentData.payment_date"
+                  label="Payment Date"
+                  type="date"
+                  variant="outlined"
+                  density="compact"
+                  :rules="[v => !!v || 'Payment date is required']"
+                />
               </VCol>
               <VCol cols="12">
-                <VSelect v-model="paymentData.payment_type" :items="paymentTypeOptions" item-title="title"
-                  item-value="value" label="Payment Type" variant="outlined" density="compact"
-                  :rules="[v => !!v || 'Payment type is required']" />
+                <VSelect
+                  v-model="paymentData.payment_type"
+                  :items="paymentTypeOptions"
+                  item-title="title"
+                  item-value="value"
+                  label="Payment Type"
+                  variant="outlined"
+                  density="compact"
+                  :rules="[v => !!v || 'Payment type is required']"
+                />
               </VCol>
               <VCol cols="12">
-                <VFileInput label="Attachment (Optional)" variant="outlined" density="compact"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" @change="handleFileUpload" />
+                <VFileInput
+                  label="Attachment (Optional)"
+                  variant="outlined"
+                  density="compact"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  @change="handleFileUpload"
+                />
                 <div class="text-caption text-medium-emphasis mt-1">
                   Supported formats: PDF, JPG, PNG, DOC, DOCX
                 </div>
@@ -474,10 +603,18 @@ onMounted(() => {
         </VCardText>
 
         <VCardText class="d-flex align-center justify-end gap-4">
-          <VBtn color="error" variant="outlined" @click="isMarkCompletedModalVisible = false">
+          <VBtn
+            color="error"
+            variant="outlined"
+            @click="isMarkCompletedModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="success" variant="elevated" @click="submitPayment">
+          <VBtn
+            color="success"
+            variant="elevated"
+            @click="submitPayment"
+          >
             Mark as Completed
           </VBtn>
         </VCardText>
@@ -485,11 +622,20 @@ onMounted(() => {
     </VDialog>
 
     <!-- View Royalty Details Dialog -->
-    <VDialog v-model="isViewRoyaltyDialogVisible" max-width="700">
-      <VCard v-if="viewedRoyalty" class="px-6 py-6">
+    <VDialog
+      v-model="isViewRoyaltyDialogVisible"
+      max-width="700"
+    >
+      <VCard
+        v-if="viewedRoyalty"
+        class="px-6 py-6"
+      >
         <VCardItem class="pb-4">
           <VCardTitle class="text-h6 d-flex align-center gap-3">
-            <VIcon icon="tabler-eye" color="primary" />
+            <VIcon
+              icon="tabler-eye"
+              color="primary"
+            />
             Royalty Details
           </VCardTitle>
           <VCardSubtitle>
@@ -508,7 +654,10 @@ onMounted(() => {
               </h6>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Billing Period
@@ -519,7 +668,10 @@ onMounted(() => {
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Due Date
@@ -530,7 +682,10 @@ onMounted(() => {
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Franchisee Name
@@ -541,7 +696,10 @@ onMounted(() => {
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Store Location
@@ -560,10 +718,21 @@ onMounted(() => {
               </h6>
             </VCol>
 
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="info" class="pa-4">
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VCard
+                variant="tonal"
+                color="info"
+                class="pa-4"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-chart-line" size="32" class="mb-2" />
+                  <VIcon
+                    icon="tabler-chart-line"
+                    size="32"
+                    class="mb-2"
+                  />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Gross Sales
                   </div>
@@ -574,10 +743,21 @@ onMounted(() => {
               </VCard>
             </VCol>
 
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="primary" class="pa-4">
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VCard
+                variant="tonal"
+                color="primary"
+                class="pa-4"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-percentage" size="32" class="mb-2" />
+                  <VIcon
+                    icon="tabler-percentage"
+                    size="32"
+                    class="mb-2"
+                  />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Royalty Rate
                   </div>
@@ -588,10 +768,21 @@ onMounted(() => {
               </VCard>
             </VCol>
 
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="success" class="pa-4">
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VCard
+                variant="tonal"
+                color="success"
+                class="pa-4"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-coins" size="32" class="mb-2" />
+                  <VIcon
+                    icon="tabler-coins"
+                    size="32"
+                    class="mb-2"
+                  />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Royalty Amount
                   </div>
@@ -610,21 +801,34 @@ onMounted(() => {
               </h6>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-2">
                   Payment Status
                 </div>
-                <VChip :color="getStatusColor(viewedRoyalty.status)" size="large" variant="tonal"
-                  class="text-capitalize">
-                  <VIcon :icon="viewedRoyalty.status === 'paid' ? 'tabler-check'
-                    : viewedRoyalty.status === 'pending' ? 'tabler-clock' : 'tabler-alert-triangle'" class="me-2" />
+                <VChip
+                  :color="getStatusColor(viewedRoyalty.status)"
+                  size="large"
+                  variant="tonal"
+                  class="text-capitalize"
+                >
+                  <VIcon
+                    :icon="viewedRoyalty.status === 'paid' ? 'tabler-check'
+                      : viewedRoyalty.status === 'pending' ? 'tabler-clock' : 'tabler-alert-triangle'"
+                    class="me-2"
+                  />
                   {{ viewedRoyalty.status }}
                 </VChip>
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-2">
                   Days Until Due
@@ -689,12 +893,23 @@ onMounted(() => {
         </VCardText>
 
         <VCardText class="d-flex align-center justify-end gap-4 pt-4">
-          <VBtn color="primary" variant="outlined" @click="isViewRoyaltyDialogVisible = false">
+          <VBtn
+            color="primary"
+            variant="outlined"
+            @click="isViewRoyaltyDialogVisible = false"
+          >
             Close
           </VBtn>
-          <VBtn v-if="viewedRoyalty.status !== 'paid'" color="success" variant="elevated"
-            @click="markAsCompleted(viewedRoyalty); isViewRoyaltyDialogVisible = false">
-            <VIcon icon="tabler-check" class="me-2" />
+          <VBtn
+            v-if="viewedRoyalty.status !== 'paid'"
+            color="success"
+            variant="elevated"
+            @click="markAsCompleted(viewedRoyalty); isViewRoyaltyDialogVisible = false"
+          >
+            <VIcon
+              icon="tabler-check"
+              class="me-2"
+            />
             Mark as Completed
           </VBtn>
         </VCardText>

@@ -248,13 +248,15 @@ export const useFranchisorDashboard = () => {
    * Format time ago helper
    */
   const formatTimeAgo = (dateString: string): string => {
-    if (!dateString) return 'Unknown'
+    if (!dateString)
+      return 'Unknown'
 
     const date = new Date(dateString)
 
     // Check if date is valid
     if (isNaN(date.getTime())) {
       console.warn('Invalid date string:', dateString)
+
       return 'Unknown'
     }
 

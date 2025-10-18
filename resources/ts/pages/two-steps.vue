@@ -27,7 +27,6 @@ const onFinish = async () => {
   isOtpInserted.value = true
   infoMessage.value = 'Verifying code...'
 
-
   try {
     // Simulate API call for OTP verification
     await new Promise(resolve => setTimeout(resolve, 800))
@@ -37,6 +36,7 @@ const onFinish = async () => {
       method: 'POST',
       body: {
         email: userData.value?.email,
+
         // This is a placeholder, replace with a secure way to re-authenticate
         password: 'password',
       },

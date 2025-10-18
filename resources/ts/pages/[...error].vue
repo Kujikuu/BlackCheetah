@@ -16,29 +16,37 @@ definePage({
 
 <template>
   <div class="misc-wrapper">
-    <ErrorHeader status-code="404" title="Page Not Found ⚠️"
-      description="We couldn't find the page you are looking for." />
+    <ErrorHeader
+      status-code="404"
+      title="Page Not Found ⚠️"
+      description="We couldn't find the page you are looking for."
+    />
 
-    <VBtn to="/" class="mb-11">
+    <VBtn
+      to="/"
+      class="mb-11"
+    >
       Back to Home
     </VBtn>
 
     <!-- 👉 Image -->
-    <!-- <div class="misc-avatar w-100 text-center">
+    <!--
+      <div class="misc-avatar w-100 text-center">
       <VImg
-        :src="misc404"
-        alt="error 404"
-        :max-height="$vuetify.display.smAndDown ? 350 : 500"
-        class="mx-auto"
+      :src="misc404"
+      alt="error 404"
+      :max-height="$vuetify.display.smAndDown ? 350 : 500"
+      class="mx-auto"
       />
-    </div>
+      </div>
 
-    <img
+      <img
       class="misc-footer-img d-none d-md-block"
       :src="authThemeMask"
       alt="misc-footer-img"
       height="320"
-    > -->
+      >
+    -->
   </div>
 </template>
 

@@ -179,14 +179,27 @@ const chartOptions = computed(() => {
         </div>
 
         <div v-if="isLoading">
-          <VSkeletonLoader type="text" width="100px" height="32px" class="mb-2" />
-          <VSkeletonLoader type="chip" width="60px" height="24px" />
+          <VSkeletonLoader
+            type="text"
+            width="100px"
+            height="32px"
+            class="mb-2"
+          />
+          <VSkeletonLoader
+            type="chip"
+            width="60px"
+            height="24px"
+          />
         </div>
         <div v-else-if="error">
           <h5 class="text-h3 mb-2 text-error">
             Error
           </h5>
-          <VChip label color="error" size="small">
+          <VChip
+            label
+            color="error"
+            size="small"
+          >
             Failed to load
           </VChip>
         </div>
@@ -194,18 +207,43 @@ const chartOptions = computed(() => {
           <h5 class="text-h3 mb-2">
             SAR {{ totalRevenue.toLocaleString() }}
           </h5>
-          <VChip label :color="revenueGrowth >= 0 ? 'success' : 'error'" size="small">
+          <VChip
+            label
+            :color="revenueGrowth >= 0 ? 'success' : 'error'"
+            size="small"
+          >
             {{ revenueGrowth >= 0 ? '+' : '' }}{{ revenueGrowth.toFixed(1) }}%
           </VChip>
         </div>
       </div>
       <div>
-        <VueApexCharts v-if="!isLoading && !error" :options="chartOptions" :series="series" :height="162" />
-        <div v-else-if="isLoading" class="d-flex align-center justify-center" style="height: 162px; width: 162px;">
-          <VProgressCircular indeterminate color="primary" size="40" />
+        <VueApexCharts
+          v-if="!isLoading && !error"
+          :options="chartOptions"
+          :series="series"
+          :height="162"
+        />
+        <div
+          v-else-if="isLoading"
+          class="d-flex align-center justify-center"
+          style="height: 162px; width: 162px;"
+        >
+          <VProgressCircular
+            indeterminate
+            color="primary"
+            size="40"
+          />
         </div>
-        <div v-else class="d-flex align-center justify-center" style="height: 162px; width: 162px;">
-          <VIcon icon="tabler-alert-circle" color="error" size="40" />
+        <div
+          v-else
+          class="d-flex align-center justify-center"
+          style="height: 162px; width: 162px;"
+        >
+          <VIcon
+            icon="tabler-alert-circle"
+            color="error"
+            size="40"
+          />
         </div>
       </div>
     </VCardText>

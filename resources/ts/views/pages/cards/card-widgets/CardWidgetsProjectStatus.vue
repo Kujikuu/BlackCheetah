@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { prefixWithPlus } from '@core/utils/formatters'
 import { useTheme } from 'vuetify'
+import { prefixWithPlus } from '@core/utils/formatters'
 
 const vuetifyTheme = useTheme()
 
@@ -107,7 +107,12 @@ const moreList = [
             $4,3742
           </VListItemTitle>
           <template #prepend>
-            <VAvatar color="primary" variant="tonal" rounded icon="tabler-currency-riyal" />
+            <VAvatar
+              color="primary"
+              variant="tonal"
+              rounded
+              icon="tabler-currency-riyal"
+            />
           </template>
           <VListItemSubtitle>
             Your Earnings
@@ -119,17 +124,24 @@ const moreList = [
         </VListItem>
       </VList>
 
-      <VueApexCharts :options="chartOptions" :series="series" height="208" />
+      <VueApexCharts
+        :options="chartOptions"
+        :series="series"
+        height="208"
+      />
 
       <VList class="card-list">
-        <VListItem v-for="status in projectStatus" :key="status.title">
+        <VListItem
+          v-for="status in projectStatus"
+          :key="status.title"
+        >
           <VListItemTitle class="font-weight-medium">
             {{ status.title }}
           </VListItemTitle>
           <template #append>
             <span class="me-3 text-medium-emphasis">{{ status.amount }}</span>
             <span :class="status.lossProfit > 0 ? 'text-success' : 'text-error'">{{ prefixWithPlus(status.lossProfit)
-              }}</span>
+            }}</span>
           </template>
         </VListItem>
       </VList>

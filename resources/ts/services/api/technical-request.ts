@@ -160,151 +160,140 @@ export const technicalRequestApi = {
    * Get all technical requests with filters
    */
   async getTechnicalRequests(filters?: TechnicalRequestFilters) {
-    const response = await $api<{ success: boolean; data: PaginatedResponse<TechnicalRequest>; message: string }>(
+    return await $api<{ success: boolean; data: PaginatedResponse<TechnicalRequest>; message: string }>(
       API_URL,
       {
         method: 'GET',
         params: filters,
       },
     )
-    return response
   },
 
   /**
    * Get a single technical request by ID
    */
   async getTechnicalRequest(id: number | string) {
-    const response = await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
       `${API_URL}/${id}`,
       {
         method: 'GET',
       },
     )
-    return response
   },
 
   /**
    * Create a new technical request
    */
   async createTechnicalRequest(data: CreateTechnicalRequestData) {
-    const response = await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
       API_URL,
       {
         method: 'POST',
         body: data,
       },
     )
-    return response
   },
 
   /**
    * Update a technical request
    */
   async updateTechnicalRequest(id: number | string, data: UpdateTechnicalRequestData) {
-    const response = await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
       `${API_URL}/${id}`,
       {
         method: 'PATCH',
         body: data,
       },
     )
-    return response
   },
 
   /**
    * Delete a technical request
    */
   async deleteTechnicalRequest(id: number | string) {
-    const response = await $api<{ success: boolean; message: string }>(
+    return await $api<{ success: boolean; message: string }>(
       `${API_URL}/${id}`,
       {
         method: 'DELETE',
       },
     )
-    return response
   },
 
   /**
    * Get technical request statistics
    */
   async getStatistics(filters?: { franchise_id?: number; unit_id?: number }) {
-    const response = await $api<{ success: boolean; data: TechnicalRequestStatistics; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequestStatistics; message: string }>(
       `${API_URL}/statistics`,
       {
         method: 'GET',
         params: filters,
       },
     )
-    return response
   },
 
   /**
    * Respond to a technical request
    */
   async respond(id: number | string, data: RespondData) {
-    const response = await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
       `${API_URL}/${id}/respond`,
       {
         method: 'POST',
         body: data,
       },
     )
-    return response
   },
 
   /**
    * Resolve a technical request
    */
   async resolve(id: number | string, data: ResolveData) {
-    const response = await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
       `${API_URL}/${id}/resolve`,
       {
         method: 'PATCH',
         body: data,
       },
     )
-    return response
   },
 
   /**
    * Close a technical request
    */
   async close(id: number | string, data: CloseData) {
-    const response = await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
       `${API_URL}/${id}/close`,
       {
         method: 'PATCH',
         body: data,
       },
     )
-    return response
   },
 
   /**
    * Escalate a technical request
    */
   async escalate(id: number | string) {
-    const response = await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
       `${API_URL}/${id}/escalate`,
       {
         method: 'PATCH',
       },
     )
-    return response
   },
 
   /**
    * Assign a technical request to a user
    */
   async assign(id: number | string, data: AssignData) {
-    const response = await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
       `${API_URL}/${id}/assign`,
       {
         method: 'PATCH',
         body: data,
       },
     )
-    return response
   },
 
   /**
@@ -312,67 +301,64 @@ export const technicalRequestApi = {
    */
   async addAttachments(id: number | string, files: File[]) {
     const formData = new FormData()
+
     files.forEach((file, index) => {
       formData.append(`attachments[${index}]`, file)
     })
 
-    const response = await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
+    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
       `${API_URL}/${id}/attachments`,
       {
         method: 'POST',
         body: formData,
       },
     )
-    return response
   },
 
   /**
    * Get franchisor technical requests
    */
   async getFranchisorRequests(filters?: TechnicalRequestFilters) {
-    const response = await $api<{ success: boolean; data: PaginatedResponse<TechnicalRequest>; message: string }>(
+    return await $api<{ success: boolean; data: PaginatedResponse<TechnicalRequest>; message: string }>(
       '/v1/franchisor/technical-requests',
       {
         method: 'GET',
         params: filters,
       },
     )
-    return response
   },
 
   /**
    * Get admin technical requests
    */
   async getAdminRequests(filters?: TechnicalRequestFilters) {
-    const response = await $api<{ success: boolean; data: PaginatedResponse<TechnicalRequest>; message: string }>(
+    return await $api<{ success: boolean; data: PaginatedResponse<TechnicalRequest>; message: string }>(
       '/v1/admin/technical-requests',
       {
         method: 'GET',
         params: filters,
       },
     )
-    return response
   },
 
   /**
    * Get employee technical requests
    */
   async getEmployeeRequests(filters?: TechnicalRequestFilters) {
-    const response = await $api<{ success: boolean; data: PaginatedResponse<TechnicalRequest>; message: string }>(
+    return await $api<{ success: boolean; data: PaginatedResponse<TechnicalRequest>; message: string }>(
       '/v1/employee/technical-requests',
       {
         method: 'GET',
         params: filters,
       },
     )
-    return response
   },
 
   /**
    * Bulk assign technical requests (admin only)
    */
   async bulkAssign(requestIds: number[], assignedTo: number) {
-    const response = await $api<{ success: boolean; message: string }>(
+    return await $api<{ success: boolean; message: string }>(
       '/v1/admin/technical-requests/bulk-assign',
       {
         method: 'POST',
@@ -382,14 +368,13 @@ export const technicalRequestApi = {
         },
       },
     )
-    return response
   },
 
   /**
    * Bulk resolve technical requests (admin only)
    */
   async bulkResolve(requestIds: number[], resolutionNotes: string) {
-    const response = await $api<{ success: boolean; message: string }>(
+    return await $api<{ success: boolean; message: string }>(
       '/v1/admin/technical-requests/bulk-resolve',
       {
         method: 'POST',
@@ -399,14 +384,13 @@ export const technicalRequestApi = {
         },
       },
     )
-    return response
   },
 
   /**
    * Bulk delete technical requests
    */
   async bulkDelete(requestIds: (number | string)[]) {
-    const response = await $api<{ success: boolean; message: string; count: number }>(
+    return await $api<{ success: boolean; message: string; count: number }>(
       '/v1/technical-requests/bulk-delete',
       {
         method: 'POST',
@@ -415,6 +399,5 @@ export const technicalRequestApi = {
         },
       },
     )
-    return response
   },
 }

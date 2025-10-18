@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useDisplay } from 'vuetify'
 import { leadApi } from '@/services/api/lead'
 import AdditionalDetails from '@/views/franchisor/add-lead/AdditionalDetails.vue'
 import BasicInfo from '@/views/franchisor/add-lead/BasicInfo.vue'
 import type { AddLeadData } from '@/views/franchisor/add-lead/types'
-import { useDisplay } from 'vuetify'
 
 const { mdAndUp } = useDisplay()
 
@@ -94,16 +94,33 @@ const onSubmit = async () => {
 <template>
   <VCard>
     <VRow no-gutters>
-      <VCol cols="12" md="4" lg="3" :class="mdAndUp ? 'border-e' : 'border-b'">
+      <VCol
+        cols="12"
+        md="4"
+        lg="3"
+        :class="mdAndUp ? 'border-e' : 'border-b'"
+      >
         <VCardText>
-          <AppStepper v-model:current-step="currentStep" direction="vertical" :items="addLeadSteps" icon-size="22"
-            class="stepper-icon-step-bg" />
+          <AppStepper
+            v-model:current-step="currentStep"
+            direction="vertical"
+            :items="addLeadSteps"
+            icon-size="22"
+            class="stepper-icon-step-bg"
+          />
         </VCardText>
       </VCol>
 
-      <VCol cols="12" md="8" lg="9">
+      <VCol
+        cols="12"
+        md="8"
+        lg="9"
+      >
         <VCardText>
-          <VWindow v-model="currentStep" class="disable-tab-transition">
+          <VWindow
+            v-model="currentStep"
+            class="disable-tab-transition"
+          >
             <VWindowItem>
               <BasicInfo v-model:form-data="addLeadData.basicInfo" />
             </VWindowItem>
@@ -114,20 +131,41 @@ const onSubmit = async () => {
           </VWindow>
 
           <div class="d-flex flex-wrap gap-4 justify-space-between mt-6">
-            <VBtn color="secondary" variant="tonal" :disabled="currentStep === 0" @click="currentStep--">
-              <VIcon icon="tabler-arrow-left" start class="flip-in-rtl" />
+            <VBtn
+              color="secondary"
+              variant="tonal"
+              :disabled="currentStep === 0"
+              @click="currentStep--"
+            >
+              <VIcon
+                icon="tabler-arrow-left"
+                start
+                class="flip-in-rtl"
+              />
               Previous
             </VBtn>
 
-            <VBtn v-if="addLeadSteps.length - 1 === currentStep" color="success" :loading="isLoading"
-              :disabled="isLoading" @click="onSubmit">
+            <VBtn
+              v-if="addLeadSteps.length - 1 === currentStep"
+              color="success"
+              :loading="isLoading"
+              :disabled="isLoading"
+              @click="onSubmit"
+            >
               Submit
             </VBtn>
 
-            <VBtn v-else @click="currentStep++">
+            <VBtn
+              v-else
+              @click="currentStep++"
+            >
               Next
 
-              <VIcon icon="tabler-arrow-right" end class="flip-in-rtl" />
+              <VIcon
+                icon="tabler-arrow-right"
+                end
+                class="flip-in-rtl"
+              />
             </VBtn>
           </div>
         </VCardText>

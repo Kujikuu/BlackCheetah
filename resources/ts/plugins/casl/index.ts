@@ -23,4 +23,3 @@ export default function (app: App) {
 }
 
 export { useAbility }
-

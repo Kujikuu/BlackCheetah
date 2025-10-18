@@ -1,5 +1,5 @@
-import { hexToRgb } from '@core/utils/colorConverter'
 import type { ThemeInstance } from 'vuetify'
+import { hexToRgb } from '@core/utils/colorConverter'
 
 // 👉 Colors variables
 const colorVariables = (themeColors: ThemeInstance['themes']['value']['colors']) => {
@@ -175,7 +175,7 @@ export const getBarChartConfig = (themeColors: ThemeInstance['themes']['value'][
     },
     tooltip: {
       theme: themeColors.dark ? 'dark' : 'light',
-    }
+    },
   }
 }
 

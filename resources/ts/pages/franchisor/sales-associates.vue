@@ -418,9 +418,17 @@ onMounted(() => {
       <VCardText>
         <VRow>
           <!-- 👉 Select Status -->
-          <VCol cols="12" sm="6">
-            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statuses" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="6"
+          >
+            <AppSelect
+              v-model="selectedStatus"
+              placeholder="Select Status"
+              :items="statuses"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
         </VRow>
       </VCardText>
@@ -429,17 +437,30 @@ onMounted(() => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect :model-value="itemsPerPage" :items="[
-            { value: 10, title: '10' },
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-            { value: -1, title: 'All' },
-          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+          <AppSelect
+            :model-value="itemsPerPage"
+            :items="[
+              { value: 10, title: '10' },
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+              { value: -1, title: 'All' },
+            ]"
+            style="inline-size: 6.25rem;"
+            @update:model-value="itemsPerPage = parseInt($event, 10)"
+          />
 
           <!-- Bulk Actions -->
-          <VBtn v-if="selectedRows.length > 0" variant="tonal" color="error" @click="bulkDelete">
-            <VIcon icon="tabler-trash" class="me-2" />
+          <VBtn
+            v-if="selectedRows.length > 0"
+            variant="tonal"
+            color="error"
+            @click="bulkDelete"
+          >
+            <VIcon
+              icon="tabler-trash"
+              class="me-2"
+            />
             Delete Selected ({{ selectedRows.length }})
           </VBtn>
         </div>
@@ -448,12 +469,21 @@ onMounted(() => {
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- 👉 Search  -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField v-model="searchQuery" placeholder="Search Sales Associate" />
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Search Sales Associate"
+            />
           </div>
 
           <!-- 👉 Export Menu -->
-          <VBtn variant="tonal" color="secondary">
-            <VIcon icon="tabler-upload" class="me-2" />
+          <VBtn
+            variant="tonal"
+            color="secondary"
+          >
+            <VIcon
+              icon="tabler-upload"
+              class="me-2"
+            />
             Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
             <VMenu activator="parent">
               <VList>
@@ -474,7 +504,10 @@ onMounted(() => {
           </VBtn>
 
           <!-- 👉 Add associate button -->
-          <VBtn prepend-icon="tabler-plus" @click="addSalesAssociate">
+          <VBtn
+            prepend-icon="tabler-plus"
+            @click="addSalesAssociate"
+          >
             Add Sales Associate
           </VBtn>
         </div>
@@ -483,15 +516,30 @@ onMounted(() => {
       <VDivider />
 
       <!-- SECTION datatable -->
-      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
-        :items="associates" item-value="id" :items-length="totalAssociates" :headers="headers" class="text-no-wrap"
-        show-select @update:options="updateOptions">
+      <VDataTableServer
+        v-model:items-per-page="itemsPerPage"
+        v-model:model-value="selectedRows"
+        v-model:page="page"
+        :items="associates"
+        item-value="id"
+        :items-length="totalAssociates"
+        :headers="headers"
+        class="text-no-wrap"
+        show-select
+        @update:options="updateOptions"
+      >
         <!-- Sales Associate -->
         <template #item.name="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <VAvatar size="34" :variant="!item.avatar ? 'tonal' : undefined"
-              :color="!item.avatar ? 'primary' : undefined">
-              <VImg v-if="item.avatar" :src="item.avatar" />
+            <VAvatar
+              size="34"
+              :variant="!item.avatar ? 'tonal' : undefined"
+              :color="!item.avatar ? 'primary' : undefined"
+            >
+              <VImg
+                v-if="item.avatar"
+                :src="item.avatar"
+              />
               <span v-else>{{ avatarText(item.name) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
@@ -518,7 +566,12 @@ onMounted(() => {
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+          <VChip
+            :color="resolveStatusVariant(item.status)"
+            size="small"
+            label
+            class="text-capitalize"
+          >
             {{ item.status }}
           </VChip>
         </template>
@@ -532,7 +585,11 @@ onMounted(() => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <VBtn icon variant="text" color="medium-emphasis">
+          <VBtn
+            icon
+            variant="text"
+            color="medium-emphasis"
+          >
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
@@ -563,14 +620,21 @@ onMounted(() => {
 
         <!-- pagination -->
         <template #bottom>
-          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalAssociates" />
+          <TablePagination
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total-items="totalAssociates"
+          />
         </template>
       </VDataTableServer>
       <!-- SECTION -->
     </VCard>
 
     <!-- 👉 View Associate Modal -->
-    <VDialog v-model="isViewAssociateModalVisible" max-width="600">
+    <VDialog
+      v-model="isViewAssociateModalVisible"
+      max-width="600"
+    >
       <VCard v-if="selectedAssociate">
         <VCardItem>
           <VCardTitle>Sales Associate Details</VCardTitle>
@@ -580,21 +644,32 @@ onMounted(() => {
           <VRow>
             <VCol cols="12">
               <div class="d-flex align-center gap-4 mb-6">
-                <VAvatar size="80" variant="tonal" color="primary">
+                <VAvatar
+                  size="80"
+                  variant="tonal"
+                  color="primary"
+                >
                   <span class="text-h4">{{ avatarText(selectedAssociate.name) }}</span>
                 </VAvatar>
                 <div>
                   <h4 class="text-h4 mb-1">
                     {{ selectedAssociate.name }}
                   </h4>
-                  <VChip :color="resolveStatusVariant(selectedAssociate?.status || '')" size="small" label
-                    class="text-capitalize">
+                  <VChip
+                    :color="resolveStatusVariant(selectedAssociate?.status || '')"
+                    size="small"
+                    label
+                    class="text-capitalize"
+                  >
                     {{ selectedAssociate.status }}
                   </VChip>
                 </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-sm text-disabled mb-1">
                   Email
@@ -604,7 +679,10 @@ onMounted(() => {
                 </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-sm text-disabled mb-1">
                   Phone
@@ -615,7 +693,10 @@ onMounted(() => {
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-sm text-disabled mb-1">
                   Country
@@ -625,7 +706,10 @@ onMounted(() => {
                 </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-sm text-disabled mb-1">
                   State
@@ -635,7 +719,10 @@ onMounted(() => {
                 </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-sm text-disabled mb-1">
                   City
@@ -645,7 +732,10 @@ onMounted(() => {
                 </div>
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-sm text-disabled mb-1">
                   Assigned Leads
@@ -676,16 +766,27 @@ onMounted(() => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="lead in selectedAssociate?.leads || []" :key="lead.id">
+                      <tr
+                        v-for="lead in selectedAssociate?.leads || []"
+                        :key="lead.id"
+                      >
                         <td>{{ lead.first_name }} {{ lead.last_name }}</td>
                         <td>{{ lead.email }}</td>
                         <td>
-                          <VChip :color="getLeadStatusColor(lead.status)" size="small" class="text-capitalize">
+                          <VChip
+                            :color="getLeadStatusColor(lead.status)"
+                            size="small"
+                            class="text-capitalize"
+                          >
                             {{ lead.status.replace('_', ' ') }}
                           </VChip>
                         </td>
                         <td>
-                          <VChip :color="getLeadPriorityColor(lead.priority)" size="small" class="text-capitalize">
+                          <VChip
+                            :color="getLeadPriorityColor(lead.priority)"
+                            size="small"
+                            class="text-capitalize"
+                          >
                             {{ lead.priority }}
                           </VChip>
                         </td>
@@ -700,10 +801,17 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewAssociateModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewAssociateModalVisible = false"
+          >
             Close
           </VBtn>
-          <VBtn color="primary" @click="editAssociate(selectedAssociate.id)">
+          <VBtn
+            color="primary"
+            @click="editAssociate(selectedAssociate.id)"
+          >
             Edit
           </VBtn>
         </VCardActions>
@@ -711,64 +819,138 @@ onMounted(() => {
     </VDialog>
 
     <!-- 👉 Add/Edit Associate Modal -->
-    <VDialog :model-value="isAddAssociateModalVisible || isEditAssociateModalVisible" max-width="700" persistent
-      @update:model-value="val => { if (!val) { isAddAssociateModalVisible = false; isEditAssociateModalVisible = false } }">
+    <VDialog
+      :model-value="isAddAssociateModalVisible || isEditAssociateModalVisible"
+      max-width="700"
+      persistent
+      @update:model-value="val => { if (!val) { isAddAssociateModalVisible = false; isEditAssociateModalVisible = false } }"
+    >
       <VCard v-if="selectedAssociate">
         <VCardItem>
           <VCardTitle>{{ selectedAssociate.id === null ? 'Add New' : 'Edit' }} Sales Associate</VCardTitle>
         </VCardItem>
 
         <VCardText>
-          <VForm ref="associateForm" @submit.prevent="saveAssociate">
+          <VForm
+            ref="associateForm"
+            @submit.prevent="saveAssociate"
+          >
             <VRow>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.name" label="Full Name" placeholder="Enter full name" :rules="[
-                  (v: string) => !!v || 'Full name is required',
-                  (v: string) => v.length <= 255 || 'Name must not exceed 255 characters',
-                ]" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.name"
+                  label="Full Name"
+                  placeholder="Enter full name"
+                  :rules="[
+                    (v: string) => !!v || 'Full name is required',
+                    (v: string) => v.length <= 255 || 'Name must not exceed 255 characters',
+                  ]"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.email" label="Email Address" type="email"
-                  placeholder="Enter email address" :rules="[
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.email"
+                  label="Email Address"
+                  type="email"
+                  placeholder="Enter email address"
+                  :rules="[
                     (v: string) => !!v || 'Email is required',
                     (v: string) => /.+@.+\..+/.test(v) || 'Email must be valid',
-                  ]" required />
+                  ]"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.phone" label="Phone Number" placeholder="+966 50 123 4567"
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.phone"
+                  label="Phone Number"
+                  placeholder="+966 50 123 4567"
                   :rules="[
                     (v: string) => !!v || 'Phone number is required',
                     (v: string) => v.length <= 20 || 'Phone number must not exceed 20 characters',
-                  ]" required />
+                  ]"
+                  required
+                />
               </VCol>
 
-              <VCol cols="12" md="6">
-                <AppSelect v-model="selectedAssociate.status" label="Status" :items="statuses"
-                  placeholder="Select status" :rules="[(v: string) => !!v || 'Status is required']" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="selectedAssociate.status"
+                  label="Status"
+                  :items="statuses"
+                  placeholder="Select status"
+                  :rules="[(v: string) => !!v || 'Status is required']"
+                  required
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppSelect v-model="selectedAssociate.country" label="Country" :items="countries"
-                  placeholder="Select country" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="selectedAssociate.country"
+                  label="Country"
+                  :items="countries"
+                  placeholder="Select country"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.state" label="State/Province"
-                  placeholder="Enter state or province" :rules="[
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.state"
+                  label="State/Province"
+                  placeholder="Enter state or province"
+                  :rules="[
                     (v: string) => !v || v.length <= 100 || 'State must not exceed 100 characters',
-                  ]" />
+                  ]"
+                />
               </VCol>
-              <VCol cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.city" label="City" placeholder="Enter city" :rules="[
-                  (v: string) => !v || v.length <= 100 || 'City must not exceed 100 characters',
-                ]" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.city"
+                  label="City"
+                  placeholder="Enter city"
+                  :rules="[
+                    (v: string) => !v || v.length <= 100 || 'City must not exceed 100 characters',
+                  ]"
+                />
               </VCol>
 
               <!-- Password field for new associates only -->
-              <VCol v-if="selectedAssociate.id === null" cols="12" md="6">
-                <AppTextField v-model="selectedAssociate.password" label="Password" type="password"
-                  placeholder="Enter password (minimum 8 characters)" :rules="[
+              <VCol
+                v-if="selectedAssociate.id === null"
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="selectedAssociate.password"
+                  label="Password"
+                  type="password"
+                  placeholder="Enter password (minimum 8 characters)"
+                  :rules="[
                     (v: string) => !!v || 'Password is required',
                     (v: string) => v.length >= 8 || 'Password must be at least 8 characters',
-                  ]" required />
+                  ]"
+                  required
+                />
               </VCol>
             </VRow>
           </VForm>
@@ -776,11 +958,19 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" :disabled="isSubmitting"
-            @click="isAddAssociateModalVisible = false; isEditAssociateModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            :disabled="isSubmitting"
+            @click="isAddAssociateModalVisible = false; isEditAssociateModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" :loading="isSubmitting" @click="saveAssociate">
+          <VBtn
+            color="primary"
+            :loading="isSubmitting"
+            @click="saveAssociate"
+          >
             {{ selectedAssociate.id === null ? 'Create Associate' : 'Save Changes' }}
           </VBtn>
         </VCardActions>
@@ -788,7 +978,10 @@ onMounted(() => {
     </VDialog>
 
     <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog v-model="isDeleteDialogVisible" max-width="500">
+    <VDialog
+      v-model="isDeleteDialogVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -800,10 +993,17 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" @click="deleteAssociate">
+          <VBtn
+            color="error"
+            @click="deleteAssociate"
+          >
             Delete
           </VBtn>
         </VCardActions>

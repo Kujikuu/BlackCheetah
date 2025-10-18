@@ -85,12 +85,18 @@ const pricingPlans = [
   <!-- 👉 Annual and monthly price toggler -->
 
   <div class="d-flex font-weight-medium text-body-1 align-center justify-center mx-auto mt-12 mb-6">
-    <VLabel for="pricing-plan-toggle" class="me-3">
+    <VLabel
+      for="pricing-plan-toggle"
+      class="me-3"
+    >
       Monthly
     </VLabel>
 
     <div class="position-relative">
-      <VSwitch id="pricing-plan-toggle" v-model="annualMonthlyPlanPriceToggler">
+      <VSwitch
+        id="pricing-plan-toggle"
+        v-model="annualMonthlyPlanPriceToggler"
+      >
         <template #label>
           <div class="text-body-1 font-weight-medium">
             Annually
@@ -99,8 +105,16 @@ const pricingPlans = [
       </VSwitch>
 
       <div class="save-upto-chip position-absolute align-center d-none d-md-flex gap-1">
-        <VIcon icon="tabler-corner-left-down" size="24" class="flip-in-rtl mt-2 text-disabled" />
-        <VChip label color="primary" size="small">
+        <VIcon
+          icon="tabler-corner-left-down"
+          size="24"
+          class="flip-in-rtl mt-2 text-disabled"
+        />
+        <VChip
+          label
+          color="primary"
+          size="small"
+        >
           Save up to 10%
         </VChip>
       </div>
@@ -109,19 +123,41 @@ const pricingPlans = [
 
   <!-- SECTION pricing plans -->
   <VRow>
-    <VCol v-for="plan in pricingPlans" :key="plan.logo" v-bind="props" cols="12">
+    <VCol
+      v-for="plan in pricingPlans"
+      :key="plan.logo"
+      v-bind="props"
+      cols="12"
+    >
       <!-- 👉  Card -->
-      <VCard flat border :class="plan.isPopular ? 'border-primary border-opacity-100' : ''">
-        <VCardText style="block-size: 3.75rem;" class="text-end">
+      <VCard
+        flat
+        border
+        :class="plan.isPopular ? 'border-primary border-opacity-100' : ''"
+      >
+        <VCardText
+          style="block-size: 3.75rem;"
+          class="text-end"
+        >
           <!-- 👉 Popular -->
-          <VChip v-show="plan.isPopular" label color="primary" size="small">
+          <VChip
+            v-show="plan.isPopular"
+            label
+            color="primary"
+            size="small"
+          >
             Popular
           </VChip>
         </VCardText>
 
         <!-- 👉 Plan logo -->
         <VCardText>
-          <VImg :height="120" :width="120" :src="plan.logo" class="mx-auto mb-5" />
+          <VImg
+            :height="120"
+            :width="120"
+            :src="plan.logo"
+            class="mx-auto mb-5"
+          />
 
           <!-- 👉 Plan name -->
           <h4 class="text-h4 mb-1 text-center">
@@ -147,8 +183,10 @@ const pricingPlans = [
             </div>
 
             <!-- 👉 Annual Price -->
-            <span v-show="annualMonthlyPlanPriceToggler"
-              class="annual-price-text position-absolute text-caption text-disabled pb-4">
+            <span
+              v-show="annualMonthlyPlanPriceToggler"
+              class="annual-price-text position-absolute text-caption text-disabled pb-4"
+            >
               {{ plan.yearlyPrice === 0 ? 'free' : `SAR ${plan.yearlyPrice}/Year` }}
             </span>
           </div>
@@ -156,10 +194,16 @@ const pricingPlans = [
           <!-- 👉 Plan features -->
 
           <VList class="card-list mb-4">
-            <VListItem v-for="feature in plan.features" :key="feature">
+            <VListItem
+              v-for="feature in plan.features"
+              :key="feature"
+            >
               <template #prepend>
-                <VIcon size="8" icon="tabler-circle-filled"
-                  color="rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity))" />
+                <VIcon
+                  size="8"
+                  icon="tabler-circle-filled"
+                  color="rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity))"
+                />
               </template>
 
               <VListItemTitle class="text-body-1">
@@ -169,8 +213,13 @@ const pricingPlans = [
           </VList>
 
           <!-- 👉 Plan actions -->
-          <VBtn block :color="plan.current ? 'success' : 'primary'" :variant="plan.isPopular ? 'elevated' : 'tonal'"
-            :to="{ name: 'front-pages-payment' }" :active="false">
+          <VBtn
+            block
+            :color="plan.current ? 'success' : 'primary'"
+            :variant="plan.isPopular ? 'elevated' : 'tonal'"
+            :to="{ name: 'front-pages-payment' }"
+            :active="false"
+          >
             {{ plan.yearlyPrice === 0 ? 'Your Current Plan' : 'Upgrade' }}
           </VBtn>
         </VCardText>

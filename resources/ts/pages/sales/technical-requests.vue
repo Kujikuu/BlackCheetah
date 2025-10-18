@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watch } from 'vue'
-import { technicalRequestApi, type TechnicalRequest } from '@/services/api/technical-request'
+import { computed, onMounted, ref, watch } from 'vue'
+import { type TechnicalRequest, technicalRequestApi } from '@/services/api/technical-request'
 
 // Local display interface
 interface DisplayRequest {
@@ -122,6 +122,7 @@ const mapToDisplayRequest = (apiRequest: TechnicalRequest): DisplayRequest => {
 const fetchRequests = async () => {
   try {
     isLoading.value = true
+
     const response = await technicalRequestApi.getTechnicalRequests({
       status: selectedStatus.value?.replace('-', '_'),
       priority: selectedPriority.value,
@@ -129,6 +130,7 @@ const fetchRequests = async () => {
       per_page: itemsPerPage.value,
       page: page.value,
     })
+
     technicalRequests.value = response.data.data.map(mapToDisplayRequest)
     totalRequests.value = response.data.total
   }
@@ -222,9 +224,8 @@ const mockRequests = ref([
 ])
 
 // Use mock data initially
-if (technicalRequests.value.length === 0) {
+if (technicalRequests.value.length === 0)
   technicalRequests.value = mockRequests.value as any
-}
 
 // Filtered data - API handles filtering
 const filteredRequests = computed(() => technicalRequests.value)
@@ -311,7 +312,7 @@ const confirmDelete = () => {
 const showBulkDeleteConfirmation = () => {
   if (selectedRows.value.length === 0)
     return
-  
+
   isBulkDeleteConfirmDialogVisible.value = true
 }
 
@@ -320,16 +321,16 @@ const confirmBulkDelete = async () => {
   try {
     isLoading.value = true
     await technicalRequestApi.bulkDelete(selectedRows.value)
-    
+
     // Refresh the list after deletion
     await fetchRequests()
-    
+
     // Clear selection
     selectedRows.value = []
-    
+
     // Close dialog
     isBulkDeleteConfirmDialogVisible.value = false
-    
+
     console.log('Bulk delete successful')
   }
   catch (error) {

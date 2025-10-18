@@ -147,21 +147,44 @@ const chartOptions = {
       </VCardSubtitle>
     </VCardItem>
 
-    <VueApexCharts :options="chartOptions" :series="series" :height="68" />
+    <VueApexCharts
+      :options="chartOptions"
+      :series="series"
+      :height="68"
+    />
 
     <VCardText class="pt-1">
-      <div v-if="isLoading" class="d-flex align-center justify-space-between gap-x-2">
-        <VSkeletonLoader type="text" width="60px" height="32px" />
-        <VSkeletonLoader type="text" width="40px" />
+      <div
+        v-if="isLoading"
+        class="d-flex align-center justify-space-between gap-x-2"
+      >
+        <VSkeletonLoader
+          type="text"
+          width="60px"
+          height="32px"
+        />
+        <VSkeletonLoader
+          type="text"
+          width="40px"
+        />
       </div>
-      <div v-else-if="error" class="text-center text-error text-sm">
+      <div
+        v-else-if="error"
+        class="text-center text-error text-sm"
+      >
         {{ error }}
       </div>
-      <div v-else class="d-flex align-center justify-space-between gap-x-2">
+      <div
+        v-else
+        class="d-flex align-center justify-space-between gap-x-2"
+      >
         <h4 class="text-h4 text-center">
           {{ totalUsers.toLocaleString() }}
         </h4>
-        <span class="text-sm" :class="userGrowth >= 0 ? 'text-success' : 'text-error'">
+        <span
+          class="text-sm"
+          :class="userGrowth >= 0 ? 'text-success' : 'text-error'"
+        >
           {{ userGrowth >= 0 ? '+' : '' }}{{ userGrowth.toFixed(1) }}%
         </span>
       </div>

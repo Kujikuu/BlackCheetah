@@ -391,21 +391,21 @@ const saveTask = async () => {
 }
 
 // 👉 Watch for tab changes to initialize users
-watch(currentTab, async (newTab) => {
+watch(currentTab, async newTab => {
   await initializeUsers(newTab as 'franchisee' | 'sales')
 })
 
 // 👉 Watch for edit modal visibility to initialize users
-watch(isEditTaskModalVisible, async (isVisible) => {
-  if (isVisible) {
+watch(isEditTaskModalVisible, async isVisible => {
+  if (isVisible)
     await initializeUsers(currentTab.value as 'franchisee' | 'sales')
-  }
 })
 
 // 👉 Load data on component mount
 onMounted(async () => {
   loadFranchiseeTasks()
   loadSalesTasks()
+
   // Initialize users for the default tab
   await initializeUsers(currentTab.value as 'franchisee' | 'sales')
 })
@@ -425,7 +425,11 @@ onMounted(async () => {
               Manage and track tasks across franchisees and sales teams
             </p>
           </div>
-          <VBtn color="primary" prepend-icon="tabler-plus" @click="isAddTaskModalVisible = true">
+          <VBtn
+            color="primary"
+            prepend-icon="tabler-plus"
+            @click="isAddTaskModalVisible = true"
+          >
             Create Task
           </VBtn>
         </div>
@@ -433,29 +437,54 @@ onMounted(async () => {
     </VRow>
 
     <!-- Tabs -->
-    <VTabs v-model="currentTab" class="mb-6">
+    <VTabs
+      v-model="currentTab"
+      class="mb-6"
+    >
       <VTab value="franchisee">
-        <VIcon icon="tabler-building-store" start />
+        <VIcon
+          icon="tabler-building-store"
+          start
+        />
         Franchisee Tasks
       </VTab>
       <VTab value="sales">
-        <VIcon icon="tabler-user-star" start />
+        <VIcon
+          icon="tabler-user-star"
+          start
+        />
         Sales Tasks
       </VTab>
     </VTabs>
 
-    <VWindow v-model="currentTab" class="disable-tab-transition">
+    <VWindow
+      v-model="currentTab"
+      class="disable-tab-transition"
+    >
       <!-- Franchisee Tasks Tab -->
       <VWindowItem value="franchisee">
         <!-- Error Alert -->
-        <VAlert v-if="franchiseeError" type="error" variant="tonal" class="mb-4" closable
-          @click:close="franchiseeError = null">
+        <VAlert
+          v-if="franchiseeError"
+          type="error"
+          variant="tonal"
+          class="mb-4"
+          closable
+          @click:close="franchiseeError = null"
+        >
           {{ franchiseeError }}
         </VAlert>
 
         <!-- Loading State -->
-        <div v-if="franchiseeLoading" class="text-center py-12">
-          <VProgressCircular indeterminate size="64" class="mb-4" />
+        <div
+          v-if="franchiseeLoading"
+          class="text-center py-12"
+        >
+          <VProgressCircular
+            indeterminate
+            size="64"
+            class="mb-4"
+          />
           <h3 class="text-h3 mb-2">
             Loading Franchisee Tasks...
           </h3>
@@ -468,11 +497,22 @@ onMounted(async () => {
         <template v-else>
           <!-- Stats Cards -->
           <VRow class="mb-6">
-            <VCol cols="12" md="3">
+            <VCol
+              cols="12"
+              md="3"
+            >
               <VCard>
                 <VCardText class="d-flex align-center">
-                  <VAvatar size="44" rounded color="primary" variant="tonal">
-                    <VIcon icon="tabler-checklist" size="26" />
+                  <VAvatar
+                    size="44"
+                    rounded
+                    color="primary"
+                    variant="tonal"
+                  >
+                    <VIcon
+                      icon="tabler-checklist"
+                      size="26"
+                    />
                   </VAvatar>
                   <div class="ms-4">
                     <div class="text-body-2 text-disabled">
@@ -485,11 +525,22 @@ onMounted(async () => {
                 </VCardText>
               </VCard>
             </VCol>
-            <VCol cols="12" md="3">
+            <VCol
+              cols="12"
+              md="3"
+            >
               <VCard>
                 <VCardText class="d-flex align-center">
-                  <VAvatar size="44" rounded color="success" variant="tonal">
-                    <VIcon icon="tabler-check" size="26" />
+                  <VAvatar
+                    size="44"
+                    rounded
+                    color="success"
+                    variant="tonal"
+                  >
+                    <VIcon
+                      icon="tabler-check"
+                      size="26"
+                    />
                   </VAvatar>
                   <div class="ms-4">
                     <div class="text-body-2 text-disabled">
@@ -502,11 +553,22 @@ onMounted(async () => {
                 </VCardText>
               </VCard>
             </VCol>
-            <VCol cols="12" md="3">
+            <VCol
+              cols="12"
+              md="3"
+            >
               <VCard>
                 <VCardText class="d-flex align-center">
-                  <VAvatar size="44" rounded color="warning" variant="tonal">
-                    <VIcon icon="tabler-clock" size="26" />
+                  <VAvatar
+                    size="44"
+                    rounded
+                    color="warning"
+                    variant="tonal"
+                  >
+                    <VIcon
+                      icon="tabler-clock"
+                      size="26"
+                    />
                   </VAvatar>
                   <div class="ms-4">
                     <div class="text-body-2 text-disabled">
@@ -519,11 +581,22 @@ onMounted(async () => {
                 </VCardText>
               </VCard>
             </VCol>
-            <VCol cols="12" md="3">
+            <VCol
+              cols="12"
+              md="3"
+            >
               <VCard>
                 <VCardText class="d-flex align-center">
-                  <VAvatar size="44" rounded color="error" variant="tonal">
-                    <VIcon icon="tabler-alert-circle" size="26" />
+                  <VAvatar
+                    size="44"
+                    rounded
+                    color="error"
+                    variant="tonal"
+                  >
+                    <VIcon
+                      icon="tabler-alert-circle"
+                      size="26"
+                    />
                   </VAvatar>
                   <div class="ms-4">
                     <div class="text-body-2 text-disabled">
@@ -549,8 +622,13 @@ onMounted(async () => {
 
             <VDivider />
 
-            <VDataTable v-if="franchiseeTasksData.length > 0" :items="franchiseeTasksData" :headers="taskHeaders"
-              class="text-no-wrap" item-value="id">
+            <VDataTable
+              v-if="franchiseeTasksData.length > 0"
+              :items="franchiseeTasksData"
+              :headers="taskHeaders"
+              class="text-no-wrap"
+              item-value="id"
+            >
               <!-- Task Info -->
               <template #item.taskInfo="{ item }">
                 <div>
@@ -572,21 +650,36 @@ onMounted(async () => {
 
               <!-- Priority -->
               <template #item.priority="{ item }">
-                <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
+                <VChip
+                  :color="resolvePriorityVariant(item.priority)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
                   {{ item.priority }}
                 </VChip>
               </template>
 
               <!-- Status -->
               <template #item.status="{ item }">
-                <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+                <VChip
+                  :color="resolveStatusVariant(item.status)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
                   {{ item.status }}
                 </VChip>
               </template>
 
               <!-- Actions -->
               <template #item.actions="{ item }">
-                <VBtn icon variant="text" color="medium-emphasis" size="small">
+                <VBtn
+                  icon
+                  variant="text"
+                  color="medium-emphasis"
+                  size="small"
+                >
                   <VIcon icon="tabler-dots-vertical" />
                   <VMenu activator="parent">
                     <VList>
@@ -615,9 +708,16 @@ onMounted(async () => {
             </VDataTable>
 
             <!-- Empty State -->
-            <VCardText v-else class="py-8">
+            <VCardText
+              v-else
+              class="py-8"
+            >
               <div class="text-center">
-                <VIcon icon="tabler-checklist" size="64" class="text-disabled mb-4" />
+                <VIcon
+                  icon="tabler-checklist"
+                  size="64"
+                  class="text-disabled mb-4"
+                />
                 <h4 class="text-h4 mb-2">
                   No Franchisee Tasks Found
                 </h4>
@@ -634,13 +734,27 @@ onMounted(async () => {
       <!-- Sales Tasks Tab -->
       <VWindowItem value="sales">
         <!-- Error Alert -->
-        <VAlert v-if="salesError" type="error" variant="tonal" class="mb-4" closable @click:close="salesError = null">
+        <VAlert
+          v-if="salesError"
+          type="error"
+          variant="tonal"
+          class="mb-4"
+          closable
+          @click:close="salesError = null"
+        >
           {{ salesError }}
         </VAlert>
 
         <!-- Loading State -->
-        <div v-if="salesLoading" class="text-center py-12">
-          <VProgressCircular indeterminate size="64" class="mb-4" />
+        <div
+          v-if="salesLoading"
+          class="text-center py-12"
+        >
+          <VProgressCircular
+            indeterminate
+            size="64"
+            class="mb-4"
+          />
           <h3 class="text-h3 mb-2">
             Loading Sales Tasks...
           </h3>
@@ -653,11 +767,22 @@ onMounted(async () => {
         <template v-else>
           <!-- Stats Cards -->
           <VRow class="mb-6">
-            <VCol cols="12" md="3">
+            <VCol
+              cols="12"
+              md="3"
+            >
               <VCard>
                 <VCardText class="d-flex align-center">
-                  <VAvatar size="44" rounded color="primary" variant="tonal">
-                    <VIcon icon="tabler-checklist" size="26" />
+                  <VAvatar
+                    size="44"
+                    rounded
+                    color="primary"
+                    variant="tonal"
+                  >
+                    <VIcon
+                      icon="tabler-checklist"
+                      size="26"
+                    />
                   </VAvatar>
                   <div class="ms-4">
                     <div class="text-body-2 text-disabled">
@@ -670,11 +795,22 @@ onMounted(async () => {
                 </VCardText>
               </VCard>
             </VCol>
-            <VCol cols="12" md="3">
+            <VCol
+              cols="12"
+              md="3"
+            >
               <VCard>
                 <VCardText class="d-flex align-center">
-                  <VAvatar size="44" rounded color="success" variant="tonal">
-                    <VIcon icon="tabler-check" size="26" />
+                  <VAvatar
+                    size="44"
+                    rounded
+                    color="success"
+                    variant="tonal"
+                  >
+                    <VIcon
+                      icon="tabler-check"
+                      size="26"
+                    />
                   </VAvatar>
                   <div class="ms-4">
                     <div class="text-body-2 text-disabled">
@@ -687,11 +823,22 @@ onMounted(async () => {
                 </VCardText>
               </VCard>
             </VCol>
-            <VCol cols="12" md="3">
+            <VCol
+              cols="12"
+              md="3"
+            >
               <VCard>
                 <VCardText class="d-flex align-center">
-                  <VAvatar size="44" rounded color="warning" variant="tonal">
-                    <VIcon icon="tabler-clock" size="26" />
+                  <VAvatar
+                    size="44"
+                    rounded
+                    color="warning"
+                    variant="tonal"
+                  >
+                    <VIcon
+                      icon="tabler-clock"
+                      size="26"
+                    />
                   </VAvatar>
                   <div class="ms-4">
                     <div class="text-body-2 text-disabled">
@@ -704,11 +851,22 @@ onMounted(async () => {
                 </VCardText>
               </VCard>
             </VCol>
-            <VCol cols="12" md="3">
+            <VCol
+              cols="12"
+              md="3"
+            >
               <VCard>
                 <VCardText class="d-flex align-center">
-                  <VAvatar size="44" rounded color="error" variant="tonal">
-                    <VIcon icon="tabler-alert-circle" size="26" />
+                  <VAvatar
+                    size="44"
+                    rounded
+                    color="error"
+                    variant="tonal"
+                  >
+                    <VIcon
+                      icon="tabler-alert-circle"
+                      size="26"
+                    />
                   </VAvatar>
                   <div class="ms-4">
                     <div class="text-body-2 text-disabled">
@@ -734,8 +892,13 @@ onMounted(async () => {
 
             <VDivider />
 
-            <VDataTable v-if="salesTasksData.length > 0" :items="salesTasksData" :headers="taskHeaders"
-              class="text-no-wrap" item-value="id">
+            <VDataTable
+              v-if="salesTasksData.length > 0"
+              :items="salesTasksData"
+              :headers="taskHeaders"
+              class="text-no-wrap"
+              item-value="id"
+            >
               <!-- Task Info -->
               <template #item.taskInfo="{ item }">
                 <div>
@@ -757,21 +920,36 @@ onMounted(async () => {
 
               <!-- Priority -->
               <template #item.priority="{ item }">
-                <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
+                <VChip
+                  :color="resolvePriorityVariant(item.priority)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
                   {{ item.priority }}
                 </VChip>
               </template>
 
               <!-- Status -->
               <template #item.status="{ item }">
-                <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+                <VChip
+                  :color="resolveStatusVariant(item.status)"
+                  size="small"
+                  label
+                  class="text-capitalize"
+                >
                   {{ item.status }}
                 </VChip>
               </template>
 
               <!-- Actions -->
               <template #item.actions="{ item }">
-                <VBtn icon variant="text" color="medium-emphasis" size="small">
+                <VBtn
+                  icon
+                  variant="text"
+                  color="medium-emphasis"
+                  size="small"
+                >
                   <VIcon icon="tabler-dots-vertical" />
                   <VMenu activator="parent">
                     <VList>
@@ -800,9 +978,16 @@ onMounted(async () => {
             </VDataTable>
 
             <!-- Empty State -->
-            <VCardText v-else class="py-8">
+            <VCardText
+              v-else
+              class="py-8"
+            >
               <div class="text-center">
-                <VIcon icon="tabler-user-star" size="64" class="text-disabled mb-4" />
+                <VIcon
+                  icon="tabler-user-star"
+                  size="64"
+                  class="text-disabled mb-4"
+                />
                 <h4 class="text-h4 mb-2">
                   No Sales Tasks Found
                 </h4>
@@ -817,11 +1002,17 @@ onMounted(async () => {
     </VWindow>
 
     <!-- Create Task Modal -->
-    <CreateTaskModal v-model:is-dialog-visible="isAddTaskModalVisible" :current-tab="currentTab"
-      @task-created="onTaskCreated" />
+    <CreateTaskModal
+      v-model:is-dialog-visible="isAddTaskModalVisible"
+      :current-tab="currentTab"
+      @task-created="onTaskCreated"
+    />
 
     <!-- View Task Modal -->
-    <VDialog v-model="isViewTaskModalVisible" max-width="600">
+    <VDialog
+      v-model="isViewTaskModalVisible"
+      max-width="600"
+    >
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
           Task Details
@@ -829,7 +1020,10 @@ onMounted(async () => {
 
         <VDivider />
 
-        <VCardText v-if="selectedTask" class="pa-6">
+        <VCardText
+          v-if="selectedTask"
+          class="pa-6"
+        >
           <VRow>
             <VCol cols="12">
               <h6 class="text-h6 mb-2">
@@ -839,7 +1033,10 @@ onMounted(async () => {
                 {{ selectedTask.description }}
               </p>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="text-body-2 text-disabled mb-1">
                 Category
               </div>
@@ -847,7 +1044,10 @@ onMounted(async () => {
                 {{ selectedTask.category }}
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="text-body-2 text-disabled mb-1">
                 Assigned To
               </div>
@@ -855,7 +1055,10 @@ onMounted(async () => {
                 {{ selectedTask.assignedTo }}
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="text-body-2 text-disabled mb-1">
                 Start Date
               </div>
@@ -863,7 +1066,10 @@ onMounted(async () => {
                 {{ selectedTask.startDate }}
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="text-body-2 text-disabled mb-1">
                 Due Date
               </div>
@@ -871,19 +1077,35 @@ onMounted(async () => {
                 {{ selectedTask.dueDate }}
               </div>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="text-body-2 text-disabled mb-1">
                 Priority
               </div>
-              <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label class="text-capitalize">
+              <VChip
+                :color="resolvePriorityVariant(selectedTask.priority)"
+                size="small"
+                label
+                class="text-capitalize"
+              >
                 {{ selectedTask.priority }}
               </VChip>
             </VCol>
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="text-body-2 text-disabled mb-1">
                 Status
               </div>
-              <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize">
+              <VChip
+                :color="resolveStatusVariant(selectedTask.status)"
+                size="small"
+                label
+                class="text-capitalize"
+              >
                 {{ selectedTask.status }}
               </VChip>
             </VCol>
@@ -894,7 +1116,11 @@ onMounted(async () => {
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewTaskModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewTaskModalVisible = false"
+          >
             Close
           </VBtn>
         </VCardActions>
@@ -902,7 +1128,11 @@ onMounted(async () => {
     </VDialog>
 
     <!-- Edit Task Modal -->
-    <VDialog v-model="isEditTaskModalVisible" max-width="600" persistent>
+    <VDialog
+      v-model="isEditTaskModalVisible"
+      max-width="600"
+      persistent
+    >
       <VCard>
         <VCardTitle class="text-h5 pa-6 pb-4">
           Edit Task
@@ -910,40 +1140,120 @@ onMounted(async () => {
 
         <VDivider />
 
-        <VCardText v-if="selectedTask" class="pa-6">
+        <VCardText
+          v-if="selectedTask"
+          class="pa-6"
+        >
           <VRow>
             <VCol cols="12">
-              <VTextField v-model="selectedTask.title" label="Task Title" placeholder="Enter task title" required />
+              <VTextField
+                v-model="selectedTask.title"
+                label="Task Title"
+                placeholder="Enter task title"
+                required
+              />
             </VCol>
             <VCol cols="12">
-              <VTextarea v-model="selectedTask.description" label="Description" placeholder="Enter task description"
-                rows="3" required />
+              <VTextarea
+                v-model="selectedTask.description"
+                label="Description"
+                placeholder="Enter task description"
+                rows="3"
+                required
+              />
             </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="selectedTask.category" label="Category" placeholder="Select category"
-                :items="TASK_CATEGORIES" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VSelect
+                v-model="selectedTask.category"
+                label="Category"
+                placeholder="Select category"
+                :items="TASK_CATEGORIES"
+                required
+              />
             </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="selectedTask.assignedTo" label="Assigned To" placeholder="Select user"
-                :items="userOptions" :loading="usersLoading" item-title="title" item-value="value" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VSelect
+                v-model="selectedTask.assignedTo"
+                label="Assigned To"
+                placeholder="Select user"
+                :items="userOptions"
+                :loading="usersLoading"
+                item-title="title"
+                item-value="value"
+                required
+              />
             </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedTask.startDate" label="Start Date" type="date" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="selectedTask.startDate"
+                label="Start Date"
+                type="date"
+                required
+              />
             </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedTask.dueDate" label="Due Date" type="date" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="selectedTask.dueDate"
+                label="Due Date"
+                type="date"
+                required
+              />
             </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="selectedTask.priority" label="Priority" :items="PRIORITY_OPTIONS" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VSelect
+                v-model="selectedTask.priority"
+                label="Priority"
+                :items="PRIORITY_OPTIONS"
+                required
+              />
             </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="selectedTask.status" label="Status" :items="STATUS_OPTIONS" required />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VSelect
+                v-model="selectedTask.status"
+                label="Status"
+                :items="STATUS_OPTIONS"
+                required
+              />
             </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedTask.estimatedHours" label="Estimated Hours" type="number" min="0" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="selectedTask.estimatedHours"
+                label="Estimated Hours"
+                type="number"
+                min="0"
+              />
             </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedTask.actualHours" label="Actual Hours" type="number" min="0" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="selectedTask.actualHours"
+                label="Actual Hours"
+                type="number"
+                min="0"
+              />
             </VCol>
           </VRow>
         </VCardText>
@@ -952,10 +1262,17 @@ onMounted(async () => {
 
         <VCardActions class="pa-6">
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isEditTaskModalVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isEditTaskModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" @click="saveTask">
+          <VBtn
+            color="primary"
+            @click="saveTask"
+          >
             Save Changes
           </VBtn>
         </VCardActions>
@@ -963,7 +1280,10 @@ onMounted(async () => {
     </VDialog>
 
     <!-- Delete Confirmation Dialog -->
-    <VDialog v-model="isDeleteDialogVisible" max-width="500">
+    <VDialog
+      v-model="isDeleteDialogVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -975,10 +1295,17 @@ onMounted(async () => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" @click="deleteTask">
+          <VBtn
+            color="error"
+            @click="deleteTask"
+          >
             Delete
           </VBtn>
         </VCardActions>

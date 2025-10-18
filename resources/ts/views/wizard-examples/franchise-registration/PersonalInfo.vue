@@ -52,22 +52,57 @@ const countries = [
 
     <VForm>
       <VRow>
-        <VCol cols="12" md="6">
-          <AppTextField v-model="localFormData.contactNumber" label="Contact Number"
-            placeholder="Enter your contact number" required />
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <AppTextField
+            v-model="localFormData.contactNumber"
+            label="Contact Number"
+            placeholder="Enter your contact number"
+            required
+          />
         </VCol>
-        <VCol cols="12" md="6">
-          <AppSelect v-model="localFormData.country" label="Country" :items="countries" placeholder="Select country"
-            required />
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <AppSelect
+            v-model="localFormData.country"
+            label="Country"
+            :items="countries"
+            placeholder="Select country"
+            required
+          />
         </VCol>
-        <VCol cols="12" md="6">
-          <AppTextField v-model="localFormData.state" label="State/Province" placeholder="Enter state or province" />
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <AppTextField
+            v-model="localFormData.state"
+            label="State/Province"
+            placeholder="Enter state or province"
+          />
         </VCol>
-        <VCol cols="12" md="6">
-          <AppTextField v-model="localFormData.city" label="City" placeholder="Enter city" required />
+        <VCol
+          cols="12"
+          md="6"
+        >
+          <AppTextField
+            v-model="localFormData.city"
+            label="City"
+            placeholder="Enter city"
+            required
+          />
         </VCol>
         <VCol cols="12">
-          <AppTextarea v-model="localFormData.address" label="Address" placeholder="Enter your full address" rows="3" />
+          <AppTextarea
+            v-model="localFormData.address"
+            label="Address"
+            placeholder="Enter your full address"
+            rows="3"
+          />
         </VCol>
       </VRow>
     </VForm>

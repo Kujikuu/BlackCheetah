@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CheckoutData } from './types';
+import type { CheckoutData } from './types'
 
 const prop = defineProps<{
   currentStep?: number
@@ -48,9 +48,19 @@ watch(() => prop.currentStep, updateCartData)
 
 <template>
   <VRow>
-    <VCol cols="12" md="8">
+    <VCol
+      cols="12"
+      md="8"
+    >
       <!-- 👉 Offers alert -->
-      <VAlert type="success" class="mb-6" variant="tonal" icon="tabler-percentage" title="Available Offer" closable>
+      <VAlert
+        type="success"
+        class="mb-6"
+        variant="tonal"
+        icon="tabler-percentage"
+        title="Available Offer"
+        closable
+      >
         <template #text>
           <p class="mb-0">
             - 0% Instant Discount on Bank of America Corp Bank Debit and Credit cards
@@ -60,7 +70,11 @@ watch(() => prop.currentStep, updateCartData)
         </template>
       </VAlert>
 
-      <VTabs v-model="selectedPaymentMethod" class="v-tabs-pill" density="comfortable">
+      <VTabs
+        v-model="selectedPaymentMethod"
+        class="v-tabs-pill"
+        density="comfortable"
+      >
         <VTab value="card">
           Card
         </VTab>
@@ -72,43 +86,95 @@ watch(() => prop.currentStep, updateCartData)
         </VTab>
       </VTabs>
 
-      <VWindow v-model="selectedPaymentMethod" style="max-inline-size: 600px;" :touch="false">
-        <VWindowItem value="card" class="ms-n3">
+      <VWindow
+        v-model="selectedPaymentMethod"
+        style="max-inline-size: 600px;"
+        :touch="false"
+      >
+        <VWindowItem
+          value="card"
+          class="ms-n3"
+        >
           <VForm class="mt-3">
             <VRow class="ma-0 pa-n2">
               <VCol cols="12">
-                <AppTextField v-model="cardFormData.cardNumber" type="number" label="Card Number"
-                  placeholder="1356 3215 6548 7898" />
+                <AppTextField
+                  v-model="cardFormData.cardNumber"
+                  type="number"
+                  label="Card Number"
+                  placeholder="1356 3215 6548 7898"
+                />
               </VCol>
 
-              <VCol cols="12" md="4">
-                <AppTextField v-model="cardFormData.cardName" label="Name" placeholder="Name on Card" />
+              <VCol
+                cols="12"
+                md="4"
+              >
+                <AppTextField
+                  v-model="cardFormData.cardName"
+                  label="Name"
+                  placeholder="Name on Card"
+                />
               </VCol>
 
-              <VCol cols="6" md="4">
-                <AppTextField v-model="cardFormData.cardExpiry" label="Expiry" placeholder="MM/YY" />
+              <VCol
+                cols="6"
+                md="4"
+              >
+                <AppTextField
+                  v-model="cardFormData.cardExpiry"
+                  label="Expiry"
+                  placeholder="MM/YY"
+                />
               </VCol>
 
-              <VCol cols="6" md="4">
-                <AppTextField v-model="cardFormData.cardCvv" label="CVV" placeholder="123" type="number">
+              <VCol
+                cols="6"
+                md="4"
+              >
+                <AppTextField
+                  v-model="cardFormData.cardCvv"
+                  label="CVV"
+                  placeholder="123"
+                  type="number"
+                >
                   <template #append-inner>
-                    <VTooltip text="Card Verification Value" location="bottom">
+                    <VTooltip
+                      text="Card Verification Value"
+                      location="bottom"
+                    >
                       <template #activator="{ props: tooltipProps }">
-                        <VIcon v-bind="tooltipProps" size="20" icon="tabler-help" />
+                        <VIcon
+                          v-bind="tooltipProps"
+                          size="20"
+                          icon="tabler-help"
+                        />
                       </template>
                     </VTooltip>
                   </template>
                 </AppTextField>
               </VCol>
 
-              <VCol cols="12" class="pt-1">
-                <VSwitch v-model="cardFormData.isCardSave" label="Save Card for future billing?" />
+              <VCol
+                cols="12"
+                class="pt-1"
+              >
+                <VSwitch
+                  v-model="cardFormData.isCardSave"
+                  label="Save Card for future billing?"
+                />
 
                 <div class="mt-4">
-                  <VBtn class="me-4" @click="nextStep">
+                  <VBtn
+                    class="me-4"
+                    @click="nextStep"
+                  >
                     Save Changes
                   </VBtn>
-                  <VBtn variant="tonal" color="secondary">
+                  <VBtn
+                    variant="tonal"
+                    color="secondary"
+                  >
                     Reset
                   </VBtn>
                 </div>
@@ -135,12 +201,19 @@ watch(() => prop.currentStep, updateCartData)
           <VForm class="ms-n3">
             <VRow class="ma-0">
               <VCol cols="12">
-                <AppTextField v-model="giftCardFormData.giftCardNumber" label="Gift Card Number"
-                  placeholder="1234 5678 9012 3456" />
+                <AppTextField
+                  v-model="giftCardFormData.giftCardNumber"
+                  label="Gift Card Number"
+                  placeholder="1234 5678 9012 3456"
+                />
               </VCol>
 
               <VCol cols="12">
-                <AppTextField v-model="giftCardFormData.giftCardPin" label="Gift Card Pin" placeholder="1234" />
+                <AppTextField
+                  v-model="giftCardFormData.giftCardPin"
+                  label="Gift Card Pin"
+                  placeholder="1234"
+                />
               </VCol>
 
               <VCol cols="12">
@@ -154,8 +227,14 @@ watch(() => prop.currentStep, updateCartData)
       </VWindow>
     </VCol>
 
-    <VCol cols="12" md="4">
-      <VCard flat variant="outlined">
+    <VCol
+      cols="12"
+      md="4"
+    >
+      <VCard
+        flat
+        variant="outlined"
+      >
         <VCardText>
           <h6 class="text-h6 mb-4">
             Price Details
@@ -168,11 +247,17 @@ watch(() => prop.currentStep, updateCartData)
 
           <div class="d-flex justify-space-between text-base">
             <span class="text-high-emphasis">Delivery Charges</span>
-            <div v-if="checkoutPaymentDataLocal.deliverySpeed === 'free'" class="d-flex align-center">
+            <div
+              v-if="checkoutPaymentDataLocal.deliverySpeed === 'free'"
+              class="d-flex align-center"
+            >
               <div class="text-decoration-line-through text-disabled me-2">
                 $5.00
               </div>
-              <VChip size="small" color="success">
+              <VChip
+                size="small"
+                color="success"
+              >
                 FREE
               </VChip>
             </div>
@@ -187,18 +272,26 @@ watch(() => prop.currentStep, updateCartData)
         <VCardText>
           <div class="d-flex justify-space-between text-base mb-2">
             <span class="text-high-emphasis font-weight-medium">Total</span>
-            <span class="font-weight-medium">${{ checkoutPaymentDataLocal.orderAmount +
-              checkoutPaymentDataLocal.deliveryCharges }}.00</span>
+            <span class="font-weight-medium">${{ checkoutPaymentDataLocal.orderAmount
+              + checkoutPaymentDataLocal.deliveryCharges }}.00</span>
           </div>
 
           <div class="d-flex justify-space-between text-base mb-4">
             <span class="text-high-emphasis font-weight-medium">Deliver to:</span>
-            <VChip color="primary" class="text-capitalize" label size="small">
+            <VChip
+              color="primary"
+              class="text-capitalize"
+              label
+              size="small"
+            >
               {{ checkoutPaymentDataLocal.deliveryAddress }}
             </VChip>
           </div>
 
-          <template v-for="item in selectedDeliveryAddress" :key="item.value">
+          <template
+            v-for="item in selectedDeliveryAddress"
+            :key="item.value"
+          >
             <h6 class="text-base font-weight-medium">
               {{ item.title }}
             </h6>

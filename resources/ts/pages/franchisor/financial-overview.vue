@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { formatCurrency } from '@/@core/utils/formatters'
-import { type ChartData, type ExpenseData, type FinancialStatistics, type ProfitData, type SalesData, type UnitPerformance, financialApi } from '@/services/api/financial'
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
+import { type ChartData, type ExpenseData, type FinancialStatistics, type ProfitData, type SalesData, type UnitPerformance, financialApi } from '@/services/api/financial'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 const vuetifyTheme = useTheme()
 
@@ -45,9 +45,13 @@ const selectedProfitRows = ref([])
 
 // Computed property for current selected rows based on active tab
 const selectedRows = computed(() => {
-  if (activeTab.value === 'sales') return selectedSalesRows.value
-  if (activeTab.value === 'expense') return selectedExpensesRows.value
-  if (activeTab.value === 'profit') return selectedProfitRows.value
+  if (activeTab.value === 'sales')
+    return selectedSalesRows.value
+  if (activeTab.value === 'expense')
+    return selectedExpensesRows.value
+  if (activeTab.value === 'profit')
+    return selectedProfitRows.value
+
   return []
 })
 
@@ -167,7 +171,7 @@ const chartOptions = computed(() => {
       chartColors.primary,
     ],
     grid: {
-      borderColor: borderColor,
+      borderColor,
       strokeDashArray: 5,
       padding: {
         top: -20,
@@ -282,6 +286,7 @@ const loadChartData = async () => {
     }
 
     const chartResponse = await financialApi.getCharts(filters)
+
     chartData.value = chartResponse.data || { categories: [], series: [] }
   }
   catch (error) {
@@ -301,6 +306,7 @@ const loadStatistics = async () => {
     }
 
     const statsResponse = await financialApi.getStatistics(filters)
+
     statistics.value = statsResponse.data || {
       totalSales: 0,
       totalExpenses: 0,
@@ -387,7 +393,8 @@ const loadUnitsData = async () => {
         profit: unit.profit || 0,
         profitMargin: unit.profitMargin || 0,
       }))
-    } else {
+    }
+    else {
       unitsTableData.value = []
     }
   }
@@ -423,9 +430,12 @@ const bulkDelete = () => {
   console.log('Bulk delete:', selectedRows.value)
 
   // Clear selection after delete
-  if (activeTab.value === 'sales') selectedSalesRows.value = []
-  else if (activeTab.value === 'expenses') selectedExpensesRows.value = []
-  else if (activeTab.value === 'profit') selectedProfitRows.value = []
+  if (activeTab.value === 'sales')
+    selectedSalesRows.value = []
+  else if (activeTab.value === 'expenses')
+    selectedExpensesRows.value = []
+  else if (activeTab.value === 'profit')
+    selectedProfitRows.value = []
 }
 
 // Functions
@@ -469,8 +479,8 @@ const deleteSelected = async () => {
           await financialApi.deleteExpense(numericId)
           break
         case 'profit':
-          // Profit data is calculated, so we don't delete it directly
-          // We would need to delete the underlying sales/expense records
+        // Profit data is calculated, so we don't delete it directly
+        // We would need to delete the underlying sales/expense records
           break
       }
     }
@@ -574,7 +584,7 @@ const deleteItem = async (id: string | number) => {
         await financialApi.deleteExpense(numericId)
         break
       case 'profit':
-        // Profit data is calculated, so we don't delete it directly
+      // Profit data is calculated, so we don't delete it directly
         break
     }
 
@@ -614,7 +624,7 @@ const viewItem = (id: string | number) => {
         isViewExpenseDialogVisible.value = true
         break
       case 'profit':
-        // Profit items might not need a detail view, or create one if needed
+      // Profit items might not need a detail view, or create one if needed
         console.log('Viewing profit item:', item)
         break
     }
@@ -660,7 +670,10 @@ onMounted(() => {
     </div>
 
     <!-- Tabs -->
-    <VTabs v-model="activeTab" class="mb-6">
+    <VTabs
+      v-model="activeTab"
+      class="mb-6"
+    >
       <VTab value="sales">
         Sales
       </VTab>
@@ -677,25 +690,38 @@ onMounted(() => {
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3 align-center">
           <span class="text-body-2 text-disabled">Show:</span>
-          <AppSelect :model-value="itemsPerPage" :items="[
-            { value: 10, title: '10' },
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+          <AppSelect
+            :model-value="itemsPerPage"
+            :items="[
+              { value: 10, title: '10' },
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+            ]"
+            style="inline-size: 6.25rem;"
+            @update:model-value="itemsPerPage = parseInt($event, 10)"
+          />
         </div>
         <VSpacer />
 
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- Search -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField v-model="searchQuery" :placeholder="`Search ${activeTab}...`"
-              prepend-inner-icon="tabler-search" />
+            <AppTextField
+              v-model="searchQuery"
+              :placeholder="`Search ${activeTab}...`"
+              prepend-inner-icon="tabler-search"
+            />
           </div>
 
           <!-- Export button -->
-          <VBtn variant="tonal" color="secondary" prepend-icon="tabler-download" :disabled="!currentSelectedRows.length"
-            @click="exportData">
+          <VBtn
+            variant="tonal"
+            color="secondary"
+            prepend-icon="tabler-download"
+            :disabled="!currentSelectedRows.length"
+            @click="exportData"
+          >
             Export Selected
           </VBtn>
         </div>
@@ -704,85 +730,157 @@ onMounted(() => {
       <VDivider />
 
       <!-- Data Table -->
-      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:page="page" :model-value="currentSelectedRows"
-        :items="currentData" item-value="id" :items-length="currentTotal" :headers="currentHeaders" class="text-no-wrap"
-        show-select :loading="isTableLoading" @update:options="updateOptions" @update:model-value="(value) => {
+      <VDataTableServer
+        v-model:items-per-page="itemsPerPage"
+        v-model:page="page"
+        :model-value="currentSelectedRows"
+        :items="currentData"
+        item-value="id"
+        :items-length="currentTotal"
+        :headers="currentHeaders"
+        class="text-no-wrap"
+        show-select
+        :loading="isTableLoading"
+        @update:options="updateOptions"
+        @update:model-value="(value) => {
           switch (activeTab) {
-            case 'sales': selectedSalesRows = value; break;
-            case 'expense': selectedExpensesRows = value; break;
-            case 'profit': selectedProfitRows = value; break;
+          case 'sales': selectedSalesRows = value; break;
+          case 'expense': selectedExpensesRows = value; break;
+          case 'profit': selectedProfitRows = value; break;
           }
-        }">
+        }"
+      >
         <!-- Sales specific templates -->
-        <template v-if="activeTab === 'sales'" #item.unitPrice="{ item }">
+        <template
+          v-if="activeTab === 'sales'"
+          #item.unitPrice="{ item }"
+        >
           <span class="font-weight-medium">
             {{ Number((item as SalesData).unitPrice).toFixed(2) }} SAR
           </span>
         </template>
 
-        <template v-if="activeTab === 'sales'" #item.sale="{ item }">
+        <template
+          v-if="activeTab === 'sales'"
+          #item.sale="{ item }"
+        >
           <span class="text-success font-weight-medium">
             {{ Number((item as SalesData).sale).toFixed(2) }} SAR
           </span>
         </template>
 
         <!-- Expenses specific templates -->
-        <template v-if="activeTab === 'expense'" #item.amount="{ item }">
+        <template
+          v-if="activeTab === 'expense'"
+          #item.amount="{ item }"
+        >
           <span class="text-error font-weight-medium">
             {{ Number((item as ExpenseData).amount).toFixed(2) }} SAR
           </span>
         </template>
 
-        <template v-if="activeTab === 'expense'" #item.expenseCategory="{ item }">
-          <VChip size="small" variant="tonal" color="primary">
+        <template
+          v-if="activeTab === 'expense'"
+          #item.expenseCategory="{ item }"
+        >
+          <VChip
+            size="small"
+            variant="tonal"
+            color="primary"
+          >
             {{ (item as ExpenseData).expenseCategory }}
           </VChip>
         </template>
 
         <!-- Profit specific templates -->
-        <template v-if="activeTab === 'profit'" #item.totalSales="{ item }">
+        <template
+          v-if="activeTab === 'profit'"
+          #item.totalSales="{ item }"
+        >
           <span class="font-weight-medium">
             {{ Number((item as ProfitData).totalSales).toFixed(2) }} SAR
           </span>
         </template>
 
-        <template v-if="activeTab === 'profit'" #item.totalExpenses="{ item }">
+        <template
+          v-if="activeTab === 'profit'"
+          #item.totalExpenses="{ item }"
+        >
           <span class="text-error">
             {{ Number((item as ProfitData).totalExpenses).toFixed(2) }} SAR
           </span>
         </template>
 
-        <template v-if="activeTab === 'profit'" #item.profit="{ item }">
+        <template
+          v-if="activeTab === 'profit'"
+          #item.profit="{ item }"
+        >
           <span class="text-success font-weight-medium">
             {{ Number((item as ProfitData).profit).toFixed(2) }} SAR
           </span>
         </template>
 
         <!-- Actions for Sales Tab -->
-        <template v-if="activeTab === 'sales'" #item.actions="{ item }">
-          <VBtn icon variant="text" color="primary" size="small" @click="viewItem(item.id)">
+        <template
+          v-if="activeTab === 'sales'"
+          #item.actions="{ item }"
+        >
+          <VBtn
+            icon
+            variant="text"
+            color="primary"
+            size="small"
+            @click="viewItem(item.id)"
+          >
             <VIcon icon="tabler-eye" />
-            <VTooltip activator="parent" location="top">
+            <VTooltip
+              activator="parent"
+              location="top"
+            >
               View Sale Details
             </VTooltip>
           </VBtn>
         </template>
 
         <!-- Actions for Expenses Tab -->
-        <template v-if="activeTab === 'expense'" #item.actions="{ item }">
-          <VBtn icon variant="text" color="primary" size="small" @click="viewItem(item.id)">
+        <template
+          v-if="activeTab === 'expense'"
+          #item.actions="{ item }"
+        >
+          <VBtn
+            icon
+            variant="text"
+            color="primary"
+            size="small"
+            @click="viewItem(item.id)"
+          >
             <VIcon icon="tabler-eye" />
-            <VTooltip activator="parent" location="top">
+            <VTooltip
+              activator="parent"
+              location="top"
+            >
               View Expense Details
             </VTooltip>
           </VBtn>
         </template>
 
         <!-- Actions for Profit Tab -->
-        <template v-if="activeTab === 'profit'" #item.actions="{ item }">
-          <VBtn icon variant="text" color="primary" size="small" @click="viewItem(item.id)">
+        <template
+          v-if="activeTab === 'profit'"
+          #item.actions="{ item }"
+        >
+          <VBtn
+            icon
+            variant="text"
+            color="primary"
+            size="small"
+            @click="viewItem(item.id)"
+          >
             <VIcon icon="tabler-eye" />
-            <VTooltip activator="parent" location="top">
+            <VTooltip
+              activator="parent"
+              location="top"
+            >
               View Profit Details
             </VTooltip>
           </VBtn>
@@ -790,7 +888,11 @@ onMounted(() => {
 
         <!-- Pagination -->
         <template #bottom>
-          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="currentTotal" />
+          <TablePagination
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total-items="currentTotal"
+          />
         </template>
       </VDataTableServer>
     </VCard>
@@ -811,8 +913,15 @@ onMounted(() => {
           <!-- Header Actions -->
           <div class="d-flex gap-3 align-center flex-wrap">
             <!-- Period Selector -->
-            <VSelect v-model="selectedPeriod" :items="periodOptions" item-title="title" item-value="value"
-              density="compact" style="min-width: 120px;" variant="outlined" />
+            <VSelect
+              v-model="selectedPeriod"
+              :items="periodOptions"
+              item-title="title"
+              item-value="value"
+              density="compact"
+              style="min-width: 120px;"
+              variant="outlined"
+            />
           </div>
         </div>
       </VCol>
@@ -821,7 +930,10 @@ onMounted(() => {
     <!-- Stat Cards -->
     <VRow class="mb-6">
       <!-- Total Sales -->
-      <VCol cols="12" md="4">
+      <VCol
+        cols="12"
+        md="4"
+      >
         <VCard>
           <VCardText>
             <div class="d-flex align-center justify-space-between">
@@ -837,8 +949,15 @@ onMounted(() => {
                   {{ (totalSales || 0).toLocaleString() }} SAR
                 </h4>
               </div>
-              <VAvatar color="success" variant="tonal" size="56">
-                <VIcon icon="tabler-trending-up" size="28" />
+              <VAvatar
+                color="success"
+                variant="tonal"
+                size="56"
+              >
+                <VIcon
+                  icon="tabler-trending-up"
+                  size="28"
+                />
               </VAvatar>
             </div>
           </VCardText>
@@ -846,7 +965,10 @@ onMounted(() => {
       </VCol>
 
       <!-- Total Expenses -->
-      <VCol cols="12" md="4">
+      <VCol
+        cols="12"
+        md="4"
+      >
         <VCard>
           <VCardText>
             <div class="d-flex align-center justify-space-between">
@@ -862,8 +984,15 @@ onMounted(() => {
                   {{ (totalExpenses || 0).toLocaleString() }} SAR
                 </h4>
               </div>
-              <VAvatar color="error" variant="tonal" size="56">
-                <VIcon icon="tabler-trending-down" size="28" />
+              <VAvatar
+                color="error"
+                variant="tonal"
+                size="56"
+              >
+                <VIcon
+                  icon="tabler-trending-down"
+                  size="28"
+                />
               </VAvatar>
             </div>
           </VCardText>
@@ -871,7 +1000,10 @@ onMounted(() => {
       </VCol>
 
       <!-- Total Profit -->
-      <VCol cols="12" md="4">
+      <VCol
+        cols="12"
+        md="4"
+      >
         <VCard>
           <VCardText>
             <div class="d-flex align-center justify-space-between">
@@ -887,7 +1019,11 @@ onMounted(() => {
                   {{ (totalProfit || 0).toLocaleString() }} SAR
                 </h4>
               </div>
-              <VAvatar color="primary" variant="tonal" size="56">
+              <VAvatar
+                color="primary"
+                variant="tonal"
+                size="56"
+              >
                 <SaudiRiyal size="28" />
               </VAvatar>
             </div>
@@ -902,8 +1038,13 @@ onMounted(() => {
         <h6 class="text-h6 mb-4">
           Financial Performance
         </h6>
-        <VueApexCharts type="line" height="400" :options="chartOptions" :series="chartData?.series || []"
-          :loading="isChartLoading" />
+        <VueApexCharts
+          type="line"
+          height="400"
+          :options="chartOptions"
+          :series="chartData?.series || []"
+          :loading="isChartLoading"
+        />
       </VCardText>
     </VCard>
 
@@ -913,7 +1054,12 @@ onMounted(() => {
         <h6 class="text-h6 mb-4">
           Units Performance
         </h6>
-        <VDataTable :headers="tableHeaders" :items="unitsTableData" :loading="isUnitsLoading" class="text-no-wrap">
+        <VDataTable
+          :headers="tableHeaders"
+          :items="unitsTableData"
+          :loading="isUnitsLoading"
+          class="text-no-wrap"
+        >
           <template #item.sales="{ item }">
             <div class="text-body-1 text-high-emphasis">
               {{ formatCurrency(item.sales || 0) }}
@@ -945,7 +1091,11 @@ onMounted(() => {
           </template>
 
           <template #item.profitMargin="{ item }">
-            <VChip :color="(item.profitMargin || 0) > 0 ? 'success' : 'error'" size="small" label>
+            <VChip
+              :color="(item.profitMargin || 0) > 0 ? 'success' : 'error'"
+              size="small"
+              label
+            >
               {{ (item.profitMargin || 0).toFixed(1) }}%
             </VChip>
           </template>
@@ -954,37 +1104,91 @@ onMounted(() => {
     </VCard>
 
     <!-- Add Data Modal -->
-    <VDialog v-model="isAddDataModalVisible" max-width="600">
+    <VDialog
+      v-model="isAddDataModalVisible"
+      max-width="600"
+    >
       <VCard>
         <VCardTitle>Add New Data</VCardTitle>
         <VCardText>
-          <VSelect v-model="addDataCategory" :items="[
-            { title: 'Sales', value: 'sales' },
-            { title: 'Expense', value: 'expense' },
-          ]" label="Category" class="mb-4" />
+          <VSelect
+            v-model="addDataCategory"
+            :items="[
+              { title: 'Sales', value: 'sales' },
+              { title: 'Expense', value: 'expense' },
+            ]"
+            label="Category"
+            class="mb-4"
+          />
 
           <!-- Sales Fields -->
           <div v-if="addDataCategory === 'sales'">
-            <VTextField v-model="addDataForm.product" label="Product" class="mb-4" />
-            <VTextField v-model="addDataForm.dateOfSale" label="Date of Sale" type="date" class="mb-4" />
-            <VTextField v-model="addDataForm.unitPrice" label="Unit Price" type="number" prefix="SAR" class="mb-4" />
-            <VTextField v-model="addDataForm.quantitySold" label="Quantity Sold" type="number" class="mb-4" />
+            <VTextField
+              v-model="addDataForm.product"
+              label="Product"
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.dateOfSale"
+              label="Date of Sale"
+              type="date"
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.unitPrice"
+              label="Unit Price"
+              type="number"
+              prefix="SAR"
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.quantitySold"
+              label="Quantity Sold"
+              type="number"
+              class="mb-4"
+            />
           </div>
 
           <!-- Expense Fields -->
           <div v-if="addDataCategory === 'expense'">
-            <VTextField v-model="addDataForm.expenseCategory" label="Expense Category" class="mb-4" />
-            <VTextField v-model="addDataForm.dateOfExpense" label="Date of Expense" type="date" class="mb-4" />
-            <VTextField v-model="addDataForm.amount" label="Amount" type="number" prefix="SAR" class="mb-4" />
-            <VTextField v-model="addDataForm.description" label="Description" class="mb-4" />
+            <VTextField
+              v-model="addDataForm.expenseCategory"
+              label="Expense Category"
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.dateOfExpense"
+              label="Date of Expense"
+              type="date"
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.amount"
+              label="Amount"
+              type="number"
+              prefix="SAR"
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.description"
+              label="Description"
+              class="mb-4"
+            />
           </div>
         </VCardText>
         <VCardActions>
           <VSpacer />
-          <VBtn variant="outlined" @click="isAddDataModalVisible = false">
+          <VBtn
+            variant="outlined"
+            @click="isAddDataModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" :loading="isLoading" @click="submitAddData">
+          <VBtn
+            color="primary"
+            :loading="isLoading"
+            @click="submitAddData"
+          >
             Add Data
           </VBtn>
         </VCardActions>
@@ -992,22 +1196,43 @@ onMounted(() => {
     </VDialog>
 
     <!-- Import Modal -->
-    <VDialog v-model="isImportModalVisible" max-width="500">
+    <VDialog
+      v-model="isImportModalVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardTitle>Import Data</VCardTitle>
         <VCardText>
-          <VSelect v-model="importCategory" :items="[
-            { title: 'Sales', value: 'sales' },
-            { title: 'Expense', value: 'expenses' },
-          ]" label="Category" class="mb-4" />
-          <VFileInput v-model="importFile" label="Choose file" accept=".csv,.xlsx" prepend-icon="tabler-upload" />
+          <VSelect
+            v-model="importCategory"
+            :items="[
+              { title: 'Sales', value: 'sales' },
+              { title: 'Expense', value: 'expenses' },
+            ]"
+            label="Category"
+            class="mb-4"
+          />
+          <VFileInput
+            v-model="importFile"
+            label="Choose file"
+            accept=".csv,.xlsx"
+            prepend-icon="tabler-upload"
+          />
         </VCardText>
         <VCardActions>
           <VSpacer />
-          <VBtn variant="outlined" @click="isImportModalVisible = false">
+          <VBtn
+            variant="outlined"
+            @click="isImportModalVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" :loading="isLoading" :disabled="!importFile" @click="submitImport">
+          <VBtn
+            color="primary"
+            :loading="isLoading"
+            :disabled="!importFile"
+            @click="submitImport"
+          >
             Import
           </VBtn>
         </VCardActions>
@@ -1015,12 +1240,19 @@ onMounted(() => {
     </VDialog>
 
     <!-- View Sale Details Dialog -->
-    <VDialog v-model="isViewSaleDialogVisible" max-width="700">
+    <VDialog
+      v-model="isViewSaleDialogVisible"
+      max-width="700"
+    >
       <VCard v-if="viewedSale">
         <VCardItem>
           <VCardTitle>Sale Details</VCardTitle>
           <template #append>
-            <VChip color="success" size="small" variant="tonal">
+            <VChip
+              color="success"
+              size="small"
+              variant="tonal"
+            >
               {{ viewedSale.referenceNumber || `REV-${String(viewedSale.id).padStart(6, '0')}` }}
             </VChip>
           </template>
@@ -1033,12 +1265,18 @@ onMounted(() => {
             <!-- Product Information -->
             <VCol cols="12">
               <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-shopping-cart" class="me-2" />
+                <VIcon
+                  icon="tabler-shopping-cart"
+                  class="me-2"
+                />
                 Product Information
               </h6>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Product Name
@@ -1049,7 +1287,10 @@ onMounted(() => {
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Sale Date
@@ -1058,47 +1299,63 @@ onMounted(() => {
                   {{ new Date(viewedSale.date).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
                   }) }}
                 </div>
               </div>
             </VCol>
 
-            <!-- <VCol cols="12" md="6">
+            <!--
+              <VCol cols="12" md="6">
               <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Store Location
-                </div>
-                <div class="font-weight-medium">
-                  {{ viewedSale.unitName || 'N/A' }}
-                </div>
+              <div class="text-body-2 text-medium-emphasis mb-1">
+              Store Location
               </div>
-            </VCol>
+              <div class="font-weight-medium">
+              {{ viewedSale.unitName || 'N/A' }}
+              </div>
+              </div>
+              </VCol>
 
-            <VCol cols="12" md="6">
+              <VCol cols="12" md="6">
               <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Customer
-                </div>
-                <div class="font-weight-medium">
-                  {{ viewedSale.customerName || 'N/A' }}
-                </div>
+              <div class="text-body-2 text-medium-emphasis mb-1">
+              Customer
               </div>
-            </VCol> -->
+              <div class="font-weight-medium">
+              {{ viewedSale.customerName || 'N/A' }}
+              </div>
+              </div>
+              </VCol>
+            -->
 
             <!-- Financial Details -->
             <VCol cols="12">
               <VDivider class="my-4" />
               <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-report-money" class="me-2" />
+                <VIcon
+                  icon="tabler-report-money"
+                  class="me-2"
+                />
                 Financial Details
               </h6>
             </VCol>
 
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="info" class="pa-4">
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VCard
+                variant="tonal"
+                color="info"
+                class="pa-4"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-tag" size="32" class="mb-2" />
+                  <VIcon
+                    icon="tabler-tag"
+                    size="32"
+                    class="mb-2"
+                  />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Unit Price
                   </div>
@@ -1109,10 +1366,21 @@ onMounted(() => {
               </VCard>
             </VCol>
 
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="warning" class="pa-4">
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VCard
+                variant="tonal"
+                color="warning"
+                class="pa-4"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-stack" size="32" class="mb-2" />
+                  <VIcon
+                    icon="tabler-stack"
+                    size="32"
+                    class="mb-2"
+                  />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Quantity
                   </div>
@@ -1123,10 +1391,21 @@ onMounted(() => {
               </VCard>
             </VCol>
 
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="success" class="pa-4">
+            <VCol
+              cols="12"
+              md="4"
+            >
+              <VCard
+                variant="tonal"
+                color="success"
+                class="pa-4"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-coins" size="32" class="mb-2" />
+                  <VIcon
+                    icon="tabler-coins"
+                    size="32"
+                    class="mb-2"
+                  />
                   <div class="text-body-2 text-medium-emphasis mb-1">
                     Total Sale
                   </div>
@@ -1141,7 +1420,10 @@ onMounted(() => {
             <VCol cols="12">
               <VDivider class="my-4" />
               <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-calculator" class="me-2" />
+                <VIcon
+                  icon="tabler-calculator"
+                  class="me-2"
+                />
                 Calculation
               </h6>
             </VCol>
@@ -1181,7 +1463,11 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewSaleDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewSaleDialogVisible = false"
+          >
             Close
           </VBtn>
         </VCardActions>
@@ -1189,12 +1475,19 @@ onMounted(() => {
     </VDialog>
 
     <!-- View Expense Details Dialog -->
-    <VDialog v-model="isViewExpenseDialogVisible" max-width="700">
+    <VDialog
+      v-model="isViewExpenseDialogVisible"
+      max-width="700"
+    >
       <VCard v-if="viewedExpense">
         <VCardItem>
           <VCardTitle>Expense Details</VCardTitle>
           <template #append>
-            <VChip color="error" size="small" variant="tonal">
+            <VChip
+              color="error"
+              size="small"
+              variant="tonal"
+            >
               {{ viewedExpense.referenceNumber || `EXP-${String(viewedExpense.id).padStart(6, '0')}` }}
             </VChip>
           </template>
@@ -1207,23 +1500,37 @@ onMounted(() => {
             <!-- Expense Information -->
             <VCol cols="12">
               <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-receipt" class="me-2" />
+                <VIcon
+                  icon="tabler-receipt"
+                  class="me-2"
+                />
                 Expense Information
               </h6>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Category
                 </div>
-                <VChip color="error" size="small" variant="tonal" class="text-capitalize">
+                <VChip
+                  color="error"
+                  size="small"
+                  variant="tonal"
+                  class="text-capitalize"
+                >
                   {{ viewedExpense.expenseCategory }}
                 </VChip>
               </div>
             </VCol>
 
-            <VCol cols="12" md="6">
+            <VCol
+              cols="12"
+              md="6"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Expense Date
@@ -1232,35 +1539,40 @@ onMounted(() => {
                   {{ new Date(viewedExpense.date).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
                   }) }}
                 </div>
               </div>
             </VCol>
 
-            <!-- <VCol cols="12" md="6">
+            <!--
+              <VCol cols="12" md="6">
               <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Store Location
-                </div>
-                <div class="font-weight-medium">
-                  {{ viewedExpense.unitName || 'N/A' }}
-                </div>
+              <div class="text-body-2 text-medium-emphasis mb-1">
+              Store Location
               </div>
-            </VCol>
+              <div class="font-weight-medium">
+              {{ viewedExpense.unitName || 'N/A' }}
+              </div>
+              </div>
+              </VCol>
 
-            <VCol cols="12" md="6">
+              <VCol cols="12" md="6">
               <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Payment Method
-                </div>
-                <div class="font-weight-medium text-capitalize">
-                  {{ viewedExpense.paymentMethod ? viewedExpense.paymentMethod.replace('_', ' ') : 'N/A' }}
-                </div>
+              <div class="text-body-2 text-medium-emphasis mb-1">
+              Payment Method
               </div>
-            </VCol> -->
+              <div class="font-weight-medium text-capitalize">
+              {{ viewedExpense.paymentMethod ? viewedExpense.paymentMethod.replace('_', ' ') : 'N/A' }}
+              </div>
+              </div>
+              </VCol>
+            -->
 
-            <VCol cols="12" v-if="viewedExpense.vendorName">
+            <VCol
+              v-if="viewedExpense.vendorName"
+              cols="12"
+            >
               <div class="mb-4">
                 <div class="text-body-2 text-medium-emphasis mb-1">
                   Vendor
@@ -1286,15 +1598,26 @@ onMounted(() => {
             <VCol cols="12">
               <VDivider class="my-4" />
               <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-report-money" class="me-2" />
+                <VIcon
+                  icon="tabler-report-money"
+                  class="me-2"
+                />
                 Amount
               </h6>
             </VCol>
 
             <VCol cols="12">
-              <VCard variant="tonal" color="error" class="pa-6">
+              <VCard
+                variant="tonal"
+                color="error"
+                class="pa-6"
+              >
                 <div class="text-center">
-                  <VIcon icon="tabler-currency-dollar" size="48" class="mb-3" />
+                  <VIcon
+                    icon="tabler-currency-dollar"
+                    size="48"
+                    class="mb-3"
+                  />
                   <div class="text-body-1 text-medium-emphasis mb-2">
                     Expense Amount
                   </div>
@@ -1309,7 +1632,11 @@ onMounted(() => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewExpenseDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isViewExpenseDialogVisible = false"
+          >
             Close
           </VBtn>
         </VCardActions>

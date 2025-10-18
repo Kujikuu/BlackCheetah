@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
-import { leadApi, type Lead, type LeadStatistic } from '@/services/api/lead'
+import { type Lead, type LeadStatistic, leadApi } from '@/services/api/lead'
 
 // 👉 Store
 const searchQuery = ref('')
@@ -81,10 +81,12 @@ const fetchLeads = async () => {
       leadsData.value = response.leads
       totalLeads.value = response.total
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     error.value = err.message || 'Failed to fetch leads'
     console.error('Error fetching leads:', err)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -93,10 +95,10 @@ const fetchLeads = async () => {
 const fetchStatistics = async () => {
   try {
     const response = await leadApi.getStatistics()
-    if (response.success) {
+    if (response.success)
       statsData.value = response.data
-    }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Error fetching statistics:', err)
   }
 }
@@ -153,6 +155,7 @@ const deleteLead = async () => {
 
   try {
     loading.value = true
+
     const response = await leadApi.deleteLead(leadToDelete.value)
 
     if (response.success) {
@@ -168,10 +171,12 @@ const deleteLead = async () => {
 
       totalLeads.value--
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Error deleting lead:', err)
     error.value = err.message || 'Failed to delete lead'
-  } finally {
+  }
+  finally {
     loading.value = false
     isDeleteDialogVisible.value = false
     leadToDelete.value = null
@@ -185,6 +190,7 @@ const bulkDelete = async () => {
 
   try {
     loading.value = true
+
     const response = await leadApi.bulkDelete(selectedRows.value)
 
     if (response.success) {
@@ -193,10 +199,12 @@ const bulkDelete = async () => {
       await fetchStatistics()
       selectedRows.value = []
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Error bulk deleting leads:', err)
     error.value = err.message || 'Failed to delete leads'
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -225,11 +233,13 @@ const downloadExampleCSV = () => {
 const importCSV = async () => {
   if (!csvFile.value) {
     error.value = 'Please select a CSV file'
+
     return
   }
 
   try {
     loading.value = true
+
     const response = await leadApi.importCsv(csvFile.value)
 
     if (response.success) {
@@ -239,10 +249,12 @@ const importCSV = async () => {
       isImportDialogVisible.value = false
       csvFile.value = null
     }
-  } catch (err: any) {
+  }
+  catch (err: any) {
     console.error('Error importing CSV:', err)
     error.value = err.message || 'Failed to import CSV'
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -254,6 +266,7 @@ const exportLeads = () => {
 
   // Create a temporary link and trigger download
   const a = document.createElement('a')
+
   a.href = exportUrl
   a.download = `leads_${selectedRows.value.length > 0 ? 'selected' : 'all'}_${new Date().toISOString().split('T')[0]}.csv`
   document.body.appendChild(a)
@@ -285,8 +298,15 @@ const navigateToAddLead = () => {
     <!-- 👉 Stats Cards -->
     <div class="d-flex mb-6">
       <VRow>
-        <template v-for="(data, id) in statsData" :key="id">
-          <VCol cols="12" md="4" sm="6">
+        <template
+          v-for="(data, id) in statsData"
+          :key="id"
+        >
+          <VCol
+            cols="12"
+            md="4"
+            sm="6"
+          >
             <VCard>
               <VCardText>
                 <div class="d-flex justify-space-between">
@@ -298,13 +318,24 @@ const navigateToAddLead = () => {
                       <h4 class="text-h4">
                         {{ data.value }}
                       </h4>
-                      <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
+                      <div
+                        class="text-base"
+                        :class="data.change > 0 ? 'text-success' : 'text-error'"
+                      >
                         ({{ prefixWithPlus(data.change) }}%)
                       </div>
                     </div>
                   </div>
-                  <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
-                    <VIcon :icon="data.icon" size="26" />
+                  <VAvatar
+                    :color="data.iconColor"
+                    variant="tonal"
+                    rounded
+                    size="42"
+                  >
+                    <VIcon
+                      :icon="data.icon"
+                      size="26"
+                    />
                   </VAvatar>
                 </div>
               </VCardText>
@@ -322,19 +353,43 @@ const navigateToAddLead = () => {
       <VCardText>
         <VRow>
           <!-- 👉 Select Source -->
-          <VCol cols="12" sm="4">
-            <AppSelect v-model="selectedSource" placeholder="Select Source" :items="sources" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedSource"
+              placeholder="Select Source"
+              :items="sources"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
           <!-- 👉 Select Status -->
-          <VCol cols="12" sm="4">
-            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statuses" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedStatus"
+              placeholder="Select Status"
+              :items="statuses"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
           <!-- 👉 Select Owner -->
-          <VCol cols="12" sm="4">
-            <AppSelect v-model="selectedOwner" placeholder="Select Owner" :items="owners" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedOwner"
+              placeholder="Select Owner"
+              :items="owners"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
         </VRow>
       </VCardText>
@@ -343,17 +398,30 @@ const navigateToAddLead = () => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect :model-value="itemsPerPage" :items="[
-            { value: 10, title: '10' },
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-            { value: -1, title: 'All' },
-          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+          <AppSelect
+            :model-value="itemsPerPage"
+            :items="[
+              { value: 10, title: '10' },
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+              { value: -1, title: 'All' },
+            ]"
+            style="inline-size: 6.25rem;"
+            @update:model-value="itemsPerPage = parseInt($event, 10)"
+          />
 
           <!-- Bulk Actions -->
-          <VBtn v-if="selectedRows.length > 0" variant="tonal" color="error" @click="bulkDelete">
-            <VIcon icon="tabler-trash" class="me-2" />
+          <VBtn
+            v-if="selectedRows.length > 0"
+            variant="tonal"
+            color="error"
+            @click="bulkDelete"
+          >
+            <VIcon
+              icon="tabler-trash"
+              class="me-2"
+            />
             Delete Selected ({{ selectedRows.length }})
           </VBtn>
         </div>
@@ -362,22 +430,37 @@ const navigateToAddLead = () => {
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- 👉 Search  -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField v-model="searchQuery" placeholder="Search Lead" />
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Search Lead"
+            />
           </div>
 
           <!-- 👉 Import button -->
-          <VBtn variant="tonal" color="secondary" prepend-icon="tabler-file-import"
-            @click="isImportDialogVisible = true">
+          <VBtn
+            variant="tonal"
+            color="secondary"
+            prepend-icon="tabler-file-import"
+            @click="isImportDialogVisible = true"
+          >
             Import
           </VBtn>
 
           <!-- 👉 Export button -->
-          <VBtn variant="tonal" color="secondary" prepend-icon="tabler-upload" @click="exportLeads">
+          <VBtn
+            variant="tonal"
+            color="secondary"
+            prepend-icon="tabler-upload"
+            @click="exportLeads"
+          >
             Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
           </VBtn>
 
           <!-- 👉 Add lead button -->
-          <VBtn prepend-icon="tabler-plus" @click="navigateToAddLead">
+          <VBtn
+            prepend-icon="tabler-plus"
+            @click="navigateToAddLead"
+          >
             Add Lead
           </VBtn>
         </div>
@@ -386,9 +469,18 @@ const navigateToAddLead = () => {
       <VDivider />
 
       <!-- SECTION datatable -->
-      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
-        :items="leads" item-value="id" :items-length="totalLeads" :headers="headers" class="text-no-wrap" show-select
-        @update:options="updateOptions">
+      <VDataTableServer
+        v-model:items-per-page="itemsPerPage"
+        v-model:model-value="selectedRows"
+        v-model:page="page"
+        :items="leads"
+        item-value="id"
+        :items-length="totalLeads"
+        :headers="headers"
+        class="text-no-wrap"
+        show-select
+        @update:options="updateOptions"
+      >
         <!-- Index -->
         <template #item.index="{ index }">
           <div class="text-body-1 font-weight-medium">
@@ -399,11 +491,18 @@ const navigateToAddLead = () => {
         <!-- Lead Name -->
         <template #item.name="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <VAvatar size="34" variant="tonal" color="primary">
+            <VAvatar
+              size="34"
+              variant="tonal"
+              color="primary"
+            >
               <span>{{ avatarText(`${item.firstName} ${item.lastName}`) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
-              <RouterLink :to="{ name: 'sales-leads-id', params: { id: item.id } }" class="text-link">
+              <RouterLink
+                :to="{ name: 'sales-leads-id', params: { id: item.id } }"
+                class="text-link"
+              >
                 {{ item.firstName }} {{ item.lastName }}
               </RouterLink>
             </div>
@@ -447,7 +546,12 @@ const navigateToAddLead = () => {
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+          <VChip
+            :color="resolveStatusVariant(item.status)"
+            size="small"
+            label
+            class="text-capitalize"
+          >
             {{ item.status }}
           </VChip>
         </template>
@@ -468,7 +572,11 @@ const navigateToAddLead = () => {
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <VBtn icon variant="text" color="medium-emphasis">
+          <VBtn
+            icon
+            variant="text"
+            color="medium-emphasis"
+          >
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
@@ -492,14 +600,21 @@ const navigateToAddLead = () => {
 
         <!-- pagination -->
         <template #bottom>
-          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalLeads" />
+          <TablePagination
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total-items="totalLeads"
+          />
         </template>
       </VDataTableServer>
       <!-- SECTION -->
     </VCard>
 
     <!-- 👉 Import Dialog -->
-    <VDialog v-model="isImportDialogVisible" max-width="600">
+    <VDialog
+      v-model="isImportDialogVisible"
+      max-width="600"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Import Leads from CSV</VCardTitle>
@@ -507,22 +622,40 @@ const navigateToAddLead = () => {
 
         <VCardText>
           <div class="mb-4">
-            <VBtn variant="tonal" color="secondary" size="small" prepend-icon="tabler-download"
-              @click="downloadExampleCSV">
+            <VBtn
+              variant="tonal"
+              color="secondary"
+              size="small"
+              prepend-icon="tabler-download"
+              @click="downloadExampleCSV"
+            >
               Download Example CSV
             </VBtn>
           </div>
 
-          <VFileInput v-model="csvFile" label="Select CSV File" accept=".csv" prepend-icon="tabler-file-upload"
-            show-size @change="handleFileUpload" />
+          <VFileInput
+            v-model="csvFile"
+            label="Select CSV File"
+            accept=".csv"
+            prepend-icon="tabler-file-upload"
+            show-size
+            @change="handleFileUpload"
+          />
         </VCardText>
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isImportDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isImportDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="primary" @click="importCSV">
+          <VBtn
+            color="primary"
+            @click="importCSV"
+          >
             Import
           </VBtn>
         </VCardActions>
@@ -530,7 +663,10 @@ const navigateToAddLead = () => {
     </VDialog>
 
     <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog v-model="isDeleteDialogVisible" max-width="500">
+    <VDialog
+      v-model="isDeleteDialogVisible"
+      max-width="500"
+    >
       <VCard>
         <VCardItem>
           <VCardTitle>Confirm Delete</VCardTitle>
@@ -542,10 +678,17 @@ const navigateToAddLead = () => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
+          <VBtn
+            color="secondary"
+            variant="tonal"
+            @click="isDeleteDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" @click="deleteLead">
+          <VBtn
+            color="error"
+            @click="deleteLead"
+          >
             Delete
           </VBtn>
         </VCardActions>
@@ -553,7 +696,10 @@ const navigateToAddLead = () => {
     </VDialog>
 
     <!-- 👉 Add Note Modal -->
-    <AddNoteModal v-model:is-dialog-visible="isAddNoteModalVisible" :lead-id="selectedLeadForNote || 0"
-      @note-added="onNoteAdded" />
+    <AddNoteModal
+      v-model:is-dialog-visible="isAddNoteModalVisible"
+      :lead-id="selectedLeadForNote || 0"
+      @note-added="onNoteAdded"
+    />
   </section>
 </template>

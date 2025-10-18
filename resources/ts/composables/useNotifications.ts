@@ -20,7 +20,7 @@ interface BackendNotification {
     img?: string
     text?: string
     color?: string
-  } | string  // Can be object or JSON string from API
+  } | string // Can be object or JSON string from API
   read_at: string | null
   created_at: string
   updated_at: string
@@ -52,7 +52,8 @@ export const useNotifications = () => {
     if (typeof parsedData === 'string') {
       try {
         parsedData = JSON.parse(parsedData)
-      } catch (e) {
+      }
+      catch (e) {
         console.error('Failed to parse notification data:', e)
         parsedData = {}
       }
@@ -69,7 +70,7 @@ export const useNotifications = () => {
       icon: data.icon || 'tabler-bell',
       img: data.img,
       text: data.text,
-      data: data,
+      data,
       created_at: backendNotification.created_at,
       read_at: backendNotification.read_at,
     }
@@ -81,33 +82,37 @@ export const useNotifications = () => {
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
 
-    if (diffInHours < 1) {
+    if (diffInHours < 1)
       return 'Just now'
-    } else if (diffInHours < 24) {
+    else if (diffInHours < 24)
       return `${diffInHours}h ago`
-    } else if (diffInHours < 48) {
+    else if (diffInHours < 48)
       return 'Yesterday'
-    } else {
+    else
       return date.toLocaleDateString()
-    }
   }
 
   // Fetch notifications
   const fetchNotifications = async (unreadOnly = false) => {
     try {
       loading.value = true
+
       const params = unreadOnly ? { unread_only: true } : {}
+
       const response = await $api<ApiResponse<NotificationResponse>>('/v1/notifications', {
         method: 'GET',
         params,
       })
 
       notifications.value = response.data.data.map(transformNotification)
+
       return response.data
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error fetching notifications:', error)
       throw error
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -120,8 +125,10 @@ export const useNotifications = () => {
       })
 
       stats.value = response.data
+
       return response.data
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error fetching notification stats:', error)
       throw error
     }
@@ -134,7 +141,8 @@ export const useNotifications = () => {
         await $api(`/v1/notifications/${notificationIds[0]}/read`, {
           method: 'PATCH',
         })
-      } else {
+      }
+      else {
         await $api('/v1/notifications/mark-multiple-read', {
           method: 'PATCH',
           body: { notification_ids: notificationIds },
@@ -143,14 +151,14 @@ export const useNotifications = () => {
 
       // Update local state
       notifications.value.forEach(notification => {
-        if (notificationIds.includes(notification.id)) {
+        if (notificationIds.includes(notification.id))
           notification.isSeen = true
-        }
       })
 
       // Update stats
       await fetchStats()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error marking notifications as read:', error)
       throw error
     }
@@ -163,7 +171,8 @@ export const useNotifications = () => {
         await $api(`/v1/notifications/${notificationIds[0]}/unread`, {
           method: 'PATCH',
         })
-      } else {
+      }
+      else {
         // Use the mark multiple as unread endpoint
         await $api('/v1/notifications/mark-multiple-unread', {
           method: 'PATCH',
@@ -173,14 +182,14 @@ export const useNotifications = () => {
 
       // Update local state
       notifications.value.forEach(notification => {
-        if (notificationIds.includes(notification.id)) {
+        if (notificationIds.includes(notification.id))
           notification.isSeen = false
-        }
       })
 
       // Update stats
       await fetchStats()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error marking notifications as unread:', error)
       throw error
     }
@@ -200,7 +209,8 @@ export const useNotifications = () => {
 
       // Update stats
       await fetchStats()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error marking all notifications as read:', error)
       throw error
     }
@@ -215,13 +225,13 @@ export const useNotifications = () => {
 
       // Update local state
       const index = notifications.value.findIndex(n => n.id === notificationId)
-      if (index > -1) {
+      if (index > -1)
         notifications.value.splice(index, 1)
-      }
 
       // Update stats
       await fetchStats()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error removing notification:', error)
       throw error
     }
@@ -229,9 +239,8 @@ export const useNotifications = () => {
 
   // Handle notification click
   const handleNotificationClick = async (notification: any) => {
-    if (!notification.isSeen) {
+    if (!notification.isSeen)
       await markAsRead([notification.id])
-    }
   }
 
   return {

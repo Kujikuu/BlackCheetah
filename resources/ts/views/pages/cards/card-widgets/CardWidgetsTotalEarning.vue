@@ -216,7 +216,10 @@ const moreList = [
           87%
         </h2>
         <div class="text-success">
-          <VIcon size="20" icon="tabler-chevron-up" />
+          <VIcon
+            size="20"
+            icon="tabler-chevron-up"
+          />
           <span class="text-base">25.8%</span>
         </div>
       </div>
@@ -229,10 +232,18 @@ const moreList = [
     </VCardItem>
 
     <VCardText>
-      <VueApexCharts :options="chartOptions" :series="series" height="191" class="my-2" />
+      <VueApexCharts
+        :options="chartOptions"
+        :series="series"
+        height="191"
+        class="my-2"
+      />
 
       <VList class="card-list">
-        <VListItem v-for="earning in totalEarnings" :key="earning.title">
+        <VListItem
+          v-for="earning in totalEarnings"
+          :key="earning.title"
+        >
           <VListItemTitle class="font-weight-medium">
             {{ earning.title }}
           </VListItemTitle>
@@ -240,8 +251,17 @@ const moreList = [
             {{ earning.subtitle }}
           </VListItemSubtitle>
           <template #prepend>
-            <VAvatar size="38" :color="earning.avatarColor" variant="tonal" rounded class="me-1">
-              <VIcon :icon="earning.avatar" size="22" />
+            <VAvatar
+              size="38"
+              :color="earning.avatarColor"
+              variant="tonal"
+              rounded
+              class="me-1"
+            >
+              <VIcon
+                :icon="earning.avatar"
+                size="22"
+              />
             </VAvatar>
           </template>
 

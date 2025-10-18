@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { FinanceWidgetData } from '@/services/api/franchisee-dashboard'
-import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useTheme } from 'vuetify'
+import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+import type { FinanceWidgetData } from '@/services/api/franchisee-dashboard'
 
 const chartColors = {
   primary: '#9155FD',
@@ -86,6 +86,7 @@ const loadDashboardData = async () => {
     const financeStatsResponse = await franchiseeDashboardApi.getFinanceStatistics()
     if (financeStatsResponse.success && financeStatsResponse.data) {
       const stats = financeStatsResponse.data
+
       financeStats.value = [
         {
           icon: SaudiRiyal,
@@ -118,6 +119,7 @@ const loadDashboardData = async () => {
     const summaryResponse = await franchiseeDashboardApi.getFinancialSummary()
     if (summaryResponse.success && summaryResponse.data) {
       const summary = summaryResponse.data
+
       summarySeries.value = [
         {
           name: 'Sales',
@@ -134,10 +136,12 @@ const loadDashboardData = async () => {
       ]
       hasLoadedApiData.value = true
     }
-  } catch (err) {
+  }
+  catch (err) {
     error.value = 'Failed to load finance data. Please try again.'
     console.error('Error loading finance data:', err)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -151,14 +155,14 @@ const themeColors = useTheme().computedThemes.value
 
 // Computed property to check if chart data is ready
 const isChartDataReady = computed(() => {
-  return !loading.value &&
-    hasLoadedApiData.value &&
-    summarySeries.value.length > 0 &&
-    summarySeries.value.every(series =>
-      series.data &&
-      Array.isArray(series.data) &&
-      series.data.length > 0 &&
-      series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
+  return !loading.value
+    && hasLoadedApiData.value
+    && summarySeries.value.length > 0
+    && summarySeries.value.every(series =>
+      series.data
+      && Array.isArray(series.data)
+      && series.data.length > 0
+      && series.data.every((value: any) => typeof value === 'number' && !isNaN(value)),
     )
 })
 
@@ -240,12 +244,12 @@ const summaryConfig = {
         fontWeight: 400,
       },
       formatter(val: number) {
-        return new Intl.NumberFormat('en-US', {
+        return `${new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'SAR',
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
-        }).format(val / 1000) + 'k'
+        }).format(val / 1000)}k`
       },
     },
   },
@@ -268,11 +272,18 @@ const summaryConfig = {
 <template>
   <section>
     <!-- Loading State -->
-    <VRow v-if="loading" class="mb-6">
+    <VRow
+      v-if="loading"
+      class="mb-6"
+    >
       <VCol cols="12">
         <VCard>
           <VCardText class="text-center py-8">
-            <VProgressCircular indeterminate color="primary" size="64" />
+            <VProgressCircular
+              indeterminate
+              color="primary"
+              size="64"
+            />
             <div class="mt-4 text-body-1">
               Loading finance data...
             </div>
@@ -282,15 +293,27 @@ const summaryConfig = {
     </VRow>
 
     <!-- Error State -->
-    <VRow v-else-if="error" class="mb-6">
+    <VRow
+      v-else-if="error"
+      class="mb-6"
+    >
       <VCol cols="12">
-        <VAlert type="error" variant="tonal" class="mb-0">
+        <VAlert
+          type="error"
+          variant="tonal"
+          class="mb-0"
+        >
           <template #prepend>
             <VIcon icon="tabler-alert-circle" />
           </template>
           {{ error }}
           <template #append>
-            <VBtn color="error" variant="text" size="small" @click="loadDashboardData">
+            <VBtn
+              color="error"
+              variant="text"
+              size="small"
+              @click="loadDashboardData"
+            >
               Retry
             </VBtn>
           </template>
@@ -302,14 +325,30 @@ const summaryConfig = {
     <div v-else>
       <!-- 👉 Finance Stats Cards -->
       <VRow class="mb-6">
-        <VCol v-for="(data, index) in financeStats" :key="index" cols="12" md="4" sm="6">
-          <VCard class="finance-card-statistics cursor-pointer"
+        <VCol
+          v-for="(data, index) in financeStats"
+          :key="index"
+          cols="12"
+          md="4"
+          sm="6"
+        >
+          <VCard
+            class="finance-card-statistics cursor-pointer"
             :style="data.isHover ? `border-block-end-color: rgb(var(--v-theme-${data.color}))` : `border-block-end-color: rgba(var(--v-theme-${data.color}),0.38)`"
-            @mouseenter="data.isHover = true" @mouseleave="data.isHover = false">
+            @mouseenter="data.isHover = true"
+            @mouseleave="data.isHover = false"
+          >
             <VCardText>
               <div class="d-flex align-center gap-x-4 mb-1">
-                <VAvatar variant="tonal" :color="data.color" rounded>
-                  <VIcon :icon="data.icon" size="28" />
+                <VAvatar
+                  variant="tonal"
+                  :color="data.color"
+                  rounded
+                >
+                  <VIcon
+                    :icon="data.icon"
+                    size="28"
+                  />
                 </VAvatar>
                 <h4 class="text-h4">
                   {{ data.value }}
@@ -335,19 +374,38 @@ const summaryConfig = {
       <VRow class="mb-6">
         <VCol cols="12">
           <VCard>
-            <VCardItem title="Financial Summary" subtitle="Yearly overview of sales, expenses and profit">
+            <VCardItem
+              title="Financial Summary"
+              subtitle="Yearly overview of sales, expenses and profit"
+            >
               <template #append>
-                <VBtn variant="tonal" size="small" append-icon="tabler-chevron-down">
+                <VBtn
+                  variant="tonal"
+                  size="small"
+                  append-icon="tabler-chevron-down"
+                >
                   2025
                 </VBtn>
               </template>
             </VCardItem>
 
             <VCardText>
-              <VueApexCharts v-if="isChartDataReady" type="line" height="400" :options="summaryConfig"
-                :series="summarySeries" />
-              <div v-else class="text-center py-8">
-                <VProgressCircular indeterminate color="primary" size="32" />
+              <VueApexCharts
+                v-if="isChartDataReady"
+                type="line"
+                height="400"
+                :options="summaryConfig"
+                :series="summarySeries"
+              />
+              <div
+                v-else
+                class="text-center py-8"
+              >
+                <VProgressCircular
+                  indeterminate
+                  color="primary"
+                  size="32"
+                />
                 <div class="mt-4 text-body-2 text-medium-emphasis">
                   Loading chart data...
                 </div>

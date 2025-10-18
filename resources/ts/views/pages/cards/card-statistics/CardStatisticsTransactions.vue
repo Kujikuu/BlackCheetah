@@ -35,9 +35,19 @@ const statistics = [
 
     <VCardText>
       <VRow>
-        <VCol v-for="item in statistics" :key="item.title" cols="6" md="3">
+        <VCol
+          v-for="item in statistics"
+          :key="item.title"
+          cols="6"
+          md="3"
+        >
           <div class="d-flex gap-x-4 align-center">
-            <VAvatar :color="item.color" variant="tonal" size="40" rounded>
+            <VAvatar
+              :color="item.color"
+              variant="tonal"
+              size="40"
+              rounded
+            >
               <VIcon :icon="item.icon" />
             </VAvatar>
 

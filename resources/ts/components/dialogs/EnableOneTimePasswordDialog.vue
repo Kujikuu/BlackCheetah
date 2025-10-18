@@ -30,8 +30,11 @@ const dialogModelValueUpdate = (val: boolean) => {
 </script>
 
 <template>
-  <VDialog :width="$vuetify.display.smAndDown ? 'auto' : 900" :model-value="props.isDialogVisible"
-    @update:model-value="dialogModelValueUpdate">
+  <VDialog
+    :width="$vuetify.display.smAndDown ? 'auto' : 900"
+    :model-value="props.isDialogVisible"
+    @update:model-value="dialogModelValueUpdate"
+  >
     <!-- Dialog close btn -->
     <DialogCloseBtn @click="dialogModelValueUpdate(false)" />
 
@@ -46,16 +49,33 @@ const dialogModelValueUpdate = (val: boolean) => {
         </p>
 
         <VForm @submit.prevent="() => { }">
-          <AppTextField v-model="phoneNumber" name="mobile" label="Phone Number" placeholder="+966 50 123 4567"
-            type="number" class="mb-6" />
+          <AppTextField
+            v-model="phoneNumber"
+            name="mobile"
+            label="Phone Number"
+            placeholder="+966 50 123 4567"
+            type="number"
+            class="mb-6"
+          />
 
           <div class="d-flex flex-wrap justify-end gap-4">
-            <VBtn color="secondary" variant="tonal" @click="resetPhoneNumber">
+            <VBtn
+              color="secondary"
+              variant="tonal"
+              @click="resetPhoneNumber"
+            >
               Cancel
             </VBtn>
-            <VBtn type="submit" @click="formSubmit">
+            <VBtn
+              type="submit"
+              @click="formSubmit"
+            >
               continue
-              <VIcon end icon="tabler-arrow-right" class="flip-in-rtl" />
+              <VIcon
+                end
+                icon="tabler-arrow-right"
+                class="flip-in-rtl"
+              />
             </VBtn>
           </div>
         </VForm>

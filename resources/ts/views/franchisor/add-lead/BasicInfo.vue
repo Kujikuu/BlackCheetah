@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LeadBasicInfo } from './types';
+import type { LeadBasicInfo } from './types'
 
 interface Props {
   formData: LeadBasicInfo
@@ -61,36 +61,95 @@ const states = [
       </p>
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.firstName" label="First Name" placeholder="First Name" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppTextField
+        v-model="localFormData.firstName"
+        label="First Name"
+        placeholder="First Name"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.lastName" label="Last Name" placeholder="Last Name" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppTextField
+        v-model="localFormData.lastName"
+        label="Last Name"
+        placeholder="Last Name"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.email" label="Email Address" type="email" placeholder="Email Address" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppTextField
+        v-model="localFormData.email"
+        label="Email Address"
+        type="email"
+        placeholder="Email Address"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.contactNumber" label="Contact Number" placeholder="Contact Number" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppTextField
+        v-model="localFormData.contactNumber"
+        label="Contact Number"
+        placeholder="Contact Number"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppSelect v-model="localFormData.country" label="Country" placeholder="Select Country" :items="countries" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppSelect
+        v-model="localFormData.country"
+        label="Country"
+        placeholder="Select Country"
+        :items="countries"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppSelect v-model="localFormData.state" label="State" placeholder="Select State" :items="states" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppSelect
+        v-model="localFormData.state"
+        label="State"
+        placeholder="Select State"
+        :items="states"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.city" label="City" placeholder="City" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppTextField
+        v-model="localFormData.city"
+        label="City"
+        placeholder="City"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppTextField v-model="localFormData.companyName" label="Company Name" placeholder="Company Name" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppTextField
+        v-model="localFormData.companyName"
+        label="Company Name"
+        placeholder="Company Name"
+      />
     </VCol>
   </VRow>
 </template>

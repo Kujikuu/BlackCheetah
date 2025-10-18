@@ -14,4 +14,4 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', 'setup.ts'],
   moduleFileExtensions: ['js', 'json', 'jsx', 'ts', 'tsx', 'vue'],
   setupFilesAfterEnv: ['<rootDir>/resources/ts/__tests__/setup.ts'],
-};
+}

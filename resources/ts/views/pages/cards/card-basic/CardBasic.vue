@@ -23,9 +23,16 @@ const isCardDetailsVisible = ref(false)
 <template>
   <VRow>
     <!-- 👉 Influencing The Influencer -->
-    <VCol cols="12" sm="6" md="4">
+    <VCol
+      cols="12"
+      sm="6"
+      md="4"
+    >
       <VCard>
-        <VImg :src="pages1" cover />
+        <VImg
+          :src="pages1"
+          cover
+        />
 
         <VCardItem>
           <VCardTitle>Influencing The Influencer</VCardTitle>
@@ -39,13 +46,21 @@ const isCardDetailsVisible = ref(false)
     </VCol>
 
     <!-- 👉 Robert Meyer -->
-    <VCol cols="12" sm="6" md="4">
+    <VCol
+      cols="12"
+      sm="6"
+      md="4"
+    >
       <VCard>
         <VImg :src="pages2" />
 
         <VCardText class="position-relative">
           <!-- User Avatar -->
-          <VAvatar size="75" class="avatar-center" :image="avatar1" />
+          <VAvatar
+            size="75"
+            class="avatar-center"
+            :image="avatar1"
+          />
 
           <!-- Title, Subtitle & Action Button -->
           <div class="d-flex justify-space-between flex-wrap pt-8">
@@ -65,7 +80,12 @@ const isCardDetailsVisible = ref(false)
             <span class="font-weight-medium">18 mutual friends</span>
 
             <div class="v-avatar-group">
-              <VAvatar v-for="avatar in avatars" :key="avatar" :image="avatar" size="38" />
+              <VAvatar
+                v-for="avatar in avatars"
+                :key="avatar"
+                :image="avatar"
+                size="38"
+              />
             </div>
           </div>
         </VCardText>
@@ -73,7 +93,11 @@ const isCardDetailsVisible = ref(false)
     </VCol>
 
     <!-- 👉 Popular Uses Of The Internet -->
-    <VCol cols="12" md="4" sm="6">
+    <VCol
+      cols="12"
+      md="4"
+      sm="6"
+    >
       <VCard>
         <VImg :src="pages3" />
 
@@ -92,7 +116,11 @@ const isCardDetailsVisible = ref(false)
 
           <VSpacer />
 
-          <VBtn icon size="small" @click="isCardDetailsVisible = !isCardDetailsVisible">
+          <VBtn
+            icon
+            size="small"
+            @click="isCardDetailsVisible = !isCardDetailsVisible"
+          >
             <VIcon :icon="isCardDetailsVisible ? 'tabler-chevron-up' : 'tabler-chevron-down'" />
           </VBtn>
         </VCardActions>
@@ -112,11 +140,18 @@ const isCardDetailsVisible = ref(false)
     </VCol>
 
     <!-- 👉 Apple iPhone 11 Pro -->
-    <VCol sm="6" cols="12">
+    <VCol
+      sm="6"
+      cols="12"
+    >
       <VCard>
         <div class="d-flex justify-space-between flex-wrap flex-md-nowrap flex-column flex-md-row">
           <div class="ma-auto pa-5">
-            <VImg width="137" height="176" :src="eCommerce2" />
+            <VImg
+              width="137"
+              height="176"
+              :src="eCommerce2"
+            />
           </div>
 
           <VDivider :vertical="$vuetify.display.mdAndUp" />
@@ -140,7 +175,10 @@ const isCardDetailsVisible = ref(false)
                 <span class="ms-2">Add to cart</span>
               </VBtn>
 
-              <IconBtn color="secondary" icon="tabler-share" />
+              <IconBtn
+                color="secondary"
+                icon="tabler-share"
+              />
             </VCardActions>
           </div>
         </div>
@@ -148,7 +186,10 @@ const isCardDetailsVisible = ref(false)
     </VCol>
 
     <!-- 👉 Stump town Roasters. -->
-    <VCol sm="6" cols="12">
+    <VCol
+      sm="6"
+      cols="12"
+    >
       <VCard>
         <div class="d-flex flex-column-reverse flex-md-row">
           <div>
@@ -157,7 +198,12 @@ const isCardDetailsVisible = ref(false)
             </VCardItem>
 
             <VCardText class="d-flex align-center flex-wrap text-body-1">
-              <VRating :model-value="5" readonly class="me-3" density="compact" />
+              <VRating
+                :model-value="5"
+                readonly
+                class="me-3"
+                density="compact"
+              />
               <span>5 Star | 98 reviews</span>
             </VCardText>
 
@@ -173,14 +219,22 @@ const isCardDetailsVisible = ref(false)
           </div>
 
           <div class="ma-auto pa-5">
-            <VImg :width="176" :src="pages5" class="rounded" />
+            <VImg
+              :width="176"
+              :src="pages5"
+              class="rounded"
+            />
           </div>
         </div>
       </VCard>
     </VCol>
 
     <!-- 👉 Apple Watch card -->
-    <VCol lg="4" sm="6" cols="12">
+    <VCol
+      lg="4"
+      sm="6"
+      cols="12"
+    >
       <VCard>
         <VImg :src="pages6" />
 
@@ -198,17 +252,31 @@ const isCardDetailsVisible = ref(false)
           </p>
         </VCardText>
 
-        <VBtn block class="rounded-t-0">
+        <VBtn
+          block
+          class="rounded-t-0"
+        >
           Add to cart
         </VBtn>
       </VCard>
     </VCol>
 
     <!-- 👉 Lifetime Membership -->
-    <VCol md="6" lg="8" cols="12">
+    <VCol
+      md="6"
+      lg="8"
+      cols="12"
+    >
       <VCard>
         <VRow no-gutters>
-          <VCol cols="12" sm="8" md="12" lg="7" order="2" order-lg="1">
+          <VCol
+            cols="12"
+            sm="8"
+            md="12"
+            lg="7"
+            order="2"
+            order-lg="1"
+          >
             <VCardItem>
               <VCardTitle>Lifetime Membership</VCardTitle>
             </VCardItem>
@@ -227,33 +295,61 @@ const isCardDetailsVisible = ref(false)
             <VCardText class="d-flex justify-center">
               <div class="me-auto pe-4">
                 <p class="d-flex align-center mb-6">
-                  <VIcon color="primary" icon="tabler-lock-open" size="22" />
+                  <VIcon
+                    color="primary"
+                    icon="tabler-lock-open"
+                    size="22"
+                  />
                   <span class="ms-3">Full Access</span>
                 </p>
 
                 <p class="d-flex align-center mb-0">
-                  <VIcon color="primary" icon="tabler-user" size="22" />
+                  <VIcon
+                    color="primary"
+                    icon="tabler-user"
+                    size="22"
+                  />
                   <span class="ms-3">15 Members</span>
                 </p>
               </div>
 
-              <VDivider v-if="$vuetify.display.smAndUp" vertical inset />
+              <VDivider
+                v-if="$vuetify.display.smAndUp"
+                vertical
+                inset
+              />
 
               <div class="ms-auto ps-4">
                 <p class="d-flex align-center mb-6">
-                  <VIcon color="primary" icon="tabler-star" size="22" />
+                  <VIcon
+                    color="primary"
+                    icon="tabler-star"
+                    size="22"
+                  />
                   <span class="ms-3">Access all Features</span>
                 </p>
 
                 <p class="d-flex align-center mb-0">
-                  <VIcon color="primary" icon="tabler-trending-up" size="22" />
+                  <VIcon
+                    color="primary"
+                    icon="tabler-trending-up"
+                    size="22"
+                  />
                   <span class="ms-3">Lifetime Free Update</span>
                 </p>
               </div>
             </VCardText>
           </VCol>
 
-          <VCol cols="12" sm="4" md="12" lg="5" order="1" order-lg="2" class="member-pricing-bg text-center">
+          <VCol
+            cols="12"
+            sm="4"
+            md="12"
+            lg="5"
+            order="1"
+            order-lg="2"
+            class="member-pricing-bg text-center"
+          >
             <div class="membership-pricing d-flex flex-column align-center py-14 h-100 justify-center">
               <p class="mb-5">
                 <sub class="text-h5">SAR</sub>
@@ -275,7 +371,11 @@ const isCardDetailsVisible = ref(false)
     </VCol>
 
     <!-- 👉 Influencing The Influencer -->
-    <VCol cols="12" lg="4" md="6">
+    <VCol
+      cols="12"
+      lg="4"
+      md="6"
+    >
       <VCard title="Influencing The Influencer">
         <VCardText>
           Computers have become ubiquitous in almost every facet of our lives. At work, desk jockeys spend hours in
@@ -294,10 +394,19 @@ const isCardDetailsVisible = ref(false)
     </VCol>
 
     <!-- 👉 The Best Answers -->
-    <VCol cols="12" lg="4" md="6">
+    <VCol
+      cols="12"
+      lg="4"
+      md="6"
+    >
       <VCard title="The Best Answers">
         <VCardText class="d-flex align-center flex-wrap">
-          <VRating :model-value="5" readonly density="compact" class="me-3" />
+          <VRating
+            :model-value="5"
+            readonly
+            density="compact"
+            class="me-3"
+          />
           <span class="text-subtitle-2">5 Star | 98 reviews</span>
         </VCardText>
 
@@ -318,11 +427,23 @@ const isCardDetailsVisible = ref(false)
     </VCol>
 
     <!-- 👉 Support -->
-    <VCol cols="12" md="6" lg="4">
+    <VCol
+      cols="12"
+      md="6"
+      lg="4"
+    >
       <VCard class="text-center">
         <VCardText class="d-flex flex-column justify-center align-center">
-          <VAvatar color="primary" variant="tonal" size="50" class="mb-4">
-            <VIcon size="2rem" icon="tabler-help" />
+          <VAvatar
+            color="primary"
+            variant="tonal"
+            size="50"
+            class="mb-4"
+          >
+            <VIcon
+              size="2rem"
+              icon="tabler-help"
+            />
           </VAvatar>
 
           <h6 class="text-h6">

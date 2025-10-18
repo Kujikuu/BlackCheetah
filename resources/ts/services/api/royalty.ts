@@ -115,17 +115,14 @@ export const royaltyApi = {
     formData.append('payment_date', paymentData.payment_date || '')
     formData.append('payment_method', paymentData.payment_type || '')
 
-    if (paymentData.payment_reference) {
+    if (paymentData.payment_reference)
       formData.append('payment_reference', paymentData.payment_reference)
-    }
 
-    if (paymentData.notes) {
+    if (paymentData.notes)
       formData.append('notes', paymentData.notes)
-    }
 
-    if (paymentData.attachment) {
+    if (paymentData.attachment)
       formData.append('attachment', paymentData.attachment)
-    }
 
     // Use POST with _method override for file uploads, as PATCH doesn't work well with FormData
     formData.append('_method', 'PATCH')

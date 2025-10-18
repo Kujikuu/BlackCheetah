@@ -73,8 +73,11 @@ const dialogModelValueUpdate = (val: boolean) => {
 </script>
 
 <template>
-  <VDialog :width="$vuetify.display.smAndDown ? 'auto' : 900" :model-value="props.isDialogVisible"
-    @update:model-value="dialogModelValueUpdate">
+  <VDialog
+    :width="$vuetify.display.smAndDown ? 'auto' : 900"
+    :model-value="props.isDialogVisible"
+    @update:model-value="dialogModelValueUpdate"
+  >
     <!-- Dialog close btn -->
     <DialogCloseBtn @click="dialogModelValueUpdate(false)" />
 
@@ -89,68 +92,145 @@ const dialogModelValueUpdate = (val: boolean) => {
         </p>
 
         <!-- 👉 Form -->
-        <VForm class="mt-6" @submit.prevent="onFormSubmit">
+        <VForm
+          class="mt-6"
+          @submit.prevent="onFormSubmit"
+        >
           <VRow>
             <!-- 👉 First Name -->
-            <VCol cols="12" md="6">
-              <AppTextField v-model="userData.fullName.split(' ')[0]" label="First Name" placeholder="First Name" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <AppTextField
+                v-model="userData.fullName.split(' ')[0]"
+                label="First Name"
+                placeholder="First Name"
+              />
             </VCol>
 
             <!-- 👉 Last Name -->
-            <VCol cols="12" md="6">
-              <AppTextField v-model="userData.fullName.split(' ')[1]" label="Last Name" placeholder="Last Name" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <AppTextField
+                v-model="userData.fullName.split(' ')[1]"
+                label="Last Name"
+                placeholder="Last Name"
+              />
             </VCol>
 
             <!-- 👉 Username -->
             <VCol cols="12">
-              <AppTextField v-model="userData.username" label="Username" placeholder="Username" />
+              <AppTextField
+                v-model="userData.username"
+                label="Username"
+                placeholder="Username"
+              />
             </VCol>
 
             <!-- 👉 Billing Email -->
-            <VCol cols="12" md="6">
-              <AppTextField v-model="userData.email" label="Email" placeholder="Email" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <AppTextField
+                v-model="userData.email"
+                label="Email"
+                placeholder="Email"
+              />
             </VCol>
 
             <!-- 👉 Status -->
-            <VCol cols="12" md="6">
-              <AppSelect v-model="userData.status" label="Status" placeholder="Active"
-                :items="['Active', 'Inactive', 'Pending']" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <AppSelect
+                v-model="userData.status"
+                label="Status"
+                placeholder="Active"
+                :items="['Active', 'Inactive', 'Pending']"
+              />
             </VCol>
 
             <!-- 👉 Tax Id -->
-            <VCol cols="12" md="6">
-              <AppTextField v-model="userData.taxId" label="Tax ID" placeholder="123456789" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <AppTextField
+                v-model="userData.taxId"
+                label="Tax ID"
+                placeholder="123456789"
+              />
             </VCol>
 
             <!-- 👉 Contact -->
-            <VCol cols="12" md="6">
-              <AppTextField v-model="userData.contact" label="Phone Number" placeholder="+966 50 123 4567" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <AppTextField
+                v-model="userData.contact"
+                label="Phone Number"
+                placeholder="+966 50 123 4567"
+              />
             </VCol>
 
             <!-- 👉 Language -->
-            <VCol cols="12" md="6">
-              <AppSelect v-model="userData.language" closable-chips chips multiple label="Language"
-                placeholder="English" :items="['English', 'Spanish', 'French']" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <AppSelect
+                v-model="userData.language"
+                closable-chips
+                chips
+                multiple
+                label="Language"
+                placeholder="English"
+                :items="['English', 'Spanish', 'French']"
+              />
             </VCol>
 
             <!-- 👉 Country -->
-            <VCol cols="12" md="6">
-              <AppSelect v-model="userData.country" label="Country" placeholder="United States"
-                :items="['United States', 'United Kingdom', 'France']" />
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <AppSelect
+                v-model="userData.country"
+                label="Country"
+                placeholder="United States"
+                :items="['United States', 'United Kingdom', 'France']"
+              />
             </VCol>
 
             <!-- 👉 Switch -->
             <VCol cols="12">
-              <VSwitch v-model="isUseAsBillingAddress" density="compact" label="Use as a billing address?" />
+              <VSwitch
+                v-model="isUseAsBillingAddress"
+                density="compact"
+                label="Use as a billing address?"
+              />
             </VCol>
 
             <!-- 👉 Submit and Cancel -->
-            <VCol cols="12" class="d-flex flex-wrap justify-center gap-4">
+            <VCol
+              cols="12"
+              class="d-flex flex-wrap justify-center gap-4"
+            >
               <VBtn type="submit">
                 Submit
               </VBtn>
 
-              <VBtn color="secondary" variant="tonal" @click="onFormReset">
+              <VBtn
+                color="secondary"
+                variant="tonal"
+                @click="onFormReset"
+              >
                 Cancel
               </VBtn>
             </VCol>

@@ -112,9 +112,8 @@ const formatFileSize = (bytes: number) => {
 // Get file icon
 const getFileIcon = (fileName: string) => {
   // Handle null, undefined, or empty fileName
-  if (!fileName || typeof fileName !== 'string') {
+  if (!fileName || typeof fileName !== 'string')
     return 'tabler-file'
-  }
 
   const ext = fileName.split('.').pop()?.toLowerCase()
 

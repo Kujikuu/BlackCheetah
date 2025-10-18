@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { ProductSalesItem, SalesWidgetData } from '@/services/api/franchisee-dashboard'
-import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
-import { getAreaChartSplineConfig } from '@core/libs/apex-chart/apexCharConfig'
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useTheme } from 'vuetify'
+import type { ProductSalesItem, SalesWidgetData } from '@/services/api/franchisee-dashboard'
+import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+import { getAreaChartSplineConfig } from '@core/libs/apex-chart/apexCharConfig'
 
 // Sales dashboard data
 const vuetifyTheme = useTheme()
@@ -23,6 +23,7 @@ const prefixWithPlus = (value: number) => {
 const widgetData = ref<SalesWidgetData[]>([])
 const mostSellingItemsData = ref<ProductSalesItem[]>([])
 const lowSellingItemsData = ref<ProductSalesItem[]>([])
+
 const monthlyPerformanceData = ref<any[]>([
   {
     name: 'Top Performing Items',
@@ -43,14 +44,14 @@ const monthlyPerformanceChartConfig = computed(() => getAreaChartSplineConfig(vu
 
 // Computed property to check if chart data is ready
 const isChartDataReady = computed(() => {
-  return !loading.value &&
-    hasLoadedApiData.value &&
-    monthlyPerformanceData.value.length > 0 &&
-    monthlyPerformanceData.value.every(series =>
-      series.data &&
-      Array.isArray(series.data) &&
-      series.data.length > 0 &&
-      series.data.every((value: any) => typeof value === 'number' && !isNaN(value))
+  return !loading.value
+    && hasLoadedApiData.value
+    && monthlyPerformanceData.value.length > 0
+    && monthlyPerformanceData.value.every(series =>
+      series.data
+      && Array.isArray(series.data)
+      && series.data.length > 0
+      && series.data.every((value: any) => typeof value === 'number' && !isNaN(value)),
     )
 })
 
@@ -74,6 +75,7 @@ const loadDashboardData = async () => {
     const salesStatsResponse = await franchiseeDashboardApi.getSalesStatistics()
     if (salesStatsResponse.success && salesStatsResponse.data) {
       const stats = salesStatsResponse.data
+
       widgetData.value = [
         {
           title: 'Total Sales',
@@ -105,6 +107,7 @@ const loadDashboardData = async () => {
     const monthlyPerformanceResponse = await franchiseeDashboardApi.getMonthlyPerformance()
     if (monthlyPerformanceResponse.success && monthlyPerformanceResponse.data) {
       const performance = monthlyPerformanceResponse.data
+
       monthlyPerformanceData.value = [
         {
           name: 'Top Performing Items',
@@ -121,10 +124,12 @@ const loadDashboardData = async () => {
       ]
       hasLoadedApiData.value = true
     }
-  } catch (err) {
+  }
+  catch (err) {
     error.value = 'Failed to load dashboard data. Please try again.'
     console.error('Error loading dashboard data:', err)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -138,11 +143,18 @@ onMounted(() => {
 <template>
   <section>
     <!-- Loading State -->
-    <VRow v-if="loading" class="mb-6">
+    <VRow
+      v-if="loading"
+      class="mb-6"
+    >
       <VCol cols="12">
         <VCard>
           <VCardText class="text-center py-8">
-            <VProgressCircular indeterminate color="primary" size="64" />
+            <VProgressCircular
+              indeterminate
+              color="primary"
+              size="64"
+            />
             <div class="mt-4 text-body-1">
               Loading dashboard data...
             </div>
@@ -152,15 +164,27 @@ onMounted(() => {
     </VRow>
 
     <!-- Error State -->
-    <VRow v-else-if="error" class="mb-6">
+    <VRow
+      v-else-if="error"
+      class="mb-6"
+    >
       <VCol cols="12">
-        <VAlert type="error" variant="tonal" class="mb-0">
+        <VAlert
+          type="error"
+          variant="tonal"
+          class="mb-0"
+        >
           <template #prepend>
             <VIcon icon="tabler-alert-circle" />
           </template>
           {{ error }}
           <template #append>
-            <VBtn color="error" variant="text" size="small" @click="loadDashboardData">
+            <VBtn
+              color="error"
+              variant="text"
+              size="small"
+              @click="loadDashboardData"
+            >
               Retry
             </VBtn>
           </template>
@@ -173,8 +197,15 @@ onMounted(() => {
       <!-- 👉 Widgets -->
       <div class="d-flex mb-6">
         <VRow>
-          <template v-for="(data, id) in widgetData" :key="id">
-            <VCol cols="12" md="6" sm="6">
+          <template
+            v-for="(data, id) in widgetData"
+            :key="id"
+          >
+            <VCol
+              cols="12"
+              md="6"
+              sm="6"
+            >
               <VCard>
                 <VCardText>
                   <div class="d-flex justify-space-between">
@@ -186,7 +217,10 @@ onMounted(() => {
                         <h4 class="text-h4">
                           {{ data.value }}
                         </h4>
-                        <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
+                        <div
+                          class="text-base"
+                          :class="data.change > 0 ? 'text-success' : 'text-error'"
+                        >
                           ({{ prefixWithPlus(data.change) }}%)
                         </div>
                       </div>
@@ -194,8 +228,16 @@ onMounted(() => {
                         {{ data.desc }}
                       </div>
                     </div>
-                    <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
-                      <VIcon :icon="data.icon" size="26" />
+                    <VAvatar
+                      :color="data.iconColor"
+                      variant="tonal"
+                      rounded
+                      size="42"
+                    >
+                      <VIcon
+                        :icon="data.icon"
+                        size="26"
+                      />
                     </VAvatar>
                   </div>
                 </VCardText>
@@ -208,7 +250,10 @@ onMounted(() => {
       <!-- 👉 Charts Section -->
       <VRow class="mb-6">
         <!-- Most Selling Items List -->
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <VCard>
             <VCardItem>
               <VCardTitle>Most Selling Items</VCardTitle>
@@ -216,11 +261,17 @@ onMounted(() => {
             </VCardItem>
             <VCardText>
               <VList class="py-0">
-                <VListItem v-for="(item, index) in mostSellingItemsData" :key="index" class="px-0">
+                <VListItem
+                  v-for="(item, index) in mostSellingItemsData"
+                  :key="index"
+                  class="px-0"
+                >
                   <template #prepend>
                     <VAvatar
                       :color="index === 0 ? 'success' : index === 1 ? 'primary' : index === 2 ? 'warning' : 'secondary'"
-                      size="40" class="me-3">
+                      size="40"
+                      class="me-3"
+                    >
                       <span class="text-sm font-weight-medium">{{ index + 1 }}</span>
                     </VAvatar>
                   </template>
@@ -230,7 +281,11 @@ onMounted(() => {
                   </VListItemTitle>
 
                   <VListItemSubtitle class="d-flex align-center gap-2 mt-1">
-                    <VChip size="small" color="success" variant="tonal">
+                    <VChip
+                      size="small"
+                      color="success"
+                      variant="tonal"
+                    >
                       {{ item.quantity }} sold
                     </VChip>
                     <span class="text-body-2 text-medium-emphasis">•</span>
@@ -245,7 +300,10 @@ onMounted(() => {
         </VCol>
 
         <!-- Low Selling Items List -->
-        <VCol cols="12" md="6">
+        <VCol
+          cols="12"
+          md="6"
+        >
           <VCard>
             <VCardItem>
               <VCardTitle>Low Selling Items</VCardTitle>
@@ -253,11 +311,17 @@ onMounted(() => {
             </VCardItem>
             <VCardText>
               <VList class="py-0">
-                <VListItem v-for="(item, index) in lowSellingItemsData" :key="index" class="px-0">
+                <VListItem
+                  v-for="(item, index) in lowSellingItemsData"
+                  :key="index"
+                  class="px-0"
+                >
                   <template #prepend>
                     <VAvatar
                       :color="index === 0 ? 'error' : index === 1 ? 'warning' : index === 2 ? 'info' : 'secondary'"
-                      size="40" class="me-3">
+                      size="40"
+                      class="me-3"
+                    >
                       <span class="text-sm font-weight-medium">{{ index + 1 }}</span>
                     </VAvatar>
                   </template>
@@ -267,7 +331,11 @@ onMounted(() => {
                   </VListItemTitle>
 
                   <VListItemSubtitle class="d-flex align-center gap-2 mt-1">
-                    <VChip size="small" color="error" variant="tonal">
+                    <VChip
+                      size="small"
+                      color="error"
+                      variant="tonal"
+                    >
                       {{ item.quantity }} sold
                     </VChip>
                     <span class="text-body-2 text-medium-emphasis">•</span>
@@ -289,20 +357,33 @@ onMounted(() => {
           <VCardSubtitle>Monthly performance comparison</VCardSubtitle>
         </VCardItem>
         <VCardText>
-          <VueApexCharts v-if="isChartDataReady" type="area" height="350" :options="{
-            ...monthlyPerformanceChartConfig,
-            xaxis: {
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            },
-            tooltip: {
-              theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
-              y: {
-                formatter: (value: number) => `${value.toLocaleString()} SAR`,
+          <VueApexCharts
+            v-if="isChartDataReady"
+            type="area"
+            height="350"
+            :options="{
+              ...monthlyPerformanceChartConfig,
+              xaxis: {
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
               },
-            },
-          }" :series="monthlyPerformanceData" />
-          <div v-else class="text-center py-8">
-            <VProgressCircular indeterminate color="primary" size="32" />
+              tooltip: {
+                theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
+                y: {
+                  formatter: (value: number) => `${value.toLocaleString()} SAR`,
+                },
+              },
+            }"
+            :series="monthlyPerformanceData"
+          />
+          <div
+            v-else
+            class="text-center py-8"
+          >
+            <VProgressCircular
+              indeterminate
+              color="primary"
+              size="32"
+            />
             <div class="mt-4 text-body-2 text-medium-emphasis">
               Loading chart data...
             </div>

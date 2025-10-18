@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { h } from 'vue'
+import { useDisplay } from 'vuetify'
 import { useAbility } from '@/plugins/casl/useAbility'
 import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
-import { h } from 'vue'
-import { useDisplay } from 'vuetify'
 
 definePage({
   meta: {
@@ -70,7 +70,8 @@ onMounted(async () => {
           router.push('/')
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to check onboarding status:', error)
   }
 })
@@ -113,27 +114,30 @@ const completeProfile = async () => {
       default:
         router.push('/')
     }
-  } catch (e: any) {
+  }
+  catch (e: any) {
     const data = e?.data || e?.response?._data || null
     if (data?.errors) {
       errorMessages.value = data.errors
-    } else {
+    }
+    else {
       errorMessages.value = {
-        general: [data?.message || 'Failed to complete profile. Please try again.']
+        general: [data?.message || 'Failed to complete profile. Please try again.'],
       }
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
 const isFormValid = computed(() => {
-  return form.value.name &&
-    form.value.phone &&
-    form.value.country &&
-    form.value.state &&
-    form.value.city &&
-    form.value.address
+  return form.value.name
+    && form.value.phone
+    && form.value.country
+    && form.value.state
+    && form.value.city
+    && form.value.address
 })
 </script>
 
@@ -141,15 +145,23 @@ const isFormValid = computed(() => {
   <div class="auth-wrapper d-flex align-center justify-center pa-4">
     <div class="position-relative my-sm-16">
       <!-- 👉 Top shape -->
-      <VNodeRenderer :nodes="h('div', { innerHTML: authV1TopShape })"
-        class="text-primary auth-v1-top-shape d-none d-sm-block" />
+      <VNodeRenderer
+        :nodes="h('div', { innerHTML: authV1TopShape })"
+        class="text-primary auth-v1-top-shape d-none d-sm-block"
+      />
 
       <!-- 👉 Bottom shape -->
-      <VNodeRenderer :nodes="h('div', { innerHTML: authV1BottomShape })"
-        class="text-primary auth-v1-bottom-shape d-none d-sm-block" />
+      <VNodeRenderer
+        :nodes="h('div', { innerHTML: authV1BottomShape })"
+        class="text-primary auth-v1-bottom-shape d-none d-sm-block"
+      />
 
       <!-- 👉 Onboarding Card -->
-      <VCard class="auth-card" max-width="600" :class="smAndUp ? 'pa-6' : 'pa-0'">
+      <VCard
+        class="auth-card"
+        max-width="600"
+        :class="smAndUp ? 'pa-6' : 'pa-0'"
+      >
         <VCardItem class="justify-center">
           <VCardTitle>
             <div class="app-logo">
@@ -174,50 +186,100 @@ const isFormValid = computed(() => {
           <VForm @submit.prevent="completeProfile">
             <VRow>
               <VCol cols="12">
-                <VAlert v-if="errorMessages?.general" type="error" variant="tonal" class="mb-4">
+                <VAlert
+                  v-if="errorMessages?.general"
+                  type="error"
+                  variant="tonal"
+                  class="mb-4"
+                >
                   {{ errorMessages.general[0] }}
                 </VAlert>
               </VCol>
 
               <!-- Full Name -->
               <VCol cols="12">
-                <AppTextField v-model="form.name" autofocus label="Full Name" placeholder="Name"
-                  :error-messages="errorMessages?.name" required />
+                <AppTextField
+                  v-model="form.name"
+                  autofocus
+                  label="Full Name"
+                  placeholder="Name"
+                  :error-messages="errorMessages?.name"
+                  required
+                />
               </VCol>
 
               <!-- Phone -->
               <VCol cols="12">
-                <AppTextField v-model="form.phone" label="Phone Number" placeholder="+966 50 123 4567"
-                  :error-messages="errorMessages?.phone" required />
+                <AppTextField
+                  v-model="form.phone"
+                  label="Phone Number"
+                  placeholder="+966 50 123 4567"
+                  :error-messages="errorMessages?.phone"
+                  required
+                />
               </VCol>
 
               <!-- Country and State -->
-              <VCol cols="12" md="6">
-                <AppSelect v-model="form.country" label="Country" placeholder="Select Country" :items="countries"
-                  :error-messages="errorMessages?.country" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="form.country"
+                  label="Country"
+                  placeholder="Select Country"
+                  :items="countries"
+                  :error-messages="errorMessages?.country"
+                  required
+                />
               </VCol>
 
-              <VCol cols="12" md="6">
-                <AppTextField v-model="form.state" label="State/Province" placeholder="Riyadh"
-                  :error-messages="errorMessages?.state" required />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="form.state"
+                  label="State/Province"
+                  placeholder="Riyadh"
+                  :error-messages="errorMessages?.state"
+                  required
+                />
               </VCol>
 
               <!-- City -->
               <VCol cols="12">
-                <AppTextField v-model="form.city" label="City" placeholder="Riyadh"
-                  :error-messages="errorMessages?.city" required />
+                <AppTextField
+                  v-model="form.city"
+                  label="City"
+                  placeholder="Riyadh"
+                  :error-messages="errorMessages?.city"
+                  required
+                />
               </VCol>
 
               <!-- Address -->
               <VCol cols="12">
-                <AppTextarea v-model="form.address" label="Address" placeholder="123 Main Street, Apt 4B"
-                  :error-messages="errorMessages?.address" rows="3" required />
+                <AppTextarea
+                  v-model="form.address"
+                  label="Address"
+                  placeholder="123 Main Street, Apt 4B"
+                  :error-messages="errorMessages?.address"
+                  rows="3"
+                  required
+                />
               </VCol>
 
               <!-- Complete Profile Button -->
               <VCol cols="12">
-                <VBtn block type="submit" :loading="loading" :disabled="loading || !isFormValid" color="primary"
-                  size="large">
+                <VBtn
+                  block
+                  type="submit"
+                  :loading="loading"
+                  :disabled="loading || !isFormValid"
+                  color="primary"
+                  size="large"
+                >
                   Complete Profile
                 </VBtn>
               </VCol>

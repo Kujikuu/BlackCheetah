@@ -7,6 +7,7 @@ const isLoading = ref(false)
 const isSaving = ref(false)
 const isUploadingAvatar = ref(false)
 const accountData = ref<UserProfile | null>(null)
+
 const accountDataLocal = ref({
   avatarImg: '',
   name: '',
@@ -15,6 +16,7 @@ const accountDataLocal = ref({
   phone: '',
   timezone: '(GMT+03:00) Riyadh',
 })
+
 const uploadStatus = ref<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' })
 
 const timezones = [
@@ -32,6 +34,7 @@ const timezones = [
 const loadProfile = async () => {
   try {
     isLoading.value = true
+
     const response = await accountSettingsApi.getProfile()
     if (response.success) {
       accountData.value = response.data
@@ -56,13 +59,14 @@ const loadProfile = async () => {
 // Get role display name
 const getRoleDisplayName = (role: string): string => {
   const roleMap: Record<string, string> = {
-    'admin': 'Administrator',
-    'franchisor': 'Franchisor',
-    'franchisee': 'Franchisee',
-    'unit_manager': 'Unit Manager',
-    'sales_associate': 'Sales Associate',
-    'employee': 'Employee',
+    admin: 'Administrator',
+    franchisor: 'Franchisor',
+    franchisee: 'Franchisee',
+    unit_manager: 'Unit Manager',
+    sales_associate: 'Sales Associate',
+    employee: 'Employee',
   }
+
   return roleMap[role] || role
 }
 
@@ -90,6 +94,7 @@ const changeAvatar = async (file: Event) => {
     if (selectedFile.size > 800 * 1024) {
       uploadStatus.value = { type: 'error', message: 'File size must be less than 800KB' }
       setTimeout(() => uploadStatus.value = { type: null, message: '' }, 5000)
+
       return
     }
 
@@ -98,13 +103,15 @@ const changeAvatar = async (file: Event) => {
     if (!allowedTypes.includes(selectedFile.type)) {
       uploadStatus.value = { type: 'error', message: 'Only JPG, PNG, and GIF files are allowed' }
       setTimeout(() => uploadStatus.value = { type: null, message: '' }, 5000)
+
       return
     }
 
     try {
       // Show instant preview using FileReader
       const reader = new FileReader()
-      reader.onload = (e) => {
+
+      reader.onload = e => {
         accountDataLocal.value.avatarImg = e.target?.result as string
       }
       reader.readAsDataURL(selectedFile)
@@ -117,9 +124,8 @@ const changeAvatar = async (file: Event) => {
       if (response.success) {
         // Update with server URL
         accountDataLocal.value.avatarImg = response.data.avatar
-        if (accountData.value) {
+        if (accountData.value)
           accountData.value.avatar = response.data.avatar
-        }
 
         // Update cookie - create new object to trigger reactivity
         const userData = useCookie<any>('userData')
@@ -138,12 +144,13 @@ const changeAvatar = async (file: Event) => {
       console.error('Error uploading avatar:', error)
       uploadStatus.value = {
         type: 'error',
-        message: error.response?.data?.message || 'Failed to upload avatar'
+        message: error.response?.data?.message || 'Failed to upload avatar',
       }
+
       // Reload original avatar on error
-      if (accountData.value?.avatar) {
+      if (accountData.value?.avatar)
         accountDataLocal.value.avatarImg = accountData.value.avatar
-      }
+
       setTimeout(() => uploadStatus.value = { type: null, message: '' }, 5000)
     }
     finally {
@@ -160,9 +167,8 @@ const resetAvatar = async () => {
 
     await accountSettingsApi.deleteAvatar()
     accountDataLocal.value.avatarImg = ''
-    if (accountData.value) {
+    if (accountData.value)
       accountData.value.avatar = null
-    }
 
     // Update cookie - create new object to trigger reactivity
     const userData = useCookie<any>('userData')
@@ -180,7 +186,7 @@ const resetAvatar = async () => {
     console.error('Error deleting avatar:', error)
     uploadStatus.value = {
       type: 'error',
-      message: error.response?.data?.message || 'Failed to remove avatar'
+      message: error.response?.data?.message || 'Failed to remove avatar',
     }
     setTimeout(() => uploadStatus.value = { type: null, message: '' }, 5000)
   }
@@ -232,38 +238,73 @@ onMounted(() => {
 <template>
   <VRow>
     <VCol cols="12">
-      <VCard title="Profile Details" :loading="isLoading">
+      <VCard
+        title="Profile Details"
+        :loading="isLoading"
+      >
         <VCardText class="d-flex flex-column gap-4">
           <div class="d-flex align-center">
             <!-- Avatar with loading overlay -->
             <div class="position-relative me-6">
-              <VAvatar rounded size="100" :image="accountDataLocal.avatarImg">
-                <span v-if="!accountDataLocal.avatarImg" class="text-5xl font-weight-medium">
+              <VAvatar
+                rounded
+                size="100"
+                :image="accountDataLocal.avatarImg"
+              >
+                <span
+                  v-if="!accountDataLocal.avatarImg"
+                  class="text-5xl font-weight-medium"
+                >
                   {{ accountDataLocal.name.charAt(0).toUpperCase() }}
                 </span>
               </VAvatar>
               <!-- Loading overlay -->
-              <div v-if="isUploadingAvatar"
+              <div
+                v-if="isUploadingAvatar"
                 class="position-absolute top-0 start-0 w-100 h-100 d-flex align-center justify-center"
-                style="background: rgba(0,0,0,0.5); border-radius: 8px;">
-                <VProgressCircular indeterminate color="white" size="32" />
+                style="background: rgba(0,0,0,0.5); border-radius: 8px;"
+              >
+                <VProgressCircular
+                  indeterminate
+                  color="white"
+                  size="32"
+                />
               </div>
             </div>
 
             <!-- Upload Photo -->
             <div class="d-flex flex-column justify-center gap-4">
               <div class="d-flex flex-wrap gap-2">
-                <VBtn color="primary" :loading="isUploadingAvatar" :disabled="isLoading || isUploadingAvatar"
-                  @click="refInputEl?.click()">
-                  <VIcon icon="tabler-cloud-upload" class="d-sm-none" />
+                <VBtn
+                  color="primary"
+                  :loading="isUploadingAvatar"
+                  :disabled="isLoading || isUploadingAvatar"
+                  @click="refInputEl?.click()"
+                >
+                  <VIcon
+                    icon="tabler-cloud-upload"
+                    class="d-sm-none"
+                  />
                   <span class="d-none d-sm-block">Upload new photo</span>
                 </VBtn>
 
-                <input ref="refInputEl" type="file" name="file" accept=".jpeg,.png,.jpg,.gif" hidden
-                  @input="changeAvatar">
+                <input
+                  ref="refInputEl"
+                  type="file"
+                  name="file"
+                  accept=".jpeg,.png,.jpg,.gif"
+                  hidden
+                  @input="changeAvatar"
+                >
 
-                <VBtn type="reset" color="secondary" variant="outlined" :loading="isUploadingAvatar"
-                  :disabled="isLoading || isUploadingAvatar || !accountDataLocal.avatarImg" @click="resetAvatar">
+                <VBtn
+                  type="reset"
+                  color="secondary"
+                  variant="outlined"
+                  :loading="isUploadingAvatar"
+                  :disabled="isLoading || isUploadingAvatar || !accountDataLocal.avatarImg"
+                  @click="resetAvatar"
+                >
                   Reset
                 </VBtn>
               </div>
@@ -275,8 +316,13 @@ onMounted(() => {
           </div>
 
           <!-- Upload Status Alert -->
-          <VAlert v-if="uploadStatus.message" :type="uploadStatus.type || 'info'" variant="tonal" closable
-            @click:close="uploadStatus = { type: null, message: '' }">
+          <VAlert
+            v-if="uploadStatus.message"
+            :type="uploadStatus.type || 'info'"
+            variant="tonal"
+            closable
+            @click:close="uploadStatus = { type: null, message: '' }"
+          >
             {{ uploadStatus.message }}
           </VAlert>
         </VCardText>
@@ -288,40 +334,90 @@ onMounted(() => {
           <VForm class="mt-6">
             <VRow>
               <!-- Full Name -->
-              <VCol cols="12" md="12">
-                <AppTextField v-model="accountDataLocal.name" label="Full Name" placeholder="Name" />
+              <VCol
+                cols="12"
+                md="12"
+              >
+                <AppTextField
+                  v-model="accountDataLocal.name"
+                  label="Full Name"
+                  placeholder="Name"
+                />
               </VCol>
 
               <!-- Email -->
-              <VCol cols="12" md="6">
-                <AppTextField v-model="accountDataLocal.email" label="Email" type="email"
-                  placeholder="admin@example.com" readonly persistent-hint />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="accountDataLocal.email"
+                  label="Email"
+                  type="email"
+                  placeholder="admin@example.com"
+                  readonly
+                  persistent-hint
+                />
               </VCol>
 
               <!-- Role -->
-              <VCol cols="12" md="6">
-                <AppTextField v-model="accountDataLocal.role" label="Role" placeholder="Administrator" readonly />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="accountDataLocal.role"
+                  label="Role"
+                  placeholder="Administrator"
+                  readonly
+                />
               </VCol>
 
               <!-- Phone -->
-              <VCol cols="12" md="6">
-                <AppTextField v-model="accountDataLocal.phone" label="Phone Number" placeholder="+966 50 123 4567" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="accountDataLocal.phone"
+                  label="Phone Number"
+                  placeholder="+966 50 123 4567"
+                />
               </VCol>
 
               <!-- Timezone -->
-              <VCol cols="12" md="6">
-                <AppSelect v-model="accountDataLocal.timezone" label="Timezone" :items="timezones"
-                  placeholder="Select Timezone" />
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="accountDataLocal.timezone"
+                  label="Timezone"
+                  :items="timezones"
+                  placeholder="Select Timezone"
+                />
               </VCol>
 
               <!-- Form Actions -->
-              <VCol cols="12" class="d-flex flex-wrap gap-4">
-                <VBtn :loading="isSaving" :disabled="isLoading" @click="onFormSubmit">
+              <VCol
+                cols="12"
+                class="d-flex flex-wrap gap-4"
+              >
+                <VBtn
+                  :loading="isSaving"
+                  :disabled="isLoading"
+                  @click="onFormSubmit"
+                >
                   Save changes
                 </VBtn>
 
-                <VBtn color="secondary" variant="outlined" type="reset" :disabled="isLoading || isSaving"
-                  @click.prevent="resetForm">
+                <VBtn
+                  color="secondary"
+                  variant="outlined"
+                  type="reset"
+                  :disabled="isLoading || isSaving"
+                  @click.prevent="resetForm"
+                >
                   Reset
                 </VBtn>
               </VCol>

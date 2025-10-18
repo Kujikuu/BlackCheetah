@@ -16,8 +16,8 @@ export interface SalesWidgetData {
 export interface ProductSalesItem {
   name: string
   quantity: number
-  price?: string  // For backward compatibility
-  avgPrice?: number  // New field from backend
+  price?: string // For backward compatibility
+  avgPrice?: number // New field from backend
 }
 
 export interface MonthlyPerformanceData {
@@ -375,12 +375,14 @@ export const franchiseeDashboardApi = {
   // Get unit details and overview
   async getUnitDetails(unitId?: number): Promise<ApiResponse<UnitDetails>> {
     const url = unitId ? `${API_URL}/units/details/${unitId}` : `${API_URL}/units/details`
+
     return await $api<ApiResponse<UnitDetails>>(url)
   },
 
   // Get unit tasks
   async getUnitTasks(unitId?: number): Promise<ApiResponse<UnitTask[]>> {
     const url = unitId ? `${API_URL}/units/tasks/${unitId}` : `${API_URL}/units/tasks`
+
     return await $api<ApiResponse<UnitTask[]>>(url)
   },
 
@@ -400,24 +402,28 @@ export const franchiseeDashboardApi = {
   // Get unit staff members
   async getUnitStaff(unitId?: number): Promise<ApiResponse<UnitStaff[]>> {
     const url = unitId ? `${API_URL}/units/staff/${unitId}` : `${API_URL}/units/staff`
+
     return await $api<ApiResponse<UnitStaff[]>>(url)
   },
 
   // Get unit products/inventory
   async getUnitProducts(unitId?: number): Promise<ApiResponse<UnitProduct[]>> {
     const url = unitId ? `${API_URL}/units/products/${unitId}` : `${API_URL}/units/products`
+
     return await $api<ApiResponse<UnitProduct[]>>(url)
   },
 
   // Get unit reviews
   async getUnitReviews(unitId?: number): Promise<ApiResponse<UnitReview[]>> {
     const url = unitId ? `${API_URL}/units/reviews/${unitId}` : `${API_URL}/units/reviews`
+
     return await $api<ApiResponse<UnitReview[]>>(url)
   },
 
   // Get unit documents
   async getUnitDocuments(unitId?: number): Promise<ApiResponse<UnitDocument[]>> {
     const url = unitId ? `${API_URL}/units/documents/${unitId}` : `${API_URL}/units/documents`
+
     return await $api<ApiResponse<UnitDocument[]>>(url)
   },
 

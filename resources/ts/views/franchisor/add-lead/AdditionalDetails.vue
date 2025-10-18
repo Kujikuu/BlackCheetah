@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LeadAdditionalDetails } from './types';
+import type { LeadAdditionalDetails } from './types'
 
 interface Props {
   formData: LeadAdditionalDetails
@@ -62,38 +62,84 @@ const handleFileUpload = (event: Event) => {
       </p>
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppSelect v-model="localFormData.leadSource" label="Lead Source" placeholder="Select Source"
-        :items="leadSources" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppSelect
+        v-model="localFormData.leadSource"
+        label="Lead Source"
+        placeholder="Select Source"
+        :items="leadSources"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppSelect v-model="localFormData.leadStatus" label="Lead Status" placeholder="Select Status"
-        :items="leadStatuses" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppSelect
+        v-model="localFormData.leadStatus"
+        label="Lead Status"
+        placeholder="Select Status"
+        :items="leadStatuses"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppSelect v-model="localFormData.leadOwner" label="Lead Owner" placeholder="Select Owner" :items="leadOwners" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppSelect
+        v-model="localFormData.leadOwner"
+        label="Lead Owner"
+        placeholder="Select Owner"
+        :items="leadOwners"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppDateTimePicker v-model="localFormData.lastContactedDate" label="Last Contacted Date"
-        placeholder="Select Date" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppDateTimePicker
+        v-model="localFormData.lastContactedDate"
+        label="Last Contacted Date"
+        placeholder="Select Date"
+      />
     </VCol>
 
-    <VCol cols="12" md="6">
-      <AppDateTimePicker v-model="localFormData.scheduledMeetingDate" label="Scheduled Meeting Date"
-        placeholder="Select Date" />
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppDateTimePicker
+        v-model="localFormData.scheduledMeetingDate"
+        label="Scheduled Meeting Date"
+        placeholder="Select Date"
+      />
     </VCol>
 
     <VCol cols="12">
-      <AppTextarea v-model="localFormData.note" label="Note" placeholder="Add any additional notes about this lead..."
-        rows="4" />
+      <AppTextarea
+        v-model="localFormData.note"
+        label="Note"
+        placeholder="Add any additional notes about this lead..."
+        rows="4"
+      />
     </VCol>
 
     <VCol cols="12">
-      <VFileInput label="Attachments" multiple prepend-icon="tabler-paperclip" placeholder="Upload files" chips
-        show-size counter @change="handleFileUpload" />
+      <VFileInput
+        label="Attachments"
+        multiple
+        prepend-icon="tabler-paperclip"
+        placeholder="Upload files"
+        chips
+        show-size
+        counter
+        @change="handleFileUpload"
+      />
     </VCol>
   </VRow>
 </template>

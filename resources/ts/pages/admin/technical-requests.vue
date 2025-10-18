@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { technicalRequestApi, type TechnicalRequest } from '@/services/api/technical-request'
-import EditTechnicalRequestDrawer from '@/views/admin/modals/EditTechnicalRequestDrawer.vue'
 import { computed, onMounted, ref, watch } from 'vue'
+import { type TechnicalRequest, technicalRequestApi } from '@/services/api/technical-request'
+import EditTechnicalRequestDrawer from '@/views/admin/modals/EditTechnicalRequestDrawer.vue'
 
 // Local display interface
 interface DisplayRequest {
@@ -95,13 +95,15 @@ const mapToDisplayRequest = (apiRequest: TechnicalRequest): DisplayRequest => {
 const fetchTechnicalRequests = async () => {
   try {
     isLoading.value = true
-    const response = await technicalRequestApi.getAdminRequests({
+
+    const response = await technicalRequestApi.getTechnicalRequests({
       status: selectedStatus.value?.replace('-', '_'),
       priority: selectedPriority.value,
       search: searchQuery.value,
       per_page: itemsPerPage.value,
       page: page.value,
     })
+
     technicalRequests.value = response.data.data.map(mapToDisplayRequest)
     totalRequests.value = response.data.total
   }
@@ -118,9 +120,9 @@ const filteredRequests = computed(() => technicalRequests.value)
 
 // Helper function for avatar text
 const avatarText = (name: string | null | undefined) => {
-  if (!name || typeof name !== 'string') {
+  if (!name || typeof name !== 'string')
     return 'U'
-  }
+
   return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase()
 }
 
@@ -158,7 +160,7 @@ const updateRequestStatus = async (id: number, status: string) => {
 const showBulkDeleteConfirmation = () => {
   if (selectedRows.value.length === 0)
     return
-  
+
   isBulkDeleteConfirmDialogVisible.value = true
 }
 
@@ -167,16 +169,16 @@ const confirmBulkDelete = async () => {
   try {
     isDeleting.value = true
     await technicalRequestApi.bulkDelete(selectedRows.value)
-    
+
     // Refresh the list after deletion
     await fetchTechnicalRequests()
-    
+
     // Clear selection
     selectedRows.value = []
-    
+
     // Close dialog
     isBulkDeleteConfirmDialogVisible.value = false
-    
+
     console.log('Bulk delete successful')
   }
   catch (error) {
@@ -207,9 +209,8 @@ const priorityOptions = [
 ]
 
 const resolveStatusVariant = (status: string | null | undefined) => {
-  if (!status || typeof status !== 'string') {
+  if (!status || typeof status !== 'string')
     return 'primary'
-  }
 
   const statusLowerCase = status.toLowerCase()
   if (statusLowerCase === 'open')
@@ -225,9 +226,8 @@ const resolveStatusVariant = (status: string | null | undefined) => {
 }
 
 const resolvePriorityVariant = (priority: string | null | undefined) => {
-  if (!priority || typeof priority !== 'string') {
+  if (!priority || typeof priority !== 'string')
     return { color: 'primary', icon: 'tabler-minus' }
-  }
 
   const priorityLowerCase = priority.toLowerCase()
   if (priorityLowerCase === 'low')
@@ -250,7 +250,7 @@ const selectedRequest = ref<any>(null)
 const viewRequest = (request: any) => {
   selectedRequest.value = {
     ...request,
-    attachments: Array.isArray(request.attachments) ? request.attachments : []
+    attachments: Array.isArray(request.attachments) ? request.attachments : [],
   }
   isViewRequestDialogVisible.value = true
 }
@@ -308,9 +308,8 @@ const downloadAttachment = (attachment: any) => {
 
 // Get file icon based on extension
 const getFileIcon = (fileName: string | null | undefined) => {
-  if (!fileName || typeof fileName !== 'string') {
+  if (!fileName || typeof fileName !== 'string')
     return 'tabler-file'
-  }
 
   const ext = fileName.split('.').pop()?.toLowerCase()
 
@@ -696,7 +695,7 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
               <div class="text-body-2 text-medium-emphasis mb-2">
                 Attachments ({{Array.isArray(selectedRequest.attachments) ? selectedRequest.attachments.filter(att =>
                   att
-                  && (att.name || att.filename)).length : 0 }})
+                  && (att.name || att.filename)).length : 0}})
               </div>
               <VList lines="two" density="compact" class="pa-0">
                 <VListItem
@@ -748,18 +747,10 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
       @request-data="updateRequest" />
 
     <!-- Bulk Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isBulkDeleteConfirmDialogVisible"
-      max-width="500"
-    >
+    <VDialog v-model="isBulkDeleteConfirmDialogVisible" max-width="500">
       <VCard class="text-center px-10 py-6">
         <VCardText>
-          <VIcon
-            icon="tabler-alert-triangle"
-            size="64"
-            color="warning"
-            class="mb-4"
-          />
+          <VIcon icon="tabler-alert-triangle" size="64" color="warning" class="mb-4" />
           <h3 class="text-h5 mb-2">
             Confirm Bulk Delete
           </h3>
@@ -779,17 +770,10 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
           </p>
         </VCardText>
         <VCardText class="d-flex align-center justify-center gap-2">
-          <VBtn
-            variant="outlined"
-            @click="isBulkDeleteConfirmDialogVisible = false"
-          >
+          <VBtn variant="outlined" @click="isBulkDeleteConfirmDialogVisible = false">
             Cancel
           </VBtn>
-          <VBtn
-            color="error"
-            :loading="isDeleting"
-            @click="confirmBulkDelete"
-          >
+          <VBtn color="error" :loading="isDeleting" @click="confirmBulkDelete">
             Delete {{ selectedRows.length }} Request(s)
           </VBtn>
         </VCardText>

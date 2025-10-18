@@ -1,5 +1,3 @@
-import type { Ref } from 'vue'
-
 export interface TaskUser {
   id: number
   name: string
@@ -33,14 +31,17 @@ export const useTaskUsers = () => {
           role: 'franchisee',
           status: user.status,
         }))
-      } else {
+      }
+      else {
         franchisees.value = []
       }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       console.error('Failed to fetch franchisees:', err)
       error.value = err?.data?.message || 'Failed to fetch franchisees'
       franchisees.value = []
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -63,14 +64,17 @@ export const useTaskUsers = () => {
           role: 'sales',
           status: user.status,
         }))
-      } else {
+      }
+      else {
         salesUsers.value = []
       }
-    } catch (err: any) {
+    }
+    catch (err: any) {
       console.error('Failed to fetch sales users:', err)
       error.value = err?.data?.message || 'Failed to fetch sales users'
       salesUsers.value = []
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -80,7 +84,7 @@ export const useTaskUsers = () => {
    */
   const getUsersForSelect = (userType: 'franchisee' | 'sales') => {
     const users = userType === 'franchisee' ? franchisees.value : salesUsers.value
-    
+
     return users
       .filter(user => user.status === 'active') // Only show active users
       .map(user => ({
@@ -96,6 +100,7 @@ export const useTaskUsers = () => {
   const getUserNameById = (userId: number, userType: 'franchisee' | 'sales') => {
     const users = userType === 'franchisee' ? franchisees.value : salesUsers.value
     const user = users.find(u => u.id === userId)
+
     return user ? user.name : 'Unknown User'
   }
 
@@ -103,13 +108,11 @@ export const useTaskUsers = () => {
    * Initialize data based on user type
    */
   const initializeUsers = async (userType: 'franchisee' | 'sales' | 'both' = 'both') => {
-    if (userType === 'franchisee' || userType === 'both') {
+    if (userType === 'franchisee' || userType === 'both')
       await fetchFranchisees()
-    }
-    
-    if (userType === 'sales' || userType === 'both') {
+
+    if (userType === 'sales' || userType === 'both')
       await fetchSalesUsers()
-    }
   }
 
   return {

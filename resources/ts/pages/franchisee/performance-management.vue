@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { PerformanceManagementData } from '@/services/api/franchisee-dashboard'
-import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 import { computed, onMounted, ref } from 'vue'
 import { useTheme } from 'vuetify'
+import type { PerformanceManagementData } from '@/services/api/franchisee-dashboard'
+import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 
 const vuetifyTheme = useTheme()
 
@@ -18,10 +18,10 @@ onMounted(async () => {
 const loadPerformanceData = async () => {
   try {
     isLoading.value = true
+
     const response = await franchiseeDashboardApi.getPerformanceManagement()
-    if (response.success) {
+    if (response.success)
       performanceData.value = response.data
-    }
   }
   catch (error) {
     console.error('Error loading performance data:', error)
@@ -109,7 +109,7 @@ const productChartOptions = computed(() => {
     },
     colors: ['#FFA726', '#7B1FA2'],
     grid: {
-      borderColor: borderColor,
+      borderColor,
       strokeDashArray: 5,
     },
     tooltip: {
@@ -296,19 +296,30 @@ const selectedFranchisee = ref('Franchisee')
     <!-- Top Row: Product Performance Chart and Royalty Card -->
     <VRow class="mb-6">
       <!-- Top and Low Performing Product Chart -->
-      <VCol cols="12" lg="8">
+      <VCol
+        cols="12"
+        lg="8"
+      >
         <VCard>
           <VCardText>
             <h5 class="text-h5 font-weight-semibold mb-4">
               Top and Low Performing Product
             </h5>
-            <VueApexCharts type="bar" height="350" :options="productChartOptions" :series="productChartData" />
+            <VueApexCharts
+              type="bar"
+              height="350"
+              :options="productChartOptions"
+              :series="productChartData"
+            />
           </VCardText>
         </VCard>
       </VCol>
 
       <!-- Royalty Card -->
-      <VCol cols="12" lg="4">
+      <VCol
+        cols="12"
+        lg="4"
+      >
         <VCard class="h-100">
           <VCardText>
             <h5 class="text-h5 font-weight-semibold mb-4">
@@ -319,7 +330,12 @@ const selectedFranchisee = ref('Franchisee')
                 {{ royaltyAmount }}
               </h2>
             </div>
-            <VueApexCharts type="line" height="120" :options="royaltyChartOptions" :series="royaltyChartData" />
+            <VueApexCharts
+              type="line"
+              height="120"
+              :options="royaltyChartOptions"
+              :series="royaltyChartData"
+            />
           </VCardText>
         </VCard>
       </VCol>
@@ -328,7 +344,10 @@ const selectedFranchisee = ref('Franchisee')
     <!-- Bottom Row: Tasks Overview and Customer Satisfaction -->
     <VRow>
       <!-- Tasks Overview -->
-      <VCol cols="12" md="6">
+      <VCol
+        cols="12"
+        md="6"
+      >
         <VCard>
           <VCardText>
             <div class="d-flex justify-space-between align-center mb-4">
@@ -340,7 +359,12 @@ const selectedFranchisee = ref('Franchisee')
             <div class="d-flex align-center">
               <!-- Donut Chart -->
               <div class="flex-shrink-0">
-                <VueApexCharts type="donut" height="200" :options="tasksChartOptions" :series="tasksChartData" />
+                <VueApexCharts
+                  type="donut"
+                  height="200"
+                  :options="tasksChartOptions"
+                  :series="tasksChartData"
+                />
               </div>
 
               <!-- Tasks Stats -->
@@ -357,7 +381,10 @@ const selectedFranchisee = ref('Franchisee')
                 <div class="d-flex flex-column gap-3">
                   <div class="d-flex align-center">
                     <div class="d-flex align-center me-3">
-                      <div class="rounded-circle me-2" style="width: 12px; height: 12px; background-color: #4CAF50;" />
+                      <div
+                        class="rounded-circle me-2"
+                        style="width: 12px; height: 12px; background-color: #4CAF50;"
+                      />
                       <span class="text-sm">{{ tasksData.completed }}</span>
                     </div>
                     <span class="text-sm text-medium-emphasis">Completed</span>
@@ -365,7 +392,10 @@ const selectedFranchisee = ref('Franchisee')
 
                   <div class="d-flex align-center">
                     <div class="d-flex align-center me-3">
-                      <div class="rounded-circle me-2" style="width: 12px; height: 12px; background-color: #2196F3;" />
+                      <div
+                        class="rounded-circle me-2"
+                        style="width: 12px; height: 12px; background-color: #2196F3;"
+                      />
                       <span class="text-sm">{{ tasksData.inProgress }}</span>
                     </div>
                     <span class="text-sm text-medium-emphasis">In Progress</span>
@@ -373,7 +403,10 @@ const selectedFranchisee = ref('Franchisee')
 
                   <div class="d-flex align-center">
                     <div class="d-flex align-center me-3">
-                      <div class="rounded-circle me-2" style="width: 12px; height: 12px; background-color: #F44336;" />
+                      <div
+                        class="rounded-circle me-2"
+                        style="width: 12px; height: 12px; background-color: #F44336;"
+                      />
                       <span class="text-sm">{{ tasksData.due }}</span>
                     </div>
                     <span class="text-sm text-medium-emphasis">Due</span>
@@ -386,7 +419,10 @@ const selectedFranchisee = ref('Franchisee')
       </VCol>
 
       <!-- Customer Satisfaction Score -->
-      <VCol cols="12" md="6">
+      <VCol
+        cols="12"
+        md="6"
+      >
         <VCard>
           <VCardText>
             <h5 class="text-h5 font-weight-semibold mb-4">
@@ -396,8 +432,12 @@ const selectedFranchisee = ref('Franchisee')
             <div class="d-flex align-center">
               <!-- Gauge Chart -->
               <div class="flex-shrink-0">
-                <VueApexCharts type="radialBar" height="200" :options="satisfactionGaugeOptions"
-                  :series="satisfactionGaugeData" />
+                <VueApexCharts
+                  type="radialBar"
+                  height="200"
+                  :options="satisfactionGaugeOptions"
+                  :series="satisfactionGaugeData"
+                />
               </div>
 
               <!-- Satisfaction Stats -->
@@ -412,7 +452,10 @@ const selectedFranchisee = ref('Franchisee')
                 <div class="d-flex flex-column gap-3">
                   <div class="d-flex align-center justify-space-between">
                     <div class="d-flex align-center">
-                      <div class="rounded-circle me-2" style="width: 12px; height: 12px; background-color: #4CAF50;" />
+                      <div
+                        class="rounded-circle me-2"
+                        style="width: 12px; height: 12px; background-color: #4CAF50;"
+                      />
                       <span class="text-sm">Positive</span>
                     </div>
                     <span class="text-sm font-weight-semibold text-success">{{
@@ -421,7 +464,10 @@ const selectedFranchisee = ref('Franchisee')
 
                   <div class="d-flex align-center justify-space-between">
                     <div class="d-flex align-center">
-                      <div class="rounded-circle me-2" style="width: 12px; height: 12px; background-color: #FFA726;" />
+                      <div
+                        class="rounded-circle me-2"
+                        style="width: 12px; height: 12px; background-color: #FFA726;"
+                      />
                       <span class="text-sm">Neutral</span>
                     </div>
                     <span class="text-sm font-weight-semibold text-warning">{{
@@ -430,7 +476,10 @@ const selectedFranchisee = ref('Franchisee')
 
                   <div class="d-flex align-center justify-space-between">
                     <div class="d-flex align-center">
-                      <div class="rounded-circle me-2" style="width: 12px; height: 12px; background-color: #F44336;" />
+                      <div
+                        class="rounded-circle me-2"
+                        style="width: 12px; height: 12px; background-color: #F44336;"
+                      />
                       <span class="text-sm">Negative</span>
                     </div>
                     <span class="text-sm font-weight-semibold text-error">{{

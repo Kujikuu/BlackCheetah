@@ -1,6 +1,6 @@
+import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
 import { $api } from '@/utils/api'
 import { canNavigate } from '@layouts/plugins/casl'
-import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
 
 export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]: any }>) => {
   // 👉 router.beforeEach
@@ -53,10 +53,10 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
         try {
           const response = await $api('/v1/onboarding/status')
 
-          if (!response.profile_completed) {
+          if (!response.profile_completed)
             return { name: 'onboarding' }
-          }
-        } catch (error) {
+        }
+        catch (error) {
           // If we can't check onboarding status, allow navigation
           console.warn('Failed to check onboarding status:', error)
         }
