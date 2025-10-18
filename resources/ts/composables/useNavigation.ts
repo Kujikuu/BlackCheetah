@@ -19,16 +19,16 @@ export const useNavigation = () => {
       return [] as VerticalNavItems
 
     switch (userRole) {
-      case 'admin':
-        return [...admin] as VerticalNavItems
-      case 'franchisor':
-        return [...franchisor] as VerticalNavItems
-      case 'franchisee':
-        return [...franchisee] as VerticalNavItems
-      case 'sales':
-        return [...sales] as VerticalNavItems
-      default:
-        return [] as VerticalNavItems
+    case 'admin':
+      return [...admin] as VerticalNavItems
+    case 'franchisor':
+      return [...franchisor] as VerticalNavItems
+    case 'franchisee':
+      return [...franchisee] as VerticalNavItems
+    case 'sales':
+      return [...sales] as VerticalNavItems
+    default:
+      return [] as VerticalNavItems
     }
   })
 

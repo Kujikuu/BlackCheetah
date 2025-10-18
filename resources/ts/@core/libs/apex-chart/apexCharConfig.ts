@@ -135,7 +135,7 @@ export const getLineChartSimpleConfig = (themeColors: ThemeInstance['themes']['v
 }
 
 export const getBarChartConfig = (themeColors: ThemeInstance['themes']['value']['colors']) => {
-  const { themeBorderColor, themeDisabledTextColor, themeSecondaryTextColor } = colorVariables(themeColors)
+  const { themeBorderColor, themeDisabledTextColor, _themeSecondaryTextColor } = colorVariables(themeColors)
 
   return {
     chart: {

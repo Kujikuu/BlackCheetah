@@ -45,6 +45,22 @@ export const useNotifications = () => {
   const loading = ref(false)
   const stats = ref<NotificationStats>({ total: 0, unread: 0, read: 0 })
 
+  // Format time for display
+  const formatTime = (dateString: string): string => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+
+    if (diffInHours < 1)
+      return 'Just now'
+    else if (diffInHours < 24)
+      return `${diffInHours}h ago`
+    else if (diffInHours < 48)
+      return 'Yesterday'
+    else
+      return date.toLocaleDateString()
+  }
+
   // Transform backend notification to frontend format
   const transformNotification = (backendNotification: BackendNotification): any => {
     // Parse data if it's a string (sometimes comes as JSON string from API)
@@ -74,22 +90,6 @@ export const useNotifications = () => {
       created_at: backendNotification.created_at,
       read_at: backendNotification.read_at,
     }
-  }
-
-  // Format time for display
-  const formatTime = (dateString: string): string => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-
-    if (diffInHours < 1)
-      return 'Just now'
-    else if (diffInHours < 24)
-      return `${diffInHours}h ago`
-    else if (diffInHours < 48)
-      return 'Yesterday'
-    else
-      return date.toLocaleDateString()
   }
 
   // Fetch notifications

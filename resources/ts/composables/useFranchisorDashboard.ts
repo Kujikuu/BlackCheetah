@@ -73,6 +73,45 @@ export const useFranchisorDashboard = () => {
   const profileCompletionStatus = ref<ProfileCompletionStatus | null>(null)
   const franchiseExists = ref<boolean>(true) // Track if franchise exists
 
+  // Track if banner was dismissed for current session only
+  const bannerDismissed = ref(false)
+
+  /**
+   * Format time ago helper
+   */
+  const formatTimeAgo = (dateString: string): string => {
+    if (!dateString)
+      return 'Unknown'
+
+    const date = new Date(dateString)
+
+    // Check if date is valid
+    if (Number.isNaN(date.getTime())) {
+      console.warn('Invalid date string:', dateString)
+
+      return 'Unknown'
+    }
+
+    const now = new Date()
+    const diffInMs = now.getTime() - date.getTime()
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
+
+    if (diffInHours < 1)
+      return 'Just now'
+    if (diffInHours < 24)
+      return `${diffInHours} hours ago`
+
+    const diffInDays = Math.floor(diffInHours / 24)
+    if (diffInDays === 1)
+      return '1 day ago'
+    if (diffInDays < 7)
+      return `${diffInDays} days ago`
+    if (diffInDays < 30)
+      return `${Math.floor(diffInDays / 7)} weeks ago`
+
+    return date.toLocaleDateString()
+  }
+
   const isProfileComplete = computed(() => {
     // If banner was dismissed for current session, hide it temporarily
     if (bannerDismissed.value)
@@ -173,9 +212,6 @@ export const useFranchisorDashboard = () => {
     }
   }
 
-  // Track if banner was dismissed for current session only
-  const bannerDismissed = ref(false)
-
   /**
    * Dismiss the onboarding banner for current session only
    * The banner will show again on next visit if profile is still incomplete
@@ -245,42 +281,6 @@ export const useFranchisorDashboard = () => {
   }
 
   /**
-   * Format time ago helper
-   */
-  const formatTimeAgo = (dateString: string): string => {
-    if (!dateString)
-      return 'Unknown'
-
-    const date = new Date(dateString)
-
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      console.warn('Invalid date string:', dateString)
-
-      return 'Unknown'
-    }
-
-    const now = new Date()
-    const diffInMs = now.getTime() - date.getTime()
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
-
-    if (diffInHours < 1)
-      return 'Just now'
-    if (diffInHours < 24)
-      return `${diffInHours} hours ago`
-
-    const diffInDays = Math.floor(diffInHours / 24)
-    if (diffInDays === 1)
-      return '1 day ago'
-    if (diffInDays < 7)
-      return `${diffInDays} days ago`
-    if (diffInDays < 30)
-      return `${Math.floor(diffInDays / 7)} weeks ago`
-
-    return date.toLocaleDateString()
-  }
-
-  /**
    * Initialize dashboard data
    */
   const initializeDashboard = async () => {
@@ -308,13 +308,13 @@ export const useFranchisorDashboard = () => {
       // If we get a successful response, the franchise exists
       return response.success === true
     }
-    catch (error: any) {
+    catch (err: any) {
       // If we get a 404, it means no franchise exists
-      if (error.status === 404)
+      if (err.status === 404)
         return false
 
       // For other errors, assume franchise exists to be safe
-      console.error('Error checking franchise existence:', error)
+      console.error('Error checking franchise existence:', err)
 
       return true
     }

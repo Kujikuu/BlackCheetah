@@ -174,7 +174,7 @@ const getUserTypeLabel = (role: string) => {
 }
 
 // Utility functions
-const prefixWithPlus = (value: number) => {
+const _prefixWithPlus = (value: number) => {
   return value > 0 ? `+${value}` : value.toString()
 }
 

@@ -4,7 +4,7 @@ import type { Notification } from '@layouts/types'
 
 const {
   notifications,
-  loading,
+  loading: _loading,
   fetchNotifications,
   fetchStats,
   markAsRead,

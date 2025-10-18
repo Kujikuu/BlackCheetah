@@ -3,7 +3,7 @@ import { useGenerateImageVariant } from '@core/composable/useGenerateImageVarian
 import miscMaskDark from '@images/pages/misc-mask-dark.png'
 import miscMaskLight from '@images/pages/misc-mask-light.png'
 
-const authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark)
+const _authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark)
 
 definePage({
   alias: '/pages/misc/not-found/:error(.*)',

@@ -35,7 +35,7 @@ const selectedPriority = ref()
 const itemsPerPage = ref(10)
 const page = ref(1)
 const sortBy = ref()
-const orderBy = ref()
+const _orderBy = ref()
 const selectedRows = ref<number[]>([])
 
 // Update data table options
@@ -65,14 +65,12 @@ const totalRequests = ref(0)
 const mapToDisplayRequest = (apiRequest: TechnicalRequest): DisplayRequest => {
   // Handle attachments - could be array, string, or null
   let attachments: any[] = []
-  if (apiRequest.attachments) {
-    if (Array.isArray(apiRequest.attachments)) {
-      attachments = apiRequest.attachments.map((url: string, index: number) => ({
-        name: url.split('/').pop() || `attachment-${index}`,
-        size: 'Unknown',
-        url,
-      }))
-    }
+  if (apiRequest.attachments && Array.isArray(apiRequest.attachments)) {
+    attachments = apiRequest.attachments.map((url: string, index: number) => ({
+      name: url.split('/').pop() || `attachment-${index}`,
+      size: 'Unknown',
+      url,
+    }))
   }
 
   return {
@@ -367,15 +365,31 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
       <VCardText>
         <VRow>
           <!-- Select Status -->
-          <VCol cols="12" sm="4">
-            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statusOptions" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedStatus"
+              placeholder="Select Status"
+              :items="statusOptions"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
 
           <!-- Select Priority -->
-          <VCol cols="12" sm="4">
-            <AppSelect v-model="selectedPriority" placeholder="Select Priority" :items="priorityOptions" clearable
-              clear-icon="tabler-x" />
+          <VCol
+            cols="12"
+            sm="4"
+          >
+            <AppSelect
+              v-model="selectedPriority"
+              placeholder="Select Priority"
+              :items="priorityOptions"
+              clearable
+              clear-icon="tabler-x"
+            />
           </VCol>
         </VRow>
       </VCardText>
@@ -384,17 +398,30 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect :model-value="itemsPerPage" :items="[
-            { value: 10, title: '10' },
-            { value: 25, title: '25' },
-            { value: 50, title: '50' },
-            { value: 100, title: '100' },
-            { value: -1, title: 'All' },
-          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
+          <AppSelect
+            :model-value="itemsPerPage"
+            :items="[
+              { value: 10, title: '10' },
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+              { value: -1, title: 'All' },
+            ]"
+            style="inline-size: 6.25rem;"
+            @update:model-value="itemsPerPage = parseInt($event, 10)"
+          />
 
           <!-- Bulk Actions -->
-          <VBtn v-if="selectedRows.length > 0" variant="tonal" color="error" @click="bulkDelete">
-            <VIcon icon="tabler-trash" class="me-2" />
+          <VBtn
+            v-if="selectedRows.length > 0"
+            variant="tonal"
+            color="error"
+            @click="bulkDelete"
+          >
+            <VIcon
+              icon="tabler-trash"
+              class="me-2"
+            />
             Delete Selected ({{ selectedRows.length }})
           </VBtn>
         </div>
@@ -403,12 +430,21 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- Search -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField v-model="searchQuery" placeholder="Search Requests" />
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Search Requests"
+            />
           </div>
 
           <!-- Export Menu -->
-          <VBtn variant="tonal" color="secondary">
-            <VIcon icon="tabler-upload" class="me-2" />
+          <VBtn
+            variant="tonal"
+            color="secondary"
+          >
+            <VIcon
+              icon="tabler-upload"
+              class="me-2"
+            />
             Export
             <VMenu activator="parent">
               <VList>
@@ -433,13 +469,26 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
       <VDivider />
 
       <!-- Data Table -->
-      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
-        :items="filteredRequests" item-value="id" :items-length="totalRequests" :headers="headers" class="text-no-wrap"
-        show-select @update:options="updateOptions">
+      <VDataTableServer
+        v-model:items-per-page="itemsPerPage"
+        v-model:model-value="selectedRows"
+        v-model:page="page"
+        :items="filteredRequests"
+        item-value="id"
+        :items-length="totalRequests"
+        :headers="headers"
+        class="text-no-wrap"
+        show-select
+        @update:options="updateOptions"
+      >
         <!-- Empty State -->
         <template #no-data>
           <div class="text-center pa-8">
-            <VIcon icon="tabler-inbox-off" size="64" class="mb-4 text-disabled" />
+            <VIcon
+              icon="tabler-inbox-off"
+              size="64"
+              class="mb-4 text-disabled"
+            />
             <h3 class="text-h5 mb-2">
               No Technical Requests Found
             </h3>
@@ -459,8 +508,15 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
         <!-- User -->
         <template #item.user="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <VAvatar size="34" :variant="!item.userAvatar ? 'tonal' : undefined" color="primary">
-              <VImg v-if="item.userAvatar" :src="item.userAvatar" />
+            <VAvatar
+              size="34"
+              :variant="!item.userAvatar ? 'tonal' : undefined"
+              color="primary"
+            >
+              <VImg
+                v-if="item.userAvatar"
+                :src="item.userAvatar"
+              />
               <span v-else>{{ avatarText(item.userName) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
@@ -486,15 +542,29 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
 
         <!-- Priority -->
         <template #item.priority="{ item }">
-          <VChip :color="resolvePriorityVariant(item.priority).color" size="small" label class="text-capitalize">
-            <VIcon :icon="resolvePriorityVariant(item.priority).icon" size="16" class="me-1" />
+          <VChip
+            :color="resolvePriorityVariant(item.priority).color"
+            size="small"
+            label
+            class="text-capitalize"
+          >
+            <VIcon
+              :icon="resolvePriorityVariant(item.priority).icon"
+              size="16"
+              class="me-1"
+            />
             {{ item.priority }}
           </VChip>
         </template>
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+          <VChip
+            :color="resolveStatusVariant(item.status)"
+            size="small"
+            label
+            class="text-capitalize"
+          >
             {{ item.status }}
           </VChip>
         </template>
@@ -509,15 +579,29 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
         <!-- Actions -->
         <template #item.actions="{ item }">
           <div class="d-flex gap-1">
-            <IconBtn size="small" @click="viewRequest(item)">
+            <IconBtn
+              size="small"
+              @click="viewRequest(item)"
+            >
               <VIcon icon="tabler-eye" />
-              <VTooltip activator="parent" location="top">
+              <VTooltip
+                activator="parent"
+                location="top"
+              >
                 View
               </VTooltip>
             </IconBtn>
 
-            <VBtn icon variant="text" color="medium-emphasis" size="small">
-              <VIcon icon="tabler-dots-vertical" size="22" />
+            <VBtn
+              icon
+              variant="text"
+              color="medium-emphasis"
+              size="small"
+            >
+              <VIcon
+                icon="tabler-dots-vertical"
+                size="22"
+              />
               <VMenu activator="parent">
                 <VList>
                   <VListItem @click="viewRequest(item)">
@@ -540,28 +624,40 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
 
                   <VListItem @click="changeStatus(item.id, 'open')">
                     <template #prepend>
-                      <VIcon icon="tabler-circle" color="info" />
+                      <VIcon
+                        icon="tabler-circle"
+                        color="info"
+                      />
                     </template>
                     <VListItemTitle>Open</VListItemTitle>
                   </VListItem>
 
                   <VListItem @click="changeStatus(item.id, 'in-progress')">
                     <template #prepend>
-                      <VIcon icon="tabler-circle" color="warning" />
+                      <VIcon
+                        icon="tabler-circle"
+                        color="warning"
+                      />
                     </template>
                     <VListItemTitle>In Progress</VListItemTitle>
                   </VListItem>
 
                   <VListItem @click="changeStatus(item.id, 'resolved')">
                     <template #prepend>
-                      <VIcon icon="tabler-circle" color="success" />
+                      <VIcon
+                        icon="tabler-circle"
+                        color="success"
+                      />
                     </template>
                     <VListItemTitle>Resolved</VListItemTitle>
                   </VListItem>
 
                   <VListItem @click="changeStatus(item.id, 'closed')">
                     <template #prepend>
-                      <VIcon icon="tabler-circle" color="secondary" />
+                      <VIcon
+                        icon="tabler-circle"
+                        color="secondary"
+                      />
                     </template>
                     <VListItemTitle>Closed</VListItemTitle>
                   </VListItem>
@@ -570,7 +666,10 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
 
                   <VListItem @click="deleteRequest(item.id)">
                     <template #prepend>
-                      <VIcon icon="tabler-trash" color="error" />
+                      <VIcon
+                        icon="tabler-trash"
+                        color="error"
+                      />
                     </template>
                     <VListItemTitle class="text-error">
                       Delete
@@ -584,13 +683,20 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
 
         <!-- Pagination -->
         <template #bottom>
-          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalRequests" />
+          <TablePagination
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total-items="totalRequests"
+          />
         </template>
       </VDataTableServer>
     </VCard>
 
     <!-- View Request Dialog -->
-    <VDialog v-model="isViewRequestDialogVisible" max-width="600">
+    <VDialog
+      v-model="isViewRequestDialogVisible"
+      max-width="600"
+    >
       <VCard v-if="selectedRequest">
         <VCardItem>
           <VCardTitle>Request Details</VCardTitle>
@@ -608,8 +714,15 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
           <VRow>
             <VCol cols="12">
               <div class="d-flex align-center gap-x-4 mb-4">
-                <VAvatar size="48" :variant="!selectedRequest.userAvatar ? 'tonal' : undefined" color="primary">
-                  <VImg v-if="selectedRequest.userAvatar" :src="selectedRequest.userAvatar" />
+                <VAvatar
+                  size="48"
+                  :variant="!selectedRequest.userAvatar ? 'tonal' : undefined"
+                  color="primary"
+                >
+                  <VImg
+                    v-if="selectedRequest.userAvatar"
+                    :src="selectedRequest.userAvatar"
+                  />
                   <span v-else>{{ avatarText(selectedRequest.userName) }}</span>
                 </VAvatar>
                 <div>
@@ -645,9 +758,17 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
               <div class="text-body-2 text-medium-emphasis mb-1">
                 Priority
               </div>
-              <VChip :color="resolvePriorityVariant(selectedRequest.priority).color" size="small" label
-                class="text-capitalize">
-                <VIcon :icon="resolvePriorityVariant(selectedRequest.priority).icon" size="16" class="me-1" />
+              <VChip
+                :color="resolvePriorityVariant(selectedRequest.priority).color"
+                size="small"
+                label
+                class="text-capitalize"
+              >
+                <VIcon
+                  :icon="resolvePriorityVariant(selectedRequest.priority).icon"
+                  size="16"
+                  class="me-1"
+                />
                 {{ selectedRequest.priority }}
               </VChip>
             </VCol>
@@ -656,7 +777,12 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
               <div class="text-body-2 text-medium-emphasis mb-1">
                 Status
               </div>
-              <VChip :color="resolveStatusVariant(selectedRequest.status)" size="small" label class="text-capitalize">
+              <VChip
+                :color="resolveStatusVariant(selectedRequest.status)"
+                size="small"
+                label
+                class="text-capitalize"
+              >
                 {{ selectedRequest.status }}
               </VChip>
             </VCol>
@@ -691,18 +817,29 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
             <!-- Attachments -->
             <VCol
               v-if="selectedRequest.attachments && Array.isArray(selectedRequest.attachments) && selectedRequest.attachments.length > 0"
-              cols="12">
+              cols="12"
+            >
               <div class="text-body-2 text-medium-emphasis mb-2">
-                Attachments ({{Array.isArray(selectedRequest.attachments) ? selectedRequest.attachments.filter(att =>
+                Attachments ({{ Array.isArray(selectedRequest.attachments) ? selectedRequest.attachments.filter(att =>
                   att
-                  && (att.name || att.filename)).length : 0}})
+                  && (att.name || att.filename)).length : 0 }})
               </div>
-              <VList lines="two" density="compact" class="pa-0">
+              <VList
+                lines="two"
+                density="compact"
+                class="pa-0"
+              >
                 <VListItem
                   v-for="(attachment, index) in (Array.isArray(selectedRequest.attachments) ? selectedRequest.attachments.filter(att => att && (att.name || att.filename)) : [])"
-                  :key="index" class="px-0">
+                  :key="index"
+                  class="px-0"
+                >
                   <template #prepend>
-                    <VAvatar color="primary" variant="tonal" size="40">
+                    <VAvatar
+                      color="primary"
+                      variant="tonal"
+                      size="40"
+                    >
                       <VIcon :icon="getFileIcon(attachment.name || attachment.filename)" />
                     </VAvatar>
                   </template>
@@ -715,9 +852,18 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
                   </VListItemSubtitle>
 
                   <template #append>
-                    <VBtn icon variant="text" size="small" color="primary" @click="downloadAttachment(attachment)">
+                    <VBtn
+                      icon
+                      variant="text"
+                      size="small"
+                      color="primary"
+                      @click="downloadAttachment(attachment)"
+                    >
                       <VIcon icon="tabler-download" />
-                      <VTooltip activator="parent" location="top">
+                      <VTooltip
+                        activator="parent"
+                        location="top"
+                      >
                         Download
                       </VTooltip>
                     </VBtn>
@@ -732,10 +878,16 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
 
         <VCardActions>
           <VSpacer />
-          <VBtn variant="outlined" @click="isViewRequestDialogVisible = false">
+          <VBtn
+            variant="outlined"
+            @click="isViewRequestDialogVisible = false"
+          >
             Close
           </VBtn>
-          <VBtn color="primary" @click="editRequest(selectedRequest); isViewRequestDialogVisible = false">
+          <VBtn
+            color="primary"
+            @click="editRequest(selectedRequest); isViewRequestDialogVisible = false"
+          >
             Edit Request
           </VBtn>
         </VCardActions>
@@ -743,14 +895,25 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
     </VDialog>
 
     <!-- Edit Technical Request Drawer -->
-    <EditTechnicalRequestDrawer v-model:is-drawer-open="isEditRequestDrawerVisible" :request="selectedRequest"
-      @request-data="updateRequest" />
+    <EditTechnicalRequestDrawer
+      v-model:is-drawer-open="isEditRequestDrawerVisible"
+      :request="selectedRequest"
+      @request-data="updateRequest"
+    />
 
     <!-- Bulk Delete Confirmation Dialog -->
-    <VDialog v-model="isBulkDeleteConfirmDialogVisible" max-width="500">
+    <VDialog
+      v-model="isBulkDeleteConfirmDialogVisible"
+      max-width="500"
+    >
       <VCard class="text-center px-10 py-6">
         <VCardText>
-          <VIcon icon="tabler-alert-triangle" size="64" color="warning" class="mb-4" />
+          <VIcon
+            icon="tabler-alert-triangle"
+            size="64"
+            color="warning"
+            class="mb-4"
+          />
           <h3 class="text-h5 mb-2">
             Confirm Bulk Delete
           </h3>
@@ -770,10 +933,17 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
           </p>
         </VCardText>
         <VCardText class="d-flex align-center justify-center gap-2">
-          <VBtn variant="outlined" @click="isBulkDeleteConfirmDialogVisible = false">
+          <VBtn
+            variant="outlined"
+            @click="isBulkDeleteConfirmDialogVisible = false"
+          >
             Cancel
           </VBtn>
-          <VBtn color="error" :loading="isDeleting" @click="confirmBulkDelete">
+          <VBtn
+            color="error"
+            :loading="isDeleting"
+            @click="confirmBulkDelete"
+          >
             Delete {{ selectedRows.length }} Request(s)
           </VBtn>
         </VCardText>
