@@ -1,9 +1,4 @@
 <script setup lang="ts">
-import { useTheme } from 'vuetify'
-
-const vuetifyTheme = useTheme()
-const currentTheme = vuetifyTheme.current.value.colors
-
 // Reactive data
 const isLoading = ref(true)
 const error = ref('')

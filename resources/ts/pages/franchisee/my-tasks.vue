@@ -465,7 +465,7 @@ const updateTaskStatus = async (newStatus: string) => {
                 :color="resolveStatusVariant(selectedTask.status)"
                 size="small"
                 label
-                class="text-capitalize ml-2"
+                class="text-capitalize ms-2"
               >
                 {{ selectedTask.status }}
               </VChip>

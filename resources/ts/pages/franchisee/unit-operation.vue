@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 // 👉 Imports
 import { computed, onMounted, ref } from 'vue'
 import AddDocumentModal from '@/components/dialogs/AddDocumentModal.vue'
@@ -15,7 +16,6 @@ import type {
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 
 // 👉 Router
-const router = useRouter()
 const route = useRoute()
 
 // 👉 Current tab
@@ -32,7 +32,7 @@ const unitId = computed<string>(() => {
 const currentUnitId = computed<number | null>(() => {
   if (unitId.value) {
     const parsed = Number.parseInt(unitId.value)
-    if (!isNaN(parsed))
+    if (!Number.isNaN(parsed))
       return parsed
   }
 
@@ -288,8 +288,8 @@ const saveUnitDetails = async () => {
       isEditUnitModalVisible.value = false
     }
   }
-  catch (error) {
-    console.error('Error updating unit details:', error)
+  catch (err) {
+    console.error('Error updating unit details:', err)
   }
 }
 

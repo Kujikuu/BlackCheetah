@@ -10,11 +10,6 @@ const vuetifyTheme = useTheme()
 const performanceData = ref<PerformanceManagementData | null>(null)
 const isLoading = ref(false)
 
-// Load data on mount
-onMounted(async () => {
-  await loadPerformanceData()
-})
-
 const loadPerformanceData = async () => {
   try {
     isLoading.value = true
@@ -31,26 +26,19 @@ const loadPerformanceData = async () => {
   }
 }
 
+// Load data on mount
+onMounted(async () => {
+  await loadPerformanceData()
+})
+
 // Data for Top and Low Performing Products
 const topPerformingProductData = computed(() => performanceData.value?.productPerformance.topPerformingProductData || Array(12).fill(0))
 const lowPerformingProductData = computed(() => performanceData.value?.productPerformance.lowPerformingProductData || Array(12).fill(0))
 
-const headingColor = 'rgba(var(--v-theme-on-background), var(--v-high-emphasis-opacity))'
 const labelColor = 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))'
-const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))'
-
-const chartColors = {
-  primary: '#9155FD',
-  warning: '#FFB400',
-  success: '#56CA00',
-  info: '#16B1FF',
-  error: '#FF4C51',
-}
 
 // Product Performance Chart Options
 const productChartOptions = computed(() => {
-  const currentTheme = vuetifyTheme.current.value.colors
-
   return {
     chart: {
       type: 'bar',
@@ -139,8 +127,6 @@ const royaltyPhaseData = computed(() => performanceData.value?.royalty.phaseData
 
 // Royalty Chart Options
 const royaltyChartOptions = computed(() => {
-  const currentTheme = vuetifyTheme.current.value.colors
-
   return {
     chart: {
       type: 'line',
@@ -189,8 +175,6 @@ const tasksData = computed(() => ({
 
 // Tasks Donut Chart Options
 const tasksChartOptions = computed(() => {
-  const currentTheme = vuetifyTheme.current.value.colors
-
   return {
     chart: {
       type: 'donut',
@@ -272,7 +256,6 @@ const satisfactionGaugeOptions = computed(() => {
 const satisfactionGaugeData = computed(() => [customerSatisfactionData.value.score])
 
 // Franchisee selector
-const selectedFranchisee = ref('Franchisee')
 </script>
 
 <template>

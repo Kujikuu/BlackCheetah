@@ -149,87 +149,6 @@ const fetchRequests = async () => {
   }
 }
 
-// Mock data for initial display (will be replaced by API)
-const mockRequests = ref([
-  {
-    id: 1,
-    requestId: 'TR-2024-001',
-    userName: 'Name',
-    userEmail: 'john.doe@example.com',
-    userAvatar: '',
-    subject: 'Login issues on mobile app',
-    description: 'Unable to login using mobile device. Getting authentication error.',
-    priority: 'high',
-    status: 'open',
-    date: '2024-01-15',
-    category: 'Authentication',
-    attachments: [
-      { name: 'error-screenshot.png', size: '245 KB', url: '#' },
-      { name: 'error-log.txt', size: '12 KB', url: '#' },
-    ],
-  },
-  {
-    id: 2,
-    requestId: 'TR-2024-002',
-    userName: 'Jane Smith',
-    userEmail: 'jane.smith@example.com',
-    userAvatar: '',
-    subject: 'Payment processing error',
-    description: 'Payment gateway not responding during checkout process.',
-    priority: 'critical',
-    status: 'in-progress',
-    date: '2024-01-14',
-    category: 'Payment',
-    attachments: [
-      { name: 'payment-error.pdf', size: '156 KB', url: '#' },
-    ],
-  },
-  {
-    id: 3,
-    requestId: 'TR-2024-003',
-    userName: 'Mike Johnson',
-    userEmail: 'mike.j@example.com',
-    userAvatar: '',
-    subject: 'Dashboard data not loading',
-    description: 'Dashboard statistics showing blank after recent update.',
-    priority: 'medium',
-    status: 'open',
-    date: '2024-01-13',
-    category: 'Dashboard',
-    attachments: [],
-  },
-  {
-    id: 4,
-    requestId: 'TR-2024-004',
-    userName: 'Sarah Williams',
-    userEmail: 'sarah.w@example.com',
-    userAvatar: '',
-    subject: 'Email notifications not working',
-    description: 'Not receiving email notifications for new orders.',
-    priority: 'low',
-    status: 'resolved',
-    date: '2024-01-12',
-    category: 'Notifications',
-    attachments: [],
-  },
-  {
-    id: 5,
-    requestId: 'TR-2024-005',
-    userName: 'David Brown',
-    userEmail: 'david.b@example.com',
-    userAvatar: '',
-    subject: 'Report generation timeout',
-    description: 'Monthly reports timing out when trying to generate.',
-    priority: 'high',
-    status: 'in-progress',
-    date: '2024-01-11',
-    category: 'Reports',
-    attachments: [
-      { name: 'report-timeout-log.txt', size: '8 KB', url: '#' },
-    ],
-  },
-])
-
 // Filtered data - API handles filtering
 const filteredRequests = computed(() => technicalRequests.value)
 
@@ -369,7 +288,7 @@ const getFileIcon = (fileName: string) => {
 
   if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext || ''))
     return 'tabler-photo'
-  if (['pdf'].includes(ext || ''))
+  else if (['pdf'].includes(ext || ''))
     return 'tabler-file-type-pdf'
   if (['doc', 'docx'].includes(ext || ''))
     return 'tabler-file-type-doc'
@@ -394,6 +313,18 @@ const categoryOptions = [
   { title: 'Training', value: 'training' },
   { title: 'Other', value: 'other' },
 ]
+
+// Reset submit form
+const resetSubmitForm = () => {
+  submitRequestForm.value = {
+    subject: '',
+    category: '',
+    priority: 'medium',
+    description: '',
+    attachments: [],
+  }
+  isFormValid.value = false
+}
 
 // Submit request function
 const submitRequest = async () => {
@@ -437,18 +368,6 @@ const submitRequest = async () => {
   finally {
     isLoading.value = false
   }
-}
-
-// Reset submit form
-const resetSubmitForm = () => {
-  submitRequestForm.value = {
-    subject: '',
-    category: '',
-    priority: 'medium',
-    description: '',
-    attachments: [],
-  }
-  isFormValid.value = false
 }
 
 // Handle file upload
