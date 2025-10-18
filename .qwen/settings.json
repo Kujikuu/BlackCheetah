@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "php",
+      "args": [
+        "artisan",
+        "boost:mcp"
+      ]
+    },
+    "herd": {
+      "command": "php",
+      "args": [
+        "C:/Users/Afifi/.config/herd/bin/herd-mcp.phar"
+      ],
+      "env": {
+        "SITE_PATH": "C:\\Users\\Afifi\\BlackCheetah"
+      }
+    }
+  },
+  "approvalMode": "yolo"
+}

@@ -57,10 +57,6 @@ onMounted(() => {
   fetchChartData()
 })
 
-const headingColor = 'rgba(var(--v-theme-on-background), var(--v-high-emphasis-opacity))'
-const labelColor = 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))'
-const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))'
-
 const chartColors = {
   primary: '#9155FD',
   warning: '#FFB400',

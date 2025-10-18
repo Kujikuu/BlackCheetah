@@ -70,6 +70,17 @@ const resetForm = () => {
   refForm.value?.reset()
 }
 
+// Format file size
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0)
+    return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return `${Math.round(bytes / k ** i * 100) / 100} ${sizes[i]}`
+}
+
 // Handle file upload
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -96,17 +107,6 @@ const handleFileUpload = (event: Event) => {
 // Remove uploaded file
 const removeFile = (index: number) => {
   uploadedFiles.value.splice(index, 1)
-}
-
-// Format file size
-const formatFileSize = (bytes: number) => {
-  if (bytes === 0)
-    return '0 Bytes'
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-  return `${Math.round(bytes / k ** i * 100) / 100} ${sizes[i]}`
 }
 
 // Get file icon

@@ -162,7 +162,7 @@ const isChartDataReady = computed(() => {
       series.data
       && Array.isArray(series.data)
       && series.data.length > 0
-      && series.data.every((value: any) => typeof value === 'number' && !isNaN(value)),
+      && series.data.every((value: any) => typeof value === 'number' && !Number.isNaN(value)),
     )
 })
 

@@ -293,12 +293,6 @@ const handleDrawerClose = () => {
   selectedFranchisee.value = null
 }
 
-// Fetch data on component mount
-onMounted(() => {
-  fetchFranchisees()
-  fetchWidgetStats()
-})
-
 // View user
 const viewUser = (franchisee: any) => {
   selectedFranchisee.value = franchisee
@@ -349,6 +343,12 @@ const fetchWidgetStats = async () => {
     console.error('Error fetching franchisee stats:', err)
   }
 }
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchFranchisees()
+  fetchWidgetStats()
+})
 </script>
 
 <template>

@@ -271,6 +271,25 @@ const handleDrawerClose = () => {
   selectedSalesUser.value = null
 }
 
+// Widget data
+const widgetData = ref([
+  { title: 'Total Sales Users', value: '0', change: 0, desc: 'All sales team members', icon: 'tabler-chart-line', iconColor: 'primary' },
+  { title: 'Active Sales', value: '0', change: 0, desc: 'Currently active', icon: 'tabler-user-check', iconColor: 'success' },
+  { title: 'Pending Approval', value: '0', change: 0, desc: 'Awaiting verification', icon: 'tabler-clock', iconColor: 'warning' },
+])
+
+// Fetch widget statistics
+const fetchWidgetStats = async () => {
+  try {
+    const response = await $api('/v1/admin/users/sales/stats')
+    if (response.success)
+      widgetData.value = response.data
+  }
+  catch (err) {
+    console.error('Error fetching sales stats:', err)
+  }
+}
+
 // View user
 const viewUser = (salesUser: any) => {
   selectedSalesUser.value = salesUser
@@ -308,25 +327,6 @@ onMounted(() => {
   fetchSalesUsers()
   fetchWidgetStats()
 })
-
-// Widget data
-const widgetData = ref([
-  { title: 'Total Sales Users', value: '0', change: 0, desc: 'All sales team members', icon: 'tabler-chart-line', iconColor: 'primary' },
-  { title: 'Active Sales', value: '0', change: 0, desc: 'Currently active', icon: 'tabler-user-check', iconColor: 'success' },
-  { title: 'Pending Approval', value: '0', change: 0, desc: 'Awaiting verification', icon: 'tabler-clock', iconColor: 'warning' },
-])
-
-// Fetch widget statistics
-const fetchWidgetStats = async () => {
-  try {
-    const response = await $api('/v1/admin/users/sales/stats')
-    if (response.success)
-      widgetData.value = response.data
-  }
-  catch (err) {
-    console.error('Error fetching sales stats:', err)
-  }
-}
 </script>
 
 <template>

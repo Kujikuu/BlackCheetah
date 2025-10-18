@@ -31,7 +31,9 @@ const onSubmit = async () => {
   try {
     // No backend endpoint wired; provide UX feedback
     infoMessage.value = 'If this email exists, a password reset link will be sent.'
-    setTimeout(() => { infoMessage.value = null }, 3000)
+    setTimeout(() => {
+      infoMessage.value = null
+    }, 3000)
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null

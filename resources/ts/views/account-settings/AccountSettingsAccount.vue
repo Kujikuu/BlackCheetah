@@ -30,6 +30,20 @@ const timezones = [
   '(GMT-08:00) Pacific Time (US & Canada)',
 ]
 
+// Get role display name
+const getRoleDisplayName = (role: string): string => {
+  const roleMap: Record<string, string> = {
+    admin: 'Administrator',
+    franchisor: 'Franchisor',
+    franchisee: 'Franchisee',
+    unit_manager: 'Unit Manager',
+    sales_associate: 'Sales Associate',
+    employee: 'Employee',
+  }
+
+  return roleMap[role] || role
+}
+
 // Load user profile
 const loadProfile = async () => {
   try {
@@ -54,20 +68,6 @@ const loadProfile = async () => {
   finally {
     isLoading.value = false
   }
-}
-
-// Get role display name
-const getRoleDisplayName = (role: string): string => {
-  const roleMap: Record<string, string> = {
-    admin: 'Administrator',
-    franchisor: 'Franchisor',
-    franchisee: 'Franchisee',
-    unit_manager: 'Unit Manager',
-    sales_associate: 'Sales Associate',
-    employee: 'Employee',
-  }
-
-  return roleMap[role] || role
 }
 
 const resetForm = () => {

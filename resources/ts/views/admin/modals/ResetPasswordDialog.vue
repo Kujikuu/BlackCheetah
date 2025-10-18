@@ -34,6 +34,12 @@ const generatePassword = () => {
   isPasswordGenerated.value = true
 }
 
+// Reset dialog
+const resetDialog = () => {
+  newPassword.value = ''
+  isPasswordGenerated.value = false
+}
+
 // Auto-generate password when dialog opens
 watch(() => props.isDialogOpen, newVal => {
   if (newVal && !isPasswordGenerated.value)
@@ -49,11 +55,6 @@ const handleConfirm = () => {
 const handleCancel = () => {
   emit('update:isDialogOpen', false)
   resetDialog()
-}
-
-const resetDialog = () => {
-  newPassword.value = ''
-  isPasswordGenerated.value = false
 }
 
 const copyPassword = () => {

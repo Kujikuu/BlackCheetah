@@ -110,7 +110,7 @@ const isLowStockChartDataReady = computed(() => {
            series.data
            && Array.isArray(series.data)
            && series.data.length > 0
-           && series.data.every((value: any) => typeof value === 'number' && !isNaN(value)),
+           && series.data.every((value: any) => typeof value === 'number' && !Number.isNaN(value)),
          )
 })
 
@@ -122,7 +122,7 @@ const isShiftCoverageChartDataReady = computed(() => {
            series.data
            && Array.isArray(series.data)
            && series.data.length > 0
-           && series.data.every((value: any) => typeof value === 'number' && !isNaN(value)),
+           && series.data.every((value: any) => typeof value === 'number' && !Number.isNaN(value)),
          )
 })
 
@@ -140,11 +140,6 @@ const staffWidgetData = computed(() => [
   { title: 'New Hires', value: staffData.value.newHires.toString(), change: 25, desc: 'This month', icon: 'tabler-user-plus', iconColor: 'success' },
   { title: 'Absenteeism Rate', value: `${staffData.value.monthlyAbsenteeismRate.toFixed(1)}%`, change: -12, desc: 'Monthly average', icon: 'tabler-user-x', iconColor: 'warning' },
 ])
-
-// Current widget data based on selected tab
-const currentWidgetData = computed(() => {
-  return currentTab.value === 'store' ? storeWidgetData.value : staffWidgetData.value
-})
 
 // Check if we have top performers data
 const hasPerformersData = computed(() => {

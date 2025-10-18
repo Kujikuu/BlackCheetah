@@ -35,7 +35,6 @@ const selectedPriority = ref()
 const itemsPerPage = ref(10)
 const page = ref(1)
 const sortBy = ref()
-const _orderBy = ref()
 const selectedRows = ref<number[]>([])
 
 // Update data table options

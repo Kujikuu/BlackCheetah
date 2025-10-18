@@ -197,25 +197,6 @@ const filteredExpenseData = computed(() => {
   )
 })
 
-const filteredProfitData = computed(() => {
-  let data = filteredProfitByPeriod.value
-
-  if (searchQuery.value) {
-    data = data.filter(item =>
-      item.date.includes(searchQuery.value),
-    )
-  }
-
-  return data
-})
-
-// Filter options
-const dateFilterOptions = [
-  { title: 'Daily', value: 'daily' },
-  { title: 'Monthly', value: 'monthly' },
-  { title: 'Yearly', value: 'yearly' },
-]
-
 // Helper function to check if date is within filter period
 const isDateInFilterPeriod = (dateString: string): boolean => {
   const itemDate = new Date(dateString)
@@ -244,6 +225,25 @@ const filteredProfitByPeriod = computed(() => {
   return profitData.value.filter(item => isDateInFilterPeriod(item.date))
 })
 
+const filteredProfitData = computed(() => {
+  let data = filteredProfitByPeriod.value
+
+  if (searchQuery.value) {
+    data = data.filter(item =>
+      item.date.includes(searchQuery.value),
+    )
+  }
+
+  return data
+})
+
+// Filter options
+const dateFilterOptions = [
+  { title: 'Daily', value: 'daily' },
+  { title: 'Monthly', value: 'monthly' },
+  { title: 'Yearly', value: 'yearly' },
+]
+
 // Computed stat cards data (filtered by period)
 const totalSales = computed(() => {
   return filteredSalesByPeriod.value.reduce((sum, item) => sum + item.sale, 0)
@@ -256,6 +256,20 @@ const totalExpenses = computed(() => {
 const totalProfit = computed(() => {
   return filteredProfitByPeriod.value.reduce((sum, item) => sum + item.profit, 0)
 })
+
+// Reset form function
+const resetForm = () => {
+  addDataForm.value = {
+    product: '',
+    date: '',
+    quantitySold: 0,
+    expenseCategory: '',
+    amount: 0,
+    description: '',
+  }
+  isEditMode.value = false
+  editItemId.value = ''
+}
 
 // Methods
 const openAddDataModal = (category: string) => {
@@ -293,19 +307,6 @@ const openEditModal = (item: any, category: string) => {
   }
 
   isAddDataModalVisible.value = true
-}
-
-const resetForm = () => {
-  addDataForm.value = {
-    product: '',
-    date: '',
-    quantitySold: 0,
-    expenseCategory: '',
-    amount: 0,
-    description: '',
-  }
-  isEditMode.value = false
-  editItemId.value = ''
 }
 
 const saveData = async () => {
@@ -350,8 +351,13 @@ const saveData = async () => {
     console.error('Error saving data:', error)
 
     // Handle specific error messages from backend
-    if (error.response?.data?.message)
-      alert(error.response.data.message)
+    if (error.response?.data?.message) {
+      // Use console.error instead of alert for better UX
+      console.error('Submission error:', error.response.data.message)
+
+      // Optionally show error in UI instead of alert
+      // errorMessage.value = error.response.data.message
+    }
   }
   finally {
     isLoading.value = false

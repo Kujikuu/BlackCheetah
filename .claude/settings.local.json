@@ -6,7 +6,8 @@
       "Bash(C:UsersAfifi.configherdbinphp.bat vendor/bin/pint --dirty)",
       "Bash(php vendor/bin/pint:*)",
       "Bash(npm run lint)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(npx eslint:*)"
     ]
   },
   "enabledMcpjsonServers": [

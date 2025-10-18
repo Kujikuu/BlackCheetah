@@ -288,6 +288,25 @@ const handleDrawerClose = () => {
   selectedFranchisor.value = null
 }
 
+// Widget data
+const widgetData = ref([
+  { title: 'Total Franchisors', value: '0', change: 0, desc: 'All registered franchisors', icon: 'tabler-building-store', iconColor: 'primary' },
+  { title: 'Active Franchisors', value: '0', change: 0, desc: 'Currently active', icon: 'tabler-user-check', iconColor: 'success' },
+  { title: 'Pending Approval', value: '0', change: 0, desc: 'Awaiting verification', icon: 'tabler-clock', iconColor: 'warning' },
+])
+
+// Fetch widget statistics
+const fetchWidgetStats = async () => {
+  try {
+    const response = await $api('/v1/admin/users/franchisors/stats')
+    if (response.success)
+      widgetData.value = response.data
+  }
+  catch (err) {
+    console.error('Error fetching franchisor stats:', err)
+  }
+}
+
 // Fetch data on component mount
 onMounted(() => {
   fetchFranchisors()
@@ -324,25 +343,6 @@ const exportToPDF = () => {
   console.log('Exporting to PDF:', dataToExport)
 
   // Implement PDF export logic
-}
-
-// Widget data
-const widgetData = ref([
-  { title: 'Total Franchisors', value: '0', change: 0, desc: 'All registered franchisors', icon: 'tabler-building-store', iconColor: 'primary' },
-  { title: 'Active Franchisors', value: '0', change: 0, desc: 'Currently active', icon: 'tabler-user-check', iconColor: 'success' },
-  { title: 'Pending Approval', value: '0', change: 0, desc: 'Awaiting verification', icon: 'tabler-clock', iconColor: 'warning' },
-])
-
-// Fetch widget statistics
-const fetchWidgetStats = async () => {
-  try {
-    const response = await $api('/v1/admin/users/franchisors/stats')
-    if (response.success)
-      widgetData.value = response.data
-  }
-  catch (err) {
-    console.error('Error fetching franchisor stats:', err)
-  }
 }
 </script>
 

@@ -1,10 +1,4 @@
 <script setup lang="ts">
-import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
-import miscMaskDark from '@images/pages/misc-mask-dark.png'
-import miscMaskLight from '@images/pages/misc-mask-light.png'
-
-const _authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark)
-
 definePage({
   alias: '/pages/misc/not-found/:error(.*)',
   meta: {

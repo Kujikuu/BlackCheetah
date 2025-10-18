@@ -173,11 +173,6 @@ const getUserTypeLabel = (role: string) => {
   return 'User'
 }
 
-// Utility functions
-const _prefixWithPlus = (value: number) => {
-  return value > 0 ? `+${value}` : value.toString()
-}
-
 const avatarText = (name: string | null | undefined) => {
   if (!name || typeof name !== 'string')
     return 'U'

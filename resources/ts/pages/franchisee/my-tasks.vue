@@ -2,9 +2,6 @@
 import type { UnitTask } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 
-// 👉 Router
-const router = useRouter()
-
 // 👉 Modal states
 const isViewTaskModalVisible = ref(false)
 const isStatusChangeModalVisible = ref(false)
@@ -13,11 +10,6 @@ const selectedTask = ref<any>(null)
 // 👉 Data
 const allTasksData = ref<UnitTask[]>([])
 const isLoading = ref(false)
-
-// 👉 Load tasks on mount
-onMounted(async () => {
-  await loadTasks()
-})
 
 // 👉 Load tasks function
 const loadTasks = async () => {
@@ -35,6 +27,11 @@ const loadTasks = async () => {
     isLoading.value = false
   }
 }
+
+// 👉 Load tasks on mount
+onMounted(async () => {
+  await loadTasks()
+})
 
 // 👉 Computed stats for all tasks
 const totalTasks = computed(() => allTasksData.value.length)

@@ -7,7 +7,7 @@ interface Props {
 
 interface Emit {
   (e: 'update:isDialogVisible', value: boolean): void
-  (e: 'franchisee-added', data: any): void
+  (e: 'franchiseeAdded', data: any): void
 }
 
 const props = defineProps<Props>()
@@ -57,31 +57,7 @@ const unitTypes = [
   { title: 'Office', value: 'office' },
 ]
 
-// Reset form when modal opens
-watch(() => props.isDialogVisible, visible => {
-  if (visible)
-    resetForm()
-})
-
 // Methods
-const updateModelValue = (val: boolean) => {
-  emit('update:isDialogVisible', val)
-}
-
-const nextStep = () => {
-  if (currentStep.value < 2) {
-    currentStep.value++
-    error.value = null
-  }
-}
-
-const prevStep = () => {
-  if (currentStep.value > 1) {
-    currentStep.value--
-    error.value = null
-  }
-}
-
 const resetForm = () => {
   currentStep.value = 1
   error.value = null
@@ -101,6 +77,30 @@ const resetForm = () => {
     monthlyRent: '',
   }
 }
+
+const updateModelValue = (val: boolean) => {
+  emit('update:isDialogVisible', val)
+}
+
+const nextStep = () => {
+  if (currentStep.value < 2) {
+    currentStep.value++
+    error.value = null
+  }
+}
+
+const prevStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--
+    error.value = null
+  }
+}
+
+// Reset form when modal opens
+watch(() => props.isDialogVisible, visible => {
+  if (visible)
+    resetForm()
+})
 
 const submitForm = async () => {
   if (!formData.value.name || !formData.value.email || !formData.value.phone) {
@@ -166,7 +166,7 @@ const submitForm = async () => {
         postalCode: response.data.unit.postal_code,
       }
 
-      emit('franchisee-added', transformedData)
+      emit('franchiseeAdded', transformedData)
       updateModelValue(false)
       resetForm()
     }
