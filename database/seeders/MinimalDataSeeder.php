@@ -42,6 +42,10 @@ class MinimalDataSeeder extends Seeder
             'phone' => '+966500000001',
             'status' => 'active',
             'email_verified_at' => now(),
+            'country' => 'Saudi Arabia',
+            'city' => 'Riyadh',
+            'state' => 'Riyadh Province',
+            'address' => 'King Fahd Road, Al Olaya District',
         ]);
 
         $franchisor = User::create([
@@ -52,6 +56,10 @@ class MinimalDataSeeder extends Seeder
             'phone' => '+966500000002',
             'status' => 'active',
             'email_verified_at' => now(),
+            'country' => 'Saudi Arabia',
+            'city' => 'Riyadh',
+            'state' => 'Riyadh Province',
+            'address' => 'King Fahd Road, Al Olaya District',
         ]);
 
         $franchisee = User::create([
@@ -62,6 +70,10 @@ class MinimalDataSeeder extends Seeder
             'phone' => '+966500000003',
             'status' => 'active',
             'email_verified_at' => now(),
+            'country' => 'Saudi Arabia',
+            'city' => 'Riyadh',
+            'state' => 'Riyadh Province',
+            'address' => 'King Fahd Road, Al Olaya District',
         ]);
 
         $sales = User::create([
@@ -72,6 +84,10 @@ class MinimalDataSeeder extends Seeder
             'phone' => '+966500000004',
             'status' => 'active',
             'email_verified_at' => now(),
+            'country' => 'Saudi Arabia',
+            'city' => 'Riyadh',
+            'state' => 'Riyadh Province',
+            'address' => 'King Fahd Road, Al Olaya District',
         ]);
 
         $this->command->info('✅ Created 4 users');
@@ -97,6 +113,10 @@ class MinimalDataSeeder extends Seeder
                 'phone' => '+96650000' . str_pad($index + 5, 4, '0', STR_PAD_LEFT),
                 'status' => 'active',
                 'email_verified_at' => now(),
+                'country' => 'Saudi Arabia',
+                'city' => 'Riyadh',
+                'state' => 'Riyadh Province',
+                'address' => 'King Fahd Road, Al Olaya District',
             ]);
         }
 

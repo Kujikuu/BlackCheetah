@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Business;
 
 use App\Http\Controllers\Controller;
 use App\Models\Franchise;
@@ -52,42 +52,45 @@ class FranchiseController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:franchises,email',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string',
-            'city' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
-            'postal_code' => 'required|string|max:20',
-            'country' => 'required|string|max:100',
-            'region' => 'required|string|max:100',
-            'owner_id' => 'required|exists:users,id',
-            'initial_fee' => 'required|numeric|min:0',
-            'royalty_percentage' => 'required|numeric|min:0|max:100',
-            'marketing_fee_percentage' => 'required|numeric|min:0|max:100',
-            'territory_description' => 'nullable|string',
-            'contract_start_date' => 'required|date',
-            'contract_end_date' => 'required|date|after:contract_start_date',
-            'status' => 'required|in:active,inactive,pending,terminated',
-            'website' => 'nullable|url',
-            'social_media' => 'nullable|array',
-            'business_hours' => 'nullable|array',
-            'notes' => 'nullable|string'
-        ]);
+ * Store a newly created resource in storage.
+ */
+public function store(Request $request): JsonResponse
+{
+    $validated = $request->validate([
+        'franchisor_id' => 'required|exists:users,id',
+        'business_name' => 'required|string|max:255',
+        'brand_name' => 'nullable|string|max:255',
+        'industry' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'website' => 'nullable|url',
+        'logo' => 'nullable|string|max:255',
+        'business_registration_number' => 'required|string|unique:franchises,business_registration_number',
+        'tax_id' => 'nullable|string|max:255',
+        'business_type' => 'required|in:corporation,llc,partnership,sole_proprietorship',
+        'established_date' => 'nullable|date',
+        'headquarters_country' => 'required|string|max:100',
+        'headquarters_city' => 'required|string|max:100',
+        'headquarters_address' => 'required|string',
+        'contact_phone' => 'required|string|max:20',
+        'contact_email' => 'required|email|max:255|unique:franchises,contact_email',
+        'franchise_fee' => 'nullable|numeric|min:0',
+        'royalty_percentage' => 'nullable|numeric|min:0|max:100',
+        'marketing_fee_percentage' => 'nullable|numeric|min:0|max:100',
+        'status' => 'required|in:active,inactive,pending_approval,suspended',
+        'plan' => 'nullable|string|max:255',
+        'business_hours' => 'nullable|array',
+        'social_media' => 'nullable|array',
+        'documents' => 'nullable|array'
+    ]);
 
-        $franchise = Franchise::create($validated);
+    $franchise = Franchise::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $franchise->load(['owner', 'units']),
-            'message' => 'Franchise created successfully'
-        ], 201);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $franchise->load(['franchisor', 'units']),
+        'message' => 'Franchise created successfully'
+    ], 201);
+}
 
     /**
      * Display the specified resource.
@@ -104,42 +107,45 @@ class FranchiseController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Franchise $franchise): JsonResponse
-    {
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => ['sometimes', 'email', Rule::unique('franchises')->ignore($franchise->id)],
-            'phone' => 'sometimes|string|max:20',
-            'address' => 'sometimes|string',
-            'city' => 'sometimes|string|max:100',
-            'state' => 'sometimes|string|max:100',
-            'postal_code' => 'sometimes|string|max:20',
-            'country' => 'sometimes|string|max:100',
-            'region' => 'sometimes|string|max:100',
-            'owner_id' => 'sometimes|exists:users,id',
-            'initial_fee' => 'sometimes|numeric|min:0',
-            'royalty_percentage' => 'sometimes|numeric|min:0|max:100',
-            'marketing_fee_percentage' => 'sometimes|numeric|min:0|max:100',
-            'territory_description' => 'nullable|string',
-            'contract_start_date' => 'sometimes|date',
-            'contract_end_date' => 'sometimes|date|after:contract_start_date',
-            'status' => 'sometimes|in:active,inactive,pending,terminated',
-            'website' => 'nullable|url',
-            'social_media' => 'nullable|array',
-            'business_hours' => 'nullable|array',
-            'notes' => 'nullable|string'
-        ]);
+ * Update the specified resource in storage.
+ */
+public function update(Request $request, Franchise $franchise): JsonResponse
+{
+    $validated = $request->validate([
+        'franchisor_id' => 'sometimes|exists:users,id',
+        'business_name' => 'sometimes|string|max:255',
+        'brand_name' => 'sometimes|string|max:255',
+        'industry' => 'sometimes|string|max:255',
+        'description' => 'sometimes|string',
+        'website' => 'sometimes|url',
+        'logo' => 'sometimes|string|max:255',
+        'business_registration_number' => ['sometimes', 'string', Rule::unique('franchises')->ignore($franchise->id)],
+        'tax_id' => 'sometimes|string|max:255',
+        'business_type' => 'sometimes|in:corporation,llc,partnership,sole_proprietorship',
+        'established_date' => 'sometimes|date',
+        'headquarters_country' => 'sometimes|string|max:100',
+        'headquarters_city' => 'sometimes|string|max:100',
+        'headquarters_address' => 'sometimes|string',
+        'contact_phone' => 'sometimes|string|max:20',
+        'contact_email' => ['sometimes', 'email', 'max:255', Rule::unique('franchises')->ignore($franchise->id)],
+        'franchise_fee' => 'sometimes|numeric|min:0',
+        'royalty_percentage' => 'sometimes|numeric|min:0|max:100',
+        'marketing_fee_percentage' => 'sometimes|numeric|min:0|max:100',
+        'status' => 'sometimes|in:active,inactive,pending_approval,suspended',
+        'plan' => 'sometimes|string|max:255',
+        'business_hours' => 'sometimes|array',
+        'social_media' => 'sometimes|array',
+        'documents' => 'sometimes|array'
+    ]);
 
-        $franchise->update($validated);
+    $franchise->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $franchise->load(['owner', 'units']),
-            'message' => 'Franchise updated successfully'
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $franchise->load(['franchisor', 'units']),
+        'message' => 'Franchise updated successfully'
+    ]);
+}
 
     /**
      * Remove the specified resource from storage.

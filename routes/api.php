@@ -1,25 +1,26 @@
 <?php
 
-use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\DocumentController;
-use App\Http\Controllers\Api\FinancialController;
-use App\Http\Controllers\Api\FranchiseController;
-use App\Http\Controllers\Api\FranchiseeDashboardController;
-use App\Http\Controllers\Api\FranchisorController;
-use App\Http\Controllers\Api\LeadController;
-use App\Http\Controllers\Api\NotificationController;
-use App\Http\Controllers\Api\OnboardingController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\RevenueController;
-use App\Http\Controllers\Api\ReviewController;
-use App\Http\Controllers\Api\RoyaltyController;
-use App\Http\Controllers\Api\TaskController;
-use App\Http\Controllers\Api\TechnicalRequestController;
-use App\Http\Controllers\Api\TransactionController;
-use App\Http\Controllers\Api\UnitController;
-use App\Http\Controllers\Api\UnitPerformanceController;
-use App\Http\Controllers\NoteController;
+use App\Http\Controllers\Api\Admin\AdminController;
+use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Business\DocumentController;
+use App\Http\Controllers\Api\Business\FinancialController;
+use App\Http\Controllers\Api\Business\FranchiseController;
+use App\Http\Controllers\Api\Franchisee\FranchiseeController;
+use App\Http\Controllers\Api\Franchisor\FranchisorController;
+use App\Http\Controllers\Api\Business\LeadController;
+use App\Http\Controllers\Api\Users\NotificationController;
+use App\Http\Controllers\Api\Auth\OnboardingController;
+use App\Http\Controllers\Api\Business\ProductController;
+use App\Http\Controllers\Api\Business\RevenueController;
+use App\Http\Controllers\Api\Business\ReviewController;
+use App\Http\Controllers\Api\Business\RoyaltyController;
+use App\Http\Controllers\Api\Business\TaskController;
+use App\Http\Controllers\Api\Business\TechnicalRequestController;
+use App\Http\Controllers\Api\Business\TransactionController;
+use App\Http\Controllers\Api\Business\UnitController;
+use App\Http\Controllers\Api\Business\UnitPerformanceController;
+use App\Http\Controllers\Api\Users\AccountSettingsController;
+use App\Http\Controllers\Api\Business\NoteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -58,12 +59,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Account Settings routes (available for all authenticated users)
     Route::prefix('v1/account')->group(function () {
-        Route::get('/profile', [\App\Http\Controllers\Api\AccountSettingsController::class, 'getProfile']);
-        Route::put('/profile', [\App\Http\Controllers\Api\AccountSettingsController::class, 'updateProfile']);
-        Route::put('/password', [\App\Http\Controllers\Api\AccountSettingsController::class, 'updatePassword']);
-        Route::post('/avatar', [\App\Http\Controllers\Api\AccountSettingsController::class, 'uploadAvatar']);
-        Route::delete('/avatar', [\App\Http\Controllers\Api\AccountSettingsController::class, 'deleteAvatar']);
-        Route::put('/notifications', [\App\Http\Controllers\Api\AccountSettingsController::class, 'updateNotifications']);
+        Route::get('/profile', [AccountSettingsController::class, 'getProfile']);
+        Route::put('/profile', [AccountSettingsController::class, 'updateProfile']);
+        Route::put('/password', [AccountSettingsController::class, 'updatePassword']);
+        Route::post('/avatar', [AccountSettingsController::class, 'uploadAvatar']);
+        Route::delete('/avatar', [AccountSettingsController::class, 'deleteAvatar']);
+        Route::put('/notifications', [AccountSettingsController::class, 'updateNotifications']);
     });
 
     // Onboarding routes (for franchisees)
@@ -150,10 +151,10 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
 
         // Inventory routes for a unit
         Route::prefix('{unit}/inventory')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\UnitInventoryController::class, 'index']);
-            Route::post('{product}', [\App\Http\Controllers\Api\UnitInventoryController::class, 'store']);
-            Route::put('{product}', [\App\Http\Controllers\Api\UnitInventoryController::class, 'update']);
-            Route::delete('{product}', [\App\Http\Controllers\Api\UnitInventoryController::class, 'destroy']);
+            Route::get('/', [UnitInventoryController::class, 'index']);
+            Route::post('{product}', [UnitInventoryController::class, 'store']);
+            Route::put('{product}', [UnitInventoryController::class, 'update']);
+            Route::delete('{product}', [UnitInventoryController::class, 'destroy']);
         });
 
         // Staff routes for a unit
@@ -177,12 +178,12 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
     });
 
     // Technical Request Routes (specific routes before resource routes)
-    Route::prefix('technical-requests')->group(function () {
+    Route::middleware(['auth:sanctum'])->prefix('technical-requests')->group(function () {
         Route::get('statistics', [TechnicalRequestController::class, 'statistics']);
         Route::post('bulk-delete', [TechnicalRequestController::class, 'bulkDelete']);
     });
-    Route::apiResource('technical-requests', TechnicalRequestController::class);
-    Route::prefix('technical-requests')->group(function () {
+    Route::middleware(['auth:sanctum'])->apiResource('technical-requests', TechnicalRequestController::class);
+    Route::middleware(['auth:sanctum'])->prefix('technical-requests')->group(function () {
         Route::patch('{technicalRequest}/assign', [TechnicalRequestController::class, 'assign']);
         Route::post('{technicalRequest}/respond', [TechnicalRequestController::class, 'respond']);
         Route::patch('{technicalRequest}/resolve', [TechnicalRequestController::class, 'resolve']);
@@ -405,8 +406,8 @@ Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('v1/unit-manager'
     // Unit manager can only access their unit data
     Route::get('unit', [UnitController::class, 'myUnit']);
     Route::get('tasks', [TaskController::class, 'myUnitTasks']);
-    Route::get('my-tasks', [FranchiseeDashboardController::class, 'myTasks']);
-    Route::patch('my-tasks/{taskId}/status', [FranchiseeDashboardController::class, 'updateMyTaskStatus']);
+    Route::get('my-tasks', [FranchiseeController::class, 'myTasks']);
+    Route::patch('my-tasks/{taskId}/status', [FranchiseeController::class, 'updateMyTaskStatus']);
     Route::get('transactions', [TransactionController::class, 'myUnitTransactions']);
     Route::get('revenues', [RevenueController::class, 'myUnitRevenues']);
     Route::get('technical-requests', [TechnicalRequestController::class, 'myUnitRequests']);
@@ -421,75 +422,75 @@ Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('v1/unit-manager'
     // Franchisee Dashboard routes
     Route::prefix('dashboard')->group(function () {
         // Performance Management
-        Route::get('performance-management', [FranchiseeDashboardController::class, 'performanceManagement']);
+        Route::get('performance-management', [FranchiseeController::class, 'performanceManagement']);
 
         // Sales dashboard endpoints
-        Route::get('sales-statistics', [FranchiseeDashboardController::class, 'salesStatistics']);
-        Route::get('product-sales', [FranchiseeDashboardController::class, 'productSales']);
-        Route::get('monthly-performance', [FranchiseeDashboardController::class, 'monthlyPerformance']);
+        Route::get('sales-statistics', [FranchiseeController::class, 'salesStatistics']);
+        Route::get('product-sales', [FranchiseeController::class, 'productSales']);
+        Route::get('monthly-performance', [FranchiseeController::class, 'monthlyPerformance']);
 
         // Finance dashboard endpoints
-        Route::get('finance-statistics', [FranchiseeDashboardController::class, 'financeStatistics']);
-        Route::get('financial-summary', [FranchiseeDashboardController::class, 'financialSummary']);
+        Route::get('finance-statistics', [FranchiseeController::class, 'financeStatistics']);
+        Route::get('financial-summary', [FranchiseeController::class, 'financialSummary']);
 
         // Financial Overview endpoints
-        Route::get('financial-overview', [FranchiseeDashboardController::class, 'financialOverview']);
-        Route::post('financial-data', [FranchiseeDashboardController::class, 'storeFinancialData']);
-        Route::put('financial-data/{id}', [FranchiseeDashboardController::class, 'updateFinancialData']);
-        Route::delete('financial-data', [FranchiseeDashboardController::class, 'deleteFinancialData']);
+        Route::get('financial-overview', [FranchiseeController::class, 'financialOverview']);
+        Route::post('financial-data', [FranchiseeController::class, 'storeFinancialData']);
+        Route::put('financial-data/{id}', [FranchiseeController::class, 'updateFinancialData']);
+        Route::delete('financial-data', [FranchiseeController::class, 'deleteFinancialData']);
 
         // Operations dashboard endpoints
-        Route::get('store-data', [FranchiseeDashboardController::class, 'storeData']);
-        Route::get('staff-data', [FranchiseeDashboardController::class, 'staffData']);
-        Route::get('low-stock-chart', [FranchiseeDashboardController::class, 'lowStockChart']);
-        Route::get('shift-coverage-chart', [FranchiseeDashboardController::class, 'shiftCoverageChart']);
-        Route::get('operations-data', [FranchiseeDashboardController::class, 'operationsData']);
+        Route::get('store-data', [FranchiseeController::class, 'storeData']);
+        Route::get('staff-data', [FranchiseeController::class, 'staffData']);
+        Route::get('low-stock-chart', [FranchiseeController::class, 'lowStockChart']);
+        Route::get('shift-coverage-chart', [FranchiseeController::class, 'shiftCoverageChart']);
+        Route::get('operations-data', [FranchiseeController::class, 'operationsData']);
     });
 
     // Unit Operations routes
     Route::prefix('units')->group(function () {
         // Unit details and overview
-        Route::get('details/{unitId?}', [FranchiseeDashboardController::class, 'unitDetails']);
-        Route::put('details/{unitId}', [FranchiseeDashboardController::class, 'updateUnitDetails']);
+        Route::get('details/{unitId?}', [FranchiseeController::class, 'unitDetails']);
+        Route::put('details/{unitId}', [FranchiseeController::class, 'updateUnitDetails']);
 
         // Unit operational data - READ operations
-        Route::get('tasks/{unitId?}', [FranchiseeDashboardController::class, 'unitTasks']);
-        Route::get('staff/{unitId?}', [FranchiseeDashboardController::class, 'unitStaff']);
-        Route::get('products/{unitId?}', [FranchiseeDashboardController::class, 'unitProducts']);
-        Route::get('reviews/{unitId?}', [FranchiseeDashboardController::class, 'unitReviews']);
-        Route::get('documents/{unitId?}', [FranchiseeDashboardController::class, 'unitDocuments']);
+        Route::get('tasks/{unitId?}', [FranchiseeController::class, 'unitTasks']);
+        Route::get('staff/{unitId?}', [FranchiseeController::class, 'unitStaff']);
+        Route::get('products/{unitId?}', [FranchiseeController::class, 'unitProducts']);
+        Route::get('reviews/{unitId?}', [FranchiseeController::class, 'unitReviews']);
+        Route::get('documents/{unitId?}', [FranchiseeController::class, 'unitDocuments']);
 
         // Unit operational data - CRUD operations
         // Task operations
-        Route::post('tasks/{unitId}', [FranchiseeDashboardController::class, 'createTask']);
-        Route::put('tasks/{unitId}/{taskId}', [FranchiseeDashboardController::class, 'updateTask']);
-        Route::delete('tasks/{unitId}/{taskId}', [FranchiseeDashboardController::class, 'deleteTask']);
+        Route::post('tasks/{unitId}', [FranchiseeController::class, 'createTask']);
+        Route::put('tasks/{unitId}/{taskId}', [FranchiseeController::class, 'updateTask']);
+        Route::delete('tasks/{unitId}/{taskId}', [FranchiseeController::class, 'deleteTask']);
 
         // Staff operations
-        Route::post('staff/{unitId}', [FranchiseeDashboardController::class, 'createStaff']);
-        Route::put('staff/{unitId}/{staffId}', [FranchiseeDashboardController::class, 'updateStaff']);
-        Route::delete('staff/{unitId}/{staffId}', [FranchiseeDashboardController::class, 'deleteStaff']);
+        Route::post('staff/{unitId}', [FranchiseeController::class, 'createStaff']);
+        Route::put('staff/{unitId}/{staffId}', [FranchiseeController::class, 'updateStaff']);
+        Route::delete('staff/{unitId}/{staffId}', [FranchiseeController::class, 'deleteStaff']);
 
         // Inventory management operations (many-to-many product-unit relationship)
-        Route::get('available-products/{unitId}', [FranchiseeDashboardController::class, 'getAvailableFranchiseProducts']);
-        Route::post('inventory/{unitId}', [FranchiseeDashboardController::class, 'addProductToInventory']);
-        Route::put('inventory/{unitId}/{productId}', [FranchiseeDashboardController::class, 'updateInventoryStock']);
-        Route::delete('inventory/{unitId}/{productId}', [FranchiseeDashboardController::class, 'removeProductFromInventory']);
+        Route::get('available-products/{unitId}', [FranchiseeController::class, 'getAvailableFranchiseProducts']);
+        Route::post('inventory/{unitId}', [FranchiseeController::class, 'addProductToInventory']);
+        Route::put('inventory/{unitId}/{productId}', [FranchiseeController::class, 'updateInventoryStock']);
+        Route::delete('inventory/{unitId}/{productId}', [FranchiseeController::class, 'removeProductFromInventory']);
 
         // Legacy product operations (for backward compatibility)
-        Route::put('products/{unitId}/{productId}', [FranchiseeDashboardController::class, 'updateProduct']);
-        Route::delete('products/{unitId}/{productId}', [FranchiseeDashboardController::class, 'deleteProduct']);
+        Route::put('products/{unitId}/{productId}', [FranchiseeController::class, 'updateProduct']);
+        Route::delete('products/{unitId}/{productId}', [FranchiseeController::class, 'deleteProduct']);
 
         // Review operations
-        Route::post('reviews/{unitId}', [FranchiseeDashboardController::class, 'createReview']);
-        Route::put('reviews/{unitId}/{reviewId}', [FranchiseeDashboardController::class, 'updateReview']);
-        Route::delete('reviews/{unitId}/{reviewId}', [FranchiseeDashboardController::class, 'deleteReview']);
+        Route::post('reviews/{unitId}', [FranchiseeController::class, 'createReview']);
+        Route::put('reviews/{unitId}/{reviewId}', [FranchiseeController::class, 'updateReview']);
+        Route::delete('reviews/{unitId}/{reviewId}', [FranchiseeController::class, 'deleteReview']);
 
         // Document operations
-        Route::post('documents/{unitId}', [FranchiseeDashboardController::class, 'createDocument']);
-        Route::put('documents/{unitId}/{documentId}', [FranchiseeDashboardController::class, 'updateDocument']);
-        Route::delete('documents/{unitId}/{documentId}', [FranchiseeDashboardController::class, 'deleteDocument']);
-        Route::get('documents/{unitId}/{documentId}/download', [FranchiseeDashboardController::class, 'downloadDocument']);
+        Route::post('documents/{unitId}', [FranchiseeController::class, 'createDocument']);
+        Route::put('documents/{unitId}/{documentId}', [FranchiseeController::class, 'updateDocument']);
+        Route::delete('documents/{unitId}/{documentId}', [FranchiseeController::class, 'deleteDocument']);
+        Route::get('documents/{unitId}/{documentId}/download', [FranchiseeController::class, 'downloadDocument']);
     });
 });
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Business;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TechnicalRequestResource;
@@ -17,7 +17,75 @@ class TechnicalRequestController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
         $query = TechnicalRequest::with(['requester', 'assignedUser', 'franchise', 'unit']);
+
+        // Apply role-based filtering
+        switch ($user->role) {
+            case 'admin':
+                // Admin can see all requests - no additional filtering needed
+                break;
+
+            case 'franchisor':
+                // Franchisor can see requests from their franchises
+                $franchiseIds = Franchise::where('franchisor_id', $user->id)->pluck('id');
+                if ($franchiseIds->isEmpty()) {
+                    return response()->json([
+                        'success' => true,
+                        'data' => [
+                            'data' => [],
+                            'current_page' => 1,
+                            'last_page' => 1,
+                            'per_page' => 15,
+                            'total' => 0,
+                        ],
+                        'message' => 'No franchises found for current user',
+                    ]);
+                }
+                $query->whereIn('franchise_id', $franchiseIds);
+                break;
+
+            case 'franchisee':
+                // Franchisee can see requests from their unit
+                $unit = Unit::where('franchisee_id', $user->id)->first();
+                if (!$unit) {
+                    return response()->json([
+                        'success' => true,
+                        'data' => [
+                            'data' => [],
+                            'current_page' => 1,
+                            'last_page' => 1,
+                            'per_page' => 15,
+                            'total' => 0,
+                        ],
+                        'message' => 'No unit found for current user',
+                    ]);
+                }
+                $query->where('unit_id', $unit->id);
+                break;
+
+            case 'sales':
+                // Sales can see requests assigned to them or created by them
+                $query->where(function ($q) use ($user) {
+                    $q->where('requester_id', $user->id)
+                        ->orWhere('assigned_to', $user->id);
+                });
+                break;
+
+            default:
+                // For any other roles, return empty result
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'data' => [],
+                        'current_page' => 1,
+                        'last_page' => 1,
+                        'per_page' => 15,
+                        'total' => 0,
+                    ],
+                    'message' => 'Access denied for this role',
+                ]);
+        }
 
         // Apply filters
         if ($request->has('status')) {
@@ -299,9 +367,94 @@ class TechnicalRequestController extends Controller
      */
     public function statistics(Request $request): JsonResponse
     {
+        $user = $request->user();
         $query = TechnicalRequest::query();
 
-        // Apply filters
+        // Apply role-based filtering for statistics
+        switch ($user->role) {
+            case 'admin':
+                // Admin can see all statistics - no additional filtering needed
+                break;
+
+            case 'franchisor':
+                // Franchisor can see statistics for their franchises
+                $franchiseIds = Franchise::where('franchisor_id', $user->id)->pluck('id');
+                if ($franchiseIds->isEmpty()) {
+                    return response()->json([
+                        'success' => true,
+                        'data' => [
+                            'total_requests' => 0,
+                            'open_requests' => 0,
+                            'resolved_requests' => 0,
+                            'overdue_requests' => 0,
+                            'escalated_requests' => 0,
+                            'high_priority_requests' => 0,
+                            'average_response_time' => 0,
+                            'average_resolution_time' => 0,
+                            'requests_by_category' => [],
+                            'requests_by_priority' => [],
+                            'satisfaction_ratings' => [],
+                        ],
+                        'message' => 'No franchises found for current user',
+                    ]);
+                }
+                $query->whereIn('franchise_id', $franchiseIds);
+                break;
+
+            case 'franchisee':
+                // Franchisee can see statistics for their unit
+                $unit = Unit::where('franchisee_id', $user->id)->first();
+                if (!$unit) {
+                    return response()->json([
+                        'success' => true,
+                        'data' => [
+                            'total_requests' => 0,
+                            'open_requests' => 0,
+                            'resolved_requests' => 0,
+                            'overdue_requests' => 0,
+                            'escalated_requests' => 0,
+                            'high_priority_requests' => 0,
+                            'average_response_time' => 0,
+                            'average_resolution_time' => 0,
+                            'requests_by_category' => [],
+                            'requests_by_priority' => [],
+                            'satisfaction_ratings' => [],
+                        ],
+                        'message' => 'No unit found for current user',
+                    ]);
+                }
+                $query->where('unit_id', $unit->id);
+                break;
+
+            case 'sales':
+                // Sales can see statistics for requests assigned to them or created by them
+                $query->where(function ($q) use ($user) {
+                    $q->where('requester_id', $user->id)
+                        ->orWhere('assigned_to', $user->id);
+                });
+                break;
+
+            default:
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'total_requests' => 0,
+                        'open_requests' => 0,
+                        'resolved_requests' => 0,
+                        'overdue_requests' => 0,
+                        'escalated_requests' => 0,
+                        'high_priority_requests' => 0,
+                        'average_response_time' => 0,
+                        'average_resolution_time' => 0,
+                        'requests_by_category' => [],
+                        'requests_by_priority' => [],
+                        'satisfaction_ratings' => [],
+                    ],
+                    'message' => 'Access denied for this role',
+                ]);
+        }
+
+        // Apply additional filters if provided
         if ($request->has('franchise_id')) {
             $query->where('franchise_id', $request->franchise_id);
         }
@@ -410,7 +563,7 @@ class TechnicalRequestController extends Controller
         $user = $request->user();
         $unit = Unit::where('manager_id', $user->id)->first();
 
-        if (! $unit) {
+        if (!$unit) {
             return response()->json([
                 'success' => false,
                 'message' => 'No unit found for current user',

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('gender', ['male', 'female', 'other'])->nullable()->after('date_of_birth');
             $table->string('country')->nullable()->after('gender');
             $table->string('city')->nullable()->after('country');
+            $table->string('state')->nullable()->after('city');
             $table->text('address')->nullable()->after('city');
             $table->timestamp('last_login_at')->nullable()->after('address');
             $table->json('preferences')->nullable()->after('last_login_at');
@@ -42,6 +43,7 @@ return new class extends Migration
                 'gender',
                 'country',
                 'city',
+                'state',
                 'address',
                 'last_login_at',
                 'preferences',

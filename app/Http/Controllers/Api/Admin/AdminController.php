@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Franchise;
@@ -772,7 +772,7 @@ class AdminController extends Controller
             // Create franchise if user is franchisor
             if ($request->role === 'franchisor') {
                 Franchise::create([
-                    'name' => $request->franchiseName,
+                    'business_name' => $request->franchiseName,
                     'franchisor_id' => $user->id,
                     'plan' => $request->plan,
                     'status' => 'active',
@@ -814,7 +814,7 @@ class AdminController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'fullName' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email,'.$id,
+                'email' => 'required|email|unique:users,email,' . $id,
                 'phone' => 'nullable|string|max:20',
                 'city' => 'nullable|string|max:100',
                 'status' => 'required|in:active,pending,inactive',
@@ -844,7 +844,7 @@ class AdminController extends Controller
             // Update franchise if user is franchisor
             if ($user->role === 'franchisor' && $user->franchise) {
                 $user->franchise->update([
-                    'name' => $request->franchiseName,
+                    'business_name' => $request->franchiseName,
                     'plan' => $request->plan,
                 ]);
             }
@@ -989,7 +989,7 @@ class AdminController extends Controller
             $requests->getCollection()->transform(function ($request) {
                 return [
                     'id' => $request->id,
-                    'requestId' => 'TR-'.date('Y').'-'.str_pad($request->id, 3, '0', STR_PAD_LEFT),
+                    'requestId' => 'TR-' . date('Y') . '-' . str_pad($request->id, 3, '0', STR_PAD_LEFT),
                     'userName' => $request->requester ? $request->requester->name : 'Unknown User',
                     'userEmail' => $request->requester ? $request->requester->email : 'Unknown Email',
                     'userAvatar' => $request->requester ? $request->requester->avatar : '',
@@ -1367,12 +1367,12 @@ class AdminController extends Controller
                 $baseCode = 'UNIT';
             }
 
-            $unitCode = $prefix.'-'.$baseCode;
+            $unitCode = $prefix . '-' . $baseCode;
             $counter = 1;
 
             // Ensure uniqueness
             while (Unit::where('unit_code', $unitCode)->exists()) {
-                $unitCode = $prefix.'-'.$baseCode.$counter;
+                $unitCode = $prefix . '-' . $baseCode . $counter;
                 $counter++;
             }
 
@@ -1398,7 +1398,7 @@ class AdminController extends Controller
             ]);
 
             // Send email notification with login credentials
-            $loginUrl = env('APP_URL').'/login';
+            $loginUrl = env('APP_URL') . '/login';
             $franchisee->notify(new NewFranchiseeCredentials($temporaryPassword, $unitCode, $loginUrl));
 
             DB::commit();

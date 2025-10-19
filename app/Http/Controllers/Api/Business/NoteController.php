@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\Business;
 
+use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use App\Models\Note;
 use Illuminate\Http\JsonResponse;

@@ -12,8 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('sales_role', ['senior_sales', 'sales_associate', 'junior_sales'])->nullable()->after('role');
-            $table->string('state')->nullable()->after('country');
             $table->foreignId('franchise_id')->nullable()->constrained()->onDelete('cascade')->after('profile_completion');
         });
     }
@@ -25,7 +23,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign(['franchise_id']);
-            $table->dropColumn(['sales_role', 'state', 'franchise_id']);
+            $table->dropColumn(['franchise_id']);
         });
     }
 };

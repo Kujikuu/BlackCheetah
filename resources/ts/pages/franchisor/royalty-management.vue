@@ -73,8 +73,15 @@ const statistics = ref<RoyaltyStatistics>({
 })
 
 // Computed values for stat cards
-const royaltyCollectedTillDate = computed(() => statistics.value?.royalty_collected_till_date || 0)
-const upcomingRoyalties = computed(() => statistics.value?.upcoming_royalties || 0)
+const royaltyCollectedTillDate = computed(() => {
+  const value = statistics.value?.royalty_collected_till_date
+  return value ? Number(value) : 0
+})
+
+const upcomingRoyalties = computed(() => {
+  const value = statistics.value?.upcoming_royalties
+  return value ? Number(value) : 0
+})
 
 // Period options
 const periodOptions = [
@@ -622,7 +629,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
                   Total payments received
                 </div>
                 <h4 class="text-h4 text-success">
-                  {{ royaltyCollectedTillDate.toLocaleString() }} SAR
+                  {{ formatCurrency(royaltyCollectedTillDate, 'SAR', true) }}
                 </h4>
               </div>
               <VAvatar
@@ -653,7 +660,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
                   Pending payments due
                 </div>
                 <h4 class="text-h4 text-warning">
-                  {{ upcomingRoyalties.toLocaleString() }} SAR
+                  {{ formatCurrency(upcomingRoyalties, 'SAR', true) }}
                 </h4>
               </div>
               <VAvatar
@@ -724,7 +731,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
             <!-- Gross Sales Column -->
             <template #item.grossSales="{ item }">
               <div class="font-weight-medium text-info">
-                {{ (item.gross_sales || 0).toLocaleString() }}
+                {{ formatCurrency(item.gross_sales || 0, 'SAR', false) }}
               </div>
             </template>
 
