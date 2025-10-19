@@ -97,7 +97,7 @@ const productChartOptions = computed(() => {
     },
     colors: ['#FFA726', '#7B1FA2'],
     grid: {
-      borderColor,
+      borderColor: 'rgba(var(--v-theme-on-background), var(--v-medium-emphasis-opacity))',
       strokeDashArray: 5,
     },
     tooltip: {
