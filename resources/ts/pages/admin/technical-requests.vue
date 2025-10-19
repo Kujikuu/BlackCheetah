@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { type TechnicalRequest, technicalRequestApi } from '@/services/api/technical-request'
-import EditTechnicalRequestDrawer from '@/views/admin/modals/EditTechnicalRequestDrawer.vue'
+import SubmitRequestForm from '@/views/technical-requests/SubmitRequestForm.vue'
+import ViewRequestDialog from '@/views/technical-requests/ViewRequestDialog.vue'
+import EditRequestDialog from '@/views/technical-requests/EditRequestDialog.vue'
+import DeleteConfirmDialog from '@/views/technical-requests/DeleteConfirmDialog.vue'
+import BulkDeleteConfirmDialog from '@/views/technical-requests/BulkDeleteConfirmDialog.vue'
+import TechnicalRequestsTable from '@/views/technical-requests/TechnicalRequestsTable.vue'
 
 // Local display interface
 interface DisplayRequest {
@@ -21,10 +26,21 @@ interface DisplayRequest {
 
 // Loading states
 const isLoading = ref(false)
-const isDeleting = ref(false)
 
-// Bulk Delete Confirmation Modal
-const isBulkDeleteConfirmDialogVisible = ref(false)
+// Snackbar for notifications
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'success',
+})
+
+const showSnackbar = (message: string, color: string = 'success') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color,
+  }
+}
 
 // Store
 const searchQuery = ref('')
@@ -35,20 +51,102 @@ const selectedPriority = ref()
 const itemsPerPage = ref(10)
 const page = ref(1)
 const sortBy = ref()
+const orderBy = ref()
 const selectedRows = ref<number[]>([])
+
+// Submit Request Modal
+const isSubmitRequestDialogVisible = ref(false)
+
+// View Request Modal
+const isViewRequestDialogVisible = ref(false)
+const selectedRequest = ref<any>(null)
+
+// Edit Request Modal
+const isEditRequestDialogVisible = ref(false)
+const requestToEdit = ref<any>(null)
+
+// Delete Confirmation Modal
+const isDeleteConfirmDialogVisible = ref(false)
+const requestToDelete = ref<any>(null)
+
+// Bulk Delete Confirmation Modal
+const isBulkDeleteConfirmDialogVisible = ref(false)
+
+// User role detection
+const userRole = ref('')
+const isAdmin = computed(() => userRole.value === 'admin')
+
 
 // Update data table options
 const updateOptions = (options: any) => {
-  if (options.sortBy && options.sortBy.length > 0)
-    sortBy.value = [options.sortBy[0]]
-  else
-    sortBy.value = []
+  sortBy.value = options.sortBy[0]?.key
+  orderBy.value = options.sortBy[0]?.order
+}
+
+const getFileIcon = (fileName: string) => {
+  const ext = fileName.split('.').pop()?.toLowerCase()
+
+  if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext || ''))
+    return 'tabler-photo'
+  else if (['pdf'].includes(ext || ''))
+    return 'tabler-file-type-pdf'
+  if (['doc', 'docx'].includes(ext || ''))
+    return 'tabler-file-type-doc'
+  if (['xls', 'xlsx'].includes(ext || ''))
+    return 'tabler-file-type-xls'
+  if (['txt', 'log'].includes(ext || ''))
+    return 'tabler-file-text'
+  if (['zip', 'rar', '7z'].includes(ext || ''))
+    return 'tabler-file-zip'
+
+  return 'tabler-file'
+}
+
+// Status and priority variant resolvers (these should be passed as props or imported from parent)
+const resolveStatusVariant = (status: string) => {
+  const statusLowerCase = status.toLowerCase().replace('_', '-')
+  if (statusLowerCase === 'open')
+    return 'info'
+  if (statusLowerCase === 'in-progress')
+    return 'warning'
+  if (statusLowerCase === 'pending-info')
+    return 'warning'
+  if (statusLowerCase === 'resolved')
+    return 'success'
+  if (statusLowerCase === 'closed')
+    return 'secondary'
+  if (statusLowerCase === 'cancelled')
+    return 'error'
+
+  return 'primary'
+}
+
+const resolvePriorityVariant = (priority: string) => {
+  const priorityLowerCase = priority.toLowerCase()
+  if (priorityLowerCase === 'low')
+    return { color: 'info', icon: 'tabler-arrow-down' }
+  if (priorityLowerCase === 'medium')
+    return { color: 'warning', icon: 'tabler-minus' }
+  if (priorityLowerCase === 'high')
+    return { color: 'error', icon: 'tabler-arrow-up' }
+  if (priorityLowerCase === 'urgent')
+    return { color: 'error', icon: 'tabler-alert-triangle' }
+
+  return { color: 'primary', icon: 'tabler-minus' }
+}
+
+const formatStatus = (status: string) => {
+  // Convert snake_case to Title Case
+  if (!status) return ''
+  return status
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
 }
 
 // Headers
 const headers = [
   { title: 'Request ID', key: 'requestId' },
-  { title: 'User', key: 'user' },
   { title: 'Subject', key: 'subject' },
   { title: 'Priority', key: 'priority' },
   { title: 'Status', key: 'status' },
@@ -56,7 +154,7 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// API data with proper typing
+// Real data from API
 const technicalRequests = ref<DisplayRequest[]>([])
 const totalRequests = ref(0)
 
@@ -64,12 +162,14 @@ const totalRequests = ref(0)
 const mapToDisplayRequest = (apiRequest: TechnicalRequest): DisplayRequest => {
   // Handle attachments - could be array, string, or null
   let attachments: any[] = []
-  if (apiRequest.attachments && Array.isArray(apiRequest.attachments)) {
-    attachments = apiRequest.attachments.map((url: string, index: number) => ({
-      name: url.split('/').pop() || `attachment-${index}`,
-      size: 'Unknown',
-      url,
-    }))
+  if (apiRequest.attachments) {
+    if (Array.isArray(apiRequest.attachments)) {
+      attachments = apiRequest.attachments.map((url: string, index: number) => ({
+        name: url.split('/').pop() || `attachment-${index}`,
+        size: 'Unknown',
+        url,
+      }))
+    }
   }
 
   return {
@@ -81,20 +181,20 @@ const mapToDisplayRequest = (apiRequest: TechnicalRequest): DisplayRequest => {
     subject: apiRequest.title,
     description: apiRequest.description,
     priority: apiRequest.priority,
-    status: apiRequest.status.replace('_', '-'),
+    status: apiRequest.status, // Keep backend format, we'll handle display in variant resolver
     date: new Date(apiRequest.created_at).toISOString().split('T')[0],
     category: apiRequest.category,
     attachments,
   }
 }
 
-// Fetch technical requests from API (admin-specific)
-const fetchTechnicalRequests = async () => {
+// Fetch technical requests
+const fetchRequests = async () => {
   try {
     isLoading.value = true
 
     const response = await technicalRequestApi.getTechnicalRequests({
-      status: selectedStatus.value?.replace('-', '_'),
+      status: selectedStatus.value, // Already in correct format from statusOptions
       priority: selectedPriority.value,
       search: searchQuery.value,
       per_page: itemsPerPage.value,
@@ -112,44 +212,79 @@ const fetchTechnicalRequests = async () => {
   }
 }
 
-// Since we're using server-side filtering, we don't need client-side filtering
+// Filtered data - API handles filtering
 const filteredRequests = computed(() => technicalRequests.value)
 
-// Helper function for avatar text
-const avatarText = (name: string | null | undefined) => {
-  if (!name || typeof name !== 'string')
-    return 'U'
+// Status options (must match backend enum)
+const statusOptions = [
+  { title: 'Open', value: 'open' },
+  { title: 'In Progress', value: 'in_progress' },
+  { title: 'Pending Info', value: 'pending_info' },
+  { title: 'Resolved', value: 'resolved' },
+  { title: 'Closed', value: 'closed' },
+  { title: 'Cancelled', value: 'cancelled' },
+]
 
-  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase()
+// Priority options (must match backend enum)
+const priorityOptions = [
+  { title: 'Low', value: 'low' },
+  { title: 'Medium', value: 'medium' },
+  { title: 'High', value: 'high' },
+  { title: 'Urgent', value: 'urgent' },
+]
+
+// View request
+const viewRequest = (request: any) => {
+  selectedRequest.value = request
+  isViewRequestDialogVisible.value = true
 }
 
-// CRUD Operations
-const deleteRequest = async (id: number) => {
+// Edit request
+const editRequest = (request: any) => {
+  requestToEdit.value = request
+  isEditRequestDialogVisible.value = true
+  isViewRequestDialogVisible.value = false // Close view dialog
+}
+
+// Handle edit from view dialog
+const handleEditFromView = (request: any) => {
+  editRequest(request)
+}
+
+// Delete request - show confirmation
+const deleteRequest = (request: any) => {
+  requestToDelete.value = request
+  isDeleteConfirmDialogVisible.value = true
+}
+
+// Confirm delete request
+const confirmDelete = async () => {
+  if (!requestToDelete.value)
+    return
+
   try {
-    isDeleting.value = true
-    await $api(`/api/v1/admin/technical-requests/${id}`, {
-      method: 'DELETE',
-    })
-    await fetchTechnicalRequests()
+    isLoading.value = true
+
+    // Delete via API
+    await technicalRequestApi.deleteTechnicalRequest(requestToDelete.value.id)
+
+    // Refresh the list after deletion
+    await fetchRequests()
+
+    // Remove from selectedRows if exists
+    const selectedIndex = selectedRows.value.findIndex(row => row === requestToDelete.value.id)
+    if (selectedIndex !== -1)
+      selectedRows.value.splice(selectedIndex, 1)
+
+    // Reset and close dialog
+    requestToDelete.value = null
+    isDeleteConfirmDialogVisible.value = false
   }
   catch (error) {
-    console.error('Error deleting request:', error)
+    console.error('Error deleting technical request:', error)
   }
   finally {
-    isDeleting.value = false
-  }
-}
-
-const updateRequestStatus = async (id: number, status: string) => {
-  try {
-    await $api(`/api/v1/admin/technical-requests/${id}/status`, {
-      method: 'PATCH',
-      body: { status },
-    })
-    await fetchTechnicalRequests()
-  }
-  catch (error) {
-    console.error('Error updating status:', error)
+    isLoading.value = false
   }
 }
 
@@ -164,176 +299,59 @@ const showBulkDeleteConfirmation = () => {
 // Confirm bulk delete
 const confirmBulkDelete = async () => {
   try {
-    isDeleting.value = true
+    isLoading.value = true
     await technicalRequestApi.bulkDelete(selectedRows.value)
 
     // Refresh the list after deletion
-    await fetchTechnicalRequests()
+    await fetchRequests()
 
     // Clear selection
     selectedRows.value = []
 
     // Close dialog
     isBulkDeleteConfirmDialogVisible.value = false
-
-    console.log('Bulk delete successful')
   }
   catch (error) {
     console.error('Error bulk deleting requests:', error)
   }
   finally {
-    isDeleting.value = false
+    isLoading.value = false
   }
 }
 
 // Legacy function for backward compatibility
 const bulkDelete = showBulkDeleteConfirmation
 
-// Status options
-const statusOptions = [
-  { title: 'Open', value: 'open' },
-  { title: 'In Progress', value: 'in-progress' },
-  { title: 'Resolved', value: 'resolved' },
-  { title: 'Closed', value: 'closed' },
-]
-
-// Priority options
-const priorityOptions = [
-  { title: 'Low', value: 'low' },
-  { title: 'Medium', value: 'medium' },
-  { title: 'High', value: 'high' },
-  { title: 'Critical', value: 'critical' },
-]
-
-const resolveStatusVariant = (status: string | null | undefined) => {
-  if (!status || typeof status !== 'string')
-    return 'primary'
-
-  const statusLowerCase = status.toLowerCase()
-  if (statusLowerCase === 'open')
-    return 'info'
-  if (statusLowerCase === 'in-progress')
-    return 'warning'
-  if (statusLowerCase === 'resolved')
-    return 'success'
-  if (statusLowerCase === 'closed')
-    return 'secondary'
-
-  return 'primary'
-}
-
-const resolvePriorityVariant = (priority: string | null | undefined) => {
-  if (!priority || typeof priority !== 'string')
-    return { color: 'primary', icon: 'tabler-minus' }
-
-  const priorityLowerCase = priority.toLowerCase()
-  if (priorityLowerCase === 'low')
-    return { color: 'info', icon: 'tabler-arrow-down' }
-  if (priorityLowerCase === 'medium')
-    return { color: 'warning', icon: 'tabler-minus' }
-  if (priorityLowerCase === 'high')
-    return { color: 'error', icon: 'tabler-arrow-up' }
-  if (priorityLowerCase === 'critical')
-    return { color: 'error', icon: 'tabler-alert-triangle' }
-
-  return { color: 'primary', icon: 'tabler-minus' }
-}
-
-const isViewRequestDialogVisible = ref(false)
-const isEditRequestDrawerVisible = ref(false)
-const selectedRequest = ref<any>(null)
-
-// View request
-const viewRequest = (request: any) => {
-  selectedRequest.value = {
-    ...request,
-    attachments: Array.isArray(request.attachments) ? request.attachments : [],
-  }
-  isViewRequestDialogVisible.value = true
-}
-
-// Edit request
-const editRequest = (request: any) => {
-  selectedRequest.value = { ...request }
-  isEditRequestDrawerVisible.value = true
-}
-
-// Update request
-const updateRequest = (requestData: any) => {
-  const index = technicalRequests.value.findIndex(r => r.id === requestData.id)
-  if (index !== -1)
-    technicalRequests.value[index] = { ...technicalRequests.value[index], ...requestData }
-
-  selectedRequest.value = null
-}
-
-// Change status (using API)
-const changeStatus = async (id: number, newStatus: string) => {
-  await updateRequestStatus(id, newStatus)
-}
-
-// Export functions
-const exportToCSV = () => {
-  const dataToExport = selectedRows.value.length > 0
-    ? technicalRequests.value.filter(request => selectedRows.value.includes(request.id))
-    : technicalRequests.value
-
-  console.log('Exporting to CSV:', dataToExport)
-
-  // Implement CSV export logic
-}
-
-const exportToPDF = () => {
-  const dataToExport = selectedRows.value.length > 0
-    ? technicalRequests.value.filter(request => selectedRows.value.includes(request.id))
-    : technicalRequests.value
-
-  console.log('Exporting to PDF:', dataToExport)
-
-  // Implement PDF export logic
-}
-
-// Bulk delete is now handled by the API version above
-
 // Download attachment
 const downloadAttachment = (attachment: any) => {
-  console.log('Downloading:', attachment.name)
-
-  // In production, this would trigger actual file download
-  // window.open(attachment.url, '_blank')
+  if (attachment.url && attachment.url !== '#')
+    window.open(attachment.url, '_blank')
 }
 
-// Get file icon based on extension
-const getFileIcon = (fileName: string | null | undefined) => {
-  if (!fileName || typeof fileName !== 'string')
-    return 'tabler-file'
-
-  const ext = fileName.split('.').pop()?.toLowerCase()
-
-  if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext || ''))
-    return 'tabler-photo'
-  if (['pdf'].includes(ext || ''))
-    return 'tabler-file-type-pdf'
-  if (['doc', 'docx'].includes(ext || ''))
-    return 'tabler-file-type-doc'
-  if (['xls', 'xlsx'].includes(ext || ''))
-    return 'tabler-file-type-xls'
-  if (['txt', 'log'].includes(ext || ''))
-    return 'tabler-file-text'
-  if (['zip', 'rar', '7z'].includes(ext || ''))
-    return 'tabler-file-zip'
-
-  return 'tabler-file'
+// Handle successful submission from SubmitRequestForm
+const handleSubmitSuccess = async () => {
+  showSnackbar('Technical request created successfully!', 'success')
+  await fetchRequests()
 }
 
-// Fetch data on component mount
+// Handle successful edit from EditRequestDialog
+const handleEditSuccess = async () => {
+  showSnackbar('Technical request updated successfully!', 'success')
+  await fetchRequests()
+}
+
+// Lifecycle hooks
 onMounted(() => {
-  fetchTechnicalRequests()
+  // Initialize user role from cookie
+  const userData = useCookie<any>('userData')
+  userRole.value = userData.value?.role || ''
+
+  fetchRequests()
 })
 
 // Watch for filter changes
 watch([selectedStatus, selectedPriority, searchQuery], () => {
-  fetchTechnicalRequests()
+  fetchRequests()
 })
 </script>
 
@@ -351,6 +369,12 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
               Manage and track all technical support requests
             </p>
           </div>
+          <div>
+            <VBtn color="primary" @click="isSubmitRequestDialogVisible = true"> <!-- v-if="!isAdmin" -->
+              <VIcon icon="tabler-plus" class="me-2" />
+              Submit Request
+            </VBtn>
+          </div>
         </div>
       </VCol>
     </VRow>
@@ -364,31 +388,15 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
       <VCardText>
         <VRow>
           <!-- Select Status -->
-          <VCol
-            cols="12"
-            sm="4"
-          >
-            <AppSelect
-              v-model="selectedStatus"
-              placeholder="Select Status"
-              :items="statusOptions"
-              clearable
-              clear-icon="tabler-x"
-            />
+          <VCol cols="12" sm="4">
+            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statusOptions" clearable
+              clear-icon="tabler-x" />
           </VCol>
 
           <!-- Select Priority -->
-          <VCol
-            cols="12"
-            sm="4"
-          >
-            <AppSelect
-              v-model="selectedPriority"
-              placeholder="Select Priority"
-              :items="priorityOptions"
-              clearable
-              clear-icon="tabler-x"
-            />
+          <VCol cols="12" sm="4">
+            <AppSelect v-model="selectedPriority" placeholder="Select Priority" :items="priorityOptions" clearable
+              clear-icon="tabler-x" />
           </VCol>
         </VRow>
       </VCardText>
@@ -397,30 +405,17 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect
-            :model-value="itemsPerPage"
-            :items="[
-              { value: 10, title: '10' },
-              { value: 25, title: '25' },
-              { value: 50, title: '50' },
-              { value: 100, title: '100' },
-              { value: -1, title: 'All' },
-            ]"
-            style="inline-size: 6.25rem;"
-            @update:model-value="itemsPerPage = parseInt($event, 10)"
-          />
+          <AppSelect :model-value="itemsPerPage" :items="[
+            { value: 10, title: '10' },
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+            { value: -1, title: 'All' },
+          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
 
           <!-- Bulk Actions -->
-          <VBtn
-            v-if="selectedRows.length > 0"
-            variant="tonal"
-            color="error"
-            @click="bulkDelete"
-          >
-            <VIcon
-              icon="tabler-trash"
-              class="me-2"
-            />
+          <VBtn v-if="selectedRows.length > 0" variant="tonal" color="error" @click="bulkDelete">
+            <VIcon icon="tabler-trash" class="me-2" />
             Delete Selected ({{ selectedRows.length }})
           </VBtn>
         </div>
@@ -429,524 +424,49 @@ watch([selectedStatus, selectedPriority, searchQuery], () => {
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- Search -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField
-              v-model="searchQuery"
-              placeholder="Search Requests"
-            />
+            <AppTextField v-model="searchQuery" placeholder="Search Requests" />
           </div>
-
-          <!-- Export Menu -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-          >
-            <VIcon
-              icon="tabler-upload"
-              class="me-2"
-            />
-            Export
-            <VMenu activator="parent">
-              <VList>
-                <VListItem @click="exportToCSV">
-                  <template #prepend>
-                    <VIcon icon="tabler-file-type-csv" />
-                  </template>
-                  <VListItemTitle>Export to CSV</VListItemTitle>
-                </VListItem>
-                <VListItem @click="exportToPDF">
-                  <template #prepend>
-                    <VIcon icon="tabler-file-type-pdf" />
-                  </template>
-                  <VListItemTitle>Export to PDF</VListItemTitle>
-                </VListItem>
-              </VList>
-            </VMenu>
-          </VBtn>
         </div>
       </VCardText>
 
       <VDivider />
 
       <!-- Data Table -->
-      <VDataTableServer
-        v-model:items-per-page="itemsPerPage"
-        v-model:model-value="selectedRows"
-        v-model:page="page"
-        :items="filteredRequests"
-        item-value="id"
-        :items-length="totalRequests"
-        :headers="headers"
-        class="text-no-wrap"
-        show-select
-        @update:options="updateOptions"
-      >
-        <!-- Empty State -->
-        <template #no-data>
-          <div class="text-center pa-8">
-            <VIcon
-              icon="tabler-inbox-off"
-              size="64"
-              class="mb-4 text-disabled"
-            />
-            <h3 class="text-h5 mb-2">
-              No Technical Requests Found
-            </h3>
-            <p class="text-body-1 text-medium-emphasis mb-4">
-              No requests match your search criteria. Try adjusting your filters.
-            </p>
-          </div>
-        </template>
-
-        <!-- Request ID -->
-        <template #item.requestId="{ item }">
-          <div class="text-body-1 font-weight-medium text-primary">
-            {{ item.requestId }}
-          </div>
-        </template>
-
-        <!-- User -->
-        <template #item.user="{ item }">
-          <div class="d-flex align-center gap-x-4">
-            <VAvatar
-              size="34"
-              :variant="!item.userAvatar ? 'tonal' : undefined"
-              color="primary"
-            >
-              <VImg
-                v-if="item.userAvatar"
-                :src="item.userAvatar"
-              />
-              <span v-else>{{ avatarText(item.userName) }}</span>
-            </VAvatar>
-            <div class="d-flex flex-column">
-              <h6 class="text-base font-weight-medium">
-                {{ item.userName }}
-              </h6>
-              <div class="text-sm text-medium-emphasis">
-                {{ item.userEmail }}
-              </div>
-            </div>
-          </div>
-        </template>
-
-        <!-- Subject -->
-        <template #item.subject="{ item }">
-          <div class="text-body-1">
-            {{ item.subject }}
-          </div>
-          <div class="text-sm text-medium-emphasis">
-            {{ item.category }}
-          </div>
-        </template>
-
-        <!-- Priority -->
-        <template #item.priority="{ item }">
-          <VChip
-            :color="resolvePriorityVariant(item.priority).color"
-            size="small"
-            label
-            class="text-capitalize"
-          >
-            <VIcon
-              :icon="resolvePriorityVariant(item.priority).icon"
-              size="16"
-              class="me-1"
-            />
-            {{ item.priority }}
-          </VChip>
-        </template>
-
-        <!-- Status -->
-        <template #item.status="{ item }">
-          <VChip
-            :color="resolveStatusVariant(item.status)"
-            size="small"
-            label
-            class="text-capitalize"
-          >
-            {{ item.status }}
-          </VChip>
-        </template>
-
-        <!-- Date -->
-        <template #item.date="{ item }">
-          <div class="text-body-1">
-            {{ item.date }}
-          </div>
-        </template>
-
-        <!-- Actions -->
-        <template #item.actions="{ item }">
-          <div class="d-flex gap-1">
-            <IconBtn
-              size="small"
-              @click="viewRequest(item)"
-            >
-              <VIcon icon="tabler-eye" />
-              <VTooltip
-                activator="parent"
-                location="top"
-              >
-                View
-              </VTooltip>
-            </IconBtn>
-
-            <VBtn
-              icon
-              variant="text"
-              color="medium-emphasis"
-              size="small"
-            >
-              <VIcon
-                icon="tabler-dots-vertical"
-                size="22"
-              />
-              <VMenu activator="parent">
-                <VList>
-                  <VListItem @click="viewRequest(item)">
-                    <template #prepend>
-                      <VIcon icon="tabler-eye" />
-                    </template>
-                    <VListItemTitle>View Details</VListItemTitle>
-                  </VListItem>
-
-                  <VListItem @click="editRequest(item)">
-                    <template #prepend>
-                      <VIcon icon="tabler-pencil" />
-                    </template>
-                    <VListItemTitle>Edit</VListItemTitle>
-                  </VListItem>
-
-                  <VDivider class="my-2" />
-
-                  <VListSubheader>Change Status</VListSubheader>
-
-                  <VListItem @click="changeStatus(item.id, 'open')">
-                    <template #prepend>
-                      <VIcon
-                        icon="tabler-circle"
-                        color="info"
-                      />
-                    </template>
-                    <VListItemTitle>Open</VListItemTitle>
-                  </VListItem>
-
-                  <VListItem @click="changeStatus(item.id, 'in-progress')">
-                    <template #prepend>
-                      <VIcon
-                        icon="tabler-circle"
-                        color="warning"
-                      />
-                    </template>
-                    <VListItemTitle>In Progress</VListItemTitle>
-                  </VListItem>
-
-                  <VListItem @click="changeStatus(item.id, 'resolved')">
-                    <template #prepend>
-                      <VIcon
-                        icon="tabler-circle"
-                        color="success"
-                      />
-                    </template>
-                    <VListItemTitle>Resolved</VListItemTitle>
-                  </VListItem>
-
-                  <VListItem @click="changeStatus(item.id, 'closed')">
-                    <template #prepend>
-                      <VIcon
-                        icon="tabler-circle"
-                        color="secondary"
-                      />
-                    </template>
-                    <VListItemTitle>Closed</VListItemTitle>
-                  </VListItem>
-
-                  <VDivider class="my-2" />
-
-                  <VListItem @click="deleteRequest(item.id)">
-                    <template #prepend>
-                      <VIcon
-                        icon="tabler-trash"
-                        color="error"
-                      />
-                    </template>
-                    <VListItemTitle class="text-error">
-                      Delete
-                    </VListItemTitle>
-                  </VListItem>
-                </VList>
-              </VMenu>
-            </VBtn>
-          </div>
-        </template>
-
-        <!-- Pagination -->
-        <template #bottom>
-          <TablePagination
-            v-model:page="page"
-            :items-per-page="itemsPerPage"
-            :total-items="totalRequests"
-          />
-        </template>
-      </VDataTableServer>
+      <TechnicalRequestsTable :items="filteredRequests" :items-length="totalRequests" :loading="isLoading"
+        v-model:selectedRows="selectedRows" :headers="headers" :is-admin="isAdmin" v-model:itemsPerPage="itemsPerPage"
+        v-model:page="page" :resolve-priority-variant="resolvePriorityVariant"
+        :resolve-status-variant="resolveStatusVariant" :format-status="formatStatus" :get-file-icon="getFileIcon" @view-request="viewRequest"
+        @edit-request="editRequest" @delete-request="deleteRequest" @update:options="updateOptions" />
     </VCard>
 
     <!-- View Request Dialog -->
-    <VDialog
-      v-model="isViewRequestDialogVisible"
-      max-width="600"
-    >
-      <VCard v-if="selectedRequest">
-        <VCardItem>
-          <VCardTitle>Request Details</VCardTitle>
+    <ViewRequestDialog v-model:visible="isViewRequestDialogVisible" :request="selectedRequest"
+      :show-edit-button="isAdmin" :is-admin="isAdmin" :resolve-priority-variant="resolvePriorityVariant"
+      :resolve-status-variant="resolveStatusVariant" :format-status="formatStatus" :get-file-icon="getFileIcon" @edit="handleEditFromView" />
 
-          <template #append>
-            <IconBtn @click="isViewRequestDialogVisible = false">
-              <VIcon icon="tabler-x" />
-            </IconBtn>
-          </template>
-        </VCardItem>
+    <!-- Edit Request Dialog -->
+    <EditRequestDialog v-model:visible="isEditRequestDialogVisible" :request="requestToEdit"
+      :is-admin="isAdmin" @success="handleEditSuccess" />
 
-        <VDivider />
+    <!-- Submit Request Dialog -->
+    <SubmitRequestForm v-model:visible="isSubmitRequestDialogVisible" @success="handleSubmitSuccess" />
 
-        <VCardText>
-          <VRow>
-            <VCol cols="12">
-              <div class="d-flex align-center gap-x-4 mb-4">
-                <VAvatar
-                  size="48"
-                  :variant="!selectedRequest.userAvatar ? 'tonal' : undefined"
-                  color="primary"
-                >
-                  <VImg
-                    v-if="selectedRequest.userAvatar"
-                    :src="selectedRequest.userAvatar"
-                  />
-                  <span v-else>{{ avatarText(selectedRequest.userName) }}</span>
-                </VAvatar>
-                <div>
-                  <h6 class="text-h6">
-                    {{ selectedRequest.userName }}
-                  </h6>
-                  <div class="text-body-2 text-medium-emphasis">
-                    {{ selectedRequest.userEmail }}
-                  </div>
-                </div>
-              </div>
-            </VCol>
-
-            <VCol cols="6">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-                Request ID
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedRequest.requestId }}
-              </div>
-            </VCol>
-
-            <VCol cols="6">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-                Date
-              </div>
-              <div class="text-body-1">
-                {{ selectedRequest.date }}
-              </div>
-            </VCol>
-
-            <VCol cols="6">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-                Priority
-              </div>
-              <VChip
-                :color="resolvePriorityVariant(selectedRequest.priority).color"
-                size="small"
-                label
-                class="text-capitalize"
-              >
-                <VIcon
-                  :icon="resolvePriorityVariant(selectedRequest.priority).icon"
-                  size="16"
-                  class="me-1"
-                />
-                {{ selectedRequest.priority }}
-              </VChip>
-            </VCol>
-
-            <VCol cols="6">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-                Status
-              </div>
-              <VChip
-                :color="resolveStatusVariant(selectedRequest.status)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
-                {{ selectedRequest.status }}
-              </VChip>
-            </VCol>
-
-            <VCol cols="12">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-                Category
-              </div>
-              <div class="text-body-1">
-                {{ selectedRequest.category }}
-              </div>
-            </VCol>
-
-            <VCol cols="12">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-                Subject
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedRequest.subject }}
-              </div>
-            </VCol>
-
-            <VCol cols="12">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-                Description
-              </div>
-              <div class="text-body-1">
-                {{ selectedRequest.description }}
-              </div>
-            </VCol>
-
-            <!-- Attachments -->
-            <VCol
-              v-if="selectedRequest.attachments && Array.isArray(selectedRequest.attachments) && selectedRequest.attachments.length > 0"
-              cols="12"
-            >
-              <div class="text-body-2 text-medium-emphasis mb-2">
-                Attachments ({{ Array.isArray(selectedRequest.attachments) ? selectedRequest.attachments.filter(att =>
-                  att
-                  && (att.name || att.filename)).length : 0 }})
-              </div>
-              <VList
-                lines="two"
-                density="compact"
-                class="pa-0"
-              >
-                <VListItem
-                  v-for="(attachment, index) in (Array.isArray(selectedRequest.attachments) ? selectedRequest.attachments.filter(att => att && (att.name || att.filename)) : [])"
-                  :key="index"
-                  class="px-0"
-                >
-                  <template #prepend>
-                    <VAvatar
-                      color="primary"
-                      variant="tonal"
-                      size="40"
-                    >
-                      <VIcon :icon="getFileIcon(attachment.name || attachment.filename)" />
-                    </VAvatar>
-                  </template>
-
-                  <VListItemTitle class="font-weight-medium">
-                    {{ attachment.name || attachment.filename || 'Unknown File' }}
-                  </VListItemTitle>
-                  <VListItemSubtitle>
-                    {{ attachment.size || 'Unknown Size' }}
-                  </VListItemSubtitle>
-
-                  <template #append>
-                    <VBtn
-                      icon
-                      variant="text"
-                      size="small"
-                      color="primary"
-                      @click="downloadAttachment(attachment)"
-                    >
-                      <VIcon icon="tabler-download" />
-                      <VTooltip
-                        activator="parent"
-                        location="top"
-                      >
-                        Download
-                      </VTooltip>
-                    </VBtn>
-                  </template>
-                </VListItem>
-              </VList>
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            variant="outlined"
-            @click="isViewRequestDialogVisible = false"
-          >
-            Close
-          </VBtn>
-          <VBtn
-            color="primary"
-            @click="editRequest(selectedRequest); isViewRequestDialogVisible = false"
-          >
-            Edit Request
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- Edit Technical Request Drawer -->
-    <EditTechnicalRequestDrawer
-      v-model:is-drawer-open="isEditRequestDrawerVisible"
-      :request="selectedRequest"
-      @request-data="updateRequest"
-    />
+    <!-- Delete Confirmation Dialog -->
+    <DeleteConfirmDialog v-model:visible="isDeleteConfirmDialogVisible" :request="requestToDelete" :loading="isLoading"
+      @confirm="confirmDelete" />
 
     <!-- Bulk Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isBulkDeleteConfirmDialogVisible"
-      max-width="500"
-    >
-      <VCard class="text-center px-10 py-6">
-        <VCardText>
-          <VIcon
-            icon="tabler-alert-triangle"
-            size="64"
-            color="warning"
-            class="mb-4"
-          />
-          <h3 class="text-h5 mb-2">
-            Confirm Bulk Delete
-          </h3>
-          <p class="text-body-1 text-medium-emphasis mb-4">
-            Are you sure you want to delete {{ selectedRows.length }} technical request(s)?
-          </p>
-          <div class="text-start pa-4 bg-surface rounded">
-            <div class="text-body-2 text-medium-emphasis mb-1">
-              Selected Requests
-            </div>
-            <div class="text-body-1 font-weight-medium">
-              {{ selectedRows.length }} request(s) will be permanently deleted
-            </div>
-          </div>
-          <p class="text-body-2 text-error mt-4 mb-0">
-            This action cannot be undone.
-          </p>
-        </VCardText>
-        <VCardText class="d-flex align-center justify-center gap-2">
-          <VBtn
-            variant="outlined"
-            @click="isBulkDeleteConfirmDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="error"
-            :loading="isDeleting"
-            @click="confirmBulkDelete"
-          >
-            Delete {{ selectedRows.length }} Request(s)
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VDialog>
+    <BulkDeleteConfirmDialog v-model:visible="isBulkDeleteConfirmDialogVisible" :selected-count="selectedRows.length"
+      :loading="isLoading" @confirm="confirmBulkDelete" />
+
+    <!-- Snackbar for notifications -->
+    <VSnackbar v-model="snackbar.show" timeout="3000">
+      {{ snackbar.message }}
+      <template #actions>
+        <VBtn :color="snackbar.color" @click="snackbar.show = false">
+          Close
+        </VBtn>
+      </template>
+    </VSnackbar>
   </section>
 </template>
