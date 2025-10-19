@@ -1,6 +1,9 @@
 <script setup lang="ts">
 // 👉 Imports
-import CreateTaskModal from '@/components/dialogs/CreateTaskModal.vue'
+import CreateTaskDialog from '@/components/dialogs/tasks/CreateTaskDialog.vue'
+import ViewTaskDialog from '@/components/dialogs/tasks/ViewTaskDialog.vue'
+import EditTaskDialog from '@/components/dialogs/tasks/EditTaskDialog.vue'
+import DeleteTaskDialog from '@/components/dialogs/tasks/DeleteTaskDialog.vue'
 import { useTaskUsers } from '@/composables/useTaskUsers'
 import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES, TASK_HEADERS } from '@/constants/taskConstants'
 
@@ -388,6 +391,41 @@ const saveTask = async () => {
 
   isEditTaskModalVisible.value = false
   selectedTask.value = null
+}
+
+// 👉 Dialog event handlers
+const onTaskUpdated = (updatedTask: any) => {
+  // Update task in appropriate data array based on current tab
+  if (currentTab.value === 'franchisee') {
+    const index = franchiseeTasksData.value.findIndex(task => task.id === updatedTask.id)
+    if (index !== -1)
+      franchiseeTasksData.value[index] = updatedTask
+  }
+  else {
+    const index = salesTasksData.value.findIndex(task => task.id === updatedTask.id)
+    if (index !== -1)
+      salesTasksData.value[index] = updatedTask
+  }
+  
+  isEditTaskModalVisible.value = false
+  selectedTask.value = null
+}
+
+const onTaskDeleted = (taskId: number) => {
+  // Remove from appropriate data array based on current tab
+  if (currentTab.value === 'franchisee') {
+    const index = franchiseeTasksData.value.findIndex(task => task.id === taskId)
+    if (index !== -1)
+      franchiseeTasksData.value.splice(index, 1)
+  }
+  else {
+    const index = salesTasksData.value.findIndex(task => task.id === taskId)
+    if (index !== -1)
+      salesTasksData.value.splice(index, 1)
+  }
+  
+  isDeleteDialogVisible.value = false
+  taskToDelete.value = null
 }
 
 // 👉 Watch for tab changes to initialize users
@@ -1001,306 +1039,34 @@ onMounted(async () => {
       </VWindowItem>
     </VWindow>
 
-    <!-- Create Task Modal -->
-    <CreateTaskModal
+    <!-- Create Task Dialog -->
+    <CreateTaskDialog
       v-model:is-dialog-visible="isAddTaskModalVisible"
       :current-tab="currentTab"
       @task-created="onTaskCreated"
     />
 
-    <!-- View Task Modal -->
-    <VDialog
-      v-model="isViewTaskModalVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isViewTaskModalVisible = false" />
-      <VCard title="Task Details">
-        <VDivider />
+    <!-- Edit Task Dialog -->
+    <EditTaskDialog
+      v-model:is-dialog-visible="isEditTaskModalVisible"
+      :task="selectedTask"
+      :user-options="userOptions"
+      :users-loading="usersLoading"
+      @task-updated="onTaskUpdated"
+    />
 
-        <VCardText
-          v-if="selectedTask"
-          class="pa-6"
-        >
-          <VRow>
-            <VCol cols="12">
-              <h6 class="text-h6 mb-2">
-                {{ selectedTask.title }}
-              </h6>
-              <p class="text-body-1 mb-4">
-                {{ selectedTask.description }}
-              </p>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="text-body-2 text-disabled mb-1">
-                Category
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.category }}
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="text-body-2 text-disabled mb-1">
-                Assigned To
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.assignedTo }}
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="text-body-2 text-disabled mb-1">
-                Start Date
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.startDate }}
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="text-body-2 text-disabled mb-1">
-                Due Date
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.dueDate }}
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="text-body-2 text-disabled mb-1">
-                Priority
-              </div>
-              <VChip
-                :color="resolvePriorityVariant(selectedTask.priority)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
-                {{ selectedTask.priority }}
-              </VChip>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="text-body-2 text-disabled mb-1">
-                Status
-              </div>
-              <VChip
-                :color="resolveStatusVariant(selectedTask.status)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
-                {{ selectedTask.status }}
-              </VChip>
-            </VCol>
-          </VRow>
-        </VCardText>
+    <!-- Delete Task Dialog -->
+    <DeleteTaskDialog
+      v-model:is-dialog-visible="isDeleteDialogVisible"
+      :task-id="taskToDelete"
+      @task-deleted="onTaskDeleted"
+    />
 
-        <VDivider />
+    <!-- View Task Dialog -->
+    <ViewTaskDialog
+      v-model:is-dialog-visible="isViewTaskModalVisible"
+      :task="selectedTask"
+    />
 
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isViewTaskModalVisible = false"
-          >
-            Close
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- Edit Task Modal -->
-    <VDialog
-      v-model="isEditTaskModalVisible"
-      max-width="600"
-      persistent
-    >
-      <DialogCloseBtn @click="isEditTaskModalVisible = false" />
-      <VCard title="Edit Task">
-        <VDivider />
-
-        <VCardText
-          v-if="selectedTask"
-          class="pa-6"
-        >
-          <VRow>
-            <VCol cols="12">
-              <VTextField
-                v-model="selectedTask.title"
-                label="Task Title"
-                placeholder="Enter task title"
-                required
-              />
-            </VCol>
-            <VCol cols="12">
-              <VTextarea
-                v-model="selectedTask.description"
-                label="Description"
-                placeholder="Enter task description"
-                rows="3"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                v-model="selectedTask.category"
-                label="Category"
-                placeholder="Select category"
-                :items="TASK_CATEGORIES"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                v-model="selectedTask.assignedTo"
-                label="Assigned To"
-                placeholder="Select user"
-                :items="userOptions"
-                :loading="usersLoading"
-                item-title="title"
-                item-value="value"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="selectedTask.startDate"
-                label="Start Date"
-                type="date"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="selectedTask.dueDate"
-                label="Due Date"
-                type="date"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                v-model="selectedTask.priority"
-                label="Priority"
-                :items="PRIORITY_OPTIONS"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VSelect
-                v-model="selectedTask.status"
-                label="Status"
-                :items="STATUS_OPTIONS"
-                required
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="selectedTask.estimatedHours"
-                label="Estimated Hours"
-                type="number"
-                min="0"
-              />
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <VTextField
-                v-model="selectedTask.actualHours"
-                label="Actual Hours"
-                type="number"
-                min="0"
-              />
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isEditTaskModalVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="primary"
-            @click="saveTask"
-          >
-            Save Changes
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isDeleteDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
-      <VCard title="Confirm Delete">
-        <VCardText>
-          Are you sure you want to delete this task? This action cannot be undone.
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteTask"
-          >
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
   </section>
 </template>

@@ -1,0 +1,450 @@
+<script setup lang="ts">
+import { emailValidator, requiredValidator } from '@core/utils/validators'
+
+interface Props {
+  isDialogVisible: boolean
+}
+
+interface Emit {
+  (e: 'update:isDialogVisible', value: boolean): void
+  (e: 'franchiseeAdded', data: any): void
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emit>()
+
+// Form data
+const currentStep = ref(1)
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+const formData = ref({
+  name: '',
+  email: '',
+  phone: '',
+  country: '',
+  state: '',
+  city: '',
+  address: '',
+  postalCode: '',
+  type: 'store' as const,
+  sizeSqft: '',
+  capacity: '',
+  openingDate: '',
+  monthlyRent: '',
+})
+
+// Data
+const countries = [
+  { title: 'Saudi Arabia', value: 'SA' },
+  { title: 'United Arab Emirates', value: 'AE' },
+  { title: 'Qatar', value: 'QA' },
+  { title: 'Kuwait', value: 'KW' },
+  { title: 'Oman', value: 'OM' },
+  { title: 'Bahrain', value: 'BH' },
+  { title: 'Jordan', value: 'JO' },
+  { title: 'Lebanon', value: 'LB' },
+  { title: 'Egypt', value: 'EG' },
+  { title: 'Iraq', value: 'IQ' },
+]
+
+const unitTypes = [
+  { title: 'Store', value: 'store' },
+  { title: 'Kiosk', value: 'kiosk' },
+  { title: 'Mobile', value: 'mobile' },
+  { title: 'Online', value: 'online' },
+  { title: 'Warehouse', value: 'warehouse' },
+  { title: 'Office', value: 'office' },
+]
+
+// Methods
+const resetForm = () => {
+  currentStep.value = 1
+  error.value = null
+  formData.value = {
+    name: '',
+    email: '',
+    phone: '',
+    country: '',
+    state: '',
+    city: '',
+    address: '',
+    postalCode: '',
+    type: 'store',
+    sizeSqft: '',
+    capacity: '',
+    openingDate: '',
+    monthlyRent: '',
+  }
+}
+
+const updateModelValue = (val: boolean) => {
+  emit('update:isDialogVisible', val)
+}
+
+const nextStep = () => {
+  if (currentStep.value < 2) {
+    currentStep.value++
+    error.value = null
+  }
+}
+
+const prevStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--
+    error.value = null
+  }
+}
+
+// Reset form when modal opens
+watch(() => props.isDialogVisible, visible => {
+  if (visible)
+    resetForm()
+})
+
+const submitForm = async () => {
+  if (!formData.value.name || !formData.value.email || !formData.value.phone) {
+    error.value = 'Please fill in all required fields'
+
+    return
+  }
+
+  loading.value = true
+  error.value = null
+
+  try {
+    // Get the franchisor's franchise ID
+    const franchiseResponse = await $api('/v1/franchisor/franchise')
+    const franchiseId = franchiseResponse.data?.id || franchiseResponse.id
+
+    // Prepare franchisee and unit data
+    const franchiseeUnitData = {
+      // Franchisee details
+      name: formData.value.name,
+      email: formData.value.email,
+      phone: formData.value.phone,
+
+      // Unit details
+      unit_name: formData.value.name, // Use same name for unit
+      franchise_id: franchiseId,
+      unit_type: formData.value.type || 'store',
+      address: formData.value.address,
+      city: formData.value.city,
+      state_province: formData.value.state,
+      postal_code: formData.value.postalCode,
+      country: formData.value.country,
+      size_sqft: formData.value.sizeSqft,
+      monthly_rent: formData.value.monthlyRent,
+      opening_date: formData.value.openingDate,
+      status: 'planning',
+    }
+
+    // Create franchisee with unit
+    const response = await $api('/v1/franchisor/franchisees-with-unit', {
+      method: 'POST',
+      body: franchiseeUnitData,
+    })
+
+    if (response.success) {
+      // Transform the response to match expected format
+      const transformedData = {
+        id: response.data.unit.id,
+        name: response.data.unit.unit_name,
+        email: response.data.franchisee.email,
+        phone: response.data.franchisee.phone,
+        type: response.data.unit.unit_type,
+        sizeSqft: response.data.unit.size_sqft,
+        capacity: null, // Not available in unit response
+        openingDate: response.data.unit.opening_date,
+        monthlyRent: response.data.unit.monthly_rent,
+        managerId: response.data.unit.franchisee_id,
+        managerName: response.data.franchisee.name,
+        country: response.data.unit.country,
+        state: response.data.unit.state_province,
+        city: response.data.unit.city,
+        address: response.data.unit.address,
+        postalCode: response.data.unit.postal_code,
+      }
+
+      emit('franchiseeAdded', transformedData)
+      updateModelValue(false)
+      resetForm()
+    }
+  }
+  catch (err: any) {
+    console.error('Error creating franchisee with unit:', err)
+    error.value = err.response?.data?.message || 'Failed to create franchisee and unit. Please try again.'
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+const onDialogModelValueUpdate = (val: boolean) => {
+  emit('update:isDialogVisible', val)
+  if (!val)
+    resetForm()
+}
+</script>
+
+<template>
+  <VDialog
+    :model-value="props.isDialogVisible"
+    max-width="800"
+    @update:model-value="onDialogModelValueUpdate"
+  >
+    <VCard>
+      <VCardTitle class="text-center">
+        <span class="text-h5">Add New Franchisee</span>
+      </VCardTitle>
+
+      <VCardText>
+        <!-- Error Alert -->
+        <VAlert
+          v-if="error"
+          type="error"
+          variant="tonal"
+          class="mb-4"
+          closable
+          @click:close="error = null"
+        >
+          {{ error }}
+        </VAlert>
+
+        <!-- Stepper -->
+        <VStepper
+          v-model="currentStep"
+          alt-labels
+        >
+          <VStepperHeader>
+            <VStepperItem
+              :complete="currentStep > 1"
+              :value="1"
+              title="Basic Info"
+            />
+            <VDivider />
+            <VStepperItem
+              :value="2"
+              title="Unit Details"
+            />
+          </VStepperHeader>
+
+          <VStepperWindow>
+            <!-- Step 1: Basic Info -->
+            <VStepperWindowItem :value="1">
+              <VForm>
+                <VRow>
+                  <VCol cols="12">
+                    <AppTextField
+                      v-model="formData.name"
+                      label="Branch Name"
+                      placeholder="Enter Branch name"
+                      :rules="[requiredValidator]"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppTextField
+                      v-model="formData.email"
+                      label="Email Address"
+                      placeholder="Enter email address"
+                      :rules="[requiredValidator, emailValidator]"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppTextField
+                      v-model="formData.phone"
+                      label="Contact Number"
+                      placeholder="Enter contact number"
+                      :rules="[requiredValidator]"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppSelect
+                      v-model="formData.country"
+                      :items="countries"
+                      label="Country"
+                      placeholder="Select country"
+                      :rules="[requiredValidator]"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.state"
+                      label="State"
+                      placeholder="Enter state"
+                      :rules="[requiredValidator]"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.city"
+                      label="City"
+                      placeholder="Enter city"
+                      :rules="[requiredValidator]"
+                    />
+                  </VCol>
+
+                  <VCol cols="12">
+                    <AppTextarea
+                      v-model="formData.address"
+                      label="Address"
+                      placeholder="Enter full address"
+                      :rules="[requiredValidator]"
+                    />
+                  </VCol>
+
+                  <VCol cols="12">
+                    <VAlert
+                      type="info"
+                      variant="tonal"
+                      class="mb-0"
+                    >
+                      <strong>{{ formData.name || 'New franchisee' }}</strong> will be automatically assigned as the
+                      unit manager.
+                    </VAlert>
+                  </VCol>
+
+                  <!--
+                    <VCol cols="12" md="6">
+                    <AppTextField v-model="formData.postalCode" label="Postal Code" hidden
+                    placeholder="Enter postal code" />
+                    </VCol>
+                  -->
+                </VRow>
+              </VForm>
+            </VStepperWindowItem>
+
+            <!-- Step 2: Unit Details -->
+            <VStepperWindowItem :value="2">
+              <VForm>
+                <VRow>
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppSelect
+                      v-model="formData.type"
+                      :items="unitTypes"
+                      label="Unit Type"
+                      placeholder="Select unit type"
+                      :rules="[requiredValidator]"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="12"
+                    md="6"
+                  >
+                    <AppDateTimePicker
+                      v-model="formData.openingDate"
+                      label="Opening Date"
+                      placeholder="Select opening date"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.sizeSqft"
+                      label="Size (sq ft)"
+                      placeholder="Enter size in square feet"
+                      type="number"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.capacity"
+                      label="Capacity"
+                      placeholder="Enter capacity"
+                      type="number"
+                    />
+                  </VCol>
+
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <AppTextField
+                      v-model="formData.monthlyRent"
+                      label="Monthly Rent"
+                      placeholder="Enter monthly rent"
+                      type="number"
+                      prefix="SAR"
+                    />
+                  </VCol>
+                </VRow>
+              </VForm>
+            </VStepperWindowItem>
+          </VStepperWindow>
+        </VStepper>
+      </VCardText>
+
+      <VCardActions class="justify-space-between pa-6">
+        <VBtn
+          v-if="currentStep > 1"
+          variant="outlined"
+          :disabled="loading"
+          @click="prevStep"
+        >
+          Previous
+        </VBtn>
+        <VSpacer v-else />
+
+        <div class="d-flex gap-3">
+          <VBtn
+            variant="outlined"
+            :disabled="loading"
+            @click="updateModelValue(false)"
+          >
+            Cancel
+          </VBtn>
+
+          <VBtn
+            v-if="currentStep < 2"
+            color="primary"
+            :disabled="loading"
+            @click="nextStep"
+          >
+            Next
+          </VBtn>
+
+          <VBtn
+            v-else
+            color="primary"
+            :loading="loading"
+            :disabled="loading"
+            @click="submitForm"
+          >
+            Create Unit
+          </VBtn>
+        </div>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>

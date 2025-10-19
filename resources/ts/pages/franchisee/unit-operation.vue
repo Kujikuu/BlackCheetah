@@ -2,9 +2,22 @@
 
 // 👉 Imports
 import { computed, onMounted, ref } from 'vue'
-import AddDocumentModal from '@/components/dialogs/AddDocumentModal.vue'
+import AddDocumentDialog from '@/components/dialogs/franchise/AddDocumentDialog.vue'
 import CreateTaskModal from '@/components/dialogs/CreateTaskModal.vue'
 import DocumentActionModal from '@/components/dialogs/DocumentActionModal.vue'
+import ViewTaskDialog from '@/components/dialogs/tasks/ViewTaskDialog.vue'
+import EditTaskDialog from '@/components/dialogs/tasks/EditTaskDialog.vue'
+import DeleteTaskDialog from '@/components/dialogs/tasks/DeleteTaskDialog.vue'
+import ViewReviewDialog from '@/components/dialogs/reviews/ViewReviewDialog.vue'
+import ViewProductDialog from '@/components/dialogs/products/ViewProductDialog.vue'
+import ViewStaffDialog from '@/components/dialogs/staff/ViewStaffDialog.vue'
+import AddReviewDialog from '@/components/dialogs/reviews/AddReviewDialog.vue'
+import EditReviewDialog from '@/components/dialogs/reviews/EditReviewDialog.vue'
+import EditProductDialog from '@/components/dialogs/products/EditProductDialog.vue'
+import EditStaffDialog from '@/components/dialogs/staff/EditStaffDialog.vue'
+import AddStaffDialog from '@/components/dialogs/staff/AddStaffDialog.vue'
+import EditUnitDialog from '@/components/dialogs/units/EditUnitDialog.vue'
+import AddProductToInventoryDialog from '@/components/dialogs/products/AddProductToInventoryDialog.vue'
 import type {
   UnitDetails,
   UnitDocument,
@@ -37,6 +50,11 @@ const currentUnitId = computed<number | null>(() => {
   }
 
   return null
+})
+
+// Computed unit ID for dialogs (prioritizes unitData.id, falls back to currentUnitId)
+const dialogUnitId = computed<number | null>(() => {
+  return unitData.value?.id || currentUnitId.value
 })
 
 // 👉 Loading and error states
@@ -280,9 +298,11 @@ const openEditUnitModal = () => {
   isEditUnitModalVisible.value = true
 }
 
-const saveUnitDetails = async () => {
+const saveUnitDetails = async (updatedUnitData?: any) => {
+  const unitToUpdate = updatedUnitData || editUnitForm.value
+  
   try {
-    const response = await franchiseeDashboardApi.updateUnitDetails(getUnitId(), editUnitForm.value)
+    const response = await franchiseeDashboardApi.updateUnitDetails(getUnitId(), unitToUpdate)
     if (response.success) {
       unitData.value = response.data
       isEditUnitModalVisible.value = false
@@ -291,6 +311,11 @@ const saveUnitDetails = async () => {
   catch (err) {
     console.error('Error updating unit details:', err)
   }
+}
+
+// 👉 Handle unit updated event from dialog
+const onUnitUpdated = async (updatedUnitData: any) => {
+  await saveUnitDetails(updatedUnitData)
 }
 
 const onTaskCreated = async (task: any) => {
@@ -437,14 +462,15 @@ const deleteStaff = async () => {
   }
 }
 
-const saveStaff = async () => {
-  if (!selectedStaff.value)
+const saveStaff = async (updatedStaff?: any) => {
+  const staffToSave = updatedStaff || selectedStaff.value
+  if (!staffToSave)
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateStaff(getUnitId(), selectedStaff.value.id, selectedStaff.value)
+    const response = await franchiseeDashboardApi.updateStaff(getUnitId(), staffToSave.id, staffToSave)
     if (response.success) {
-      const index = staffData.value.findIndex(staff => staff.id === selectedStaff.value.id)
+      const index = staffData.value.findIndex(staff => staff.id === staffToSave.id)
       if (index !== -1)
         staffData.value[index] = response.data
     }
@@ -458,6 +484,11 @@ const saveStaff = async () => {
   }
 }
 
+// 👉 Handle staff updated event from dialog
+const onStaffUpdated = async (staff: any) => {
+  await saveStaff(staff)
+}
+
 const onStaffCreated = async (staff: any) => {
   try {
     const response = await franchiseeDashboardApi.createStaff(getUnitId(), staff)
@@ -469,9 +500,11 @@ const onStaffCreated = async (staff: any) => {
   }
 }
 
-const addStaff = async () => {
+const addStaff = async (staffToAdd?: any) => {
+  const staffToSubmit = staffToAdd || newStaffForm.value
+  
   try {
-    const response = await franchiseeDashboardApi.createStaff(getUnitId(), newStaffForm.value)
+    const response = await franchiseeDashboardApi.createStaff(getUnitId(), staffToSubmit)
     if (response.success) {
       staffData.value.push(response.data)
       isAddStaffModalVisible.value = false
@@ -481,15 +514,26 @@ const addStaff = async () => {
         name: '',
         email: '',
         phone: '',
-        position: '',
+        jobTitle: '',
+        department: '',
         salary: 0,
+        hireDate: '',
+        shiftStart: '',
+        shiftEnd: '',
         status: 'Active',
+        employmentType: 'full_time',
+        notes: '',
       }
     }
   }
   catch (error) {
     console.error('Error adding staff:', error)
   }
+}
+
+// 👉 Handle staff added event from dialog
+const onStaffAdded = async (staff: any) => {
+  await addStaff(staff)
 }
 
 // 👉 Product handlers
@@ -529,14 +573,15 @@ const deleteProduct = async () => {
   }
 }
 
-const saveProduct = async () => {
-  if (!selectedProduct.value)
+const saveProduct = async (updatedProduct?: any) => {
+  const productToSave = updatedProduct || selectedProduct.value
+  if (!productToSave)
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateProduct(getUnitId(), selectedProduct.value.id, selectedProduct.value)
+    const response = await franchiseeDashboardApi.updateProduct(getUnitId(), productToSave.id, productToSave)
     if (response.success) {
-      const index = productsData.value.findIndex(product => product.id === selectedProduct.value.id)
+      const index = productsData.value.findIndex(product => product.id === productToSave.id)
       if (index !== -1)
         productsData.value[index] = response.data
     }
@@ -548,6 +593,11 @@ const saveProduct = async () => {
     isEditProductModalVisible.value = false
     selectedProduct.value = null
   }
+}
+
+// 👉 Handle product updated event from dialog
+const onProductUpdated = async (product: any) => {
+  await saveProduct(product)
 }
 
 // 👉 Load available franchise products for inventory
@@ -575,9 +625,12 @@ const loadAvailableFranchiseProducts = async () => {
 }
 
 // 👉 Add product to unit inventory
-const addProductToInventory = async () => {
-  if (!selectedFranchiseProduct.value)
-    return
+const addProductToInventory = async (inventoryData?: { productId: number; quantity: number; reorderLevel: number }) => {
+  const dataToUse = inventoryData || {
+    productId: selectedFranchiseProduct.value!,
+    quantity: Number.parseInt(newInventoryForm.value.quantity.toString()),
+    reorderLevel: Number.parseInt(newInventoryForm.value.reorderLevel.toString()),
+  }
 
   try {
     // Get unit ID from loaded data or route params
@@ -585,24 +638,17 @@ const addProductToInventory = async () => {
 
     if (!unitIdToUse) {
       console.error('Unit ID not available for adding product')
-
       return
     }
 
-    const inventoryData = {
-      productId: selectedFranchiseProduct.value,
-      quantity: Number.parseInt(newInventoryForm.value.quantity.toString()),
-      reorderLevel: Number.parseInt(newInventoryForm.value.reorderLevel.toString()),
-    }
-
-    const response = await franchiseeDashboardApi.addProductToInventory(unitIdToUse, inventoryData)
+    const response = await franchiseeDashboardApi.addProductToInventory(unitIdToUse, dataToUse)
     if (response.success) {
       // Add the product with inventory data to our products list
-      const selectedProduct = availableFranchiseProducts.value.find(p => p.id === selectedFranchiseProduct.value)
+      const selectedProduct = availableFranchiseProducts.value.find(p => p.id === dataToUse.productId)
       if (selectedProduct) {
         productsData.value.push({
           ...selectedProduct,
-          stock: inventoryData.quantity,
+          stock: dataToUse.quantity,
         })
       }
       closeAddProductModal()
@@ -611,6 +657,11 @@ const addProductToInventory = async () => {
   catch (error) {
     console.error('Error adding product to inventory:', error)
   }
+}
+
+// 👉 Handle product added event from dialog
+const onProductAdded = async (inventoryData: { productId: number; quantity: number; reorderLevel: number }) => {
+  await addProductToInventory(inventoryData)
 }
 
 // 👉 Close add product modal and reset form
@@ -666,14 +717,15 @@ const deleteReview = async () => {
   }
 }
 
-const saveReview = async () => {
-  if (!selectedReview.value)
+const saveReview = async (updatedReview?: any) => {
+  const reviewToSave = updatedReview || selectedReview.value
+  if (!reviewToSave)
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateReview(getUnitId(), selectedReview.value.id, selectedReview.value)
+    const response = await franchiseeDashboardApi.updateReview(getUnitId(), reviewToSave.id, reviewToSave)
     if (response.success) {
-      const index = reviewsData.value.findIndex(review => review.id === selectedReview.value.id)
+      const index = reviewsData.value.findIndex(review => review.id === reviewToSave.id)
       if (index !== -1)
         reviewsData.value[index] = response.data
     }
@@ -687,6 +739,11 @@ const saveReview = async () => {
   }
 }
 
+// 👉 Handle review updated event from dialog
+const onReviewUpdated = async (review: any) => {
+  await saveReview(review)
+}
+
 const onReviewCreated = async (review: any) => {
   try {
     const response = await franchiseeDashboardApi.createReview(getUnitId(), review)
@@ -698,9 +755,11 @@ const onReviewCreated = async (review: any) => {
   }
 }
 
-const addReview = async () => {
+const addReview = async (reviewData?: any) => {
+  const reviewToSubmit = reviewData || newReviewForm.value
+  
   try {
-    const response = await franchiseeDashboardApi.createReview(getUnitId(), newReviewForm.value)
+    const response = await franchiseeDashboardApi.createReview(getUnitId(), reviewToSubmit)
     if (response.success) {
       reviewsData.value.push(response.data)
       isAddReviewModalVisible.value = false
@@ -718,6 +777,11 @@ const addReview = async () => {
   catch (error) {
     console.error('Error adding review:', error)
   }
+}
+
+// 👉 Handle review added event from dialog
+const onReviewAdded = async (review: any) => {
+  await addReview(review)
 }
 
 // 👉 Task action handlers
@@ -792,6 +856,25 @@ const saveTask = async () => {
     isEditTaskModalVisible.value = false
     selectedTask.value = null
   }
+}
+
+// Event handlers for dialog components
+const onTaskUpdated = (updatedTask: any) => {
+  const index = tasksData.value.findIndex(task => task.id === updatedTask.id)
+  if (index !== -1)
+    tasksData.value[index] = updatedTask
+
+  isEditTaskModalVisible.value = false
+  selectedTask.value = null
+}
+
+const onTaskDeleted = (taskId: number) => {
+  const index = tasksData.value.findIndex(task => task.id === taskId)
+  if (index !== -1)
+    tasksData.value.splice(index, 1)
+
+  isDeleteDialogVisible.value = false
+  taskToDelete.value = null
 }
 
 // 👉 Headers
@@ -1687,7 +1770,12 @@ const reviewHeaders = [
     <!-- Modals -->
     <CreateTaskModal v-model:is-dialog-visible="isAddTaskModalVisible" @task-created="onTaskCreated" />
 
-    <AddDocumentModal v-model:is-dialog-visible="isAddDocumentModalVisible" @document-added="onDocumentAdded" />
+    <AddDocumentDialog 
+      v-model:is-dialog-visible="isAddDocumentModalVisible" 
+      :unit-id="dialogUnitId"
+      mode="unit"
+      @document-added="onDocumentAdded" 
+    />
 
     <DocumentActionModal 
       v-if="documentAction" 
@@ -1697,790 +1785,91 @@ const reviewHeaders = [
       @document-action-confirmed="onDocumentActionConfirmed" 
     />
 
-    <!-- View Task Modal -->
-    <VDialog v-model="isViewTaskModalVisible" max-width="600">
-      <VCard>
-        <VCardTitle class="text-h5 pa-6 pb-4">
-          Task Details
-        </VCardTitle>
+    <!-- View Task Dialog -->
+    <ViewTaskDialog
+      v-model:is-dialog-visible="isViewTaskModalVisible"
+      :task="selectedTask"
+    />
 
-        <VDivider />
+    <!-- Edit Task Dialog -->
+    <EditTaskDialog
+      v-model:is-dialog-visible="isEditTaskModalVisible"
+      :task="selectedTask"
+      :user-options="[]"
+      :users-loading="false"
+      @task-updated="onTaskUpdated"
+    />
 
-        <VCardText v-if="selectedTask" class="pa-6">
-          <VRow>
-            <VCol cols="12">
-              <h6 class="text-h6 mb-2">
-                {{ selectedTask.title }}
-              </h6>
-              <p class="text-body-1 mb-4">
-                {{ selectedTask.description }}
-              </p>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Category
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.category }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Assigned To
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.assignedTo }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Start Date
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.startDate }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Due Date
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.dueDate }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Priority
-              </div>
-              <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label class="text-capitalize">
-                {{ selectedTask.priority }}
-              </VChip>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Status
-              </div>
-              <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize">
-                {{ selectedTask.status }}
-              </VChip>
-            </VCol>
-          </VRow>
-        </VCardText>
+    <!-- Delete Task Dialog -->
+    <DeleteTaskDialog
+      v-model:is-dialog-visible="isDeleteDialogVisible"
+      :task-id="taskToDelete"
+      @task-deleted="onTaskDeleted"
+    />
 
-        <VDivider />
+    <!-- Edit Unit Details Dialog -->
+    <EditUnitDialog
+      v-model:is-dialog-visible="isEditUnitModalVisible"
+      :unit-data="unitData"
+      @unit-updated="onUnitUpdated"
+    />
 
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewTaskModalVisible = false">
-            Close
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- Add Staff Dialog -->
+    <AddStaffDialog
+      v-model:is-dialog-visible="isAddStaffModalVisible"
+      @staff-added="onStaffAdded"
+    />
 
-    <!-- Edit Task Modal -->
-    <VDialog v-model="isEditTaskModalVisible" max-width="600" persistent>
-      <DialogCloseBtn @click="isEditTaskModalVisible = false" />
-      <VCard title="Edit Task">
-        <VCardText v-if="selectedTask" class="pa-6">
-          <VRow>
-            <VCol cols="12">
-              <VTextField v-model="selectedTask.title" label="Task Title" placeholder="Enter task title" required />
-            </VCol>
-            <VCol cols="12">
-              <VTextarea v-model="selectedTask.description" label="Description" placeholder="Enter task description"
-                rows="3" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedTask.category" label="Category" placeholder="Enter category" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedTask.assignedTo" label="Assigned To" placeholder="Enter assignee" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedTask.startDate" label="Start Date" type="date" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedTask.dueDate" label="Due Date" type="date" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="selectedTask.priority" label="Priority" :items="[
-                { title: 'Low', value: 'low' },
-                { title: 'Medium', value: 'medium' },
-                { title: 'High', value: 'high' },
-              ]" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="selectedTask.status" label="Status" :items="[
-                { title: 'Pending', value: 'pending' },
-                { title: 'In Progress', value: 'in_progress' },
-                { title: 'Completed', value: 'completed' },
-              ]" required />
-            </VCol>
-          </VRow>
-        </VCardText>
+    <!-- View Staff Dialog -->
+    <ViewStaffDialog
+      v-model:is-dialog-visible="isViewStaffModalVisible"
+      :selected-staff="selectedStaff"
+    />
 
-        <VDivider />
+    <!-- Edit Staff Dialog -->
+    <EditStaffDialog
+      v-model:is-dialog-visible="isEditStaffModalVisible"
+      :selected-staff="selectedStaff"
+      @staff-updated="onStaffUpdated"
+    />
 
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isEditTaskModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" @click="saveTask">
-            Save Changes
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- Add Product to Inventory Dialog -->
+    <AddProductToInventoryDialog
+      v-model:is-dialog-visible="isAddProductModalVisible"
+      :available-franchise-products="availableFranchiseProducts"
+      @product-added="onProductAdded"
+    />
 
-    <!-- Delete Confirmation Dialog -->
-    <VDialog v-model="isDeleteDialogVisible" max-width="600">
-      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
-      <VCard title="Confirm Delete">
-        <VCardText>
-          Are you sure you want to delete this task? This action cannot be undone.
-        </VCardText>
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="error" @click="deleteTask">
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- Add Review Dialog -->
+    <AddReviewDialog
+      v-model:is-dialog-visible="isAddReviewModalVisible"
+      @review-added="onReviewAdded"
+    />
 
-    <!-- Edit Unit Details Modal -->
-    <VDialog v-model="isEditUnitModalVisible" max-width="600">
-      <DialogCloseBtn @click="isEditUnitModalVisible = false" />
-      <VCard title="Edit Unit Details">
-        <VCardText class="pa-6">
-          <VRow>
-            <VCol cols="12" md="6">
-              <VTextField v-model="editUnitForm.branchName" label="Branch Name" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="editUnitForm.city" label="City" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="editUnitForm.franchiseeName" label="Franchisee" disabled />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="editUnitForm.contactNumber" label="Contact Number" required />
-            </VCol>
-            <VCol cols="12">
-              <VTextarea v-model="editUnitForm.address" label="Address" rows="3" />
-            </VCol>
-          </VRow>
-        </VCardText>
+    <!-- View Product Dialog -->
+    <ViewProductDialog
+      v-model:is-dialog-visible="isViewProductModalVisible"
+      :selected-product="selectedProduct"
+    />
 
-        <VDivider />
+    <!-- Edit Product Dialog -->
+    <EditProductDialog
+      v-model:is-dialog-visible="isEditProductModalVisible"
+      :selected-product="selectedProduct"
+      @product-updated="onProductUpdated"
+    />
 
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isEditUnitModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" @click="saveUnitDetails">
-            Save Changes
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- View Review Dialog -->
+    <ViewReviewDialog
+      v-model:is-dialog-visible="isViewReviewModalVisible"
+      :selected-review="selectedReview"
+    />
 
-    <!-- Add Staff Modal -->
-    <VDialog v-model="isAddStaffModalVisible" max-width="600">
-      <DialogCloseBtn @click="isAddStaffModalVisible = false" />
-      <VCard title="Add New Staff Member">
-        <VCardText class="pa-6">
-          <VRow>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.name" label="Full Name" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.email" label="Email" type="email" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.phone" label="Phone" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.jobTitle" label="Job Title" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.department" label="Department" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.salary" label="Salary" type="number" prefix="SAR" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.hireDate" label="Hire Date" type="date" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.shiftStart" label="Shift Start" type="time" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newStaffForm.shiftEnd" label="Shift End" type="time" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="newStaffForm.status" label="Status"
-                :items="['Active', 'On Leave', 'Terminated', 'Inactive']" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="newStaffForm.employmentType" label="Employment Type" :items="[
-                { title: 'Full Time', value: 'full_time' },
-                { title: 'Part Time', value: 'part_time' },
-                { title: 'Contract', value: 'contract' },
-                { title: 'Temporary', value: 'temporary' },
-              ]" required />
-            </VCol>
-            <VCol cols="12">
-              <VTextarea v-model="newStaffForm.notes" label="Notes" rows="2" />
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isAddStaffModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" @click="addStaff">
-            Add Staff
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- View Staff Modal -->
-    <VDialog v-model="isViewStaffModalVisible" max-width="600">
-      <DialogCloseBtn @click="isViewStaffModalVisible = false" />
-      <VCard title="Staff Details">
-        <VCardText v-if="selectedStaff" class="pa-6">
-          <VRow>
-            <VCol cols="12" class="text-center pb-6">
-              <VAvatar size="80" color="primary" variant="tonal">
-                <span class="text-h4">{{selectedStaff.name.split(' ').map((n: string) => n[0]).join('')}}</span>
-              </VAvatar>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Full Name
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedStaff.name }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Email
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedStaff.email }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Phone
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedStaff.phone || 'N/A' }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Job Title
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedStaff.jobTitle }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Department
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedStaff.department || 'N/A' }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Salary
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedStaff.salary ? `SAR ${selectedStaff.salary}`
-                  : 'N/A' }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Hire Date
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedStaff.hireDate || 'N/A' }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Shift Time
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedStaff.shiftTime }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Employment Type
-              </div>
-              <div class="text-body-1 font-weight-medium text-capitalize">
-                {{ selectedStaff.employmentType?.replace('_',
-                  ' ') || 'N/A' }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Status
-              </div>
-              <VChip :color="resolveStatusVariant(selectedStaff.status)" size="small" label class="text-capitalize">
-                {{ selectedStaff.status }}
-              </VChip>
-            </VCol>
-            <VCol v-if="selectedStaff.notes" cols="12">
-              <div class="text-body-2 text-disabled mb-1">
-                Notes
-              </div>
-              <div class="text-body-1">
-                {{ selectedStaff.notes }}
-              </div>
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewStaffModalVisible = false">
-            Close
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- Edit Staff Modal -->
-    <VDialog v-model="isEditStaffModalVisible" max-width="600">
-      <DialogCloseBtn @click="isEditStaffModalVisible = false" />
-      <VCard title="Edit Staff Member">
-        <VCardText v-if="selectedStaff" class="pa-6">
-          <VRow>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.name" label="Full Name" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.email" label="Email" type="email" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.phone" label="Phone" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.jobTitle" label="Job Title" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.department" label="Department" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.salary" label="Salary" type="number" prefix="SAR" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.hireDate" label="Hire Date" type="date" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.shiftStart" label="Shift Start" type="time" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedStaff.shiftEnd" label="Shift End" type="time" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="selectedStaff.status" label="Status"
-                :items="['working', 'leave', 'terminated', 'inactive']" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VSelect v-model="selectedStaff.employmentType" label="Employment Type" :items="[
-                { title: 'Full Time', value: 'full_time' },
-                { title: 'Part Time', value: 'part_time' },
-                { title: 'Contract', value: 'contract' },
-                { title: 'Temporary', value: 'temporary' },
-              ]" />
-            </VCol>
-            <VCol cols="12">
-              <VTextarea v-model="selectedStaff.notes" label="Notes" rows="2" />
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isEditStaffModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" @click="saveStaff">
-            Save Changes
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- Add Product to Inventory Modal -->
-    <VDialog v-model="isAddProductModalVisible" max-width="600">
-      <DialogCloseBtn @click="isAddProductModalVisible = false" />
-      <VCard title="Add Product to Inventory">
-        <VCardText class="pa-6">
-          <VRow>
-            <VCol cols="12">
-              <VSelect v-model="selectedFranchiseProduct" label="Select Product" :items="availableFranchiseProducts"
-                item-title="name" item-value="id" required placeholder="Choose a product from franchise catalog"
-                :no-data-text="availableFranchiseProducts.length === 0 ? 'No available franchise products to add' : 'No products match your search'">
-                <template #item="{ item, props }">
-                  <VListItem v-bind="props">
-                    <VListItemTitle>{{ item.raw.name }}</VListItemTitle>
-                    <VListItemSubtitle>
-                      {{ item.raw.category }} • SAR {{ item.raw.unitPrice.toFixed(2) }}
-                    </VListItemSubtitle>
-                  </VListItem>
-                </template>
-              </VSelect>
-
-              <div v-if="availableFranchiseProducts.length === 0" class="text-center py-4">
-                <VIcon icon="tabler-package-off" size="48" class="text-disabled mb-2" />
-                <div class="text-body-2 text-disabled">
-                  All franchise products are already in this unit's inventory
-                </div>
-              </div>
-            </VCol>
-
-            <!-- Product Preview (when product is selected) -->
-            <VCol v-if="selectedProductPreview" cols="12">
-              <VCard variant="tonal" color="primary">
-                <VCardText>
-                  <div class="d-flex align-center gap-3">
-                    <VIcon icon="tabler-package" size="24" />
-                    <div>
-                      <h6 class="text-h6">
-                        {{ selectedProductPreview.name }}
-                      </h6>
-                      <p class="text-body-2 mb-0">
-                        {{ selectedProductPreview.description }}
-                      </p>
-                      <div class="text-body-2 text-medium-emphasis">
-                        Category: {{ selectedProductPreview.category }} • Price: SAR {{
-                          selectedProductPreview.unitPrice.toFixed(2) }}
-                      </div>
-                    </div>
-                  </div>
-                </VCardText>
-              </VCard>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <VTextField v-model="newInventoryForm.quantity" label="Initial Stock Quantity" type="number" min="0"
-                required placeholder="Enter quantity to add" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newInventoryForm.reorderLevel" label="Reorder Level" type="number" min="0" required
-                placeholder="Minimum stock alert level" />
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="closeAddProductModal">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" :disabled="!selectedFranchiseProduct || !newInventoryForm.quantity"
-            @click="addProductToInventory">
-            Add to Inventory
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- Add Review Modal -->
-    <VDialog v-model="isAddReviewModalVisible" max-width="600">
-      <DialogCloseBtn @click="isAddReviewModalVisible = false" />
-      <VCard title="Add Customer Review">
-        <VCardText class="pa-6">
-          <VRow>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newReviewForm.customerName" label="Customer Name" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newReviewForm.customerEmail" label="Customer Email" type="email" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-2">
-                Rating
-              </div>
-              <VRating v-model="newReviewForm.rating" size="large" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="newReviewForm.date" label="Date" type="date" required />
-            </VCol>
-            <VCol cols="12">
-              <VTextarea v-model="newReviewForm.comment" label="Review Comment" rows="4" required />
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isAddReviewModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" @click="addReview">
-            Add Review
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- View Product Modal -->
-    <VDialog v-model="isViewProductModalVisible" max-width="600">
-      <DialogCloseBtn @click="isViewProductModalVisible = false" />
-      <VCard title="Product Details">
-        <VCardText v-if="selectedProduct" class="pa-6">
-          <VRow>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Product Name
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedProduct.name }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Category
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedProduct.category }}
-              </div>
-            </VCol>
-            <VCol cols="12">
-              <div class="text-body-2 text-disabled mb-1">
-                Description
-              </div>
-              <div class="text-body-1">
-                {{ selectedProduct.description }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Unit Price
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ formatCurrency(selectedProduct.unitPrice) }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Stock
-              </div>
-              <VChip
-                :color="selectedProduct.stock === 0 ? 'error' : selectedProduct.stock <= 10 ? 'warning' : 'success'"
-                size="small" label>
-                {{ selectedProduct.stock }} units
-              </VChip>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Status
-              </div>
-              <VChip :color="resolveStatusVariant(selectedProduct.status)" size="small" label class="text-capitalize">
-                {{ selectedProduct.status }}
-              </VChip>
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewProductModalVisible = false">
-            Close
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- Edit Product Modal -->
-    <VDialog v-model="isEditProductModalVisible" max-width="600">
-      <DialogCloseBtn @click="isEditProductModalVisible = false" />
-      <VCard title="Edit Product Inventory">
-        <VCardText v-if="selectedProduct" class="pa-6">
-          <VRow>
-            <VCol cols="12">
-              <div class="text-body-2 text-disabled mb-3">
-                Product: <span class="font-weight-medium text-high-emphasis">{{ selectedProduct.name }}</span>
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model.number="selectedProduct.stock" label="Stock Quantity" type="number" min="0"
-                required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Unit Price
-              </div>
-              <div class="text-h6">
-                {{ formatCurrency(selectedProduct.unitPrice) }}
-              </div>
-            </VCol>
-            <VCol cols="12">
-              <div class="text-caption text-disabled">
-                Note: You can only update the stock quantity. Product details like name, price, and category are managed
-                at
-                the franchise level.
-              </div>
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isEditProductModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" @click="saveProduct">
-            Save Changes
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- View Review Modal -->
-    <VDialog v-model="isViewReviewModalVisible" max-width="600">
-      <DialogCloseBtn @click="isViewReviewModalVisible = false" />
-      <VCard title="Review Details">
-        <VCardText v-if="selectedReview" class="pa-6">
-          <VRow>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Customer Name
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedReview.customerName }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Customer Email
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedReview.customerEmail || 'N/A' }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Rating
-              </div>
-              <div class="d-flex align-center gap-1">
-                <VRating :model-value="selectedReview.rating" readonly size="small" density="compact" />
-                <span class="text-body-1 font-weight-medium">{{ selectedReview.rating }}/5</span>
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Date
-              </div>
-              <div class="text-body-1 font-weight-medium">
-                {{ selectedReview.date }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Sentiment
-              </div>
-              <VChip
-                :color="selectedReview.sentiment === 'positive' ? 'success' : selectedReview.sentiment === 'neutral' ? 'warning' : 'error'"
-                size="small" label class="text-capitalize">
-                {{ selectedReview.sentiment }}
-              </VChip>
-            </VCol>
-            <VCol cols="12">
-              <div class="text-body-2 text-disabled mb-1">
-                Comment
-              </div>
-              <div class="text-body-1">
-                {{ selectedReview.comment }}
-              </div>
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewReviewModalVisible = false">
-            Close
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- Edit Review Modal -->
-    <VDialog v-model="isEditReviewModalVisible" max-width="600">
-      <DialogCloseBtn @click="isEditReviewModalVisible = false" />
-      <VCard title="Edit Customer Review">
-        <VCardText v-if="selectedReview" class="pa-6">
-          <VRow>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedReview.customerName" label="Customer Name" required />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedReview.customerEmail" label="Customer Email" type="email" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-2">
-                Rating
-              </div>
-              <VRating v-model="selectedReview.rating" size="large" />
-            </VCol>
-            <VCol cols="12" md="6">
-              <VTextField v-model="selectedReview.date" label="Date" type="date" required />
-            </VCol>
-            <VCol cols="12">
-              <VTextarea v-model="selectedReview.comment" label="Review Comment" rows="4" required />
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VDivider />
-
-        <VCardActions class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isEditReviewModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" @click="saveReview">
-            Save Changes
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- Edit Review Dialog -->
+    <EditReviewDialog
+      v-model:is-dialog-visible="isEditReviewModalVisible"
+      :selected-review="selectedReview"
+      @review-updated="onReviewUpdated"
+    />
   </section>
 </template>

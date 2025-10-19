@@ -2,6 +2,7 @@
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
 import EditNoteModal from '@/components/franchisor/EditNoteModal.vue'
 import ViewNoteModal from '@/components/franchisor/ViewNoteModal.vue'
+import DeleteNoteDialog from '@/components/dialogs/notes/DeleteNoteDialog.vue'
 import { type Lead, leadApi } from '@/services/api/lead'
 import { avatarText } from '@core/utils/formatters'
 
@@ -178,6 +179,14 @@ const onNoteAdded = async () => {
   // Refresh notes from API
   await fetchNotes()
   console.log('Note added successfully')
+}
+
+const onNoteDeleted = async () => {
+  // Refresh notes from API
+  await fetchNotes()
+  isDeleteNoteDialogVisible.value = false
+  noteToDelete.value = null
+  console.log('Note deleted successfully')
 }
 
 const toggleEditMode = () => {
@@ -829,34 +838,11 @@ const priorities = [
       @note-updated="onNoteUpdated"
     />
 
-    <!-- 👉 Delete Note Confirmation Dialog -->
-    <VDialog
-      v-model="isDeleteNoteDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isDeleteNoteDialogVisible = false" />
-      <VCard title="Confirm Delete">
-        <VCardText>
-          Are you sure you want to delete this note? This action cannot be undone.
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteNoteDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteNote"
-          >
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- 👉 Delete Note Dialog -->
+    <DeleteNoteDialog
+      v-model:is-dialog-visible="isDeleteNoteDialogVisible"
+      :note-id="noteToDelete"
+      @note-deleted="onNoteDeleted"
+    />
   </section>
 </template>

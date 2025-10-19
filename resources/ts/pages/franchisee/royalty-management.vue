@@ -2,6 +2,8 @@
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api/royalty'
+import MarkCompletedRoyaltyDialog from '@/components/dialogs/royalty/MarkCompletedRoyaltyDialog.vue'
+import ViewRoyaltyDetailsDialog from '@/components/dialogs/royalty/ViewRoyaltyDetailsDialog.vue'
 
 // Loading states
 const isLoading = ref(false)
@@ -193,6 +195,21 @@ const submitPayment = async () => {
   catch (error) {
     console.error('Error marking royalty as paid:', error)
   }
+}
+
+// Event handler for dialog components
+const onPaymentSubmitted = async () => {
+  // Refresh data
+  await fetchRoyalties()
+  await fetchStatistics()
+  
+  // Reset form and close modal
+  isMarkCompletedModalVisible.value = false
+  selectedRoyalty.value = null
+}
+
+const onMarkAsCompletedFromView = (royalty: RoyaltyRecord) => {
+  markAsCompleted(royalty)
 }
 
 const handleFileUpload = (event: Event) => {
@@ -423,252 +440,18 @@ onMounted(() => {
     </VDialog>
 
     <!-- Mark as Completed Modal -->
-    <VDialog v-model="isMarkCompletedModalVisible" max-width="600">
-      <DialogCloseBtn @click="isMarkCompletedModalVisible = false" />
-      <VCard title="Mark Royalty as Completed">
-        <VCardText>
-          <VForm @submit.prevent="submitPayment">
-            <VRow>
-              <VCol cols="12" md="6">
-                <VTextField v-model.number="paymentData.amount_paid" label="Amount Paid (SAR)" type="number"
-                  variant="outlined" density="compact" :rules="[v => !!v || 'Amount is required']" />
-              </VCol>
-              <VCol cols="12" md="6">
-                <VTextField v-model="paymentData.payment_date" label="Payment Date" type="date" variant="outlined"
-                  density="compact" :rules="[v => !!v || 'Payment date is required']" />
-              </VCol>
-              <VCol cols="12">
-                <VSelect v-model="paymentData.payment_type" :items="paymentTypeOptions" item-title="title"
-                  item-value="value" label="Payment Type" variant="outlined" density="compact"
-                  :rules="[v => !!v || 'Payment type is required']" />
-              </VCol>
-              <VCol cols="12">
-                <VFileInput label="Attachment (Optional)" variant="outlined" density="compact"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" @change="handleFileUpload" />
-                <div class="text-caption text-medium-emphasis mt-1">
-                  Supported formats: PDF, JPG, PNG, DOC, DOCX
-                </div>
-              </VCol>
-            </VRow>
-          </VForm>
-        </VCardText>
-
-        <VCardText class="d-flex align-center justify-end gap-4">
-          <VBtn color="error" variant="outlined" @click="isMarkCompletedModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="success" variant="elevated" @click="submitPayment">
-            Mark as Completed
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VDialog>
+    <MarkCompletedRoyaltyDialog
+      v-model:is-dialog-visible="isMarkCompletedModalVisible"
+      :selected-royalty="selectedRoyalty"
+      :payment-type-options="paymentTypeOptions"
+      @payment-submitted="onPaymentSubmitted"
+    />
 
     <!-- View Royalty Details Dialog -->
-    <VDialog v-model="isViewRoyaltyDialogVisible" max-width="600">
-      <DialogCloseBtn @click="isViewRoyaltyDialogVisible = false" />
-      <VCard v-if="viewedRoyalty" title="Royalty Details">
-
-        <VCardText>
-          <VRow>
-            <!-- Basic Information -->
-            <VCol cols="12">
-              <h6 class="text-h6 mb-4 text-primary">
-                Basic Information
-              </h6>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Billing Period
-                </div>
-                <div class="font-weight-medium">
-                  {{ viewedRoyalty.billing_period }}
-                </div>
-              </div>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Due Date
-                </div>
-                <div class="font-weight-medium">
-                  {{ formatDate(viewedRoyalty.due_date) }}
-                </div>
-              </div>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Franchisee Name
-                </div>
-                <div class="font-weight-medium text-primary">
-                  {{ viewedRoyalty.franchisee_name }}
-                </div>
-              </div>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Store Location
-                </div>
-                <div class="font-weight-medium">
-                  {{ viewedRoyalty.store_location }}
-                </div>
-              </div>
-            </VCol>
-
-            <!-- Financial Information -->
-            <VCol cols="12">
-              <VDivider class="my-4" />
-              <h6 class="text-h6 mb-4 text-primary">
-                Financial Details
-              </h6>
-            </VCol>
-
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="info" class="pa-4">
-                <div class="text-center">
-                  <VIcon icon="tabler-chart-line" size="32" class="mb-2" />
-                  <div class="text-body-2 text-medium-emphasis mb-1">
-                    Gross Sales
-                  </div>
-                  <div class="text-h6 font-weight-bold">
-                    {{ (viewedRoyalty?.gross_sales || 0).toLocaleString() }} SAR
-                  </div>
-                </div>
-              </VCard>
-            </VCol>
-
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="primary" class="pa-4">
-                <div class="text-center">
-                  <VIcon icon="tabler-percentage" size="32" class="mb-2" />
-                  <div class="text-body-2 text-medium-emphasis mb-1">
-                    Royalty Rate
-                  </div>
-                  <div class="text-h6 font-weight-bold">
-                    {{ viewedRoyalty.royalty_percentage }}%
-                  </div>
-                </div>
-              </VCard>
-            </VCol>
-
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="success" class="pa-4">
-                <div class="text-center">
-                  <VIcon icon="tabler-coins" size="32" class="mb-2" />
-                  <div class="text-body-2 text-medium-emphasis mb-1">
-                    Royalty Amount
-                  </div>
-                  <div class="text-h6 font-weight-bold">
-                    {{ (viewedRoyalty?.amount || 0).toLocaleString() }} SAR
-                  </div>
-                </div>
-              </VCard>
-            </VCol>
-
-            <!-- Status Information -->
-            <VCol cols="12">
-              <VDivider class="my-4" />
-              <h6 class="text-h6 mb-4 text-primary">
-                Status Information
-              </h6>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-2">
-                  Payment Status
-                </div>
-                <VChip :color="getStatusColor(viewedRoyalty.status)" size="large" variant="tonal"
-                  class="text-capitalize">
-                  <VIcon :icon="viewedRoyalty.status === 'paid' ? 'tabler-check'
-                    : viewedRoyalty.status === 'pending' ? 'tabler-clock' : 'tabler-alert-triangle'" class="me-2" />
-                  {{ viewedRoyalty.status }}
-                </VChip>
-              </div>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-2">
-                  Days Until Due
-                </div>
-                <div class="font-weight-medium">
-                  {{ Math.ceil((new Date(viewedRoyalty.due_date).getTime() - new Date().getTime())
-                    / (1000 * 60
-                      * 60 * 24)) }} days
-                </div>
-              </div>
-            </VCol>
-
-            <!-- Calculation Breakdown -->
-            <VCol cols="12">
-              <VDivider class="my-4" />
-              <h6 class="text-h6 mb-4 text-primary">
-                Calculation Breakdown
-              </h6>
-            </VCol>
-
-            <VCol cols="12">
-              <VTable density="compact">
-                <tbody>
-                  <tr>
-                    <td class="font-weight-medium">
-                      Gross Sales:
-                    </td>
-                    <td class="text-end">
-                      {{ (viewedRoyalty?.gross_sales || 0).toLocaleString() }} SAR
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="font-weight-medium">
-                      Royalty Rate:
-                    </td>
-                    <td class="text-end">
-                      {{ viewedRoyalty.royalty_percentage }}%
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="font-weight-medium">
-                      Calculation:
-                    </td>
-                    <td class="text-end">
-                      {{ (viewedRoyalty?.gross_sales || 0).toLocaleString() }} × {{
-                        viewedRoyalty?.royalty_percentage || 0 }}%
-                    </td>
-                  </tr>
-                  <tr class="bg-primary-lighten-5">
-                    <td class="font-weight-bold text-primary">
-                      Total Royalty Amount:
-                    </td>
-                    <td class="text-end font-weight-bold text-primary">
-                      {{
-                        (viewedRoyalty?.amount || 0).toLocaleString() }} SAR
-                    </td>
-                  </tr>
-                </tbody>
-              </VTable>
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VCardText class="d-flex align-center justify-end gap-4 pt-4">
-          <VBtn color="primary" variant="outlined" @click="isViewRoyaltyDialogVisible = false">
-            Close
-          </VBtn>
-          <VBtn v-if="viewedRoyalty.status !== 'paid'" color="success" variant="elevated"
-            @click="markAsCompleted(viewedRoyalty); isViewRoyaltyDialogVisible = false">
-            <VIcon icon="tabler-check" class="me-2" />
-            Mark as Completed
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VDialog>
+    <ViewRoyaltyDetailsDialog
+      v-model:is-dialog-visible="isViewRoyaltyDialogVisible"
+      :viewed-royalty="viewedRoyalty"
+      @mark-as-completed="onMarkAsCompletedFromView"
+    />
   </section>
 </template>

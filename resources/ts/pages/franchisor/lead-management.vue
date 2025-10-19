@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import AssignLeadModal from '@/components/dialogs/AssignLeadModal.vue'
-import ConvertLeadModal from '@/components/dialogs/ConvertLeadModal.vue'
-import MarkAsLostModal from '@/components/dialogs/MarkAsLostModal.vue'
-import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
+import AssignLeadDialog from '@/components/dialogs/leads/AssignLeadDialog.vue'
+import ConvertLeadDialog from '@/components/dialogs/leads/ConvertLeadDialog.vue'
+import MarkAsLostDialog from '@/components/dialogs/leads/MarkAsLostDialog.vue'
+import AddNoteDialog from '@/components/dialogs/leads/AddNoteDialog.vue'
+import ImportLeadsDialog from '@/components/dialogs/leads/ImportLeadsDialog.vue'
+import DeleteLeadDialog from '@/components/dialogs/leads/DeleteLeadDialog.vue'
 import { type Lead, leadApi } from '@/services/api/lead'
 import { avatarText, prefixWithPlus } from '@core/utils/formatters'
 
@@ -219,6 +221,11 @@ const deleteLead = async () => {
   }
 }
 
+const onLeadDeleted = async () => {
+  await fetchLeads()
+  await fetchStats()
+}
+
 // 👉 Bulk delete
 const bulkDelete = async () => {
   if (selectedRows.value.length === 0)
@@ -285,16 +292,15 @@ const downloadExampleCSV = () => {
   window.URL.revokeObjectURL(url)
 }
 
-const importCSV = () => {
-  if (!csvFile.value) {
+const importCSV = (file: File | null) => {
+  if (!file) {
     // Show error message
     return
   }
 
   // TODO: Implement CSV import logic
-  console.log('Importing CSV:', csvFile.value)
+  console.log('Importing CSV:', file)
   isImportDialogVisible.value = false
-  csvFile.value = null
 }
 
 // 👉 Export functionality
@@ -585,67 +591,32 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
     </VCard>
 
     <!-- 👉 Import Dialog -->
-    <VDialog v-model="isImportDialogVisible" max-width="600">
-      <DialogCloseBtn @click="isImportDialogVisible = false" />
-      <VCard title="Import Leads from CSV">
-        <VCardText>
-          <div class="mb-4">
-            <VBtn variant="tonal" color="secondary" prepend-icon="tabler-download"
-              @click="downloadExampleCSV">
-              Download Example CSV
-            </VBtn>
-          </div>
-
-          <VFileInput v-model="csvFile" label="Select CSV File" accept=".csv" prepend-icon="tabler-file-upload"
-            show-size @change="handleFileUpload" />
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isImportDialogVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" @click="importCSV">
-            Import
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <ImportLeadsDialog
+      v-model:is-dialog-visible="isImportDialogVisible"
+      @import="importCSV"
+    />
 
     <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog v-model="isDeleteDialogVisible" max-width="600">
-      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
-      <VCard title="Confirm Delete">
-        <VCardText>
-          Are you sure you want to delete this lead? This action cannot be undone.
-        </VCardText>
+    <DeleteLeadDialog
+      v-model:is-dialog-visible="isDeleteDialogVisible"
+      :lead-id="leadToDelete"
+      @lead-deleted="onLeadDeleted"
+    />
 
-        <VCardActions>
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isDeleteDialogVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="error" @click="deleteLead">
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- 👉 Assign Lead Modal -->
-    <AssignLeadModal v-model:is-dialog-visible="isAssignLeadModalVisible" :lead-id="selectedLeadForAssign || 0"
+    <!-- 👉 Assign Lead Dialog -->
+    <AssignLeadDialog v-model:is-dialog-visible="isAssignLeadModalVisible" :lead-id="selectedLeadForAssign || 0"
       :sales-associates="salesAssociates" @lead-assigned="onLeadAssigned" />
 
-    <!-- 👉 Convert Lead Modal -->
-    <ConvertLeadModal v-model:is-dialog-visible="isConvertLeadModalVisible" :lead-id="selectedLeadForConvert || 0"
+    <!-- 👉 Convert Lead Dialog -->
+    <ConvertLeadDialog v-model:is-dialog-visible="isConvertLeadModalVisible" :lead-id="selectedLeadForConvert || 0"
       @lead-converted="onLeadConverted" />
 
-    <!-- 👉 Mark as Lost Modal -->
-    <MarkAsLostModal v-model:is-dialog-visible="isMarkAsLostModalVisible" :lead-id="selectedLeadForMarkLost || 0"
+    <!-- 👉 Mark as Lost Dialog -->
+    <MarkAsLostDialog v-model:is-dialog-visible="isMarkAsLostModalVisible" :lead-id="selectedLeadForMarkLost || 0"
       @lead-marked-lost="onLeadMarkedLost" />
 
-    <!-- 👉 Add Note Modal -->
-    <AddNoteModal v-model:is-dialog-visible="isAddNoteModalVisible" :lead-id="selectedLeadForNote || 0"
+    <!-- 👉 Add Note Dialog -->
+    <AddNoteDialog v-model:is-dialog-visible="isAddNoteModalVisible" :lead-id="selectedLeadForNote || 0"
       @note-added="onNoteAdded" />
   </section>
 </template>

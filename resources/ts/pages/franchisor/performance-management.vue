@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import { $api } from '@/utils/api'
+import ExportPerformanceDialog from '@/components/dialogs/performance/ExportPerformanceDialog.vue'
 
 const vuetifyTheme = useTheme()
 
@@ -337,6 +338,12 @@ const downloadFile = (content: string, filename: string, mimeType: string) => {
 // Main export function
 const exportData = () => {
   isExportDialogVisible.value = true
+}
+
+// Event handler for dialog components
+const onExportCompleted = () => {
+  // Optionally show success message or refresh data
+  console.log('Export completed successfully')
 }
 
 const performExport = async () => {
@@ -915,80 +922,17 @@ const periodOptions = [
       </VCol>
     </VRow>
 
-    <!-- Export Options Dialog -->
-    <VDialog
-      v-model="isExportDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isExportDialogVisible = false" />
-      <VCard title="Export Data" class="text-center px-6 py-8">
-        <VDivider class="mb-6" />
-
-        <VCardText class="text-start">
-          <VRow>
-            <VCol cols="12">
-              <VSelect
-                v-model="exportDataType"
-                :items="exportDataTypeOptions"
-                item-title="title"
-                item-value="value"
-                label="Data Type"
-                variant="outlined"
-                density="comfortable"
-                prepend-inner-icon="tabler-database"
-              />
-            </VCol>
-            <VCol cols="12">
-              <VSelect
-                v-model="exportFormat"
-                :items="exportFormatOptions"
-                item-title="title"
-                item-value="value"
-                label="Export Format"
-                variant="outlined"
-                density="comfortable"
-                prepend-inner-icon="tabler-file-type-csv"
-              />
-            </VCol>
-          </VRow>
-
-          <!-- Export Info -->
-          <VAlert
-            type="info"
-            variant="tonal"
-            class="mt-4"
-            density="compact"
-          >
-            <template #prepend>
-              <VIcon icon="tabler-info-circle" />
-            </template>
-            <div class="text-body-2">
-              <strong>Current Selection:</strong><br>
-              Period: {{ periodOptions.find(p => p.value === selectedPeriod)?.title }}<br>
-              Unit: {{ franchiseeUnits.find(u => u.id === selectedUnit)?.name }}
-            </div>
-          </VAlert>
-        </VCardText>
-
-        <VCardActions class="d-flex align-center justify-center gap-3 pt-4">
-          <VBtn
-            variant="outlined"
-            color="secondary"
-            @click="isExportDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="primary"
-            prepend-icon="tabler-download"
-            :disabled="loading"
-            @click="performExport"
-          >
-            Export Data
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- Export Performance Dialog -->
+    <ExportPerformanceDialog
+      v-model:is-dialog-visible="isExportDialogVisible"
+      :selected-period="selectedPeriod"
+      :selected-unit="selectedUnit"
+      :export-data-type-options="exportDataTypeOptions"
+      :export-format-options="exportFormatOptions"
+      :period-options="periodOptions"
+      :franchisee-units="franchiseeUnits"
+      @export-completed="onExportCompleted"
+    />
   </section>
 </template>
 

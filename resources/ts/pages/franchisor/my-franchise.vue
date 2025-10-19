@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { $api } from '@/utils/api'
+import ConfirmDeleteDialog from '@/components/dialogs/common/ConfirmDeleteDialog.vue'
+import AddDocumentDialog from '@/components/dialogs/franchise/AddDocumentDialog.vue'
 
 // 👉 Router
 const router = useRouter()
@@ -807,10 +809,38 @@ const deleteProduct = async () => {
   }
 }
 
+// Event handlers for dialog components
+const onDeleteProductConfirm = async () => {
+  await deleteProduct()
+  isDeleteProductModalVisible.value = false
+  productToDelete.value = null
+}
+
+const onDeleteDocumentConfirm = async () => {
+  await deleteDocument()
+  isDeleteDocumentDialogVisible.value = false
+  documentToDelete.value = null
+}
+
+const onDocumentSaved = async () => {
+  await loadDocuments()
+}
+
 // 👉 Computed
 const totalProducts = computed(() => productsData.value.length)
 const activeProducts = computed(() => productsData.value.filter(p => p.status === 'active').length)
 const totalDocuments = computed(() => documentsData.value.length)
+
+// Dialog messages
+const deleteProductMessage = computed(() => {
+  const name = productToDelete.value?.name || 'this product'
+  return `Are you sure you want to delete "${name}"? This action cannot be undone.`
+})
+
+const deleteDocumentMessage = computed(() => {
+  const name = documentToDelete.value?.name || 'this document'
+  return `Are you sure you want to delete "${name}"? This action cannot be undone.`
+})
 
 // 👉 Headers for products table
 const productHeaders = [
@@ -1666,62 +1696,13 @@ const resolveStatusVariant = (status: string) => {
     </VWindow>
 
     <!-- Add Document Modal -->
-    <VDialog
-      v-model="isAddDocumentModalVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isAddDocumentModalVisible = false" />
-      <VCard title="Add New Document">
-        <VCardText>
-          <VForm>
-            <VRow>
-              <VCol cols="12">
-                <AppTextField
-                  v-model="selectedDocument.name"
-                  label="Document Name"
-                  placeholder="Enter document name"
-                  required
-                />
-              </VCol>
-              <VCol cols="12">
-                <AppTextarea
-                  v-model="selectedDocument.description"
-                  label="Description"
-                  placeholder="Enter document description"
-                  rows="3"
-                />
-              </VCol>
-              <VCol cols="12">
-                <VFileInput
-                  v-model="selectedDocument.file"
-                  label="Attach File"
-                  accept=".pdf,.doc,.docx"
-                  prepend-icon="tabler-paperclip"
-                  required
-                />
-              </VCol>
-            </VRow>
-          </VForm>
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="outlined"
-            @click="isAddDocumentModalVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="primary"
-            @click="saveDocument"
-          >
-            Add Document
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <AddDocumentDialog
+      v-model:is-dialog-visible="isAddDocumentModalVisible"
+      :franchise-id="franchiseData?.id"
+      :document-data="selectedDocument"
+      mode='unit'
+      @document-saved="onDocumentSaved"
+    />
 
     <!-- Add/Edit Product Modal -->
     <VDialog
@@ -1833,64 +1814,20 @@ const resolveStatusVariant = (status: string) => {
     </VDialog>
 
     <!-- Delete Product Confirmation -->
-    <VDialog
-      v-model="isDeleteProductModalVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isDeleteProductModalVisible = false" />
-      <VCard title="Delete Product">
-        <VCardText>
-          Are you sure you want to delete "{{ productToDelete?.name }}"? This action cannot be undone.
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="outlined"
-            @click="isDeleteProductModalVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteProduct"
-          >
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <ConfirmDeleteDialog
+      v-model:is-dialog-visible="isDeleteProductModalVisible"
+      title="Delete Product"
+      :message="deleteProductMessage"
+      @confirm="onDeleteProductConfirm"
+    />
 
     <!-- Delete Document Confirmation -->
-    <VDialog
-      v-model="isDeleteDocumentDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isDeleteDocumentDialogVisible = false" />
-      <VCard title="Confirm Delete">
-        <VCardText>
-          Are you sure you want to delete "{{ documentToDelete?.name }}"? This action cannot be undone.
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDocumentDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteDocument"
-          >
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <ConfirmDeleteDialog
+      v-model:is-dialog-visible="isDeleteDocumentDialogVisible"
+      title="Confirm Delete"
+      :message="deleteDocumentMessage"
+      @confirm="onDeleteDocumentConfirm"
+    />
 
     <!-- Snackbar for notifications -->
     <VSnackbar

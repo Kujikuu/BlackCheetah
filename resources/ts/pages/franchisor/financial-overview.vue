@@ -4,6 +4,11 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import { type ChartData, type ExpenseData, type FinancialStatistics, type ProfitData, type SalesData, type UnitPerformance, financialApi } from '@/services/api/financial'
 import { formatCurrency } from '@/@core/utils/formatters'
+import ImportDataDialog from '@/components/dialogs/common/ImportDataDialog.vue'
+import ViewSaleDetailsDialog from '@/components/dialogs/financial/ViewSaleDetailsDialog.vue'
+import ViewExpenseDetailsDialog from '@/components/dialogs/financial/ViewExpenseDetailsDialog.vue'
+import AddDataDialog from '@/components/dialogs/financial/AddDataDialog.vue'
+import ImportFinancialDialog from '@/components/dialogs/financial/ImportFinancialDialog.vue'
 
 const vuetifyTheme = useTheme()
 
@@ -572,6 +577,28 @@ const submitImport = async () => {
   }
 }
 
+// Event handler for dialog components
+const onImportData = async (file: File | null) => {
+  if (!file) return
+  
+  try {
+    await financialApi.importData(file, importCategory.value)
+    isImportModalVisible.value = false
+    await loadTableData()
+  }
+  catch (error) {
+    console.error('Error importing data:', error)
+  }
+}
+
+const onDataAdded = async () => {
+  await loadTableData()
+}
+
+const onDataImported = async () => {
+  await loadTableData()
+}
+
 const deleteItem = async (id: string | number) => {
   try {
     const numericId = typeof id === 'string' ? Number.parseInt(id, 10) : id
@@ -964,366 +991,27 @@ onMounted(() => {
     </VCard>
 
     <!-- Add Data Modal -->
-    <VDialog v-model="isAddDataModalVisible" max-width="600">
-      <DialogCloseBtn @click="isAddDataModalVisible = false" />
-      <VCard title="Add New Data">
-        <VCardText>
-          <VSelect v-model="addDataCategory" :items="[
-            { title: 'Sales', value: 'sales' },
-            { title: 'Expense', value: 'expense' },
-          ]" label="Category" class="mb-4" />
-
-          <!-- Sales Fields -->
-          <div v-if="addDataCategory === 'sales'">
-            <VTextField v-model="addDataForm.product" label="Product" class="mb-4" />
-            <VTextField v-model="addDataForm.dateOfSale" label="Date of Sale" type="date" class="mb-4" />
-            <VTextField v-model="addDataForm.unitPrice" label="Unit Price" type="number" prefix="SAR" class="mb-4" />
-            <VTextField v-model="addDataForm.quantitySold" label="Quantity Sold" type="number" class="mb-4" />
-          </div>
-
-          <!-- Expense Fields -->
-          <div v-if="addDataCategory === 'expense'">
-            <VTextField v-model="addDataForm.expenseCategory" label="Expense Category" class="mb-4" />
-            <VTextField v-model="addDataForm.dateOfExpense" label="Date of Expense" type="date" class="mb-4" />
-            <VTextField v-model="addDataForm.amount" label="Amount" type="number" prefix="SAR" class="mb-4" />
-            <VTextField v-model="addDataForm.description" label="Description" class="mb-4" />
-          </div>
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn variant="outlined" @click="isAddDataModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" :loading="isLoading" @click="submitAddData">
-            Add Data
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <AddDataDialog
+      v-model:is-dialog-visible="isAddDataModalVisible"
+      @data-added="onDataAdded"
+    />
 
     <!-- Import Modal -->
-    <VDialog v-model="isImportModalVisible" max-width="600">
-      <DialogCloseBtn @click="isImportModalVisible = false" />
-      <VCard title="Import Data">
-        <VCardText>
-          <VSelect v-model="importCategory" :items="[
-            { value: 'sales', title: 'Sales' },
-            { value: 'expense', title: 'Expense' },
-          ]" label="Category" variant="outlined" class="mb-4" />
-          <VFileInput v-model="importFile" label="Choose file" accept=".csv,.xlsx" variant="outlined" />
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn variant="outlined" @click="isImportModalVisible = false">
-            Cancel
-          </VBtn>
-          <VBtn color="primary" :loading="isLoading" :disabled="!importFile" @click="submitImport">
-            Import
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <ImportFinancialDialog
+      v-model:is-dialog-visible="isImportModalVisible"
+      @data-imported="onDataImported"
+    />
 
     <!-- View Sale Details Dialog -->
-    <VDialog v-model="isViewSaleDialogVisible" max-width="600">
-      <DialogCloseBtn @click="isViewSaleDialogVisible = false" />
-      <VCard v-if="viewedSale" title="Sale Details">
-        <VCardText>
-          <VChip color="success" size="small" variant="tonal">
-            {{ viewedSale.referenceNumber || `REV-${String(viewedSale.id).padStart(6, '0')}` }}
-          </VChip>
-        </VCardText>
-
-        <VDivider class="mb-4" />
-
-        <VCardText>
-          <VRow>
-            <!-- Product Information -->
-            <VCol cols="12">
-              <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-shopping-cart" class="me-2" />
-                Product Information
-              </h6>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Product Name
-                </div>
-                <div class="font-weight-medium text-h6">
-                  {{ viewedSale.product }}
-                </div>
-              </div>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Sale Date
-                </div>
-                <div class="font-weight-medium">
-                  {{ new Date(viewedSale.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  }) }}
-                </div>
-              </div>
-            </VCol>
-
-            <!--
-              <VCol cols="12" md="6">
-              <div class="mb-4">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-              Store Location
-              </div>
-              <div class="font-weight-medium">
-              {{ viewedSale.unitName || 'N/A' }}
-              </div>
-              </div>
-              </VCol>
-
-              <VCol cols="12" md="6">
-              <div class="mb-4">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-              Customer
-              </div>
-              <div class="font-weight-medium">
-              {{ viewedSale.customerName || 'N/A' }}
-              </div>
-              </div>
-              </VCol>
-            -->
-
-            <!-- Financial Details -->
-            <VCol cols="12">
-              <VDivider class="my-4" />
-              <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-report-money" class="me-2" />
-                Financial Details
-              </h6>
-            </VCol>
-
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="info" class="pa-4">
-                <div class="text-center">
-                  <VIcon icon="tabler-tag" size="32" class="mb-2" />
-                  <div class="text-body-2 text-medium-emphasis mb-1">
-                    Unit Price
-                  </div>
-                  <div class="text-h6 font-weight-bold">
-                    {{ Number(viewedSale.unitPrice).toFixed(2) }} SAR
-                  </div>
-                </div>
-              </VCard>
-            </VCol>
-
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="warning" class="pa-4">
-                <div class="text-center">
-                  <VIcon icon="tabler-stack" size="32" class="mb-2" />
-                  <div class="text-body-2 text-medium-emphasis mb-1">
-                    Quantity
-                  </div>
-                  <div class="text-h6 font-weight-bold">
-                    {{ viewedSale.quantity }}
-                  </div>
-                </div>
-              </VCard>
-            </VCol>
-
-            <VCol cols="12" md="4">
-              <VCard variant="tonal" color="success" class="pa-4">
-                <div class="text-center">
-                  <VIcon icon="tabler-coins" size="32" class="mb-2" />
-                  <div class="text-body-2 text-medium-emphasis mb-1">
-                    Total Sale
-                  </div>
-                  <div class="text-h6 font-weight-bold">
-                    {{ Number(viewedSale.sale).toFixed(2) }} SAR
-                  </div>
-                </div>
-              </VCard>
-            </VCol>
-
-            <!-- Calculation Breakdown -->
-            <VCol cols="12">
-              <VDivider class="my-4" />
-              <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-calculator" class="me-2" />
-                Calculation
-              </h6>
-            </VCol>
-
-            <VCol cols="12">
-              <VTable density="compact">
-                <tbody>
-                  <tr>
-                    <td class="font-weight-medium">
-                      Unit Price:
-                    </td>
-                    <td class="text-end">
-                      {{ Number(viewedSale.unitPrice).toFixed(2) }} SAR
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="font-weight-medium">
-                      Quantity:
-                    </td>
-                    <td class="text-end">
-                      × {{ viewedSale.quantity }}
-                    </td>
-                  </tr>
-                  <tr class="bg-success-lighten-5">
-                    <td class="font-weight-bold text-success">
-                      Total Amount:
-                    </td>
-                    <td class="text-end font-weight-bold text-success">
-                      {{ Number(viewedSale.sale).toFixed(2) }} SAR
-                    </td>
-                  </tr>
-                </tbody>
-              </VTable>
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewSaleDialogVisible = false">
-            Close
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <ViewSaleDetailsDialog
+      v-model:is-dialog-visible="isViewSaleDialogVisible"
+      :sale-data="viewedSale"
+    />
 
     <!-- View Expense Details Dialog -->
-    <VDialog v-model="isViewExpenseDialogVisible" max-width="600">
-      <DialogCloseBtn @click="isViewExpenseDialogVisible = false" />
-      <VCard v-if="viewedExpense" title="Expense Details">
-        <VCardText>
-          <VChip color="error" size="small" variant="tonal">
-            {{ viewedExpense.referenceNumber || `EXP-${String(viewedExpense.id).padStart(6, '0')}` }}
-          </VChip>
-        </VCardText>
-
-        <VDivider class="mb-4" />
-
-        <VCardText>
-          <VRow>
-            <!-- Expense Information -->
-            <VCol cols="12">
-              <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-receipt" class="me-2" />
-                Expense Information
-              </h6>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Category
-                </div>
-                <VChip color="error" size="small" variant="tonal" class="text-capitalize">
-                  {{ viewedExpense.expenseCategory }}
-                </VChip>
-              </div>
-            </VCol>
-
-            <VCol cols="12" md="6">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Expense Date
-                </div>
-                <div class="font-weight-medium">
-                  {{ new Date(viewedExpense.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  }) }}
-                </div>
-              </div>
-            </VCol>
-
-            <!--
-              <VCol cols="12" md="6">
-              <div class="mb-4">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-              Store Location
-              </div>
-              <div class="font-weight-medium">
-              {{ viewedExpense.unitName || 'N/A' }}
-              </div>
-              </div>
-              </VCol>
-
-              <VCol cols="12" md="6">
-              <div class="mb-4">
-              <div class="text-body-2 text-medium-emphasis mb-1">
-              Payment Method
-              </div>
-              <div class="font-weight-medium text-capitalize">
-              {{ viewedExpense.paymentMethod ? viewedExpense.paymentMethod.replace('_', ' ') : 'N/A' }}
-              </div>
-              </div>
-              </VCol>
-            -->
-
-            <VCol v-if="viewedExpense.vendorName" cols="12">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Vendor
-                </div>
-                <div class="font-weight-medium">
-                  {{ viewedExpense.vendorName }}
-                </div>
-              </div>
-            </VCol>
-
-            <VCol cols="12">
-              <div class="mb-4">
-                <div class="text-body-2 text-medium-emphasis mb-1">
-                  Description
-                </div>
-                <div class="font-weight-medium">
-                  {{ viewedExpense.description || 'No description provided' }}
-                </div>
-              </div>
-            </VCol>
-
-            <!-- Financial Details -->
-            <VCol cols="12">
-              <VDivider class="my-4" />
-              <h6 class="text-h6 mb-4 text-primary">
-                <VIcon icon="tabler-report-money" class="me-2" />
-                Amount
-              </h6>
-            </VCol>
-
-            <VCol cols="12">
-              <VCard variant="tonal" color="error" class="pa-6">
-                <div class="text-center">
-                  <VIcon icon="tabler-currency-dollar" size="48" class="mb-3" />
-                  <div class="text-body-1 text-medium-emphasis mb-2">
-                    Expense Amount
-                  </div>
-                  <div class="text-h4 font-weight-bold">
-                    {{ Number(viewedExpense.amount).toFixed(2) }} SAR
-                  </div>
-                </div>
-              </VCard>
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewExpenseDialogVisible = false">
-            Close
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <ViewExpenseDetailsDialog
+      v-model:is-dialog-visible="isViewExpenseDialogVisible"
+      :expense-data="viewedExpense"
+    />
   </section>
 </template>

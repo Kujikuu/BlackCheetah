@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { UnitTask } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+import ViewTaskDialog from '@/components/dialogs/tasks/ViewTaskDialog.vue'
+import StatusChangeTaskDialog from '@/components/dialogs/tasks/StatusChangeTaskDialog.vue'
 
 // 👉 Modal states
 const isViewTaskModalVisible = ref(false)
@@ -116,6 +118,16 @@ const updateTaskStatus = async (newStatus: string) => {
   catch (error) {
     console.error('Error updating task status:', error)
   }
+}
+
+// Event handler for dialog components
+const onStatusUpdated = (updatedTask: any) => {
+  const index = allTasksData.value.findIndex(task => task.id === updatedTask.id)
+  if (index !== -1)
+    allTasksData.value[index] = updatedTask
+
+  isStatusChangeModalVisible.value = false
+  selectedTask.value = null
 }
 </script>
 
@@ -267,106 +279,17 @@ const updateTaskStatus = async (newStatus: string) => {
       </VDataTable>
     </VCard>
 
-    <!-- View Task Modal -->
-    <VDialog v-model="isViewTaskModalVisible" max-width="600">
-      <DialogCloseBtn @click="isViewTaskModalVisible = false" />
-      <VCard title="Task Details">
-        <VCardText v-if="selectedTask">
-          <VRow>
-            <VCol cols="12">
-              <h6 class="text-h6 mb-2">
-                {{ selectedTask.title }}
-              </h6>
-              <p class="text-body-1 mb-4">
-                {{ selectedTask.description }}
-              </p>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Category
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.category }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Start Date
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.startDate }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Due Date
-              </div>
-              <div class="text-body-1">
-                {{ selectedTask.dueDate }}
-              </div>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Priority
-              </div>
-              <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label class="text-capitalize">
-                {{ selectedTask.priority }}
-              </VChip>
-            </VCol>
-            <VCol cols="12" md="6">
-              <div class="text-body-2 text-disabled mb-1">
-                Status
-              </div>
-              <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize">
-                {{ selectedTask.status }}
-              </VChip>
-            </VCol>
-          </VRow>
-        </VCardText>
+    <!-- View Task Dialog -->
+    <ViewTaskDialog
+      v-model:is-dialog-visible="isViewTaskModalVisible"
+      :task="selectedTask"
+    />
 
-
-        <VCardText class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isViewTaskModalVisible = false">
-            Close
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VDialog>
-
-    <!-- Status Change Modal -->
-    <VDialog v-model="isStatusChangeModalVisible" max-width="600">
-      <DialogCloseBtn @click="isStatusChangeModalVisible = false" />
-      <VCard title="Change Task Status">
-        <VCardText v-if="selectedTask">
-          <div class="mb-4">
-            <h6 class="text-base font-weight-medium mb-2">
-              {{ selectedTask.title }}
-            </h6>
-            <div class="text-body-2 text-disabled">
-              Current Status:
-              <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize ms-2">
-                {{ selectedTask.status }}
-              </VChip>
-            </div>
-          </div>
-
-          <VSelect label="New Status" :items="[
-            { title: 'Pending', value: 'pending' },
-            { title: 'In Progress', value: 'in_progress' },
-            { title: 'Completed', value: 'completed' },
-            { title: 'Cancelled', value: 'cancelled' },
-            { title: 'On Hold', value: 'on_hold' },
-          ]" :model-value="selectedTask.status" required @update:model-value="updateTaskStatus" />
-        </VCardText>
-
-        <VCardText class="pa-6">
-          <VSpacer />
-          <VBtn color="secondary" variant="tonal" @click="isStatusChangeModalVisible = false">
-            Cancel
-          </VBtn>
-        </VCardText>
-      </VCard>
-    </VDialog>
+    <!-- Status Change Dialog -->
+    <StatusChangeTaskDialog
+      v-model:is-dialog-visible="isStatusChangeModalVisible"
+      :task="selectedTask"
+      @status-updated="onStatusUpdated"
+    />
   </section>
 </template>

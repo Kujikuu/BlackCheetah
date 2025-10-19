@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import DeleteLeadDialog from '@/components/dialogs/leads/DeleteLeadDialog.vue'
+import ViewLeadDialog from '@/components/dialogs/leads/ViewLeadDialog.vue'
+import EditLeadDialog from '@/components/dialogs/leads/EditLeadDialog.vue'
 
 // 👉 API composable
 const { data: leadsApiData, execute: fetchLeadsData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/leads')
@@ -251,14 +254,15 @@ const deleteLead = async () => {
 }
 
 // 👉 Save edited lead
-const saveLead = async () => {
-  if (!selectedLead.value)
+const saveLead = async (updatedLead?: Lead) => {
+  const leadToSave = updatedLead || selectedLead.value
+  if (!leadToSave)
     return
 
   // TODO: Implement API call for update
-  const index = leadsData.value.leads.findIndex(lead => lead.id === selectedLead.value!.id)
+  const index = leadsData.value.leads.findIndex(lead => lead.id === leadToSave.id)
   if (index !== -1)
-    leadsData.value.leads[index] = { ...selectedLead.value }
+    leadsData.value.leads[index] = { ...leadToSave }
 
   isEditLeadModalVisible.value = false
   selectedLead.value = null
@@ -298,6 +302,14 @@ const prefixWithPlusNumber = (num: number) => {
 
 const avatarText = (name: string) => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase()
+}
+
+// Event handler for dialog components
+const onLeadDeleted = async () => {
+  // Refresh data from API
+  await fetchLeadsData()
+  isDeleteDialogVisible.value = false
+  leadToDelete.value = null
 }
 </script>
 
@@ -580,244 +592,27 @@ const avatarText = (name: string) => {
       <!-- SECTION -->
     </VCard>
 
-    <!-- 👉 View Lead Modal -->
-    <VDialog
-      v-model="isViewLeadModalVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isViewLeadModalVisible = false" />
-      <VCard v-if="selectedLead" title="Lead Details">
-        <VCardText>
-          <VRow>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Name
-                </div>
-                <div class="text-body-1 font-weight-medium">
-                  {{ selectedLead.name }}
-                </div>
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Email
-                </div>
-                <div class="text-body-1">
-                  {{ selectedLead.email }}
-                </div>
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Phone
-                </div>
-                <div class="text-body-1">
-                  {{ selectedLead.phone }}
-                </div>
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Source
-                </div>
-                <div class="text-body-1 text-capitalize">
-                  {{ selectedLead.source }}
-                </div>
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Status
-                </div>
-                <VChip
-                  :color="resolveStatusVariant(selectedLead.status)"
-                  size="small"
-                  label
-                  class="text-capitalize"
-                >
-                  {{ selectedLead.status }}
-                </VChip>
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Created Date
-                </div>
-                <div class="text-body-1">
-                  {{ selectedLead.createdDate }}
-                </div>
-              </div>
-            </VCol>
-          </VRow>
-        </VCardText>
+    <!-- 👉 View Lead Dialog -->
+    <ViewLeadDialog
+      v-model:is-dialog-visible="isViewLeadModalVisible"
+      :selected-lead="selectedLead"
+      @edit-lead="editLead"
+    />
 
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isViewLeadModalVisible = false"
-          >
-            Close
-          </VBtn>
-          <VBtn
-            color="primary"
-            @click="editLead(selectedLead)"
-          >
-            Edit
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- 👉 Edit Lead Dialog -->
+    <EditLeadDialog
+      v-model:is-dialog-visible="isEditLeadModalVisible"
+      :selected-lead="selectedLead"
+      :sources="sources"
+      :statuses="statuses"
+      @save-lead="saveLead"
+    />
 
-    <!-- 👉 Edit Lead Modal -->
-    <VDialog
-      v-model="isEditLeadModalVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isEditLeadModalVisible = false" />
-      <VCard v-if="selectedLead" title="Edit Lead">
-        <VCardText>
-          <VForm @submit.prevent="saveLead">
-            <VRow>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  v-model="selectedLead.name"
-                  label="Name"
-                  placeholder="Enter lead name"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  v-model="selectedLead.email"
-                  label="Email"
-                  type="email"
-                  placeholder="Enter email address"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  v-model="selectedLead.phone"
-                  label="Phone"
-                  placeholder="+966 50 123 4567"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppSelect
-                  v-model="selectedLead.source"
-                  label="Source"
-                  :items="sources"
-                  placeholder="Select source"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppSelect
-                  v-model="selectedLead.status"
-                  label="Status"
-                  :items="statuses"
-                  placeholder="Select status"
-                />
-              </VCol>
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  v-model="selectedLead.createdDate"
-                  label="Created Date"
-                  type="date"
-                />
-              </VCol>
-            </VRow>
-          </VForm>
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isEditLeadModalVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="primary"
-            @click="saveLead"
-          >
-            Save Changes
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isDeleteDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
-      <VCard title="Confirm Delete">
-        <VCardText>
-          Are you sure you want to delete this lead? This action cannot be undone.
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteLead"
-          >
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- 👉 Delete Lead Dialog -->
+    <DeleteLeadDialog
+      v-model:is-dialog-visible="isDeleteDialogVisible"
+      :lead-id="leadToDelete"
+      @lead-deleted="onLeadDeleted"
+    />
   </section>
 </template>

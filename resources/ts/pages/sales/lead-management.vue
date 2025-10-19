@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
+import ImportLeadsDialog from '@/components/dialogs/leads/ImportLeadsDialog.vue'
+import DeleteLeadDialog from '@/components/dialogs/leads/DeleteLeadDialog.vue'
 import { type Lead, type LeadStatistic, leadApi } from '@/services/api/lead'
 
 // 👉 Store
@@ -283,6 +285,19 @@ const openAddNoteModal = (leadId: number) => {
 const onNoteAdded = () => {
   // TODO: Refresh notes or show success message
   console.log('Note added successfully')
+}
+
+const onLeadDeleted = async () => {
+  await fetchLeads()
+  await fetchStatistics()
+  isDeleteDialogVisible.value = false
+  leadToDelete.value = null
+}
+
+const onImportCompleted = (file: File | null) => {
+  if (!file) return
+  csvFile.value = file
+  importCSV()
 }
 
 // 👉 Navigation
@@ -610,84 +625,18 @@ const navigateToAddLead = () => {
       <!-- SECTION -->
     </VCard>
 
-    <!-- 👉 Import Dialog -->
-    <VDialog
-      v-model="isImportDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isImportDialogVisible = false" />
-      <VCard title="Import Leads from CSV">
-        <VCardText>
-          <div class="mb-4">
-            <VBtn
-              variant="tonal"
-              color="secondary"
-              size="small"
-              prepend-icon="tabler-download"
-              @click="downloadExampleCSV"
-            >
-              Download Example CSV
-            </VBtn>
-          </div>
+    <!-- 👉 Import Leads Dialog -->
+    <ImportLeadsDialog
+      v-model:is-dialog-visible="isImportDialogVisible"
+      @import="onImportCompleted"
+    />
 
-          <VFileInput
-            v-model="csvFile"
-            label="Select CSV File"
-            accept=".csv"
-            prepend-icon="tabler-file-upload"
-            show-size
-            @change="handleFileUpload"
-          />
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isImportDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="primary"
-            @click="importCSV"
-          >
-            Import
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-    <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isDeleteDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
-      <VCard title="Confirm Delete">
-        <VCardText>
-          Are you sure you want to delete this lead? This action cannot be undone.
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteLead"
-          >
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- 👉 Delete Lead Dialog -->
+    <DeleteLeadDialog
+      v-model:is-dialog-visible="isDeleteDialogVisible"
+      :lead-id="leadToDelete"
+      @lead-deleted="onLeadDeleted"
+    />
 
     <!-- 👉 Add Note Modal -->
     <AddNoteModal

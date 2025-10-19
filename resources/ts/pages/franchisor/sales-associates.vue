@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import ConfirmDeleteDialog from '@/components/dialogs/common/ConfirmDeleteDialog.vue'
+
 // 👉 Interfaces
 interface Lead {
   id: number
@@ -400,6 +402,11 @@ const exportToPDF = () => {
   console.log('Exporting to PDF:', dataToExport)
 
   // TODO: Implement PDF export logic
+}
+
+// Event handler for dialog components
+const onDeleteConfirm = async () => {
+  await deleteAssociate()
 }
 
 // 👉 Lifecycle hooks
@@ -972,33 +979,11 @@ onMounted(() => {
     </VDialog>
 
     <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isDeleteDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
-      <VCard title="Confirm Delete">
-        <VCardText>
-          Are you sure you want to delete this sales associate? This action cannot be undone.
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteAssociate"
-          >
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <ConfirmDeleteDialog
+      v-model:is-dialog-visible="isDeleteDialogVisible"
+      title="Confirm Delete Sales Associate"
+      message="Are you sure you want to delete this sales associate? This action cannot be undone."
+      @confirm="onDeleteConfirm"
+    />
   </section>
 </template>

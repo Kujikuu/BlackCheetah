@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import ViewTaskDialog from '@/components/dialogs/tasks/ViewTaskDialog.vue'
+import EditTaskDialog from '@/components/dialogs/tasks/EditTaskDialog.vue'
+import DeleteTaskDialog from '@/components/dialogs/tasks/DeleteTaskDialog.vue'
 
 // 👉 API composable
 const { data: operationsApiData, execute: fetchOperationsData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/operations')
@@ -379,6 +382,37 @@ const saveTask = async () => {
   selectedTask.value = null
 }
 
+// Event handlers for dialog components
+const onTaskUpdated = (updatedTask: any) => {
+  const taskList = currentTab.value === 'franchisee'
+    ? tasksData.value.franchisee.tasks
+    : currentTab.value === 'sales'
+      ? tasksData.value.sales.tasks
+      : tasksData.value.staff.tasks
+
+  const index = taskList.findIndex(task => task.id === updatedTask.id)
+  if (index !== -1)
+    taskList[index] = updatedTask
+
+  isEditTaskModalVisible.value = false
+  selectedTask.value = null
+}
+
+const onTaskDeleted = (taskId: number) => {
+  const taskList = currentTab.value === 'franchisee'
+    ? tasksData.value.franchisee.tasks
+    : currentTab.value === 'sales'
+      ? tasksData.value.sales.tasks
+      : tasksData.value.staff.tasks
+
+  const index = taskList.findIndex(task => task.id === taskId)
+  if (index !== -1)
+    taskList.splice(index, 1)
+
+  isDeleteDialogVisible.value = false
+  taskToDelete.value = null
+}
+
 // 👉 Export functionality
 const exportTasks = () => {
   const dataToExport = selectedRows.value.length > 0
@@ -721,108 +755,11 @@ const tabs = [
       </VWindowItem>
     </VWindow>
 
-    <!-- 👉 View Task Modal -->
-    <VDialog
-      v-model="isViewTaskModalVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isViewTaskModalVisible = false" />
-      <VCard v-if="selectedTask" title="Task Details">
-        <VCardText>
-          <VRow>
-            <VCol cols="12">
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Task
-                </div>
-                <div class="text-body-1 font-weight-medium">
-                  {{ selectedTask.task }}
-                </div>
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Assigned To
-                </div>
-                <div class="text-body-1">
-                  {{ selectedTask.assignedTo }}
-                </div>
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Due Date
-                </div>
-                <div class="text-body-1">
-                  {{ selectedTask.dueDate }}
-                </div>
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Priority
-                </div>
-                <VChip
-                  :color="resolvePriorityVariant(selectedTask.priority)"
-                  size="small"
-                  label
-                  class="text-capitalize"
-                >
-                  {{ selectedTask.priority }}
-                </VChip>
-              </div>
-            </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">
-                  Status
-                </div>
-                <VChip
-                  :color="resolveStatusVariant(selectedTask.status)"
-                  size="small"
-                  label
-                  class="text-capitalize"
-                >
-                  {{ selectedTask.status.replace('_', ' ') }}
-                </VChip>
-              </div>
-            </VCol>
-          </VRow>
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isViewTaskModalVisible = false"
-          >
-            Close
-          </VBtn>
-          <VBtn
-            color="primary"
-            @click="editTask(selectedTask.id)"
-          >
-            Edit
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- 👉 View Task Dialog -->
+    <ViewTaskDialog
+      v-model:is-dialog-visible="isViewTaskModalVisible"
+      :task="selectedTask ? { ...selectedTask, title: selectedTask.task, category: 'general', description: selectedTask.task, startDate: null, assignedTo: selectedTask.assignedTo, dueDate: selectedTask.dueDate, priority: selectedTask.priority, status: selectedTask.status, estimatedHours: 0, actualHours: 0 } : null"
+    />
 
     <!-- 👉 Edit Task Modal -->
     <VDialog
@@ -906,34 +843,11 @@ const tabs = [
       </VCard>
     </VDialog>
 
-    <!-- 👉 Delete Confirmation Dialog -->
-    <VDialog
-      v-model="isDeleteDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
-      <VCard title="Confirm Delete">
-        <VCardText>
-          Are you sure you want to delete this task? This action cannot be undone.
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isDeleteDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="error"
-            @click="deleteTask"
-          >
-            Delete
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <!-- 👉 Delete Task Dialog -->
+    <DeleteTaskDialog
+      v-model:is-dialog-visible="isDeleteDialogVisible"
+      :task-id="taskToDelete"
+      @task-deleted="onTaskDeleted"
+    />
   </section>
 </template>

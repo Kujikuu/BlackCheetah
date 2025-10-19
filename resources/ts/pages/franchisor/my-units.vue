@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { SaudiRiyal } from 'lucide-vue-next'
 import { formatCurrency } from '@/@core/utils/formatters'
-import AddFranchiseeModal from '@/components/dialogs/AddFranchiseeModal.vue'
+import AddFranchiseeDialog from '@/components/dialogs/units/AddFranchiseeDialog.vue'
+import ChangeStatusDialog from '@/components/dialogs/units/ChangeStatusDialog.vue'
 
 // 👉 Pagination helper
 const paginationMeta = (page: number, perPage: number, total: number) => {
@@ -236,6 +237,16 @@ const changeUnitStatus = async () => {
     console.error('Failed to change unit status:', err)
     error.value = err?.data?.message || 'Failed to change unit status'
   }
+}
+
+const onStatusUpdated = (data: { unitId: number; newStatus: string }) => {
+  // Update local data
+  const unitIndex = unitsData.value.findIndex((u: any) => u.id === data.unitId)
+  if (unitIndex !== -1)
+    unitsData.value[unitIndex].status = data.newStatus
+
+  // Reload statistics
+  loadStatisticsData()
 }
 </script>
 
@@ -812,46 +823,19 @@ const changeUnitStatus = async () => {
       </VWindowItem>
     </VWindow>
 
-    <!-- Add Franchisee Modal -->
-    <AddFranchiseeModal
+    <!-- Add Franchisee Dialog -->
+    <AddFranchiseeDialog
       v-model:is-dialog-visible="isAddFranchiseeModalVisible"
       @franchisee-added="onFranchiseeAdded"
     />
 
     <!-- Change Status Dialog -->
-    <VDialog
-      v-model="isChangeStatusDialogVisible"
-      max-width="600"
-    >
-      <DialogCloseBtn @click="isChangeStatusDialogVisible = false" />
-      <VCard title="Change Unit Status">
-        <VCardText>
-          <VSelect
-            v-model="newStatus"
-            label="Status"
-            :items="statusOptions"
-            placeholder="Select Status"
-          />
-        </VCardText>
-
-        <VCardActions>
-          <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isChangeStatusDialogVisible = false"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            color="primary"
-            :disabled="!newStatus || newStatus === selectedUnit?.status"
-            @click="changeUnitStatus"
-          >
-            Update Status
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
+    <ChangeStatusDialog
+      v-model:is-dialog-visible="isChangeStatusDialogVisible"
+      :unit-id="selectedUnit?.id || null"
+      :current-status="selectedUnit?.status || ''"
+      :status-options="statusOptions"
+      @status-updated="onStatusUpdated"
+    />
   </section>
 </template>

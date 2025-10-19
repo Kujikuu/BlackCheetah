@@ -7,6 +7,7 @@ import type {
   UnitProduct,
 } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+import ImportDataDialog from '@/components/dialogs/common/ImportDataDialog.vue'
 
 interface AddDataForm {
 
@@ -421,6 +422,13 @@ const handleImport = () => {
   console.log('Importing data for category:', importCategory.value)
   isImportModalVisible.value = false
 }
+
+// Event handler for dialog components
+const onImportData = (file: File | null) => {
+  if (!file) return
+  console.log('Importing file:', file.name, 'for category:', importCategory.value)
+  isImportModalVisible.value = false
+}
 </script>
 
 <template>
@@ -675,23 +683,12 @@ const handleImport = () => {
     </VCard>
   </VDialog>
 
-  <!-- Import Modal -->
-  <VDialog v-model="isImportModalVisible" max-width="600">
-    <DialogCloseBtn @click="isImportModalVisible = false" />
-    <VCard title="Import Data">
-      <VCardText>
-        <VSelect v-model="importCategory" :items="importCategoryOptions" label="Select Category" variant="outlined"
-          class="mb-4" />
-        <VFileInput label="Choose CSV file" variant="outlined" accept=".csv" prepend-icon="tabler-file-upload" />
-      </VCardText>
-      <VCardActions class="d-flex justify-end gap-2 pa-4">
-        <VBtn variant="tonal" color="secondary" @click="isImportModalVisible = false">
-          Cancel
-        </VBtn>
-        <VBtn @click="handleImport">
-          Import
-        </VBtn>
-      </VCardActions>
-    </VCard>
-  </VDialog>
+  <!-- Import Data Dialog -->
+  <ImportDataDialog
+    v-model:is-dialog-visible="isImportModalVisible"
+    title="Import Financial Data"
+    label="Choose CSV file"
+    accept=".csv"
+    @import="onImportData"
+  />
 </template>
