@@ -188,7 +188,7 @@ const reviewToDelete = ref<number | null>(null)
 // 👉 Document modal states
 const isDocumentActionModalVisible = ref(false)
 const selectedDocument = ref<any>(null)
-const documentAction = ref<'view' | 'download' | 'delete' | null>(null)
+const documentAction = ref<'approve' | 'reject' | null>(null)
 
 // 👉 Form data
 const newStaffForm = ref({
@@ -326,19 +326,17 @@ const onDocumentAdded = async (document: any) => {
   }
 }
 
-const onDocumentActionConfirmed = async (action: string, document: any) => {
+const onDocumentActionConfirmed = async (data: { document: any; action: string; comment: string }) => {
   try {
-    if (action === 'delete') {
-      const response = await franchiseeDashboardApi.deleteDocument(getUnitId(), document.id)
-      if (response.success) {
-        const index = documentsData.value.findIndex(doc => doc.id === document.id)
-        if (index !== -1)
-          documentsData.value.splice(index, 1)
-      }
+    if (data.action === 'approve') {
+      // Handle document approval
+      console.log('Approving document:', data.document, 'with comment:', data.comment)
+      // Add approval logic here
     }
-    else if (action === 'download') {
-      // Handle document download
-      downloadDocument(document)
+    else if (data.action === 'reject') {
+      // Handle document rejection
+      console.log('Rejecting document:', data.document, 'with comment:', data.comment)
+      // Add rejection logic here
     }
   }
   catch (error) {
@@ -1692,10 +1690,10 @@ const reviewHeaders = [
     <AddDocumentModal v-model:is-dialog-visible="isAddDocumentModalVisible" @document-added="onDocumentAdded" />
 
     <DocumentActionModal 
-      v-if="documentAction && (documentAction === 'approve' || documentAction === 'reject')" 
+      v-if="documentAction" 
       v-model:is-dialog-visible="isDocumentActionModalVisible" 
       :document="selectedDocument"
-      :action="documentAction as 'approve' | 'reject'" 
+      :action="documentAction" 
       @document-action-confirmed="onDocumentActionConfirmed" 
     />
 
