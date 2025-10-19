@@ -79,7 +79,8 @@ watch(
     @update:model-value="dialogModelValueUpdate"
     @keyup.esc="clearSearchAndCloseDialog"
   >
-    <VCard
+    <DialogCloseBtn @click="clearSearchAndCloseDialog" />
+    <VCard title="Search">
       height="100%"
       width="100%"
       class="position-relative"

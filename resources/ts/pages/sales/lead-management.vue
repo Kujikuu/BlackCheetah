@@ -615,11 +615,8 @@ const navigateToAddLead = () => {
       v-model="isImportDialogVisible"
       max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Import Leads from CSV</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isImportDialogVisible = false" />
+      <VCard title="Import Leads from CSV">
         <VCardText>
           <div class="mb-4">
             <VBtn
@@ -665,13 +662,10 @@ const navigateToAddLead = () => {
     <!-- 👉 Delete Confirmation Dialog -->
     <VDialog
       v-model="isDeleteDialogVisible"
-      max-width="500"
+      max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Confirm Delete</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
+      <VCard title="Confirm Delete">
         <VCardText>
           Are you sure you want to delete this lead? This action cannot be undone.
         </VCardText>

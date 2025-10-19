@@ -440,30 +440,14 @@ const handleImport = () => {
 
           <!-- Header Actions -->
           <div class="d-flex gap-3 align-center flex-wrap">
-            <VBtn
-              color="primary"
-              variant="outlined"
-              prepend-icon="tabler-upload"
-              @click="isImportModalVisible = true"
-            >
+            <VBtn color="primary" variant="outlined" prepend-icon="tabler-upload" @click="isImportModalVisible = true">
               Import
             </VBtn>
-            <VBtn
-              color="primary"
-              prepend-icon="tabler-plus"
-              @click="openAddDataModal(activeTab)"
-            >
+            <VBtn color="primary" prepend-icon="tabler-plus" @click="openAddDataModal(activeTab)">
               Add Data
             </VBtn>
-            <VSelect
-              v-model="dateFilter"
-              :items="dateFilterOptions"
-              item-title="title"
-              item-value="value"
-              density="comfortable"
-              style="min-width: 120px;"
-              variant="outlined"
-            />
+            <VSelect v-model="dateFilter" :items="dateFilterOptions" item-title="title" item-value="value"
+              density="comfortable" style="min-width: 120px;" variant="outlined" />
           </div>
         </div>
       </VCol>
@@ -472,19 +456,10 @@ const handleImport = () => {
     <!-- Stat Cards -->
     <VRow class="mb-6">
       <!-- Total Sales -->
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="primary"
-              variant="tonal"
-              class="me-4"
-            >
+            <VAvatar size="44" rounded color="primary" variant="tonal" class="me-4">
               <SaudiRiyal />
             </VAvatar>
             <div>
@@ -498,23 +473,11 @@ const handleImport = () => {
       </VCol>
 
       <!-- Total Expenses -->
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="error"
-              variant="tonal"
-              class="me-4"
-            >
-              <VIcon
-                size="24"
-                icon="tabler-trending-down"
-              />
+            <VAvatar size="44" rounded color="error" variant="tonal" class="me-4">
+              <VIcon size="24" icon="tabler-trending-down" />
             </VAvatar>
             <div>
               <span class="text-sm text-medium-emphasis">Total Expenses</span>
@@ -527,23 +490,11 @@ const handleImport = () => {
       </VCol>
 
       <!-- Total Profit -->
-      <VCol
-        cols="12"
-        md="4"
-      >
+      <VCol cols="12" md="4">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="success"
-              variant="tonal"
-              class="me-4"
-            >
-              <VIcon
-                size="24"
-                icon="tabler-trending-up"
-              />
+            <VAvatar size="44" rounded color="success" variant="tonal" class="me-4">
+              <VIcon size="24" icon="tabler-trending-up" />
             </VAvatar>
             <div>
               <span class="text-sm text-medium-emphasis">Total Profit</span>
@@ -561,11 +512,7 @@ const handleImport = () => {
       <VCol cols="12">
         <VCard>
           <VCardText>
-            <VTabs
-              v-model="activeTab"
-              color="primary"
-              class="mb-4"
-            >
+            <VTabs v-model="activeTab" color="primary" class="mb-4">
               <VTab value="sales">
                 Sales
               </VTab>
@@ -579,41 +526,19 @@ const handleImport = () => {
 
             <!-- Search and Actions Bar -->
             <div class="d-flex justify-space-between align-center mb-4">
-              <VTextField
-                v-model="searchQuery"
-                placeholder="Search..."
-                prepend-inner-icon="tabler-search"
-                variant="outlined"
-                density="compact"
-                style="max-width: 300px;"
-                clearable
-              />
+              <VTextField v-model="searchQuery" placeholder="Search..." prepend-inner-icon="tabler-search"
+                variant="outlined" density="compact" style="max-width: 300px;" clearable />
               <div class="d-flex gap-2">
-                <VBtn
-                  v-if="selectedItems.length > 0"
-                  color="primary"
-                  variant="outlined"
-                  prepend-icon="tabler-download"
-                  @click="exportData"
-                >
+                <VBtn v-if="selectedItems.length > 0" color="primary" variant="outlined" prepend-icon="tabler-download"
+                  @click="exportData">
                   Export Selected ({{ selectedItems.length }})
                 </VBtn>
-                <VBtn
-                  v-if="selectedItems.length > 0"
-                  color="error"
-                  variant="outlined"
-                  prepend-icon="tabler-trash"
-                  @click="deleteSelected"
-                >
+                <VBtn v-if="selectedItems.length > 0" color="error" variant="outlined" prepend-icon="tabler-trash"
+                  @click="deleteSelected">
                   Delete Selected ({{ selectedItems.length }})
                 </VBtn>
-                <VBtn
-                  v-if="selectedItems.length === 0"
-                  color="primary"
-                  variant="outlined"
-                  prepend-icon="tabler-download"
-                  @click="exportData"
-                >
+                <VBtn v-if="selectedItems.length === 0" color="primary" variant="outlined"
+                  prepend-icon="tabler-download" @click="exportData">
                   Export All
                 </VBtn>
               </div>
@@ -623,15 +548,8 @@ const handleImport = () => {
             <VTabsWindow v-model="activeTab">
               <!-- Sales Tab -->
               <VTabsWindowItem value="sales">
-                <VDataTable
-                  v-model="selectedItems"
-                  :headers="salesHeaders"
-                  :items="filteredSalesData"
-                  :items-per-page="10"
-                  show-select
-                  class="text-no-wrap"
-                  item-value="id"
-                >
+                <VDataTable v-model="selectedItems" :headers="salesHeaders" :items="filteredSalesData"
+                  :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.unitPrice="{ item }">
                     <span class="font-weight-medium">
                       {{ Number(item.unitPrice).toFixed(2) }} SAR
@@ -643,65 +561,37 @@ const handleImport = () => {
                     </span>
                   </template>
                   <template #item.actions="{ item }">
-                    <VBtn
-                      icon="tabler-edit"
-                      variant="text"
-                      color="primary"
-                      size="small"
-                      @click="openEditModal(item, 'sales')"
-                    />
+                    <VBtn icon="tabler-edit" variant="text" color="primary" size="small"
+                      @click="openEditModal(item, 'sales')" />
                   </template>
                 </VDataTable>
               </VTabsWindowItem>
 
               <!-- Expense Tab -->
               <VTabsWindowItem value="expense">
-                <VDataTable
-                  v-model="selectedItems"
-                  :headers="expenseHeaders"
-                  :items="filteredExpenseData"
-                  :items-per-page="10"
-                  show-select
-                  class="text-no-wrap"
-                  item-value="id"
-                >
+                <VDataTable v-model="selectedItems" :headers="expenseHeaders" :items="filteredExpenseData"
+                  :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.amount="{ item }">
                     <span class="text-error font-weight-medium">
                       {{ Number(item.amount).toFixed(2) }} SAR
                     </span>
                   </template>
                   <template #item.expenseCategory="{ item }">
-                    <VChip
-                      size="small"
-                      variant="tonal"
-                      color="primary"
-                    >
+                    <VChip size="small" variant="tonal" color="primary">
                       {{ item.expenseCategory }}
                     </VChip>
                   </template>
                   <template #item.actions="{ item }">
-                    <VBtn
-                      icon="tabler-edit"
-                      variant="text"
-                      color="primary"
-                      size="small"
-                      @click="openEditModal(item, 'expense')"
-                    />
+                    <VBtn icon="tabler-edit" variant="text" color="primary" size="small"
+                      @click="openEditModal(item, 'expense')" />
                   </template>
                 </VDataTable>
               </VTabsWindowItem>
 
               <!-- Profit Tab -->
               <VTabsWindowItem value="profit">
-                <VDataTable
-                  v-model="selectedItems"
-                  :headers="profitHeaders"
-                  :items="filteredProfitData"
-                  :items-per-page="10"
-                  show-select
-                  class="text-no-wrap"
-                  item-value="id"
-                >
+                <VDataTable v-model="selectedItems" :headers="profitHeaders" :items="filteredProfitData"
+                  :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.totalSales="{ item }">
                     <span class="font-weight-medium">
                       {{ Number(item.totalSales).toFixed(2) }} SAR
@@ -727,116 +617,58 @@ const handleImport = () => {
   </section>
 
   <!-- Add Data Modal -->
-  <VDialog
-    v-model="isAddDataModalVisible"
-    max-width="500"
-  >
-    <VCard>
-      <VCardTitle class="text-h6 font-weight-medium">
-        {{ isEditMode ? 'Edit' : 'Add' }} {{ selectedCategory === 'sales' ? 'Sales' : 'Expense' }} Data
-      </VCardTitle>
+  <VDialog v-model="isAddDataModalVisible" max-width="600">
+    <DialogCloseBtn @click="isAddDataModalVisible = false" />
+    <VCard :title="isEditMode ? 'Edit' : 'Add' + (selectedCategory === 'sales' ? 'Sales' : 'Expense') + ' Data'">
       <VCardText>
         <VForm @submit.prevent="saveData">
           <VRow>
             <!-- Sales Fields -->
             <template v-if="selectedCategory === 'sales'">
               <VCol cols="12">
-                <VSelect
-                  v-model="addDataForm.product"
-                  :items="productOptions"
-                  label="Product"
-                  variant="outlined"
-                  item-title="title"
-                  item-value="value"
-                  :loading="unitProducts.length === 0"
+                <VSelect v-model="addDataForm.product" :items="productOptions" label="Product" variant="outlined"
+                  item-title="title" item-value="value" :loading="unitProducts.length === 0"
                   :disabled="unitProducts.length === 0"
-                  :hint="unitProducts.length === 0 ? 'No products available in stock' : ''"
-                  persistent-hint
-                  required
-                />
+                  :hint="unitProducts.length === 0 ? 'No products available in stock' : ''" persistent-hint required />
               </VCol>
               <VCol cols="12">
-                <VTextField
-                  v-model="addDataForm.date"
-                  label="Date"
-                  type="date"
-                  variant="outlined"
-                  required
-                />
+                <VTextField v-model="addDataForm.date" label="Date" type="date" variant="outlined" required />
               </VCol>
               <VCol cols="12">
-                <VTextField
-                  v-model.number="addDataForm.quantitySold"
-                  label="Quantity Sold"
-                  type="number"
-                  variant="outlined"
-                  required
-                  :min="1"
-                  :max="selectedProductStock"
-                  :error="!!quantityErrorMessage"
+                <VTextField v-model.number="addDataForm.quantitySold" label="Quantity Sold" type="number"
+                  variant="outlined" required :min="1" :max="selectedProductStock" :error="!!quantityErrorMessage"
                   :error-messages="quantityErrorMessage"
                   :hint="selectedProductStock > 0 ? `Available stock: ${selectedProductStock} units` : ''"
-                  persistent-hint
-                  :disabled="!addDataForm.product"
-                />
+                  persistent-hint :disabled="!addDataForm.product" />
               </VCol>
             </template>
 
             <!-- Expense Fields -->
             <template v-else>
               <VCol cols="12">
-                <VSelect
-                  v-model="addDataForm.expenseCategory"
-                  :items="expenseCategoryOptions"
-                  label="Expense Category"
-                  variant="outlined"
-                  required
-                />
+                <VSelect v-model="addDataForm.expenseCategory" :items="expenseCategoryOptions" label="Expense Category"
+                  variant="outlined" required />
               </VCol>
               <VCol cols="12">
-                <VTextField
-                  v-model="addDataForm.date"
-                  label="Date"
-                  type="date"
-                  variant="outlined"
-                  required
-                />
+                <VTextField v-model="addDataForm.date" label="Date" type="date" variant="outlined" required />
               </VCol>
               <VCol cols="12">
-                <VTextField
-                  v-model.number="addDataForm.amount"
-                  label="Amount (SAR)"
-                  type="number"
-                  step="0.01"
-                  variant="outlined"
-                  required
-                />
+                <VTextField v-model.number="addDataForm.amount" label="Amount (SAR)" type="number" step="0.01"
+                  variant="outlined" required />
               </VCol>
               <VCol cols="12">
-                <VTextarea
-                  v-model="addDataForm.description"
-                  label="Note/Description"
-                  variant="outlined"
-                  rows="3"
-                />
+                <VTextarea v-model="addDataForm.description" label="Note/Description" variant="outlined" rows="3" />
               </VCol>
             </template>
           </VRow>
         </VForm>
       </VCardText>
       <VCardActions class="d-flex justify-end gap-2 pa-4">
-        <VBtn
-          variant="outlined"
-          @click="isAddDataModalVisible = false"
-        >
+        <VBtn variant="tonal" color="secondary" @click="isAddDataModalVisible = false">
           Cancel
         </VBtn>
-        <VBtn
-          color="primary"
-          :disabled="selectedCategory === 'sales' && !isQuantityValid"
-          :loading="isLoading"
-          @click="saveData"
-        >
+        <VBtn :disabled="selectedCategory === 'sales' && !isQuantityValid" :loading="isLoading"
+          @click="saveData">
           Save
         </VBtn>
       </VCardActions>
@@ -844,40 +676,19 @@ const handleImport = () => {
   </VDialog>
 
   <!-- Import Modal -->
-  <VDialog
-    v-model="isImportModalVisible"
-    max-width="400"
-  >
-    <VCard>
-      <VCardTitle class="text-h6 font-weight-medium">
-        Import Data
-      </VCardTitle>
+  <VDialog v-model="isImportModalVisible" max-width="600">
+    <DialogCloseBtn @click="isImportModalVisible = false" />
+    <VCard title="Import Data">
       <VCardText>
-        <VSelect
-          v-model="importCategory"
-          :items="importCategoryOptions"
-          label="Select Category"
-          variant="outlined"
-          class="mb-4"
-        />
-        <VFileInput
-          label="Choose CSV file"
-          variant="outlined"
-          accept=".csv"
-          prepend-icon="tabler-file-upload"
-        />
+        <VSelect v-model="importCategory" :items="importCategoryOptions" label="Select Category" variant="outlined"
+          class="mb-4" />
+        <VFileInput label="Choose CSV file" variant="outlined" accept=".csv" prepend-icon="tabler-file-upload" />
       </VCardText>
       <VCardActions class="d-flex justify-end gap-2 pa-4">
-        <VBtn
-          variant="outlined"
-          @click="isImportModalVisible = false"
-        >
+        <VBtn variant="tonal" color="secondary" @click="isImportModalVisible = false">
           Cancel
         </VBtn>
-        <VBtn
-          color="primary"
-          @click="handleImport"
-        >
+        <VBtn @click="handleImport">
           Import
         </VBtn>
       </VCardActions>

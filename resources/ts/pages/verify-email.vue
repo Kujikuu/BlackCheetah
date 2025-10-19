@@ -67,7 +67,7 @@ const resend = async () => {
       <!-- 👉 Auth card -->
       <VCard
         class="auth-card"
-        max-width="460"
+        max-width="600"
         :class="smAndUp ? 'pa-6' : 'pa-2'"
       >
         <VCardItem class="justify-center">

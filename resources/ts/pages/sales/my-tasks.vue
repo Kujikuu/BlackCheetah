@@ -365,11 +365,8 @@ const updateTaskStatus = async (newStatus: string) => {
       v-model="isViewTaskModalVisible"
       max-width="600"
     >
-      <VCard>
-        <VCardTitle class="text-h5 pa-6 pb-4">
-          Task Details
-        </VCardTitle>
-
+      <DialogCloseBtn @click="isViewTaskModalVisible = false" />
+      <VCard title="Task Details">
         <VDivider />
 
         <VCardText
@@ -471,13 +468,10 @@ const updateTaskStatus = async (newStatus: string) => {
     <!-- Status Change Modal -->
     <VDialog
       v-model="isStatusChangeModalVisible"
-      max-width="400"
+      max-width="600"
     >
-      <VCard>
-        <VCardTitle class="text-h5 pa-6 pb-4">
-          Change Task Status
-        </VCardTitle>
-
+      <DialogCloseBtn @click="isStatusChangeModalVisible = false" />
+      <VCard title="Change Task Status">
         <VDivider />
 
         <VCardText

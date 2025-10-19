@@ -635,11 +635,8 @@ onMounted(() => {
       v-model="isViewAssociateModalVisible"
       max-width="600"
     >
-      <VCard v-if="selectedAssociate">
-        <VCardItem>
-          <VCardTitle>Sales Associate Details</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isViewAssociateModalVisible = false" />
+      <VCard v-if="selectedAssociate" title="Sales Associate Details">
         <VCardText>
           <VRow>
             <VCol cols="12">
@@ -821,15 +818,12 @@ onMounted(() => {
     <!-- 👉 Add/Edit Associate Modal -->
     <VDialog
       :model-value="isAddAssociateModalVisible || isEditAssociateModalVisible"
-      max-width="700"
+      max-width="600"
       persistent
       @update:model-value="val => { if (!val) { isAddAssociateModalVisible = false; isEditAssociateModalVisible = false } }"
     >
-      <VCard v-if="selectedAssociate">
-        <VCardItem>
-          <VCardTitle>{{ selectedAssociate.id === null ? 'Add New' : 'Edit' }} Sales Associate</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isAddAssociateModalVisible = false; isEditAssociateModalVisible = false" />
+      <VCard v-if="selectedAssociate" :title="selectedAssociate.id === null ? 'Add New' : 'Edit' + ' Sales Associate'">
         <VCardText>
           <VForm
             ref="associateForm"
@@ -980,13 +974,10 @@ onMounted(() => {
     <!-- 👉 Delete Confirmation Dialog -->
     <VDialog
       v-model="isDeleteDialogVisible"
-      max-width="500"
+      max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Confirm Delete</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
+      <VCard title="Confirm Delete">
         <VCardText>
           Are you sure you want to delete this sales associate? This action cannot be undone.
         </VCardText>

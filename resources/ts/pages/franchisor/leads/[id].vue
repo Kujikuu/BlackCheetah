@@ -832,13 +832,10 @@ const priorities = [
     <!-- 👉 Delete Note Confirmation Dialog -->
     <VDialog
       v-model="isDeleteNoteDialogVisible"
-      max-width="500"
+      max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Confirm Delete</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isDeleteNoteDialogVisible = false" />
+      <VCard title="Confirm Delete">
         <VCardText>
           Are you sure you want to delete this note? This action cannot be undone.
         </VCardText>

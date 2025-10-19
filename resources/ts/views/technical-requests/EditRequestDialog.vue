@@ -135,18 +135,8 @@ const updateRequest = async () => {
 
 <template>
   <VDialog :model-value="visible" max-width="600" persistent @update:model-value="emit('update:visible', $event)">
-    <VCard>
-      <VCardItem>
-        <VCardTitle>Edit Technical Request</VCardTitle>
-        <template #append>
-          <IconBtn @click="closeDialog">
-            <VIcon icon="tabler-x" />
-          </IconBtn>
-        </template>
-      </VCardItem>
-
-      <VDivider />
-
+    <DialogCloseBtn @click="closeDialog" />
+    <VCard title="Edit Technical Request">
       <VForm v-model="isFormValid" @submit.prevent="updateRequest">
         <VCardText>
           <VRow>

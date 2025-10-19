@@ -2026,11 +2026,8 @@ watch(() => unitData.value, () => {
         v-model="isViewTaskModalVisible"
         max-width="600"
       >
-        <VCard>
-          <VCardTitle class="text-h5 pa-6 pb-4">
-            Task Details
-          </VCardTitle>
-
+        <DialogCloseBtn @click="isViewTaskModalVisible = false" />
+        <VCard title="Task Details">
           <VDivider />
 
           <VCardText
@@ -2146,11 +2143,8 @@ watch(() => unitData.value, () => {
         max-width="600"
         persistent
       >
-        <VCard>
-          <VCardTitle class="text-h5 pa-6 pb-4">
-            Edit Task
-          </VCardTitle>
-
+        <DialogCloseBtn @click="isEditTaskModalVisible = false" />
+        <VCard title="Edit Task">
           <VDivider />
 
           <VCardText
@@ -2276,13 +2270,10 @@ watch(() => unitData.value, () => {
       <!-- Delete Confirmation Dialog -->
       <VDialog
         v-model="isDeleteDialogVisible"
-        max-width="500"
+        max-width="600"
       >
-        <VCard>
-          <VCardItem>
-            <VCardTitle>Confirm Delete</VCardTitle>
-          </VCardItem>
-
+        <DialogCloseBtn @click="isDeleteDialogVisible = false" />
+        <VCard title="Confirm Delete">
           <VCardText>
             Are you sure you want to delete this task? This action cannot be undone.
           </VCardText>

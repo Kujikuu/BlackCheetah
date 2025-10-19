@@ -109,7 +109,7 @@ const login = async () => {
       <!-- 👉 Auth Card -->
       <VCard
         class="auth-card"
-        max-width="460"
+        max-width="600"
         :class="smAndUp ? 'pa-6' : 'pa-0'"
       >
         <VCardItem class="justify-center">

@@ -816,13 +816,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
     <!-- Export Dialog -->
     <VDialog
       v-model="isExportDialogVisible"
-      max-width="500"
+      max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Export Royalty Data</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isExportDialogVisible = false" />
+      <VCard title="Export Royalty Data">
         <VCardText>
           <VRow>
             <VCol cols="12">
@@ -885,14 +882,11 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
     <!-- Create Royalty Modal -->
     <VDialog
       v-model="isCreateRoyaltyModalVisible"
-      max-width="800"
+      max-width="600"
       persistent
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Create New Royalty Record</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isCreateRoyaltyModalVisible = false" />
+      <VCard title="Create New Royalty Record">
         <VCardText>
           <VForm
             ref="formRef"
@@ -1190,11 +1184,8 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
       v-model="isMarkCompletedModalVisible"
       max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Mark Royalty as Completed</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isMarkCompletedModalVisible = false" />
+      <VCard title="Mark Royalty as Completed">
         <VCardText>
           <VForm @submit.prevent="submitPayment">
             <VRow>
@@ -1274,13 +1265,10 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
     <!-- View Royalty Details Dialog -->
     <VDialog
       v-model="isViewRoyaltyDialogVisible"
-      max-width="700"
+      max-width="600"
     >
-      <VCard v-if="viewedRoyalty">
-        <VCardItem>
-          <VCardTitle>Royalty Details</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isViewRoyaltyDialogVisible = false" />
+      <VCard v-if="viewedRoyalty" title="Royalty Details">
         <VDivider class="mb-4" />
 
         <VCardText>

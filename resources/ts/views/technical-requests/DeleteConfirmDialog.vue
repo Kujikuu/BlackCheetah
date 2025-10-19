@@ -31,22 +31,10 @@ const confirmDelete = () => {
 
 <template>
   <VDialog :model-value="visible" max-width="500" @update:model-value="emit('update:visible', $event)">
-    <VCard class="text-center px-10 py-6">
+    <DialogCloseBtn @click="closeDialog" />
+    <VCard title="Confirm Delete">
       <VCardText>
-        <VIcon icon="tabler-alert-triangle" size="64" color="warning" class="mb-4" />
-        <h3 class="text-h5 mb-2">
-          Confirm Delete
-        </h3>
-        <p class="text-body-1 text-medium-emphasis mb-4">
-          Are you sure you want to delete this technical request?
-        </p>
         <div v-if="request" class="text-start pa-4 bg-surface rounded">
-          <div class="text-body-2 text-medium-emphasis mb-1">
-            Request ID
-          </div>
-          <div class="text-body-1 font-weight-medium mb-2">
-            {{ request.requestId }}
-          </div>
           <div class="text-body-2 text-medium-emphasis mb-1">
             Subject
           </div>

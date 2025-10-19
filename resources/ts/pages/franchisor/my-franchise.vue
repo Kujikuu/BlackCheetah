@@ -1670,9 +1670,8 @@ const resolveStatusVariant = (status: string) => {
       v-model="isAddDocumentModalVisible"
       max-width="600"
     >
-      <VCard>
-        <VCardTitle>Add New Document</VCardTitle>
-
+      <DialogCloseBtn @click="isAddDocumentModalVisible = false" />
+      <VCard title="Add New Document">
         <VCardText>
           <VForm>
             <VRow>
@@ -1729,9 +1728,8 @@ const resolveStatusVariant = (status: string) => {
       v-model="isProductModalVisible"
       max-width="600"
     >
-      <VCard>
-        <VCardTitle>{{ selectedProduct.id ? 'Edit Product' : 'Add New Product' }}</VCardTitle>
-
+      <DialogCloseBtn @click="isProductModalVisible = false" />
+      <VCard :title="selectedProduct.id ? 'Edit Product' : 'Add New Product'">
         <VCardText>
           <VForm>
             <VRow>
@@ -1837,11 +1835,10 @@ const resolveStatusVariant = (status: string) => {
     <!-- Delete Product Confirmation -->
     <VDialog
       v-model="isDeleteProductModalVisible"
-      max-width="400"
+      max-width="600"
     >
-      <VCard>
-        <VCardTitle>Delete Product</VCardTitle>
-
+      <DialogCloseBtn @click="isDeleteProductModalVisible = false" />
+      <VCard title="Delete Product">
         <VCardText>
           Are you sure you want to delete "{{ productToDelete?.name }}"? This action cannot be undone.
         </VCardText>
@@ -1868,13 +1865,10 @@ const resolveStatusVariant = (status: string) => {
     <!-- Delete Document Confirmation -->
     <VDialog
       v-model="isDeleteDocumentDialogVisible"
-      max-width="500"
+      max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Confirm Delete</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isDeleteDocumentDialogVisible = false" />
+      <VCard title="Confirm Delete">
         <VCardText>
           Are you sure you want to delete "{{ documentToDelete?.name }}"? This action cannot be undone.
         </VCardText>

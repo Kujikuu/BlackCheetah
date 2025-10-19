@@ -726,11 +726,8 @@ const tabs = [
       v-model="isViewTaskModalVisible"
       max-width="600"
     >
-      <VCard v-if="selectedTask">
-        <VCardItem>
-          <VCardTitle>Task Details</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isViewTaskModalVisible = false" />
+      <VCard v-if="selectedTask" title="Task Details">
         <VCardText>
           <VRow>
             <VCol cols="12">
@@ -830,13 +827,10 @@ const tabs = [
     <!-- 👉 Edit Task Modal -->
     <VDialog
       v-model="isEditTaskModalVisible"
-      max-width="700"
+      max-width="600"
     >
-      <VCard v-if="selectedTask">
-        <VCardItem>
-          <VCardTitle>Edit Task</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isEditTaskModalVisible = false" />
+      <VCard v-if="selectedTask" title="Edit Task">
         <VCardText>
           <VForm @submit.prevent="saveTask">
             <VRow>
@@ -915,13 +909,10 @@ const tabs = [
     <!-- 👉 Delete Confirmation Dialog -->
     <VDialog
       v-model="isDeleteDialogVisible"
-      max-width="500"
+      max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Confirm Delete</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
+      <VCard title="Confirm Delete">
         <VCardText>
           Are you sure you want to delete this task? This action cannot be undone.
         </VCardText>

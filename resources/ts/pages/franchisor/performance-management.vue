@@ -918,22 +918,10 @@ const periodOptions = [
     <!-- Export Options Dialog -->
     <VDialog
       v-model="isExportDialogVisible"
-      max-width="500"
+      max-width="600"
     >
-      <VCard class="text-center px-6 py-8">
-        <VCardItem class="pb-4">
-          <VCardTitle class="text-h5 mb-2">
-            <VIcon
-              icon="tabler-download"
-              class="me-2"
-            />
-            Export Data
-          </VCardTitle>
-          <VCardSubtitle class="text-body-1">
-            Choose export format and data type
-          </VCardSubtitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isExportDialogVisible = false" />
+      <VCard title="Export Data" class="text-center px-6 py-8">
         <VDivider class="mb-6" />
 
         <VCardText class="text-start">

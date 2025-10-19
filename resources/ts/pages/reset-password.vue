@@ -77,7 +77,7 @@ const onSubmit = async () => {
       <!-- 👉 Auth Card -->
       <VCard
         class="auth-card"
-        max-width="460"
+        max-width="600"
         :class="smAndUp ? 'pa-6' : 'pa-2'"
       >
         <VCardItem class="justify-center">

@@ -171,13 +171,8 @@ const getFileIcon = (type: string): string => {
     v-model="dialogValue"
     max-width="800"
   >
-    <VCard v-if="editedNote">
-      <VCardItem>
-        <VCardTitle>Edit Note</VCardTitle>
-      </VCardItem>
-
-      <VDivider />
-
+    <DialogCloseBtn @click="onCancel" />
+    <VCard v-if="editedNote" title="Edit Note">
       <VCardText>
         <VForm @submit.prevent="onSubmit">
           <VRow>

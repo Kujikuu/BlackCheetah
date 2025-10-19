@@ -137,22 +137,11 @@ const updateTaskStatus = async (newStatus: string) => {
 
     <!-- Stats Cards -->
     <VRow class="mb-6">
-      <VCol
-        cols="12"
-        md="3"
-      >
+      <VCol cols="12" md="3">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="primary"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-checklist"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="primary" variant="tonal">
+              <VIcon icon="tabler-checklist" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -165,22 +154,11 @@ const updateTaskStatus = async (newStatus: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol
-        cols="12"
-        md="3"
-      >
+      <VCol cols="12" md="3">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="success"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-check"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="success" variant="tonal">
+              <VIcon icon="tabler-check" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -193,22 +171,11 @@ const updateTaskStatus = async (newStatus: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol
-        cols="12"
-        md="3"
-      >
+      <VCol cols="12" md="3">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="warning"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-clock"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="warning" variant="tonal">
+              <VIcon icon="tabler-clock" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -221,22 +188,11 @@ const updateTaskStatus = async (newStatus: string) => {
           </VCardText>
         </VCard>
       </VCol>
-      <VCol
-        cols="12"
-        md="3"
-      >
+      <VCol cols="12" md="3">
         <VCard>
           <VCardText class="d-flex align-center">
-            <VAvatar
-              size="44"
-              rounded
-              color="error"
-              variant="tonal"
-            >
-              <VIcon
-                icon="tabler-alert-circle"
-                size="26"
-              />
+            <VAvatar size="44" rounded color="error" variant="tonal">
+              <VIcon icon="tabler-alert-circle" size="26" />
             </VAvatar>
             <div class="ms-4">
               <div class="text-body-2 text-disabled">
@@ -259,12 +215,7 @@ const updateTaskStatus = async (newStatus: string) => {
 
       <VDivider />
 
-      <VDataTable
-        :items="allTasksData"
-        :headers="taskHeaders"
-        class="text-no-wrap"
-        item-value="id"
-      >
+      <VDataTable :items="allTasksData" :headers="taskHeaders" class="text-no-wrap" item-value="id">
         <!-- Task Info -->
         <template #item.taskInfo="{ item }">
           <div>
@@ -279,36 +230,21 @@ const updateTaskStatus = async (newStatus: string) => {
 
         <!-- Priority -->
         <template #item.priority="{ item }">
-          <VChip
-            :color="resolvePriorityVariant(item.priority)"
-            size="small"
-            label
-            class="text-capitalize"
-          >
+          <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
             {{ item.priority }}
           </VChip>
         </template>
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip
-            :color="resolveStatusVariant(item.status)"
-            size="small"
-            label
-            class="text-capitalize"
-          >
+          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
             {{ item.status }}
           </VChip>
         </template>
 
         <!-- Actions -->
         <template #item.actions="{ item }">
-          <VBtn
-            icon
-            variant="text"
-            color="medium-emphasis"
-            size="small"
-          >
+          <VBtn icon variant="text" color="medium-emphasis" size="small">
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
@@ -332,21 +268,10 @@ const updateTaskStatus = async (newStatus: string) => {
     </VCard>
 
     <!-- View Task Modal -->
-    <VDialog
-      v-model="isViewTaskModalVisible"
-      max-width="600"
-    >
-      <VCard>
-        <VCardTitle class="text-h5 pa-6 pb-4">
-          Task Details
-        </VCardTitle>
-
-        <VDivider />
-
-        <VCardText
-          v-if="selectedTask"
-          class="pa-6"
-        >
+    <VDialog v-model="isViewTaskModalVisible" max-width="600">
+      <DialogCloseBtn @click="isViewTaskModalVisible = false" />
+      <VCard title="Task Details">
+        <VCardText v-if="selectedTask">
           <VRow>
             <VCol cols="12">
               <h6 class="text-h6 mb-2">
@@ -356,10 +281,7 @@ const updateTaskStatus = async (newStatus: string) => {
                 {{ selectedTask.description }}
               </p>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Category
               </div>
@@ -367,10 +289,7 @@ const updateTaskStatus = async (newStatus: string) => {
                 {{ selectedTask.category }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Start Date
               </div>
@@ -378,10 +297,7 @@ const updateTaskStatus = async (newStatus: string) => {
                 {{ selectedTask.startDate }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Due Date
               </div>
@@ -389,116 +305,67 @@ const updateTaskStatus = async (newStatus: string) => {
                 {{ selectedTask.dueDate }}
               </div>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Priority
               </div>
-              <VChip
-                :color="resolvePriorityVariant(selectedTask.priority)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
+              <VChip :color="resolvePriorityVariant(selectedTask.priority)" size="small" label class="text-capitalize">
                 {{ selectedTask.priority }}
               </VChip>
             </VCol>
-            <VCol
-              cols="12"
-              md="6"
-            >
+            <VCol cols="12" md="6">
               <div class="text-body-2 text-disabled mb-1">
                 Status
               </div>
-              <VChip
-                :color="resolveStatusVariant(selectedTask.status)"
-                size="small"
-                label
-                class="text-capitalize"
-              >
+              <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize">
                 {{ selectedTask.status }}
               </VChip>
             </VCol>
           </VRow>
         </VCardText>
 
-        <VDivider />
 
-        <VCardActions class="pa-6">
+        <VCardText class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isViewTaskModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isViewTaskModalVisible = false">
             Close
           </VBtn>
-        </VCardActions>
+        </VCardText>
       </VCard>
     </VDialog>
 
     <!-- Status Change Modal -->
-    <VDialog
-      v-model="isStatusChangeModalVisible"
-      max-width="400"
-    >
-      <VCard>
-        <VCardTitle class="text-h5 pa-6 pb-4">
-          Change Task Status
-        </VCardTitle>
-
-        <VDivider />
-
-        <VCardText
-          v-if="selectedTask"
-          class="pa-6"
-        >
+    <VDialog v-model="isStatusChangeModalVisible" max-width="600">
+      <DialogCloseBtn @click="isStatusChangeModalVisible = false" />
+      <VCard title="Change Task Status">
+        <VCardText v-if="selectedTask">
           <div class="mb-4">
             <h6 class="text-base font-weight-medium mb-2">
               {{ selectedTask.title }}
             </h6>
             <div class="text-body-2 text-disabled">
               Current Status:
-              <VChip
-                :color="resolveStatusVariant(selectedTask.status)"
-                size="small"
-                label
-                class="text-capitalize ms-2"
-              >
+              <VChip :color="resolveStatusVariant(selectedTask.status)" size="small" label class="text-capitalize ms-2">
                 {{ selectedTask.status }}
               </VChip>
             </div>
           </div>
 
-          <VSelect
-            label="New Status"
-            :items="[
-              { title: 'Pending', value: 'pending' },
-              { title: 'In Progress', value: 'in_progress' },
-              { title: 'Completed', value: 'completed' },
-              { title: 'Cancelled', value: 'cancelled' },
-              { title: 'On Hold', value: 'on_hold' },
-            ]"
-            :model-value="selectedTask.status"
-            required
-            @update:model-value="updateTaskStatus"
-          />
+          <VSelect label="New Status" :items="[
+            { title: 'Pending', value: 'pending' },
+            { title: 'In Progress', value: 'in_progress' },
+            { title: 'Completed', value: 'completed' },
+            { title: 'Cancelled', value: 'cancelled' },
+            { title: 'On Hold', value: 'on_hold' },
+          ]" :model-value="selectedTask.status" required @update:model-value="updateTaskStatus" />
         </VCardText>
 
-        <VDivider />
-
-        <VCardActions class="pa-6">
+        <VCardText class="pa-6">
           <VSpacer />
-          <VBtn
-            color="secondary"
-            variant="tonal"
-            @click="isStatusChangeModalVisible = false"
-          >
+          <VBtn color="secondary" variant="tonal" @click="isStatusChangeModalVisible = false">
             Cancel
           </VBtn>
-        </VCardActions>
+        </VCardText>
       </VCard>
     </VDialog>
   </section>

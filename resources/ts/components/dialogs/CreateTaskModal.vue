@@ -137,13 +137,8 @@ watch(() => props.currentTab, async newTab => {
     persistent
     @update:model-value="updateModelValue"
   >
-    <VCard>
-      <VCardTitle class="text-h5 pa-6 pb-4">
-        Create New Task
-      </VCardTitle>
-
-      <VDivider />
-
+    <DialogCloseBtn @click="updateModelValue(false)" />
+    <VCard title="Create New Task">
       <VCardText class="pa-6">
         <VForm
           v-model="isFormValid"

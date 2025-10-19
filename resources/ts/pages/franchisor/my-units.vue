@@ -821,16 +821,10 @@ const changeUnitStatus = async () => {
     <!-- Change Status Dialog -->
     <VDialog
       v-model="isChangeStatusDialogVisible"
-      max-width="500"
+      max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Change Unit Status</VCardTitle>
-          <VCardSubtitle v-if="selectedUnit">
-            {{ selectedUnit.branchName }}
-          </VCardSubtitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isChangeStatusDialogVisible = false" />
+      <VCard title="Change Unit Status">
         <VCardText>
           <VSelect
             v-model="newStatus"

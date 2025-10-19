@@ -92,23 +92,15 @@ const getFileIcon = (type: string): string => {
     v-model="dialogValue"
     max-width="800"
   >
-    <VCard v-if="note">
-      <VCardItem>
-        <VCardTitle>{{ note.title }}</VCardTitle>
-        <VCardSubtitle>
-          Created by {{ note.createdBy }} at {{ formatDateTime(note.createdAt) }}
-        </VCardSubtitle>
-      </VCardItem>
-
-      <VDivider />
-
+    <DialogCloseBtn @click="dialogValue = false" />
+    <VCard v-if="note" title="Note Details">
       <VCardText>
         <div class="mb-6">
-          <h6 class="text-h6 mb-3">
-            Description
-          </h6>
           <p class="text-body-1 whitespace-pre-wrap">
             {{ note.description }}
+          </p>
+          <p class="text-body-2 text-medium-emphasis">
+            Created by {{ note.createdBy }} at {{ formatDateTime(note.createdAt) }}
           </p>
         </div>
 

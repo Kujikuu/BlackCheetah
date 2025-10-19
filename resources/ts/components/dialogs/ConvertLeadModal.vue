@@ -54,11 +54,8 @@ const convertLead = async () => {
     :model-value="props.isDialogVisible"
     @update:model-value="updateModelValue"
   >
-    <VCard>
-      <VCardItem>
-        <VCardTitle>Convert Lead to Customer</VCardTitle>
-      </VCardItem>
-
+    <DialogCloseBtn @click="updateModelValue(false)" />
+    <VCard title="Convert Lead to Customer">
       <VCardText>
         <div class="mb-4">
           <p class="text-body-1 mb-2">

@@ -585,11 +585,8 @@ const avatarText = (name: string) => {
       v-model="isViewLeadModalVisible"
       max-width="600"
     >
-      <VCard v-if="selectedLead">
-        <VCardItem>
-          <VCardTitle>Lead Details</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isViewLeadModalVisible = false" />
+      <VCard v-if="selectedLead" title="Lead Details">
         <VCardText>
           <VRow>
             <VCol
@@ -700,13 +697,10 @@ const avatarText = (name: string) => {
     <!-- 👉 Edit Lead Modal -->
     <VDialog
       v-model="isEditLeadModalVisible"
-      max-width="700"
+      max-width="600"
     >
-      <VCard v-if="selectedLead">
-        <VCardItem>
-          <VCardTitle>Edit Lead</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isEditLeadModalVisible = false" />
+      <VCard v-if="selectedLead" title="Edit Lead">
         <VCardText>
           <VForm @submit.prevent="saveLead">
             <VRow>
@@ -799,13 +793,10 @@ const avatarText = (name: string) => {
     <!-- 👉 Delete Confirmation Dialog -->
     <VDialog
       v-model="isDeleteDialogVisible"
-      max-width="500"
+      max-width="600"
     >
-      <VCard>
-        <VCardItem>
-          <VCardTitle>Confirm Delete</VCardTitle>
-        </VCardItem>
-
+      <DialogCloseBtn @click="isDeleteDialogVisible = false" />
+      <VCard title="Confirm Delete">
         <VCardText>
           Are you sure you want to delete this lead? This action cannot be undone.
         </VCardText>

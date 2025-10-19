@@ -57,17 +57,8 @@ const resolveUserPlanVariant = (plan: string) => {
     max-width="600"
     @update:model-value="(val: boolean) => emit('update:isDialogOpen', val)"
   >
-    <VCard v-if="props.user">
-      <VCardItem>
-        <VCardTitle>{{ props.userType }} Details</VCardTitle>
-
-        <template #append>
-          <IconBtn @click="handleClose">
-            <VIcon icon="tabler-x" />
-          </IconBtn>
-        </template>
-      </VCardItem>
-
+    <DialogCloseBtn @click="handleClose" />
+    <VCard v-if="props.user" title="User Details">
       <VDivider />
 
       <VCardText>

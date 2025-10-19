@@ -159,19 +159,9 @@ const onSubmit = () => {
       size="small"
       @click="emit('update:isDialogVisible', false)"
     />
-    <VCard
-      class="create-app-dialog"
-      min-height="590"
-    >
+    <DialogCloseBtn @click="emit('update:isDialogVisible', false)" />
+    <VCard title="Create App">
       <VCardText class="pa-5 pa-sm-16">
-        <!-- 👉 Title -->
-        <h4 class="text-h4 text-center mb-2">
-          Create App
-        </h4>
-        <p class="text-body-1 text-center mb-6">
-          Provide data with this form to create your app.
-        </p>
-
         <VRow>
           <VCol
             cols="12"

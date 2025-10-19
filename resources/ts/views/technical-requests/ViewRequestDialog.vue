@@ -40,19 +40,8 @@ const downloadAttachment = (attachment: any) => {
 
 <template>
   <VDialog :model-value="visible" max-width="800" @update:model-value="emit('update:visible', $event)">
-    <VCard v-if="request">
-      <VCardItem class="py-2">
-        <VCardTitle>Request Details</VCardTitle>
-
-        <template #append>
-          <IconBtn @click="closeDialog">
-            <VIcon icon="tabler-x" />
-          </IconBtn>
-        </template>
-      </VCardItem>
-
-      <VDivider />
-
+    <DialogCloseBtn @click="closeDialog" />
+    <VCard v-if="request" title="Request Details">
       <VCardText class="pa-4 pa-sm-6">
         <VRow>
           <VCol cols="12" sm="6">

@@ -88,11 +88,8 @@ const onCancel = () => {
     v-model="dialogValue"
     max-width="600"
   >
-    <VCard>
-      <VCardItem>
-        <VCardTitle>Add Note</VCardTitle>
-      </VCardItem>
-
+    <DialogCloseBtn @click="onCancel" />
+    <VCard title="Add Note">
       <VCardText>
         <VForm @submit.prevent="onSubmit">
           <VRow>

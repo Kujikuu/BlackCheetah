@@ -33,19 +33,9 @@ const handleCancel = () => {
     max-width="500"
     @update:model-value="(val: boolean) => emit('update:isDialogOpen', val)"
   >
-    <VCard>
+    <DialogCloseBtn @click="emit('update:isDialogOpen', false)" />
+    <VCard title="Confirm Deletion">
       <VCardText class="text-center pa-8">
-        <VIcon
-          icon="tabler-alert-circle"
-          size="64"
-          color="error"
-          class="mb-4"
-        />
-
-        <h3 class="text-h5 mb-2">
-          Confirm Deletion
-        </h3>
-
         <p class="text-body-1 mb-6">
           Are you sure you want to delete <strong>{{ props.userName }}</strong>?
           <br>

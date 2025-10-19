@@ -68,18 +68,8 @@ const copyPassword = () => {
     max-width="500"
     @update:model-value="(val: boolean) => emit('update:isDialogOpen', val)"
   >
-    <VCard>
-      <VCardItem>
-        <VCardTitle>Reset Password</VCardTitle>
-        <VCardSubtitle>Generate new password for {{ props.userName }}</VCardSubtitle>
-
-        <template #append>
-          <IconBtn @click="handleCancel">
-            <VIcon icon="tabler-x" />
-          </IconBtn>
-        </template>
-      </VCardItem>
-
+    <DialogCloseBtn @click="emit('update:isDialogOpen', false)" />
+    <VCard title="Reset Password">
       <VDivider />
 
       <VCardText class="pa-6">
