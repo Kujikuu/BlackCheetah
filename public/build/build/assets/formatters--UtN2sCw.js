@@ -1,0 +1,1 @@
+const a=r=>r?r.split(" ").map(n=>n.charAt(0).toUpperCase()).join(""):"",e=r=>r>0?`+${r}`:r,i=(r,t="SAR",n=!1)=>typeof r!="number"||Number.isNaN(r)?`0 ${t}`:new Intl.NumberFormat("en-US",{style:"currency",currency:t,minimumFractionDigits:n?2:0,maximumFractionDigits:n?2:0}).format(r).replace(/ر\.س\.|SAR|USD|EUR/g,t);export{a,i as f,e as p};
