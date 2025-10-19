@@ -263,35 +263,6 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
 
 // Admin-only routes (requires admin role)
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(function () {
-
-    // Admin franchise management
-    Route::prefix('franchises')->group(function () {
-        Route::get('all-statistics', [FranchiseController::class, 'statistics']);
-        Route::post('bulk-activate', [FranchiseController::class, 'bulkActivate']);
-        Route::post('bulk-deactivate', [FranchiseController::class, 'bulkDeactivate']);
-    });
-
-    // Admin lead management
-    Route::prefix('leads')->group(function () {
-        Route::get('all-statistics', [LeadController::class, 'statistics']);
-        Route::post('bulk-assign', [LeadController::class, 'bulkAssign']);
-        Route::post('bulk-convert', [LeadController::class, 'bulkConvert']);
-    });
-
-    // Admin unit management
-    Route::prefix('units')->group(function () {
-        Route::get('all-statistics', [UnitController::class, 'statistics']);
-        Route::post('bulk-activate', [UnitController::class, 'bulkActivate']);
-        Route::post('bulk-deactivate', [UnitController::class, 'bulkDeactivate']);
-    });
-
-    // Admin task management
-    Route::prefix('tasks')->group(function () {
-        Route::get('all-statistics', [TaskController::class, 'statistics']);
-        Route::post('bulk-assign', [TaskController::class, 'bulkAssign']);
-        Route::post('bulk-complete', [TaskController::class, 'bulkComplete']);
-    });
-
     // Admin technical request management
     Route::prefix('technical-requests')->group(function () {
         Route::get('all-statistics', [TechnicalRequestController::class, 'statistics']);
@@ -299,44 +270,29 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(fun
         Route::post('bulk-resolve', [TechnicalRequestController::class, 'bulkResolve']);
     });
 
-    // Admin transaction management
-    Route::prefix('transactions')->group(function () {
-        Route::get('all-statistics', [TransactionController::class, 'statistics']);
-        Route::post('bulk-complete', [TransactionController::class, 'bulkComplete']);
-        Route::post('bulk-cancel', [TransactionController::class, 'bulkCancel']);
-    });
+    Route::get('dashboard/stats', [AdminController::class, 'dashboardStats']);
+    Route::get('dashboard/recent-users', [AdminController::class, 'recentUsers']);
+    Route::get('dashboard/chart-data', [AdminController::class, 'chartData']);
 
-    // Admin royalty management
-    Route::prefix('royalties')->group(function () {
-        Route::get('all-statistics', [RoyaltyController::class, 'statistics']);
-        Route::post('bulk-mark-paid', [RoyaltyController::class, 'bulkMarkAsPaid']);
-        Route::post('generate-all-monthly', [RoyaltyController::class, 'generateAllMonthlyRoyalties']);
-    });
+    // User management endpoints
+    Route::get('users/franchisors', [AdminController::class, 'franchisors']);
+    Route::get('users/franchisees', [AdminController::class, 'franchisees']);
+    Route::get('users/sales', [AdminController::class, 'salesUsers']);
 
-    // Admin revenue management
-    Route::prefix('revenues')->group(function () {
-        Route::get('all-statistics', [RevenueController::class, 'statistics']);
-        Route::post('bulk-verify', [RevenueController::class, 'bulkVerify']);
-        Route::get('comprehensive-breakdown', [RevenueController::class, 'comprehensiveBreakdown']);
-    });
+    // User stats endpoints
+    Route::get('users/franchisors/stats', [AdminController::class, 'franchisorStats']);
+    Route::get('users/franchisees/stats', [AdminController::class, 'franchiseeStats']);
+    Route::get('users/sales/stats', [AdminController::class, 'salesStats']);
+
+    // User CRUD operations
+    Route::post('users', [AdminController::class, 'createUser']);
+    Route::put('users/{id}', [AdminController::class, 'updateUser']);
+    Route::delete('users/{id}', [AdminController::class, 'deleteUser']);
+    Route::post('users/{id}/reset-password', [AdminController::class, 'resetPassword']);
+
+    // Franchisee with unit creation
+    Route::post('franchisees-with-unit', [AdminController::class, 'createFranchiseeWithUnit']);
 });
-
-// Franchise Owner routes (requires franchise_owner role)
-// Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')->group(function () {
-
-//     // Franchise owner can only access their own franchise data
-//     Route::get('franchise', [FranchiseController::class, 'myFranchise']);
-//     Route::get('units', [UnitController::class, 'myUnits']);
-//     Route::get('leads', [LeadController::class, 'myLeads']);
-//     Route::get('tasks', [TaskController::class, 'myTasks']);
-//     Route::get('transactions', [TransactionController::class, 'myTransactions']);
-//     Route::get('royalties', [RoyaltyController::class, 'myRoyalties']);
-//     Route::get('revenues', [RevenueController::class, 'myRevenues']);
-//     Route::get('technical-requests', [TechnicalRequestController::class, 'myRequests']);
-
-//     // Statistics for franchise owner
-//     Route::get('statistics', [FranchiseController::class, 'myStatistics']);
-// });
 
 // Franchisor routes (requires franchisor role)
 Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')->group(function () {
@@ -363,9 +319,6 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('v1/franchisor')-
     Route::get('units', [FranchisorController::class, 'myUnits']);
     Route::get('units/statistics', [FranchisorController::class, 'unitsStatistics']);
     Route::get('units/{unitId}/staff', [FranchisorController::class, 'getUnitStaff']);
-
-    // Task management for franchisor
-    Route::get('tasks', [TaskController::class, 'myTasks']);
 
     // Task management for franchisor
     Route::get('tasks', [TaskController::class, 'myTasks']);
@@ -577,34 +530,4 @@ Route::middleware(['auth:sanctum', 'role:sales'])->prefix('v1/sales')->group(fun
     Route::get('tasks', [TaskController::class, 'mySalesTasks']);
     Route::get('tasks/statistics', [TaskController::class, 'salesTasksStatistics']);
     Route::patch('tasks/{task}/status', [TaskController::class, 'updateSalesTaskStatus']);
-});
-
-// Admin routes (requires admin role)
-Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(function () {
-
-    // Dashboard endpoints
-    Route::get('dashboard/stats', [AdminController::class, 'dashboardStats']);
-    Route::get('dashboard/recent-users', [AdminController::class, 'recentUsers']);
-    Route::get('dashboard/chart-data', [AdminController::class, 'chartData']);
-
-    // User management endpoints
-    Route::get('users/franchisors', [AdminController::class, 'franchisors']);
-    Route::get('users/franchisees', [AdminController::class, 'franchisees']);
-    Route::get('users/sales', [AdminController::class, 'salesUsers']);
-
-    // User stats endpoints
-    Route::get('users/franchisors/stats', [AdminController::class, 'franchisorStats']);
-    Route::get('users/franchisees/stats', [AdminController::class, 'franchiseeStats']);
-    Route::get('users/sales/stats', [AdminController::class, 'salesStats']);
-
-    // User CRUD operations
-    Route::post('users', [AdminController::class, 'createUser']);
-    Route::put('users/{id}', [AdminController::class, 'updateUser']);
-    Route::delete('users/{id}', [AdminController::class, 'deleteUser']);
-    Route::post('users/{id}/reset-password', [AdminController::class, 'resetPassword']);
-
-    // Franchisee with unit creation
-    Route::post('franchisees-with-unit', [AdminController::class, 'createFranchiseeWithUnit']);
-
-    // Technical requests management routes moved to earlier in file to avoid conflicts
 });
