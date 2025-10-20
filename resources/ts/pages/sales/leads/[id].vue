@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
-import EditNoteModal from '@/components/franchisor/EditNoteModal.vue'
-import ViewNoteModal from '@/components/franchisor/ViewNoteModal.vue'
+import AddNoteDialog from '@/components/dialogs/notes/AddNoteDialog.vue'
+import EditNoteDialog from '@/components/dialogs/notes/EditNoteDialog.vue'
+import ViewNoteDialog from '@/components/dialogs/notes/ViewNoteDialog.vue'
 import DeleteNoteDialog from '@/components/dialogs/notes/DeleteNoteDialog.vue'
 import { type Lead, leadApi } from '@/services/api/lead'
 import { avatarText } from '@core/utils/formatters'
@@ -10,9 +10,9 @@ const route = useRoute('sales-lead-view-id')
 const leadId = computed(() => Number(route.params.id))
 
 const currentTab = ref('overview')
-const isAddNoteModalVisible = ref(false)
-const isViewNoteModalVisible = ref(false)
-const isEditNoteModalVisible = ref(false)
+const isAddNoteDialogVisible = ref(false)
+const isViewNoteDialogVisible = ref(false)
+const isEditNoteDialogVisible = ref(false)
 const isDeleteNoteDialogVisible = ref(false)
 const selectedNote = ref<any>(null)
 const noteToDelete = ref<number | null>(null)
@@ -123,12 +123,12 @@ const getExcerpt = (text: string, maxLength: number = 150) => {
 
 const viewNote = (note: any) => {
   selectedNote.value = note
-  isViewNoteModalVisible.value = true
+  isViewNoteDialogVisible.value = true
 }
 
 const editNote = (note: any) => {
   selectedNote.value = { ...note }
-  isEditNoteModalVisible.value = true
+  isEditNoteDialogVisible.value = true
 }
 
 const confirmDeleteNote = (noteId: number) => {
@@ -171,7 +171,7 @@ const deleteNote = async () => {
 const onNoteUpdated = async () => {
   // Refresh notes from API
   await fetchNotes()
-  isEditNoteModalVisible.value = false
+  isEditNoteDialogVisible.value = false
   console.log('Note updated successfully')
 }
 
@@ -727,7 +727,7 @@ const priorities = [
                 <VBtn
                   color="primary"
                   prepend-icon="tabler-plus"
-                  @click="isAddNoteModalVisible = true"
+                  @click="isAddNoteDialogVisible = true"
                 >
                   Add Note
                 </VBtn>
@@ -797,22 +797,22 @@ const priorities = [
       </VWindow>
     </template>
 
-    <!-- 👉 Add Note Modal -->
-    <AddNoteModal
-      v-model:is-dialog-visible="isAddNoteModalVisible"
+    <!-- 👉 Add Note Dialog -->
+    <AddNoteDialog
+      v-model:is-dialog-visible="isAddNoteDialogVisible"
       :lead-id="leadId"
       @note-added="onNoteAdded"
     />
 
-    <!-- 👉 View Note Modal -->
-    <ViewNoteModal
-      v-model:is-dialog-visible="isViewNoteModalVisible"
+    <!-- 👉 View Note Dialog -->
+    <ViewNoteDialog
+      v-model:is-dialog-visible="isViewNoteDialogVisible"
       :note="selectedNote"
     />
 
-    <!-- 👉 Edit Note Modal -->
-    <EditNoteModal
-      v-model:is-dialog-visible="isEditNoteModalVisible"
+    <!-- 👉 Edit Note Dialog -->
+    <EditNoteDialog
+      v-model:is-dialog-visible="isEditNoteDialogVisible"
       :note="selectedNote"
       @note-updated="onNoteUpdated"
     />

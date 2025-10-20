@@ -2,7 +2,7 @@
 import AssignLeadDialog from '@/components/dialogs/leads/AssignLeadDialog.vue'
 import ConvertLeadDialog from '@/components/dialogs/leads/ConvertLeadDialog.vue'
 import MarkAsLostDialog from '@/components/dialogs/leads/MarkAsLostDialog.vue'
-import AddNoteDialog from '@/components/dialogs/leads/AddNoteDialog.vue'
+import AddNoteDialog from '@/components/dialogs/notes/AddNoteDialog.vue'
 import ImportLeadsDialog from '@/components/dialogs/leads/ImportLeadsDialog.vue'
 import DeleteLeadDialog from '@/components/dialogs/leads/DeleteLeadDialog.vue'
 import { type Lead, leadApi } from '@/services/api/lead'
@@ -109,7 +109,7 @@ const fetchStats = async () => {
 }
 
 // 👉 Modal states
-const isAddNoteModalVisible = ref(false)
+const isAddNoteDialogVisible = ref(false)
 const selectedLeadForNote = ref<number | null>(null)
 const isImportDialogVisible = ref(false)
 const isDeleteDialogVisible = ref(false)
@@ -184,9 +184,9 @@ const openMarkAsLostModal = (leadId: number) => {
   isMarkAsLostModalVisible.value = true
 }
 
-const openAddNoteModal = (leadId: number) => {
+const openAddNoteDialog = (leadId: number) => {
   selectedLeadForNote.value = leadId
-  isAddNoteModalVisible.value = true
+  isAddNoteDialogVisible.value = true
 }
 
 // 👉 Delete lead
@@ -267,7 +267,7 @@ const onLeadMarkedLost = () => {
 
 const onNoteAdded = () => {
   fetchLeads()
-  isAddNoteModalVisible.value = false
+  isAddNoteDialogVisible.value = false
   selectedLeadForNote.value = null
 }
 
@@ -564,7 +564,7 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
                   <VListItemTitle>Mark as Lost</VListItemTitle>
                 </VListItem>
 
-                <VListItem @click="openAddNoteModal(item.id)">
+                <VListItem @click="openAddNoteDialog(item.id)">
                   <template #prepend>
                     <VIcon icon="tabler-note" />
                   </template>
@@ -616,7 +616,7 @@ watch([searchQuery, selectedStatus, selectedSource, selectedOwner], () => {
       @lead-marked-lost="onLeadMarkedLost" />
 
     <!-- 👉 Add Note Dialog -->
-    <AddNoteDialog v-model:is-dialog-visible="isAddNoteModalVisible" :lead-id="selectedLeadForNote || 0"
+    <AddNoteDialog v-model:is-dialog-visible="isAddNoteDialogVisible" :lead-id="selectedLeadForNote || 0"
       @note-added="onNoteAdded" />
   </section>
 </template>

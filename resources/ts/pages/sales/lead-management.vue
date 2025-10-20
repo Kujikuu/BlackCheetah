@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AddNoteModal from '@/components/franchisor/AddNoteModal.vue'
+import AddNoteDialog from '@/components/dialogs/notes/AddNoteDialog.vue'
 import ImportLeadsDialog from '@/components/dialogs/leads/ImportLeadsDialog.vue'
 import DeleteLeadDialog from '@/components/dialogs/leads/DeleteLeadDialog.vue'
 import { type Lead, type LeadStatistic, leadApi } from '@/services/api/lead'
@@ -9,7 +9,7 @@ const searchQuery = ref('')
 const selectedStatus = ref()
 const selectedSource = ref()
 const selectedOwner = ref()
-const isAddNoteModalVisible = ref(false)
+const isAddNoteDialogVisible = ref(false)
 const selectedLeadForNote = ref<number | null>(null)
 const isImportDialogVisible = ref(false)
 const isDeleteDialogVisible = ref(false)
@@ -277,9 +277,9 @@ const exportLeads = () => {
 }
 
 // 👉 Add note functionality
-const openAddNoteModal = (leadId: number) => {
+const openAddNoteDialog = (leadId: number) => {
   selectedLeadForNote.value = leadId
-  isAddNoteModalVisible.value = true
+  isAddNoteDialogVisible.value = true
 }
 
 const onNoteAdded = () => {
@@ -595,7 +595,7 @@ const navigateToAddLead = () => {
             <VIcon icon="tabler-dots-vertical" />
             <VMenu activator="parent">
               <VList>
-                <VListItem @click="openAddNoteModal(item.id)">
+                <VListItem @click="openAddNoteDialog(item.id)">
                   <template #prepend>
                     <VIcon icon="tabler-note" />
                   </template>
@@ -638,9 +638,9 @@ const navigateToAddLead = () => {
       @lead-deleted="onLeadDeleted"
     />
 
-    <!-- 👉 Add Note Modal -->
-    <AddNoteModal
-      v-model:is-dialog-visible="isAddNoteModalVisible"
+    <!-- 👉 Add Note Dialog -->
+    <AddNoteDialog
+      v-model:is-dialog-visible="isAddNoteDialogVisible"
       :lead-id="selectedLeadForNote || 0"
       @note-added="onNoteAdded"
     />
