@@ -6,7 +6,7 @@ import DeleteNoteDialog from '@/components/dialogs/notes/DeleteNoteDialog.vue'
 import { type Lead, leadApi } from '@/services/api/lead'
 import { avatarText } from '@core/utils/formatters'
 
-const route = useRoute('franchisor-lead-view-id')
+const route = useRoute('franchisor-leads-id')
 const leadId = computed(() => Number(route.params.id))
 
 const currentTab = ref('overview')

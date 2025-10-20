@@ -27,6 +27,8 @@ interface Emit {
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
+const downloadingAttachments = ref<Set<number>>(new Set())
+
 const dialogValue = computed({
   get: () => props.isDialogVisible,
   set: val => emit('update:isDialogVisible', val),
@@ -55,16 +57,65 @@ const formatFileSize = (bytes: number): string => {
   return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 
-const downloadAttachment = (attachment: Attachment) => {
-  // Create download link
-  const link = document.createElement('a')
+const downloadAttachment = async (attachment: Attachment, attachmentIndex: number) => {
+  if (!props.note) return
 
-  link.href = `/storage/${attachment.path}`
-  link.download = attachment.name
-  link.target = '_blank'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  // Add to downloading set
+  downloadingAttachments.value.add(attachmentIndex)
+
+  try {
+    // Get the access token from cookie for authentication
+    const accessToken = useCookie('accessToken').value
+    
+    if (!accessToken) {
+      console.error('No access token found')
+      return
+    }
+
+    // Use native fetch for proper blob handling with authentication
+    const response = await fetch(`/api/v1/notes/${props.note.id}/attachments/${attachmentIndex}/download`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/octet-stream',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Download failed:', response.status, errorText)
+      throw new Error(`Failed to download attachment: ${response.status}`)
+    }
+
+    // Get the blob from response
+    const blob = await response.blob()
+
+    // Create object URL and trigger download
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.download = attachment.name
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error downloading attachment:', error)
+    // Fallback to direct file access if API call fails
+    const link = document.createElement('a')
+    link.href = `/storage/${attachment.path}`
+    link.download = attachment.name
+    link.target = '_blank'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  } finally {
+    // Remove from downloading set
+    downloadingAttachments.value.delete(attachmentIndex)
+  }
 }
 
 const getFileIcon = (type: string): string => {
@@ -114,7 +165,6 @@ const getFileIcon = (type: string): string => {
               v-for="(attachment, index) in note.attachments"
               :key="index"
               cols="12"
-              md="6"
             >
               <VCard
                 variant="tonal"
@@ -138,7 +188,8 @@ const getFileIcon = (type: string): string => {
                   size="small"
                   variant="text"
                   color="primary"
-                  @click="downloadAttachment(attachment)"
+                  :loading="downloadingAttachments.has(index)"
+                  @click="downloadAttachment(attachment, index)"
                 >
                   <VIcon icon="tabler-download" />
                 </VBtn>

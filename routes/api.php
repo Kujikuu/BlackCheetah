@@ -139,6 +139,7 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
         Route::put('{note}', [NoteController::class, 'update']); // Update note
         Route::delete('{note}', [NoteController::class, 'destroy']); // Delete note
         Route::delete('{note}/attachments/{attachmentIndex}', [NoteController::class, 'removeAttachment']); // Remove attachment
+        Route::get('{note}/attachments/{attachmentIndex}/download', [NoteController::class, 'downloadAttachment']); // Download attachment
     });
 
     // Unit Management Routes

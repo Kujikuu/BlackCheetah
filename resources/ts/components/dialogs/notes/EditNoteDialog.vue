@@ -208,7 +208,6 @@ const getFileIcon = (type: string): string => {
                   v-for="(attachment, index) in editedNote.attachments"
                   :key="index"
                   cols="12"
-                  md="6"
                 >
                   <VCard
                     variant="tonal"

@@ -7,6 +7,7 @@ use App\Models\Lead;
 use App\Models\Note;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -252,5 +253,39 @@ class NoteController extends Controller
             'message' => 'Attachment removed successfully',
             'data' => $note,
         ]);
+    }
+
+    /**
+     * Download a note attachment.
+     */
+    public function downloadAttachment(Note $note, int $attachmentIndex): Response
+    {
+        // Check if user can access this note
+        if (! $this->canManageNote($note)) {
+            abort(403, 'Unauthorized to access this note');
+        }
+
+        $attachments = $note->attachments ?? [];
+
+        if (! isset($attachments[$attachmentIndex])) {
+            abort(404, 'Attachment not found');
+        }
+
+        $attachment = $attachments[$attachmentIndex];
+
+        if (! isset($attachment['path'])) {
+            abort(404, 'Attachment file not found');
+        }
+
+        $filePath = $attachment['path'];
+
+        if (! Storage::disk('public')->exists($filePath)) {
+            abort(404, 'Attachment file no longer exists');
+        }
+
+        $fullPath = Storage::disk('public')->path($filePath);
+        $fileName = $attachment['name'] ?? 'attachment';
+
+        return response()->download($fullPath, $fileName);
     }
 }
