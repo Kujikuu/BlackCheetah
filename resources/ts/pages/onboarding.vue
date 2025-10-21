@@ -8,13 +8,6 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import { onboardingApi } from '@/services/api'
 
-definePage({
-  meta: {
-    layout: 'blank',
-    requiresAuth: true,
-  },
-})
-
 const form = ref({
   name: '',
   phone: '',
@@ -51,9 +44,72 @@ const countries = [
 onMounted(async () => {
   try {
     const response = await onboardingApi.getStatus()
-    if (response.success && response.data.is_completed) {
+    if (response.success && response.data) {
+      // Pre-fill form with existing user data if available
+      if (response.data.user) {
+        form.value = {
+          name: response.data.user.name || '',
+          phone: response.data.user.phone || '',
+          country: response.data.user.country || '',
+          state: response.data.user.state || '',
+          city: response.data.user.city || '',
+          address: response.data.user.address || '',
+        }
+      }
+
       // If profile is already completed, redirect to dashboard
-      const userRole = userData.value?.role
+      if (response.data.profile_completed) {
+        const userRole = userData.value?.role
+        switch (userRole) {
+          case 'admin':
+            router.push('/admin/dashboard')
+            break
+          case 'franchisor':
+            router.push('/franchisor')
+            break
+          case 'franchisee':
+            router.push('/franchisee/dashboard/sales')
+            break
+          case 'sales':
+            router.push('/sales/lead-management')
+            break
+          default:
+            router.push('/')
+        }
+      }
+    }
+  }
+  catch (error) {
+    console.error('Failed to check onboarding status:', error)
+  }
+})
+
+const completeProfile = async () => {
+  loading.value = true
+  errorMessages.value = null
+
+  try {
+    console.log('Submitting onboarding form:', form.value)
+    const response = await onboardingApi.complete(form.value)
+    console.log('Onboarding response:', response)
+
+    if (response.success && response.data) {
+      console.log('Onboarding successful, updating user data...')
+      
+      // Update user data in cookie to reflect profile completion
+      const userDataCookie = useCookie<any>('userData')
+      if (userDataCookie.value) {
+        userDataCookie.value = {
+          ...userDataCookie.value,
+          profile_completed: true,
+          ...response.data.user,
+        }
+      }
+
+      console.log('Redirecting to dashboard...')
+      
+      // Redirect directly to role-specific dashboard
+      const userRole = userDataCookie.value?.role
       switch (userRole) {
         case 'admin':
           router.push('/admin/dashboard')
@@ -71,49 +127,15 @@ onMounted(async () => {
           router.push('/')
       }
     }
-  }
-  catch (error) {
-    console.error('Failed to check onboarding status:', error)
-  }
-})
-
-const completeProfile = async () => {
-  loading.value = true
-  errorMessages.value = null
-
-  try {
-    const response = await onboardingApi.complete(form.value)
-
-    // Update user data in cookie to reflect profile completion
-    const userDataCookie = useCookie<any>('userData')
-    if (userDataCookie.value) {
-      userDataCookie.value = {
-        ...userDataCookie.value,
-        profile_completed: true,
-        ...response.user,
+    else {
+      console.error('Onboarding failed:', response)
+      errorMessages.value = {
+        general: [response.message || 'Failed to complete profile. Please try again.'],
       }
-    }
-
-    // Redirect directly to role-specific dashboard
-    const userRole = userDataCookie.value?.role
-    switch (userRole) {
-      case 'admin':
-        router.push('/admin/dashboard')
-        break
-      case 'franchisor':
-        router.push('/franchisor')
-        break
-      case 'franchisee':
-        router.push('/franchisee/dashboard/sales')
-        break
-      case 'sales':
-        router.push('/sales/lead-management')
-        break
-      default:
-        router.push('/')
     }
   }
   catch (e: any) {
+    console.error('Onboarding error:', e)
     const data = e?.data || e?.response?._data || null
     if (data?.errors) {
       errorMessages.value = data.errors

@@ -131,7 +131,7 @@ export class UsersApi {
     sort_by?: string; 
     page?: number; 
     per_page?: number;
-  } = {}): Promise<ApiResponse<any[]>> {
+  } = {}): Promise<ApiResponse<{ data: any[]; total: number; per_page: number; current_page: number; last_page: number }>> {
     const params = new URLSearchParams()
     if (filters.search) params.append('search', filters.search)
     if (filters.status) params.append('status', filters.status)

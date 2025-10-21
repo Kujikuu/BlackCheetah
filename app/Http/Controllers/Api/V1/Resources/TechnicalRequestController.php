@@ -282,4 +282,12 @@ class TechnicalRequestController extends BaseResourceController
             'total' => $requests->total(),
         ], 'Technical requests retrieved successfully');
     }
+
+    /**
+     * Get franchisee's unit technical requests (alias for myRequests for franchisee route compatibility)
+     */
+    public function myUnitRequests(Request $request): JsonResponse
+    {
+        return $this->myRequests($request);
+    }
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ConfirmDeleteDialog from '@/components/dialogs/common/ConfirmDeleteDialog.vue'
 import { usersApi } from '@/services/api'
+import { avatarText } from '@core/utils/formatters'
 
 // 👉 Interfaces
 interface Lead {
@@ -114,16 +115,28 @@ const fetchSalesAssociates = async () => {
       order_by: orderBy.value || undefined,
     })
 
-    if (response.success) {
+    if (response.success && response.data) {
+      // API returns paginated data: { data: { data: [...], total: 5 } }
+      const paginatedData = response.data as any
+      
       salesAssociatesData.value = {
-        associates: response.data || [],
-        total: response.total || 0,
+        associates: paginatedData.data || [],
+        total: paginatedData.total || 0,
+      }
+    }
+    else {
+      salesAssociatesData.value = {
+        associates: [],
+        total: 0,
       }
     }
   }
   catch (error) {
     console.error('Error fetching sales associates:', error)
-
+    salesAssociatesData.value = {
+      associates: [],
+      total: 0,
+    }
     // Handle error - show toast notification
   }
   finally {
@@ -223,7 +236,7 @@ const viewAssociate = async (id: number | null) => {
   if (id === null)
     return
   const associate = associates.value.find(a => a.id === id)
-  if (associate) {
+  if (associate && associate.id !== null) {
     try {
       isLoading.value = true
 
@@ -388,6 +401,35 @@ const exportToPDF = () => {
   // TODO: Implement PDF export logic
 }
 
+// 👉 Bulk delete associates
+const bulkDelete = async () => {
+  if (selectedRows.value.length === 0)
+    return
+
+  try {
+    isSubmitting.value = true
+
+    // Delete each associate sequentially
+    for (const associateId of selectedRows.value) {
+      if (associateId !== null) {
+        await usersApi.deleteSalesAssociate(associateId)
+      }
+    }
+
+    // Refresh the list
+    await fetchSalesAssociates()
+    selectedRows.value = []
+
+    console.log('Sales associates deleted successfully')
+  }
+  catch (error) {
+    console.error('Error bulk deleting associates:', error)
+  }
+  finally {
+    isSubmitting.value = false
+  }
+}
+
 // Event handler for dialog components
 const onDeleteConfirm = async () => {
   await deleteAssociate()
@@ -395,6 +437,12 @@ const onDeleteConfirm = async () => {
 
 // 👉 Lifecycle hooks
 onMounted(() => {
+  fetchSalesAssociates()
+})
+
+// 👉 Watchers - refresh data when filters change
+watch([searchQuery, selectedStatus], () => {
+  page.value = 1 // Reset to first page when filters change
   fetchSalesAssociates()
 })
 </script>
@@ -598,7 +646,7 @@ onMounted(() => {
                   <VListItemTitle>Edit</VListItemTitle>
                 </VListItem>
 
-                <VListItem @click="confirmDelete(item.id)">
+                <VListItem @click="item.id !== null && confirmDelete(item.id)">
                   <template #prepend>
                     <VIcon icon="tabler-trash" />
                   </template>

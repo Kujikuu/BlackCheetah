@@ -41,6 +41,9 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
           return '/v1/sales/tasks'
         case 'franchisor':
           return '/v1/franchisor/tasks'
+        case 'unit-manager':
+        case 'franchisee':
+          return '/v1/unit-manager/tasks'
         default:
           return '/v1/tasks'
       }
@@ -48,7 +51,7 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
     case 'royalties':
       switch (userRole) {
         case 'franchisor':
-          return '/v1/franchisor/royalties'
+          return '/v1/franchisor/financial/royalties'
         case 'unit-manager':
         case 'franchisee':
           return '/v1/unit-manager/royalties'
@@ -57,8 +60,13 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
       }
 
     case 'technical-requests':
-      // Technical requests don't have role-based routing currently
-      return '/v1/technical-requests'
+      switch (userRole) {
+        case 'unit-manager':
+        case 'franchisee':
+          return '/v1/unit-manager/technical-requests'
+        default:
+          return '/v1/technical-requests'
+      }
 
     case 'units':
       switch (userRole) {

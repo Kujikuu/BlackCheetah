@@ -348,8 +348,6 @@ class MinimalDataSeeder extends Seeder
 
         foreach ($requesters as $i => $requester) {
             TechnicalRequest::create([
-                'franchise_id' => $franchise->id,
-                'unit_id' => $unit->id,
                 'requester_id' => $requester->id,
                 'title' => $issues[$i],
                 'description' => 'Detailed description of ' . $issues[$i],
@@ -361,7 +359,7 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created ' . count($requesters) . ' technical requests');
 
-        // Create 5 Leads (assigned to sales associates)
+        // Create 7 Leads (2 for main sales user, 5 for sales associates)
         $this->command->info('Creating leads...');
         $leadNames = [
             ['Ahmed', 'Al-Rashid'],
@@ -369,14 +367,20 @@ class MinimalDataSeeder extends Seeder
             ['Mohammed', 'Abdullah'],
             ['Sara', 'Al-Masri'],
             ['Omar', 'Al-Hashimi'],
+            ['Khaled', 'Al-Faisal'],
+            ['Nora', 'Al-Zahrani'],
         ];
 
         foreach ($leadNames as $i => $name) {
-            // Assign each lead to a different sales associate
-            $assignedSales = $salesAssociates[$i % count($salesAssociates)];
+            // Assign first 2 leads to main sales user, rest to sales associates
+            if ($i < 2) {
+                $assignedSales = $sales;
+            } else {
+                $assignedSales = $salesAssociates[($i - 2) % count($salesAssociates)];
+            }
 
             // Create leads with varied timestamps (from 1 hour to 30 days ago)
-            $daysAgo = [0, 1, 3, 7, 15][$i]; // Varied days ago
+            $daysAgo = min($i, 15); // Varied days ago
             $createdAt = Carbon::now()->subDays($daysAgo)->subHours(rand(0, 23));
 
             Lead::create([
@@ -398,7 +402,7 @@ class MinimalDataSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('✅ Created 5 leads (distributed among sales associates)');
+        $this->command->info('✅ Created 7 leads (2 for main sales user, 5 for sales associates)');
 
         // Create 5 Documents
         $this->command->info('Creating documents...');
@@ -633,7 +637,7 @@ class MinimalDataSeeder extends Seeder
         $this->command->info('  - 5 Expenses');
         $this->command->info('  - 5 Royalties');
         $this->command->info('  - 5 Technical Requests');
-        $this->command->info('  - 5 Leads (distributed among sales associates)');
+        $this->command->info('  - 7 Leads (2 for sales user, 5 for sales associates)');
         $this->command->info('  - 5 Documents');
         $this->command->info('  - 5 Staff');
         $this->command->info('  - 5 Customer Reviews');

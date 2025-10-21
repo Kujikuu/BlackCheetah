@@ -79,14 +79,20 @@ const fetchLeads = async () => {
       orderBy: orderBy.value,
     })
 
-    if (response.success) {
-      leadsData.value = response.leads
-      totalLeads.value = response.total
+    if (response.success && response.data) {
+      leadsData.value = response.data.leads || []
+      totalLeads.value = response.data.total || 0
+    }
+    else {
+      leadsData.value = []
+      totalLeads.value = 0
     }
   }
   catch (err: any) {
     error.value = err.message || 'Failed to fetch leads'
     console.error('Error fetching leads:', err)
+    leadsData.value = []
+    totalLeads.value = 0
   }
   finally {
     loading.value = false

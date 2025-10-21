@@ -5,11 +5,17 @@ const API_URL = '/v1/onboarding'
 
 // Onboarding types
 export interface OnboardingStatus {
-  step: number
-  is_completed: boolean
-  can_proceed: boolean
-  required_fields?: string[]
-  message?: string
+  requires_onboarding: boolean
+  profile_completed: boolean
+  user?: {
+    name: string
+    email: string
+    phone: string | null
+    country: string | null
+    state: string | null
+    city: string | null
+    address: string | null
+  }
 }
 
 export interface OnboardingStep {

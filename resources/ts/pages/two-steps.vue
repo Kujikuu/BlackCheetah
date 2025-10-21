@@ -8,13 +8,6 @@ import { themeConfig } from '@themeConfig'
 import { useAbility } from '@/plugins/casl/useAbility'
 import { authApi } from '@/services/api'
 
-definePage({
-  meta: {
-    layout: 'blank',
-    public: true,
-  },
-})
-
 const { smAndUp } = useDisplay()
 
 const router = useRouter()

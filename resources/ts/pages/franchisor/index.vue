@@ -2,14 +2,6 @@
 import { SaudiRiyal } from 'lucide-vue-next'
 import { useFranchisorDashboard } from '@/composables/useFranchisorDashboard'
 
-// 👉 Add route meta for CASL protection
-definePage({
-  meta: {
-    action: 'read',
-    subject: 'FranchisorDashboard',
-  },
-})
-
 // 👉 Router
 const router = useRouter()
 

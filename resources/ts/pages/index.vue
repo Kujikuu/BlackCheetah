@@ -1,10 +1,5 @@
 <script setup lang="ts">
 // This is the root route handler that redirects users to their role-specific dashboard
-definePage({
-  meta: {
-    public: false, // Requires authentication
-  },
-})
 
 const router = useRouter()
 const userData = useCookie('userData')

@@ -36,13 +36,17 @@ export interface LeadStatistic {
   iconColor: string
 }
 
-export interface LeadsResponse extends ApiResponse<{
-  leads: Lead[]
-  total: number
-  currentPage: number
-  perPage: number
-  lastPage: number
-}> {}
+export interface LeadsResponse {
+  success: boolean
+  data: {
+    leads: Lead[]
+    total: number
+    currentPage: number
+    perPage: number
+    lastPage: number
+  }
+  message?: string
+}
 
 export interface StatisticsResponse extends ApiResponse<LeadStatistic[]> {}
 

@@ -59,7 +59,10 @@ export const useTaskUsers = () => {
       const response = await usersApi.getSalesAssociates()
 
       if (response.success && response.data) {
-        salesUsers.value = response.data.map((user: any) => ({
+        // API returns paginated data, handle both array and paginated response
+        const usersArray = Array.isArray(response.data) ? response.data : response.data.data || []
+        
+        salesUsers.value = usersArray.map((user: any) => ({
           id: user.id,
           name: user.name,
           email: user.email,

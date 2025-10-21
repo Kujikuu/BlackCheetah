@@ -6,7 +6,7 @@ import DeleteNoteDialog from '@/components/dialogs/notes/DeleteNoteDialog.vue'
 import { type Lead, leadApi, notesApi, usersApi } from '@/services/api'
 import { avatarText } from '@core/utils/formatters'
 
-const route = useRoute('franchisor-leads-id')
+const route = useRoute()
 const leadId = computed(() => Number(route.params.id))
 
 const currentTab = ref('overview')
@@ -226,7 +226,10 @@ const fetchSalesAssociates = async () => {
     const response = await usersApi.getSalesAssociates()
 
     if (response.success) {
-      salesAssociates.value = response.data.map((user) => ({
+      // API returns paginated data, handle both array and paginated response
+      const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
+      
+      salesAssociates.value = associatesArray.map((user: any) => ({
         title: user.name,
         value: user.name,
       }))

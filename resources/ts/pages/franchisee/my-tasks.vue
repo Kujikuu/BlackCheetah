@@ -19,11 +19,19 @@ const loadTasks = async () => {
     isLoading.value = true
 
     const response = await franchiseeDashboardApi.getMyTasks()
-    if (response.success)
-      allTasksData.value = response.data
+    if (response.success && response.data) {
+      // Handle both array and paginated response
+      allTasksData.value = Array.isArray(response.data) 
+        ? response.data 
+        : response.data.data || []
+    }
+    else {
+      allTasksData.value = []
+    }
   }
   catch (error) {
     console.error('Error loading tasks:', error)
+    allTasksData.value = []
   }
   finally {
     isLoading.value = false

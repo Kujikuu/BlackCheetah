@@ -1,11 +1,4 @@
 <script setup lang="ts">
-definePage({
-  alias: '/pages/misc/not-found/:error(.*)',
-  meta: {
-    layout: 'blank',
-    public: true,
-  },
-})
 </script>
 
 <template>

@@ -39,7 +39,7 @@ const filters = [
 
 // 👉 Timeline Item Interface
 interface TimelineItem {
-  id: number
+  id: number | string
   title: string
   description: string
   week: string
@@ -57,8 +57,8 @@ interface Stats {
   color: string
 }
 
-// 👉 API Response Interface
-interface ApiResponse {
+// 👉 Local Timeline API Response Interface (to avoid conflict with imported ApiResponse)
+interface TimelineApiResponse {
   success: boolean
   data: {
     stats: {
@@ -136,9 +136,9 @@ const formatDate = (dateString: string): string => {
 
 // 👉 Watch for API data changes
 watch(timelineApiData, newData => {
-  const apiData = newData as ApiResponse<DashboardTimelineData>
+  const apiData = newData as ApiResponse<DashboardTimelineData> | TimelineApiResponse
   if (apiData?.success && apiData?.data) {
-    const data = apiData.data
+    const data = apiData.data as any
 
     // Update timeline items with null/undefined checks
     timelineItems.value = Array.isArray(data.timeline)
@@ -173,41 +173,90 @@ const filteredTimelineItems = computed(() => {
   return timelineItems.value.filter(item => item.status === selectedFilter.value)
 })
 
+// 👉 Helper to extract ID from composite ID
+const extractId = (compositeId: string | number): number => {
+  if (typeof compositeId === 'number') return compositeId
+  const parts = compositeId.toString().split('-')
+  return parseInt(parts[parts.length - 1])
+}
+
+// 👉 Helper to extract type from composite ID
+const extractType = (compositeId: string | number): string => {
+  if (typeof compositeId === 'number') return 'unknown'
+  const parts = compositeId.toString().split('-')
+  return parts[0]
+}
+
 // 👉 Action handlers
 const viewDetails = (item: TimelineItem) => {
-  // Navigate to appropriate detail page based on item type
-  if (item.description.includes('Lead')) {
-    // Navigate to leads page with specific lead
-    router.push('/franchisor/dashboard/leads')
-  }
-  else if (item.description.includes('Task')) {
-    // Navigate to operations/tasks page
-    router.push('/franchisor/dashboard/operations')
-  }
-  else if (item.description.includes('Technical')) {
-    // Navigate to technical requests page
-    router.push('/franchisor/dashboard/operations')
+  const type = extractType(item.id)
+  const id = extractId(item.id)
+  
+  // Navigate to appropriate detail page based on activity type
+  switch (type) {
+    case 'unit':
+      router.push('/franchisor/my-units')
+      break
+    case 'royalty':
+      router.push('/franchisor/royalty-management')
+      break
+    case 'tech':
+      router.push('/franchisor/technical-requests')
+      break
+    case 'lead':
+      router.push(`/franchisor/leads/${id}`)
+      break
+    case 'task':
+      router.push('/franchisor/tasks-management')
+      break
+    case 'doc':
+      router.push('/franchisor/franchise')
+      break
+    case 'review':
+      router.push('/franchisor/my-units')
+      break
+    default:
+      router.push('/franchisor')
   }
 }
 
 const takeAction = (item: TimelineItem) => {
-  // Show action dialog or navigate to action page
-  if (item.description.includes('Lead'))
-    router.push('/franchisor/dashboard/leads')
-  else if (item.description.includes('Task'))
-    router.push('/franchisor/dashboard/operations')
-  else
-    router.push('/franchisor/dashboard/operations')
+  const type = extractType(item.id)
+  const id = extractId(item.id)
+  
+  // Navigate based on activity type
+  switch (type) {
+    case 'royalty':
+      router.push('/franchisor/royalty-management')
+      break
+    case 'tech':
+      router.push('/franchisor/technical-requests')
+      break
+    case 'lead':
+      router.push(`/franchisor/leads/${id}`)
+      break
+    case 'task':
+      router.push('/franchisor/tasks-management')
+      break
+    default:
+      viewDetails(item)
+  }
 }
 
 const reschedule = (item: TimelineItem) => {
-  // Show reschedule dialog or navigate to reschedule page
-  if (item.description.includes('Lead'))
-    router.push('/franchisor/dashboard/leads')
-  else if (item.description.includes('Task'))
-    router.push('/franchisor/dashboard/operations')
-  else
-    router.push('/franchisor/dashboard/operations')
+  const type = extractType(item.id)
+  
+  // Navigate based on activity type
+  switch (type) {
+    case 'task':
+      router.push('/franchisor/tasks-management')
+      break
+    case 'lead':
+      router.push('/franchisor/lead-management')
+      break
+    default:
+      viewDetails(item)
+  }
 }
 
 // 👉 Fetch data on component mount

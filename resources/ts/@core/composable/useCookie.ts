@@ -20,6 +20,8 @@ const CookieDefaults: CookieOptions<any> = {
   watch: true,
   decode: val => destr(decodeURIComponent(val)),
   encode: val => encodeURIComponent(typeof val === 'string' ? val : JSON.stringify(val)),
+  secure: typeof window !== 'undefined' && window.location.protocol === 'https:',
+  sameSite: 'lax',
 }
 
 export const useCookie = <T = string | null | undefined>(name: string, _opts?: CookieOptions<T>): CookieRef<T> => {
@@ -30,7 +32,7 @@ export const useCookie = <T = string | null | undefined>(name: string, _opts?: C
 
   watch(cookie, () => {
     document.cookie = serializeCookie(name, cookie.value, opts)
-  })
+  }, { flush: 'sync' })
 
   return cookie as CookieRef<T>
 }

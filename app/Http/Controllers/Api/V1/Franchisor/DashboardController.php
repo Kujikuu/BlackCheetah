@@ -170,51 +170,194 @@ class DashboardController extends BaseResourceController
             // Recent activities (last 30 days)
             $activities = collect();
 
-            // Recent leads
+            // 1. Units - Opening and milestones
+            $recentUnits = \App\Models\Unit::where('franchise_id', $franchise->id)
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($unit) {
+                    $status = 'completed';
+                    if ($unit->status === 'active' && $unit->opening_date && Carbon::parse($unit->opening_date)->isFuture()) {
+                        $status = 'scheduled';
+                    }
+                    
+                    return [
+                        'id' => 'unit-'.$unit->id,
+                        'title' => "New Unit: {$unit->unit_name}",
+                        'description' => "Unit opened in {$unit->city}, {$unit->country}",
+                        'week' => 'Week '.Carbon::parse($unit->created_at)->weekOfYear,
+                        'date' => Carbon::parse($unit->created_at)->format('M d, Y'),
+                        'status' => $status,
+                        'icon' => 'tabler-building-store',
+                        'created_at' => $unit->created_at->toISOString(),
+                    ];
+                });
+
+            // 2. Royalty Payments
+            $recentRoyalties = \App\Models\Royalty::where('franchise_id', $franchise->id)
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($royalty) {
+                    $status = match($royalty->status) {
+                        'paid' => 'completed',
+                        'pending' => Carbon::parse($royalty->due_date)->isPast() ? 'overdue' : 'scheduled',
+                        default => 'scheduled',
+                    };
+                    
+                    return [
+                        'id' => 'royalty-'.$royalty->id,
+                        'title' => "Royalty Payment - ".number_format($royalty->total_amount, 2)." SAR",
+                        'description' => "Payment for period: ".Carbon::parse($royalty->period_start_date)->format('M Y'),
+                        'week' => 'Week '.Carbon::parse($royalty->created_at)->weekOfYear,
+                        'date' => Carbon::parse($royalty->created_at)->format('M d, Y'),
+                        'status' => $status,
+                        'icon' => 'tabler-currency-dollar',
+                        'created_at' => $royalty->created_at->toISOString(),
+                    ];
+                });
+
+            // 3. Technical Requests
+            $recentTechnicalRequests = \App\Models\TechnicalRequest::whereHas('requester', function ($query) use ($franchise) {
+                    $query->where('franchise_id', $franchise->id);
+                })
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($request) {
+                    $status = match($request->status) {
+                        'resolved', 'closed' => 'completed',
+                        'open', 'in_progress' => 'scheduled',
+                        default => 'scheduled',
+                    };
+                    
+                    return [
+                        'id' => 'tech-'.$request->id,
+                        'title' => "Technical Request: {$request->title}",
+                        'description' => "Category: {$request->category} - Priority: {$request->priority}",
+                        'week' => 'Week '.Carbon::parse($request->created_at)->weekOfYear,
+                        'date' => Carbon::parse($request->created_at)->format('M d, Y'),
+                        'status' => $status,
+                        'icon' => 'tabler-tool',
+                        'created_at' => $request->created_at->toISOString(),
+                    ];
+                });
+
+            // 4. Recent leads
             $recentLeads = Lead::where('franchise_id', $franchise->id)
                 ->where('created_at', '>=', Carbon::now()->subDays(30))
                 ->orderBy('created_at', 'desc')
-                ->limit(10)
                 ->get()
                 ->map(function ($lead) {
+                    $status = match($lead->status) {
+                        'converted' => 'completed',
+                        'qualified' => 'scheduled',
+                        'lost' => 'overdue',
+                        default => 'scheduled',
+                    };
+                    
                     return [
-                        'id' => $lead->id,
-                        'title' => "New lead: {$lead->first_name} {$lead->last_name}",
-                        'description' => "Lead from {$lead->lead_source}",
+                        'id' => 'lead-'.$lead->id,
+                        'title' => "New Lead: {$lead->first_name} {$lead->last_name}",
+                        'description' => "Lead from {$lead->lead_source} - Status: {$lead->status}",
                         'week' => 'Week '.Carbon::parse($lead->created_at)->weekOfYear,
                         'date' => Carbon::parse($lead->created_at)->format('M d, Y'),
-                        'status' => $lead->status === 'new' ? 'scheduled' : ($lead->status === 'converted' ? 'completed' : $lead->status),
+                        'status' => $status,
                         'icon' => 'tabler-user-plus',
                         'created_at' => $lead->created_at->toISOString(),
                     ];
                 });
 
-            // Recent tasks
-            $recentTasks = Task::where('created_by', $user->id)
+            // 5. Recent tasks
+            $recentTasks = Task::where('franchise_id', $franchise->id)
                 ->where('created_at', '>=', Carbon::now()->subDays(30))
                 ->orderBy('created_at', 'desc')
-                ->limit(10)
                 ->get()
                 ->map(function ($task) {
+                    $status = match($task->status) {
+                        'completed' => 'completed',
+                        'cancelled' => 'overdue',
+                        default => Carbon::parse($task->due_date ?? now())->isPast() ? 'overdue' : 'scheduled',
+                    };
+                    
                     return [
-                        'id' => $task->id,
-                        'title' => "Task assigned: {$task->title}",
-                        'description' => $task->description,
+                        'id' => 'task-'.$task->id,
+                        'title' => "Task: {$task->title}",
+                        'description' => $task->description ?? "Priority: {$task->priority}",
                         'week' => 'Week '.Carbon::parse($task->created_at)->weekOfYear,
                         'date' => Carbon::parse($task->created_at)->format('M d, Y'),
-                        'status' => $task->status === 'pending' ? 'scheduled' : $task->status,
+                        'status' => $status,
                         'icon' => 'tabler-checklist',
                         'created_at' => $task->created_at->toISOString(),
                     ];
                 });
 
+            // 6. Documents uploaded
+            $recentDocuments = \App\Models\Document::where('franchise_id', $franchise->id)
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($document) {
+                    return [
+                        'id' => 'doc-'.$document->id,
+                        'title' => "Document Uploaded: {$document->name}",
+                        'description' => "Type: {$document->type}",
+                        'week' => 'Week '.Carbon::parse($document->created_at)->weekOfYear,
+                        'date' => Carbon::parse($document->created_at)->format('M d, Y'),
+                        'status' => 'completed',
+                        'icon' => 'tabler-file-text',
+                        'created_at' => $document->created_at->toISOString(),
+                    ];
+                });
+
+            // 7. Reviews received
+            $recentReviews = \App\Models\Review::whereHas('unit', function ($query) use ($franchise) {
+                    $query->where('franchise_id', $franchise->id);
+                })
+                ->where('created_at', '>=', Carbon::now()->subDays(30))
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($review) {
+                    $status = $review->rating >= 4 ? 'completed' : 'scheduled';
+                    
+                    return [
+                        'id' => 'review-'.$review->id,
+                        'title' => "Customer Review: {$review->rating}/5 stars",
+                        'description' => "By {$review->customer_name} - {$review->sentiment}",
+                        'week' => 'Week '.Carbon::parse($review->created_at)->weekOfYear,
+                        'date' => Carbon::parse($review->created_at)->format('M d, Y'),
+                        'status' => $status,
+                        'icon' => 'tabler-star',
+                        'created_at' => $review->created_at->toISOString(),
+                    ];
+                });
+
             // Combine and sort all activities
-            $allActivities = $recentLeads->merge($recentTasks)
+            $allActivities = $recentUnits
+                ->merge($recentRoyalties)
+                ->merge($recentTechnicalRequests)
+                ->merge($recentLeads)
+                ->merge($recentTasks)
+                ->merge($recentDocuments)
+                ->merge($recentReviews)
                 ->sortByDesc('created_at')
+                ->take(50) // Limit to 50 most recent activities
                 ->values();
 
+            // Calculate statistics
+            $totalMilestones = $allActivities->count();
+            $completed = $allActivities->where('status', 'completed')->count();
+            $scheduled = $allActivities->where('status', 'scheduled')->count();
+            $overdue = $allActivities->where('status', 'overdue')->count();
+
             return $this->successResponse([
-                'activities' => $allActivities,
+                'timeline' => $allActivities,
+                'stats' => [
+                    'total_milestones' => $totalMilestones,
+                    'completed' => $completed,
+                    'scheduled' => $scheduled,
+                    'overdue' => $overdue,
+                ],
             ], 'Timeline data retrieved successfully');
         } catch (\Exception $e) {
             return $this->errorResponse('Failed to fetch timeline data', 500, $e->getMessage());

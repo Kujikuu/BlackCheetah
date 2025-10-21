@@ -54,6 +54,11 @@ class LeadController extends BaseResourceController
             $query->where('franchise_id', $franchiseId);
         }
 
+        // Sales users should only see their assigned leads
+        if ($user->hasRole('sales')) {
+            $query->where('assigned_to', $user->id);
+        }
+
         // Apply filters
         if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);
@@ -260,12 +265,21 @@ class LeadController extends BaseResourceController
             $user = Auth::user();
             $franchiseId = $this->getUserFranchiseId($user);
 
-            if (! $franchiseId) {
+            if (! $franchiseId && !$user->hasRole('admin')) {
                 return $this->notFoundResponse('No franchise found for this user');
             }
 
-            $query = Lead::where('franchise_id', $franchiseId)
-                ->with(['assignedUser:id,name,email']);
+            $query = Lead::with(['assignedUser:id,name,email']);
+
+            // Filter by franchise
+            if ($franchiseId) {
+                $query->where('franchise_id', $franchiseId);
+            }
+
+            // Sales users should only see their assigned leads
+            if ($user->hasRole('sales')) {
+                $query->where('assigned_to', $user->id);
+            }
 
             // Apply search filter
             if ($request->has('search') && $request->search) {
@@ -348,6 +362,11 @@ class LeadController extends BaseResourceController
         // Scope to user's franchise (unless admin)
         if ($franchiseId) {
             $query->where('franchise_id', $franchiseId);
+        }
+
+        // Sales users should only see their assigned leads statistics
+        if ($user->hasRole('sales')) {
+            $query->where('assigned_to', $user->id);
         }
 
         $totalLeads = (clone $query)->count();

@@ -41,15 +41,21 @@ const fetchTasks = async () => {
       taskApi.getStatistics(),
     ])
 
-    if (tasksResponse.success)
-      allTasksData.value = tasksResponse.data
+    if (tasksResponse.success && tasksResponse.data) {
+      // Handle both array and paginated response
+      allTasksData.value = Array.isArray(tasksResponse.data) 
+        ? tasksResponse.data 
+        : tasksResponse.data.data || []
+    }
 
-    if (statsResponse.success)
+    if (statsResponse.success && statsResponse.data) {
       statistics.value = statsResponse.data
+    }
   }
   catch (err: any) {
     console.error('Error fetching tasks:', err)
     error.value = err.message || 'Failed to load tasks'
+    allTasksData.value = []
   }
   finally {
     isLoading.value = false

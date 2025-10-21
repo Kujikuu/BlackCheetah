@@ -120,14 +120,17 @@ export const useFranchisorDashboard = () => {
       const response = await usersApi.getSalesAssociates()
 
       if (response.success && response.data) {
+        // API returns paginated data, so we need to access response.data.data
+        const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
+        
         // Map the API response to match the composable's expected interface
-        salesAssociates.value = response.data.map((associate: ApiSalesAssociate) => ({
+        salesAssociates.value = associatesArray.map((associate: any) => ({
           id: associate.id,
           name: associate.name,
           email: associate.email,
-          phone: '', // Default empty string since phone is not in API response
+          phone: associate.phone || '', // Use phone from API or default to empty string
           status: (associate.status as 'active' | 'inactive') || 'active',
-          leads_count: 0, // Default value since it's not in the API response
+          leads_count: associate.assignedLeads || 0, // Use assignedLeads from API
           created_at: associate.created_at,
         }))
       }

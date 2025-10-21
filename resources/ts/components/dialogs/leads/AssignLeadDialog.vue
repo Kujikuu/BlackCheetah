@@ -40,8 +40,11 @@ const fetchSalesAssociates = async () => {
     const response = await usersApi.getSalesAssociates()
 
     if (response.success) {
+      // API returns paginated data, handle both array and paginated response
+      const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
+      
       // Transform the data to match the expected format
-      salesAssociates.value = response.data.map((associate) => ({
+      salesAssociates.value = associatesArray.map((associate: any) => ({
         id: associate.id,
         name: associate.name,
         email: associate.email,

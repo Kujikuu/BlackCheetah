@@ -6,13 +6,6 @@ import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 
-definePage({
-  meta: {
-    layout: 'blank',
-    public: true,
-  },
-})
-
 const { smAndUp } = useDisplay()
 
 const form = ref({

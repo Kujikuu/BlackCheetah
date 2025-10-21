@@ -73,9 +73,9 @@ const fetchLeads = async () => {
 
     const response = await leadApi.getLeads(filters)
 
-    if (response.success) {
-      leads.value = response.leads || []
-      totalLeads.value = response.total || 0
+    if (response.success && response.data) {
+      leads.value = response.data.leads || []
+      totalLeads.value = response.data.total || 0
     }
   }
   catch (error) {
@@ -141,8 +141,11 @@ const fetchSalesAssociates = async () => {
   try {
     const response = await usersApi.getSalesAssociates()
 
-    if (response.success)
-      salesAssociates.value = response.data || []
+    if (response.success) {
+      // API returns paginated data, handle both array and paginated response
+      const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
+      salesAssociates.value = associatesArray
+    }
   }
   catch (error) {
     console.error('Error fetching sales associates:', error)
@@ -151,7 +154,7 @@ const fetchSalesAssociates = async () => {
 
 const owners = computed(() => {
   return salesAssociates.value.map((associate: any) => ({
-    title: `${associate.first_name} ${associate.last_name}`,
+    title: associate.name || `${associate.first_name || ''} ${associate.last_name || ''}`.trim(),
     value: associate.id.toString(),
   }))
 })
