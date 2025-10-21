@@ -1,22 +1,6 @@
 import { $api } from '@/utils/api'
-
-// Get base API URL based on user role
-const getBaseUrl = (): string => {
-  const userDataCookie = useCookie('userData')
-  const userData = userDataCookie.value as any
-  const userRole = userData?.role
-
-  // Sales users use /v1/sales/leads
-  if (userRole === 'sales')
-    return '/v1/sales/leads'
-
-  // Franchisors use /v1/franchisor/leads
-  if (userRole === 'franchisor')
-    return '/v1/franchisor/leads'
-
-  // Admin and others use /v1/leads
-  return '/v1/leads'
-}
+import { getEndpoint } from '@/utils/api-router'
+import type { ApiResponse, LeadStatus } from '@/types/api'
 
 // Type definitions
 export interface Lead {
@@ -30,7 +14,7 @@ export interface Lead {
   state: string
   city: string
   source: string
-  status: 'qualified' | 'unqualified' | 'new' | 'contacted' | 'converted' | 'lost'
+  status: `${LeadStatus}`
   owner: string
   lastContacted: string | null
   scheduledMeeting: string | null
@@ -52,27 +36,15 @@ export interface LeadStatistic {
   iconColor: string
 }
 
-export interface LeadsResponse {
-  success: boolean
+export interface LeadsResponse extends ApiResponse<{
   leads: Lead[]
   total: number
   currentPage: number
   perPage: number
   lastPage: number
-  message: string
-}
+}> {}
 
-export interface StatisticsResponse {
-  success: boolean
-  data: LeadStatistic[]
-  message: string
-}
-
-export interface ApiResponse<T = any> {
-  success: boolean
-  data?: T
-  message: string
-}
+export interface StatisticsResponse extends ApiResponse<LeadStatistic[]> {}
 
 export interface LeadFilters {
   status?: string
@@ -85,12 +57,16 @@ export interface LeadFilters {
   orderBy?: 'asc' | 'desc'
 }
 
-class LeadApi {
+export class LeadApi {
+  private getBaseUrl(): string {
+    return getEndpoint('leads')
+  }
+
   /**
    * Get lead statistics
    */
   async getStatistics(): Promise<StatisticsResponse> {
-    return await $api<StatisticsResponse>(`${getBaseUrl()}/statistics`)
+    return await $api<StatisticsResponse>(`${this.getBaseUrl()}/statistics`)
   }
 
   /**
@@ -117,7 +93,7 @@ class LeadApi {
       params.append('orderBy', filters.orderBy)
 
     const queryString = params.toString()
-    const baseUrl = getBaseUrl()
+    const baseUrl = this.getBaseUrl()
     const url = queryString ? `${baseUrl}?${queryString}` : baseUrl
 
     return await $api<LeadsResponse>(url)
@@ -127,7 +103,7 @@ class LeadApi {
    * Get single lead by ID
    */
   async getLead(id: number): Promise<ApiResponse<Lead>> {
-    const response = await $api<any>(`${getBaseUrl()}/${id}`)
+    const response = await $api<any>(`${this.getBaseUrl()}/${id}`)
 
     // Transform snake_case to camelCase
     if (response.success && response.data) {
@@ -164,7 +140,7 @@ class LeadApi {
    * Create new lead
    */
   async createLead(data: Partial<Lead>): Promise<ApiResponse<Lead>> {
-    return await $api<ApiResponse<Lead>>(getBaseUrl(), {
+    return await $api<ApiResponse<Lead>>(this.getBaseUrl(), {
       method: 'POST',
       body: data,
     })
@@ -208,7 +184,7 @@ class LeadApi {
     if (data.expectedDecisionDate !== undefined)
       backendData.expected_decision_date = data.expectedDecisionDate
 
-    return await $api<ApiResponse<Lead>>(`${getBaseUrl()}/${id}`, {
+    return await $api<ApiResponse<Lead>>(`${this.getBaseUrl()}/${id}`, {
       method: 'PUT',
       body: backendData,
     })
@@ -218,7 +194,7 @@ class LeadApi {
    * Delete lead
    */
   async deleteLead(id: number): Promise<ApiResponse> {
-    return await $api<ApiResponse>(`${getBaseUrl()}/${id}`, {
+    return await $api<ApiResponse>(`${this.getBaseUrl()}/${id}`, {
       method: 'DELETE',
     })
   }
@@ -227,7 +203,7 @@ class LeadApi {
    * Bulk delete leads
    */
   async bulkDelete(ids: number[]): Promise<ApiResponse> {
-    return await $api<ApiResponse>(`${getBaseUrl()}/bulk-delete`, {
+    return await $api<ApiResponse>(`${this.getBaseUrl()}/bulk-delete`, {
       method: 'POST',
       body: { ids },
     })
@@ -241,7 +217,7 @@ class LeadApi {
 
     formData.append('file', file)
 
-    return await $api<ApiResponse>(`${getBaseUrl()}/import`, {
+    return await $api<ApiResponse>(`${this.getBaseUrl()}/import`, {
       method: 'POST',
       body: formData,
     })
@@ -251,7 +227,7 @@ class LeadApi {
    * Export leads to CSV
    */
   exportCsv(ids?: number[]): string {
-    const baseUrl = getBaseUrl()
+    const baseUrl = this.getBaseUrl()
     const params = new URLSearchParams()
     if (ids && ids.length > 0)
       ids.forEach(id => params.append('ids[]', id.toString()))
@@ -267,9 +243,58 @@ class LeadApi {
    * Add note to lead
    */
   async addNote(leadId: number, note: { content: string }): Promise<ApiResponse> {
-    return await $api<ApiResponse>(`${getBaseUrl()}/${leadId}/notes`, {
+    return await $api<ApiResponse>(`${this.getBaseUrl()}/${leadId}/notes`, {
       method: 'POST',
       body: note,
+    })
+  }
+
+  /**
+   * Add note to lead (franchisor endpoint)
+   */
+  async addNoteToLead(leadId: number, noteText: string): Promise<ApiResponse> {
+    return await $api<ApiResponse>(`/v1/franchisor/leads/${leadId}/notes`, {
+      method: 'POST',
+      body: {
+        note: noteText,
+      },
+    })
+  }
+
+  /**
+   * Get leads with limit (for dashboard)
+   */
+  async getLeadsWithLimit(limit: number = 10): Promise<ApiResponse<Lead[]>> {
+    return await $api<ApiResponse<Lead[]>>(`${this.getBaseUrl()}?limit=${limit}`)
+  }
+
+  /**
+   * Convert lead to customer
+   */
+  async convertLead(leadId: number, notes: string): Promise<ApiResponse> {
+    return await $api<ApiResponse>(`/v1/franchisor/leads/${leadId}/convert`, {
+      method: 'POST',
+      body: { notes },
+    })
+  }
+
+  /**
+   * Mark lead as lost
+   */
+  async markAsLost(leadId: number, reason: string): Promise<ApiResponse> {
+    return await $api<ApiResponse>(`/v1/franchisor/leads/${leadId}/mark-lost`, {
+      method: 'POST',
+      body: { reason },
+    })
+  }
+
+  /**
+   * Assign lead to sales associate
+   */
+  async assignLead(leadId: number, assignedTo: number): Promise<ApiResponse> {
+    return await $api<ApiResponse>(`/v1/franchisor/leads/${leadId}/assign`, {
+      method: 'PATCH',
+      body: { assigned_to: assignedTo },
     })
   }
 }

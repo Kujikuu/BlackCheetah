@@ -6,6 +6,7 @@ import PersonalInfo from '@/views/wizard-examples/franchise-registration/Persona
 import ReviewComplete from '@/views/wizard-examples/franchise-registration/ReviewComplete.vue'
 
 import { useFranchisorDashboard } from '@/composables/useFranchisorDashboard'
+import { franchiseApi } from '@/services/api'
 import { $api } from '@/utils/api'
 import type { FranchiseRegistrationData } from '@/views/wizard-examples/franchise-registration/types'
 
@@ -108,17 +109,7 @@ const franchiseRegistrationData = ref<FranchiseRegistrationData>({
 })
 
 const uploadDocument = async (file: File, name: string, type: string, franchiseId: number) => {
-  const formData = new FormData()
-
-  formData.append('file', file)
-  formData.append('name', name)
-  formData.append('description', `${name} uploaded during franchise registration`)
-  formData.append('type', type)
-
-  return await $api(`/v1/documents/${franchiseId}`, {
-    method: 'POST',
-    body: formData,
-  })
+  return await franchiseApi.uploadRegistrationDocument(franchiseId, file, name, type)
 }
 
 const onSubmit = async () => {
@@ -128,13 +119,10 @@ const onSubmit = async () => {
     console.log('Submitting franchise registration:', franchiseRegistrationData.value)
 
     // First, register the franchise
-    const registrationResponse = await $api('/v1/franchisor/franchise/register', {
-      method: 'POST',
-      body: {
-        personalInfo: franchiseRegistrationData.value.personalInfo,
-        franchiseDetails: franchiseRegistrationData.value.franchiseDetails,
-        reviewComplete: franchiseRegistrationData.value.reviewComplete,
-      },
+    const registrationResponse = await franchiseApi.registerFranchise({
+      personalInfo: franchiseRegistrationData.value.personalInfo,
+      franchiseDetails: franchiseRegistrationData.value.franchiseDetails,
+      reviewComplete: franchiseRegistrationData.value.reviewComplete,
     })
 
     if (!registrationResponse.success) {

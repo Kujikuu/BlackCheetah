@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { $api } from '@/utils/api'
-import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+import { franchiseApi, franchiseeDashboardApi } from '@/services/api'
 
 interface DocumentData {
   id: number | null
@@ -149,34 +149,28 @@ const saveDocument = async () => {
       }
     } else {
       // Handle franchisor mode
-      const formData = new FormData()
-      formData.append('name', documentForm.value.name || '')
-      formData.append('description', documentForm.value.description || '')
-      formData.append('type', documentForm.value.type)
-      formData.append('status', documentForm.value.status)
-      formData.append('is_confidential', documentForm.value.is_confidential ? '1' : '0')
-
-      if (documentForm.value.expiry_date) {
-        formData.append('expiry_date', documentForm.value.expiry_date)
+      if (!props.franchiseId) {
+        console.error('No franchise ID provided')
+        return
       }
 
-      if (documentForm.value.file) {
-        formData.append('file', documentForm.value.file)
+      const payload = {
+        name: documentForm.value.name || '',
+        description: documentForm.value.description || '',
+        type: documentForm.value.type,
+        status: documentForm.value.status,
+        is_confidential: documentForm.value.is_confidential,
+        expiry_date: documentForm.value.expiry_date,
+        file: documentForm.value.file,
       }
 
       let response
       if (documentForm.value.id !== null) {
         // Update existing document
-        response = await $api(`/v1/franchises/${props.franchiseId}/documents/${documentForm.value.id}`, {
-          method: 'PUT',
-          body: formData,
-        })
+        response = await franchiseApi.updateDocument(props.franchiseId, documentForm.value.id, payload)
       } else {
         // Add new document
-        response = await $api(`/v1/franchises/${props.franchiseId}/documents`, {
-          method: 'POST',
-          body: formData,
-        })
+        response = await franchiseApi.createDocument(props.franchiseId, payload)
       }
 
       if (response.success) {

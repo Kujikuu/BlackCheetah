@@ -1,16 +1,6 @@
 import { $api } from '@/utils/api'
-
-// Base API URLs for different roles
-const FRANCHISOR_API_URL = '/v1/franchisor/royalties'
-const FRANCHISEE_API_URL = '/v1/unit-manager/royalties'
-
-// Helper function to get the appropriate API URL based on user role
-const getApiUrl = (): string => {
-  const userData = useCookie<any>('userData')
-  const userRole = userData.value?.role
-
-  return userRole === 'franchisor' ? FRANCHISOR_API_URL : FRANCHISEE_API_URL
-}
+import { getEndpoint } from '@/utils/api-router'
+import type { ApiResponse, PaginatedResponse, PeriodFilter, RoyaltyStatus } from '@/types/api'
 
 // Type definitions
 export interface RoyaltyRecord {
@@ -53,16 +43,8 @@ export interface RoyaltyStatistics {
   overdue_count: number
 }
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  current_page: number
-  last_page: number
-  per_page: number
-  total: number
-}
-
 export interface RoyaltyFilters {
-  period?: 'daily' | 'monthly' | 'yearly'
+  period?: PeriodFilter
   status?: 'all' | 'paid' | 'pending' | 'overdue'
   search?: string
   page?: number
@@ -76,36 +58,33 @@ export interface RoyaltyFilters {
 export interface ExportOptions {
   format: 'csv' | 'excel'
   data_type: 'all' | 'paid' | 'pending' | 'overdue'
-  period: 'daily' | 'monthly' | 'yearly'
+  period: PeriodFilter
 }
 
-// API response wrapper
-interface ApiResponse<T> {
-  success: boolean
-  data: T
-  message?: string
-}
+// API Service Class
+export class RoyaltyApi {
+  private getBaseUrl(): string {
+    return getEndpoint('royalties')
+  }
 
-// API functions
-export const royaltyApi = {
   // Get all royalties with filters
   async getRoyalties(filters?: RoyaltyFilters): Promise<ApiResponse<PaginatedResponse<RoyaltyRecord>>> {
-    return await $api<ApiResponse<PaginatedResponse<RoyaltyRecord>>>(getApiUrl(), {
+    return await $api<ApiResponse<PaginatedResponse<RoyaltyRecord>>>(this.getBaseUrl(), {
       params: filters,
     })
-  },
+  }
 
   // Get single royalty by ID
   async getRoyalty(id: string | number): Promise<ApiResponse<RoyaltyRecord>> {
-    return await $api<ApiResponse<RoyaltyRecord>>(`${getApiUrl()}/${id}`)
-  },
+    return await $api<ApiResponse<RoyaltyRecord>>(`${this.getBaseUrl()}/${id}`)
+  }
 
   // Get royalty statistics
   async getStatistics(filters?: RoyaltyFilters): Promise<ApiResponse<RoyaltyStatistics>> {
-    return await $api<ApiResponse<RoyaltyStatistics>>(`${getApiUrl()}/statistics`, {
+    return await $api<ApiResponse<RoyaltyStatistics>>(`${this.getBaseUrl()}/statistics`, {
       params: filters,
     })
-  },
+  }
 
   // Mark royalty as paid/completed
   async markAsPaid(id: string | number, paymentData: PaymentData): Promise<ApiResponse<RoyaltyRecord>> {
@@ -127,7 +106,7 @@ export const royaltyApi = {
     // Use POST with _method override for file uploads, as PATCH doesn't work well with FormData
     formData.append('_method', 'PATCH')
 
-    return await $api<ApiResponse<RoyaltyRecord>>(`${getApiUrl()}/${id}/mark-paid`, {
+    return await $api<ApiResponse<RoyaltyRecord>>(`${this.getBaseUrl()}/${id}/mark-paid`, {
       method: 'POST',
       body: formData,
       headers: {
@@ -135,54 +114,57 @@ export const royaltyApi = {
         'Content-Type': undefined as any,
       },
     })
-  },
+  }
 
   // Export royalty data
   async exportRoyalties(options: ExportOptions): Promise<Blob> {
-    return await $api<Blob>(`${getApiUrl()}/export`, {
+    return await $api<Blob>(`${this.getBaseUrl()}/export`, {
       params: options,
       parseResponse: data => data,
     })
-  },
+  }
 
   // Create new royalty
   async createRoyalty(data: Partial<RoyaltyRecord>): Promise<ApiResponse<RoyaltyRecord>> {
-    return await $api<ApiResponse<RoyaltyRecord>>('/api/v1/royalties', {
+    return await $api<ApiResponse<RoyaltyRecord>>(`${this.getBaseUrl()}`, {
       method: 'POST',
       body: data,
     })
-  },
+  }
 
   // Update royalty
   async updateRoyalty(id: string | number, data: Partial<RoyaltyRecord>): Promise<ApiResponse<RoyaltyRecord>> {
-    return await $api<ApiResponse<RoyaltyRecord>>(`${getApiUrl()}/${id}`, {
+    return await $api<ApiResponse<RoyaltyRecord>>(`${this.getBaseUrl()}/${id}`, {
       method: 'PUT',
       body: data,
     })
-  },
+  }
 
   // Delete royalty
   async deleteRoyalty(id: string | number): Promise<void> {
-    await $api(`${getApiUrl()}/${id}`, {
+    await $api(`${this.getBaseUrl()}/${id}`, {
       method: 'DELETE',
     })
-  },
+  }
 
   // Add adjustment to royalty
   async addAdjustment(id: string | number, amount: number, reason: string): Promise<ApiResponse<RoyaltyRecord>> {
-    return await $api<ApiResponse<RoyaltyRecord>>(`${getApiUrl()}/${id}/adjustments`, {
+    return await $api<ApiResponse<RoyaltyRecord>>(`${this.getBaseUrl()}/${id}/adjustments`, {
       method: 'POST',
       body: {
         adjustment_amount: amount,
         adjustment_reason: reason,
       },
     })
-  },
+  }
 
   // Calculate late fee
   async calculateLateFee(id: string | number): Promise<ApiResponse<{ royalty: RoyaltyRecord; late_fee: number; days_overdue: number }>> {
-    return await $api<ApiResponse<{ royalty: RoyaltyRecord; late_fee: number; days_overdue: number }>>(`${getApiUrl()}/${id}/late-fee`, {
+    return await $api<ApiResponse<{ royalty: RoyaltyRecord; late_fee: number; days_overdue: number }>>(`${this.getBaseUrl()}/${id}/late-fee`, {
       method: 'POST',
     })
-  },
+  }
 }
+
+// Export class instance
+export const royaltyApi = new RoyaltyApi()

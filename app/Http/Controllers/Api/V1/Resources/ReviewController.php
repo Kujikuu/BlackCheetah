@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Models\Review;
 use App\Models\Unit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class ReviewController extends Controller
+class ReviewController extends BaseResourceController
 {
     /**
      * Display a listing of the resource.
@@ -43,19 +43,14 @@ class ReviewController extends Controller
         }
 
         // Apply sorting
-        $sortBy = $request->get('sort_by', 'review_date');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sort = $this->parseSortParams($request, 'review_date');
+        $query->orderBy($sort['column'], $sort['order']);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $reviews = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $reviews,
-            'message' => 'Reviews retrieved successfully',
-        ]);
+        return $this->successResponse($reviews, 'Reviews retrieved successfully');
     }
 
     /**
@@ -83,11 +78,7 @@ class ReviewController extends Controller
 
         $review = Review::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $review->load(['unit', 'franchisee']),
-            'message' => 'Customer review added successfully',
-        ], 201);
+        return $this->successResponse($review->load(['unit', 'franchisee']), 'Customer review added successfully', 201);
     }
 
     /**
@@ -97,11 +88,7 @@ class ReviewController extends Controller
     {
         $review->load(['unit', 'franchisee']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $review,
-            'message' => 'Review retrieved successfully',
-        ]);
+        return $this->successResponse($review, 'Review retrieved successfully');
     }
 
     /**
@@ -125,11 +112,7 @@ class ReviewController extends Controller
 
         $review->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $review->load(['unit', 'franchisee']),
-            'message' => 'Review updated successfully',
-        ]);
+        return $this->successResponse($review->load(['unit', 'franchisee']), 'Review updated successfully');
     }
 
     /**
@@ -139,10 +122,7 @@ class ReviewController extends Controller
     {
         $review->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Review deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Review deleted successfully');
     }
 
     /**
@@ -152,11 +132,7 @@ class ReviewController extends Controller
     {
         $review->update(['status' => 'published']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $review->load(['unit', 'franchisee']),
-            'message' => 'Review published successfully',
-        ]);
+        return $this->successResponse($review->load(['unit', 'franchisee']), 'Review published successfully');
     }
 
     /**
@@ -166,11 +142,7 @@ class ReviewController extends Controller
     {
         $review->update(['status' => 'archived']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $review->load(['unit', 'franchisee']),
-            'message' => 'Review archived successfully',
-        ]);
+        return $this->successResponse($review->load(['unit', 'franchisee']), 'Review archived successfully');
     }
 
     /**
@@ -184,11 +156,7 @@ class ReviewController extends Controller
 
         $review->update(['internal_notes' => $validated['internal_notes']]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $review->load(['unit', 'franchisee']),
-            'message' => 'Internal notes updated successfully',
-        ]);
+        return $this->successResponse($review->load(['unit', 'franchisee']), 'Internal notes updated successfully');
     }
 
     /**
@@ -225,10 +193,6 @@ class ReviewController extends Controller
             ],
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Review statistics retrieved successfully',
-        ]);
+        return $this->successResponse($stats, 'Review statistics retrieved successfully');
     }
 }

@@ -1,8 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Api\Franchisee;
+namespace App\Http\Controllers\Api\V1\Franchisee;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\Controller;
+use App\Http\Requests\StoreFinancialDataRequest;
+use App\Http\Requests\UpdateFinancialDataRequest;
+use App\Http\Requests\UpdateTaskStatusRequest;
+use App\Http\Requests\StoreStaffRequest;
+use App\Http\Requests\UpdateStaffRequest;
+use App\Http\Requests\StoreReviewRequest;
+use App\Http\Requests\UpdateReviewRequest;
+use App\Http\Requests\CreateUnitTaskRequest;
+use App\Http\Requests\UpdateUnitTaskRequest;
 use App\Models\Product;
 use App\Models\Revenue;
 use App\Models\Staff;
@@ -24,10 +33,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get current month and previous month dates
@@ -69,16 +75,12 @@ class FranchiseeController extends Controller
             ? round((($currentMonthProfit - $previousMonthProfit) / $previousMonthProfit) * 100, 2)
             : 0;
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'totalSales' => $currentMonthRevenue,
-                'totalProfit' => $currentMonthProfit,
-                'salesChange' => $salesChange,
-                'profitChange' => $profitChange,
-            ],
-            'message' => 'Sales statistics retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'totalSales' => $currentMonthRevenue,
+            'totalProfit' => $currentMonthProfit,
+            'salesChange' => $salesChange,
+            'profitChange' => $profitChange,
+        ], 'Sales statistics retrieved successfully');
     }
 
     /**
@@ -90,10 +92,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $currentMonth = now()->month;
@@ -163,12 +162,9 @@ class FranchiseeController extends Controller
             ];
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'mostSelling' => $mostSelling,
-                'lowSelling' => $lowSelling,
-            ],
+        return $this->successResponse([
+            'mostSelling' => $mostSelling,
+            'lowSelling' => $lowSelling,
         ]);
     }
 
@@ -181,10 +177,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get monthly performance data for the current year
@@ -215,16 +208,12 @@ class FranchiseeController extends Controller
             $averagePerformance[$monthIndex] = (int) ($data->total_revenue * 0.5); // Simulate average 50%
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'topPerforming' => $topPerforming,
-                'lowPerforming' => $lowPerforming,
-                'averagePerformance' => $averagePerformance,
-                'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            ],
-            'message' => 'Monthly performance data retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'topPerforming' => $topPerforming,
+            'lowPerforming' => $lowPerforming,
+            'averagePerformance' => $averagePerformance,
+            'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        ], 'Monthly performance data retrieved successfully');
     }
 
     /**
@@ -236,10 +225,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get current month and previous month dates
@@ -291,18 +277,14 @@ class FranchiseeController extends Controller
             ? round((($currentProfit - $previousProfit) / $previousProfit) * 100, 2)
             : 0;
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'totalSales' => $currentSales,
-                'totalExpenses' => $currentExpenses,
-                'totalProfit' => $currentProfit,
-                'salesChange' => $salesChange,
-                'expensesChange' => $expensesChange,
-                'profitChange' => $profitChange,
-            ],
-            'message' => 'Finance statistics retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'totalSales' => $currentSales,
+            'totalExpenses' => $currentExpenses,
+            'totalProfit' => $currentProfit,
+            'salesChange' => $salesChange,
+            'expensesChange' => $expensesChange,
+            'profitChange' => $profitChange,
+        ], 'Finance statistics retrieved successfully');
     }
 
     /**
@@ -314,10 +296,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get monthly financial data for the current year
@@ -353,16 +332,12 @@ class FranchiseeController extends Controller
             $profit[$i] = $sales[$i] - $expenses[$i];
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'sales' => $sales,
-                'expenses' => $expenses,
-                'profit' => $profit,
-                'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            ],
-            'message' => 'Financial summary data retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'sales' => $sales,
+            'expenses' => $expenses,
+            'profit' => $profit,
+            'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        ], 'Financial summary data retrieved successfully');
     }
 
     /**
@@ -374,10 +349,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get products for this unit through inventory
@@ -403,16 +375,12 @@ class FranchiseeController extends Controller
         // Out of stock items (where quantity = 0)
         $outOfStockItems = $inventoryData->where('unit_quantity', 0)->count();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'totalItems' => $totalItems,
-                'totalStocks' => $totalStocks,
-                'lowStockItems' => $lowStockItems,
-                'outOfStockItems' => $outOfStockItems,
-            ],
-            'message' => 'Store data retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'totalItems' => $totalItems,
+            'totalStocks' => $totalStocks,
+            'lowStockItems' => $lowStockItems,
+            'outOfStockItems' => $outOfStockItems,
+        ], 'Store data retrieved successfully');
     }
 
     /**
@@ -424,10 +392,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get active staff members for this unit
@@ -453,16 +418,12 @@ class FranchiseeController extends Controller
             ];
         })->sortByDesc('performance')->values();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'totalStaffs' => $totalStaffs,
-                'newHires' => $newHires,
-                'monthlyAbsenteeismRate' => $monthlyAbsenteeismRate,
-                'topPerformers' => $topPerformers,
-            ],
-            'message' => 'Staff data retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'totalStaffs' => $totalStaffs,
+            'newHires' => $newHires,
+            'monthlyAbsenteeismRate' => $monthlyAbsenteeismRate,
+            'topPerformers' => $topPerformers,
+        ], 'Staff data retrieved successfully');
     }
 
     /**
@@ -474,30 +435,23 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Mock monthly inventory data (in a real app, you'd track this over time)
         $intakeData = [120, 132, 101, 134, 90, 230, 210, 150, 180, 200, 220, 240];
         $availableData = [80, 95, 70, 110, 60, 180, 160, 120, 140, 160, 180, 200];
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                [
-                    'name' => 'Intake',
-                    'data' => $intakeData,
-                ],
-                [
-                    'name' => 'Available',
-                    'data' => $availableData,
-                ],
+        return $this->successResponse([
+            [
+                'name' => 'Intake',
+                'data' => $intakeData,
             ],
-            'message' => 'Low stock chart data retrieved successfully',
-        ]);
+            [
+                'name' => 'Available',
+                'data' => $availableData,
+            ],
+        ], 'Low stock chart data retrieved successfully');
     }
 
     /**
@@ -509,35 +463,28 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Mock shift coverage data for the week
-        return response()->json([
-            'success' => true,
-            'data' => [
-                [
-                    'name' => 'Morning Shift',
-                    'data' => [8, 7, 8, 6, 7, 8, 7],
-                ],
-                [
-                    'name' => 'Afternoon Shift',
-                    'data' => [6, 8, 7, 8, 6, 7, 8],
-                ],
-                [
-                    'name' => 'Evening Shift',
-                    'data' => [4, 5, 6, 5, 4, 5, 6],
-                ],
-                [
-                    'name' => 'Night Shift',
-                    'data' => [2, 3, 2, 3, 2, 2, 3],
-                ],
+        return $this->successResponse([
+            [
+                'name' => 'Morning Shift',
+                'data' => [8, 7, 8, 6, 7, 8, 7],
             ],
-            'message' => 'Shift coverage chart data retrieved successfully',
-        ]);
+            [
+                'name' => 'Afternoon Shift',
+                'data' => [6, 8, 7, 8, 6, 7, 8],
+            ],
+            [
+                'name' => 'Evening Shift',
+                'data' => [4, 5, 6, 5, 4, 5, 6],
+            ],
+            [
+                'name' => 'Night Shift',
+                'data' => [2, 3, 2, 3, 2, 2, 3],
+            ],
+        ], 'Shift coverage chart data retrieved successfully');
     }
 
     /**
@@ -549,10 +496,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get store data
@@ -570,16 +514,12 @@ class FranchiseeController extends Controller
         $shiftCoverageChartResponse = $this->shiftCoverageChart($request);
         $shiftCoverageChart = $shiftCoverageChartResponse->getData(true)['data'];
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'storeData' => $storeData,
-                'staffData' => $staffData,
-                'lowStockChart' => $lowStockChart,
-                'shiftCoverageChart' => $shiftCoverageChart,
-            ],
-            'message' => 'Operations data retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'storeData' => $storeData,
+            'staffData' => $staffData,
+            'lowStockChart' => $lowStockChart,
+            'shiftCoverageChart' => $shiftCoverageChart,
+        ], 'Operations data retrieved successfully');
     }
 
     /**
@@ -612,31 +552,24 @@ class FranchiseeController extends Controller
         }
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $unit->id,
-                'branchName' => $unit->unit_name,
-                'franchiseeName' => $unit->franchisee->name,
-                'email' => $unit->franchisee->email,
-                'contactNumber' => $unit->phone ?? $unit->franchisee->phone,
-                'address' => $unit->address,
-                'city' => $unit->city,
-                'state' => $unit->state_province,
-                'country' => $unit->country,
-                'royaltyPercentage' => $unit->franchise->royalty_percentage ?? 8.5,
-                'contractStartDate' => $unit->lease_start_date?->format('Y-m-d'),
-                'renewalDate' => $unit->lease_end_date?->format('Y-m-d'),
-                'status' => $unit->status,
-            ],
-            'message' => 'Unit details retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $unit->id,
+            'branchName' => $unit->unit_name,
+            'franchiseeName' => $unit->franchisee->name,
+            'email' => $unit->franchisee->email,
+            'contactNumber' => $unit->phone ?? $unit->franchisee->phone,
+            'address' => $unit->address,
+            'city' => $unit->city,
+            'state' => $unit->state_province,
+            'country' => $unit->country,
+            'royaltyPercentage' => $unit->franchise->royalty_percentage ?? 8.5,
+            'contractStartDate' => $unit->lease_start_date?->format('Y-m-d'),
+            'renewalDate' => $unit->lease_end_date?->format('Y-m-d'),
+            'status' => $unit->status,
+        ], 'Unit details retrieved successfully');
     }
 
     /**
@@ -653,10 +586,7 @@ class FranchiseeController extends Controller
         }
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $tasks = $unit->tasks()->latest()->get()->map(function ($task) {
@@ -673,11 +603,7 @@ class FranchiseeController extends Controller
             ];
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $tasks,
-            'message' => 'Unit tasks retrieved successfully',
-        ]);
+        return $this->successResponse($tasks, 'Unit tasks retrieved successfully');
     }
 
     /**
@@ -694,10 +620,7 @@ class FranchiseeController extends Controller
         }
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         // Get active staff members for this unit
@@ -722,11 +645,7 @@ class FranchiseeController extends Controller
                 ];
             });
 
-        return response()->json([
-            'success' => true,
-            'data' => $staffMembers,
-            'message' => 'Unit staff retrieved successfully',
-        ]);
+        return $this->successResponse($staffMembers, 'Unit staff retrieved successfully');
     }
 
     /**
@@ -743,10 +662,7 @@ class FranchiseeController extends Controller
         }
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         // Get products with inventory data
@@ -775,11 +691,7 @@ class FranchiseeController extends Controller
                 ];
             });
 
-        return response()->json([
-            'success' => true,
-            'data' => $products,
-            'message' => 'Unit products retrieved successfully',
-        ]);
+        return $this->successResponse($products, 'Unit products retrieved successfully');
     }
 
     /**
@@ -796,10 +708,7 @@ class FranchiseeController extends Controller
         }
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $reviews = $unit->reviews()->latest()->get()->map(function ($review) {
@@ -814,11 +723,7 @@ class FranchiseeController extends Controller
             ];
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $reviews,
-            'message' => 'Unit reviews retrieved successfully',
-        ]);
+        return $this->successResponse($reviews, 'Unit reviews retrieved successfully');
     }
 
     /**
@@ -835,10 +740,7 @@ class FranchiseeController extends Controller
         }
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         // Get documents from the unit's documents JSON field
@@ -856,11 +758,7 @@ class FranchiseeController extends Controller
             ];
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $documents,
-            'message' => 'Unit documents retrieved successfully',
-        ]);
+        return $this->successResponse($documents, 'Unit documents retrieved successfully');
     }
 
     // CRUD Operations for Unit Management
@@ -874,10 +772,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $validated = $request->validate([
@@ -896,38 +791,22 @@ class FranchiseeController extends Controller
             'state_province' => $validated['state'] ?? $unit->state_province,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $this->formatUnitDetails($unit),
-            'message' => 'Unit details updated successfully',
-        ]);
+        return $this->successResponse($this->formatUnitDetails($unit), 'Unit details updated successfully');
     }
 
     /**
      * Create a new task
      */
-    public function createTask(Request $request, $unitId): JsonResponse
+    public function createTask(CreateUnitTaskRequest $request, $unitId): JsonResponse
     {
         $user = $request->user();
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'category' => 'required|in:onboarding,training,compliance,maintenance,marketing,operations,finance,support,other',
-            'assignedTo' => 'required|string|max:255',
-            'startDate' => 'nullable|date',
-            'dueDate' => 'required|date',
-            'priority' => 'required|in:low,medium,high,urgent',
-            'status' => 'sometimes|in:pending,in_progress,completed,cancelled,on_hold',
-        ]);
+        $validated = $request->validated();
 
         $task = $unit->tasks()->create([
             'title' => $validated['title'],
@@ -940,56 +819,37 @@ class FranchiseeController extends Controller
             'status' => $validated['status'] ?? 'pending',
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $task->id,
-                'title' => $task->title,
-                'description' => $task->description,
-                'category' => $task->type,
-                'assignedTo' => $validated['assignedTo'],
-                'startDate' => $validated['startDate'] ?? null,
-                'dueDate' => $task->due_date,
-                'priority' => $task->priority,
-                'status' => $task->status,
-            ],
-            'message' => 'Task created successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $task->id,
+            'title' => $task->title,
+            'description' => $task->description,
+            'category' => $task->type,
+            'assignedTo' => $validated['assignedTo'],
+            'startDate' => $validated['startDate'] ?? null,
+            'dueDate' => $task->due_date,
+            'priority' => $task->priority,
+            'status' => $task->status,
+        ], 'Task created successfully', 201);
     }
 
     /**
      * Update a task
      */
-    public function updateTask(Request $request, $unitId, $taskId): JsonResponse
+    public function updateTask(UpdateUnitTaskRequest $request, $unitId, $taskId): JsonResponse
     {
         $user = $request->user();
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $task = $unit->tasks()->where('id', $taskId)->first();
         if (! $task) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Task not found',
-            ], 404);
+            return $this->notFoundResponse('Task not found');
         }
 
-        $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string|max:1000',
-            'category' => 'sometimes|string|max:100',
-            'assignedTo' => 'sometimes|string|max:255',
-            'startDate' => 'sometimes|date',
-            'dueDate' => 'sometimes|date',
-            'priority' => 'sometimes|in:low,medium,high',
-            'status' => 'sometimes|in:pending,in_progress,completed',
-        ]);
+        $validated = $request->validated();
 
         $task->update([
             'title' => $validated['title'] ?? $task->title,
@@ -1002,21 +862,17 @@ class FranchiseeController extends Controller
             'status' => $validated['status'] ?? $task->status,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $task->id,
-                'title' => $task->title,
-                'description' => $task->description,
-                'category' => $task->category,
-                'assignedTo' => $task->assigned_to,
-                'startDate' => $task->start_date,
-                'dueDate' => $task->due_date,
-                'priority' => $task->priority,
-                'status' => $task->status,
-            ],
-            'message' => 'Task updated successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $task->id,
+            'title' => $task->title,
+            'description' => $task->description,
+            'category' => $task->category,
+            'assignedTo' => $task->assigned_to,
+            'startDate' => $task->start_date,
+            'dueDate' => $task->due_date,
+            'priority' => $task->priority,
+            'status' => $task->status,
+        ], 'Task updated successfully');
     }
 
     /**
@@ -1028,57 +884,32 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $task = $unit->tasks()->where('id', $taskId)->first();
         if (! $task) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Task not found',
-            ], 404);
+            return $this->notFoundResponse('Task not found');
         }
 
         $task->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Task deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Task deleted successfully');
     }
 
     /**
      * Create a new staff member
      */
-    public function createStaff(Request $request, $unitId): JsonResponse
+    public function createStaff(StoreStaffRequest $request, $unitId): JsonResponse
     {
         $user = $request->user();
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:staff,email',
-            'phone' => 'nullable|string|max:20',
-            'jobTitle' => 'required|string|max:100',
-            'department' => 'nullable|string|max:100',
-            'salary' => 'nullable|numeric|min:0',
-            'hireDate' => 'required|date',
-            'shiftStart' => 'nullable|date_format:H:i',
-            'shiftEnd' => 'nullable|date_format:H:i',
-            'status' => 'sometimes|in:Active,On Leave,Terminated,Inactive',
-            'employmentType' => 'sometimes|in:full_time,part_time,contract,temporary',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $staff = Staff::create([
             'name' => $validated['name'],
@@ -1101,65 +932,42 @@ class FranchiseeController extends Controller
         // Refresh to get accessor values
         $staff->refresh();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $staff->id,
-                'name' => $staff->name,
-                'email' => $staff->email,
-                'phone' => $staff->phone,
-                'jobTitle' => $staff->job_title,
-                'department' => $staff->department,
-                'salary' => $staff->salary,
-                'hireDate' => $staff->hire_date?->format('Y-m-d'),
-                'shiftStart' => $staff->shift_start?->format('H:i'),
-                'shiftEnd' => $staff->shift_end?->format('H:i'),
-                'shiftTime' => $staff->full_shift_time,
-                'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
-                'employmentType' => $staff->employment_type,
-                'notes' => $staff->notes,
-            ],
-            'message' => 'Staff member created successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $staff->id,
+            'name' => $staff->name,
+            'email' => $staff->email,
+            'phone' => $staff->phone,
+            'jobTitle' => $staff->job_title,
+            'department' => $staff->department,
+            'salary' => $staff->salary,
+            'hireDate' => $staff->hire_date?->format('Y-m-d'),
+            'shiftStart' => $staff->shift_start?->format('H:i'),
+            'shiftEnd' => $staff->shift_end?->format('H:i'),
+            'shiftTime' => $staff->full_shift_time,
+            'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
+            'employmentType' => $staff->employment_type,
+            'notes' => $staff->notes,
+        ], 'Staff member created successfully', 201);
     }
 
     /**
      * Update a staff member
      */
-    public function updateStaff(Request $request, $unitId, $staffId): JsonResponse
+    public function updateStaff(UpdateStaffRequest $request, $unitId, $staffId): JsonResponse
     {
         $user = $request->user();
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $staff = $unit->staff()->where('staff.id', $staffId)->first();
         if (! $staff) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Staff member not found',
-            ], 404);
+            return $this->notFoundResponse('Staff member not found');
         }
 
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|max:255|unique:staff,email,' . $staffId,
-            'phone' => 'sometimes|nullable|string|max:20',
-            'jobTitle' => 'sometimes|string|max:100',
-            'department' => 'sometimes|nullable|string|max:100',
-            'salary' => 'sometimes|nullable|numeric|min:0',
-            'hireDate' => 'sometimes|date',
-            'shiftStart' => 'sometimes|nullable|date_format:H:i',
-            'shiftEnd' => 'sometimes|nullable|date_format:H:i',
-            'status' => 'sometimes|in:working,leave,terminated,inactive',
-            'employmentType' => 'sometimes|in:full_time,part_time,contract,temporary',
-            'notes' => 'sometimes|nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // Map frontend status values to database values
         $statusMapping = [
@@ -1213,26 +1021,22 @@ class FranchiseeController extends Controller
         // Reload the staff to get the full_shift_time accessor
         $staff->refresh();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $staff->id,
-                'name' => $staff->name,
-                'email' => $staff->email,
-                'phone' => $staff->phone,
-                'jobTitle' => $staff->job_title,
-                'department' => $staff->department,
-                'salary' => $staff->salary,
-                'hireDate' => $staff->hire_date?->format('Y-m-d'),
-                'shiftStart' => $staff->shift_start?->format('H:i'),
-                'shiftEnd' => $staff->shift_end?->format('H:i'),
-                'shiftTime' => $staff->full_shift_time,
-                'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
-                'employmentType' => $staff->employment_type,
-                'notes' => $staff->notes,
-            ],
-            'message' => 'Staff member updated successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $staff->id,
+            'name' => $staff->name,
+            'email' => $staff->email,
+            'phone' => $staff->phone,
+            'jobTitle' => $staff->job_title,
+            'department' => $staff->department,
+            'salary' => $staff->salary,
+            'hireDate' => $staff->hire_date?->format('Y-m-d'),
+            'shiftStart' => $staff->shift_start?->format('H:i'),
+            'shiftEnd' => $staff->shift_end?->format('H:i'),
+            'shiftTime' => $staff->full_shift_time,
+            'status' => $staff->status === 'active' ? 'working' : ($staff->status === 'on_leave' ? 'leave' : $staff->status),
+            'employmentType' => $staff->employment_type,
+            'notes' => $staff->notes,
+        ], 'Staff member updated successfully');
     }
 
     /**
@@ -1244,18 +1048,12 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $staff = $unit->staff()->where('staff.id', $staffId)->first();
         if (! $staff) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Staff member not found',
-            ], 404);
+            return $this->notFoundResponse('Staff member not found');
         }
 
         // Remove staff from unit
@@ -1266,10 +1064,7 @@ class FranchiseeController extends Controller
             $staff->delete();
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Staff member removed successfully',
-        ]);
+        return $this->successResponse(null, 'Staff member removed successfully');
     }
 
     /**
@@ -1281,10 +1076,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         // Get franchise products that are not yet in this unit's inventory
@@ -1305,11 +1097,7 @@ class FranchiseeController extends Controller
                 ];
             });
 
-        return response()->json([
-            'success' => true,
-            'data' => $availableProducts,
-            'message' => 'Available franchise products retrieved successfully',
-        ]);
+        return $this->successResponse($availableProducts, 'Available franchise products retrieved successfully');
     }
 
     /**
@@ -1321,10 +1109,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $validated = $request->validate([
@@ -1339,18 +1124,12 @@ class FranchiseeController extends Controller
             ->first();
 
         if (! $product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product not found or not available for this franchise',
-            ], 404);
+            return $this->notFoundResponse('Product not found or not available for this franchise');
         }
 
         // Check if product is already in unit inventory
         if ($product->units()->where('units.id', $unit->id)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product is already in unit inventory',
-            ], 400);
+            return $this->errorResponse('Product is already in unit inventory', null, 400);
         }
 
         // Add product to unit inventory
@@ -1359,19 +1138,15 @@ class FranchiseeController extends Controller
             'reorder_level' => $validated['reorderLevel'],
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $product->id,
-                'name' => $product->name,
-                'description' => $product->description,
-                'unitPrice' => (float) $product->unit_price,
-                'category' => $product->category,
-                'status' => $product->status,
-                'stock' => $validated['quantity'],
-            ],
-            'message' => 'Product added to inventory successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $product->id,
+            'name' => $product->name,
+            'description' => $product->description,
+            'unitPrice' => (float) $product->unit_price,
+            'category' => $product->category,
+            'status' => $product->status,
+            'stock' => $validated['quantity'],
+        ], 'Product added to inventory successfully', 201);
     }
 
     /**
@@ -1383,10 +1158,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $validated = $request->validate([
@@ -1398,10 +1170,7 @@ class FranchiseeController extends Controller
         $inventory = $unit->inventory()->where('product_id', $productId)->first();
 
         if (! $inventory) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product not found in unit inventory',
-            ], 404);
+            return $this->notFoundResponse('Product not found in unit inventory');
         }
 
         // Update inventory levels
@@ -1412,10 +1181,7 @@ class FranchiseeController extends Controller
 
         $unit->inventory()->updateExistingPivot($productId, $updateData);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Inventory stock updated successfully',
-        ]);
+        return $this->successResponse(null, 'Inventory stock updated successfully');
     }
 
     /**
@@ -1427,27 +1193,18 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         // Check if product exists in unit inventory
         if (! $unit->products()->where('product_id', $productId)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product not found in unit inventory',
-            ], 404);
+            return $this->notFoundResponse('Product not found in unit inventory');
         }
 
         // Remove product from inventory
         $unit->products()->detach($productId);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Product removed from inventory successfully',
-        ]);
+        return $this->successResponse(null, 'Product removed from inventory successfully');
     }
 
     /**
@@ -1459,18 +1216,12 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         // Check if product exists in unit inventory
         if (! $unit->products()->where('product_id', $productId)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product not found in unit inventory',
-            ], 404);
+            return $this->notFoundResponse('Product not found in unit inventory');
         }
 
         $validated = $request->validate([
@@ -1508,19 +1259,15 @@ class FranchiseeController extends Controller
             )
             ->first();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $productData->id,
-                'name' => $productData->name,
-                'description' => $productData->description ?? '',
-                'unitPrice' => (float) $productData->unitPrice,
-                'category' => $productData->category ?? 'General',
-                'status' => $productData->status ?? 'active',
-                'stock' => (int) $productData->stock,
-            ],
-            'message' => 'Product inventory updated successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $productData->id,
+            'name' => $productData->name,
+            'description' => $productData->description ?? '',
+            'unitPrice' => (float) $productData->unitPrice,
+            'category' => $productData->category ?? 'General',
+            'status' => $productData->status ?? 'active',
+            'stock' => (int) $productData->stock,
+        ], 'Product inventory updated successfully');
     }
 
     /**
@@ -1532,10 +1279,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $product = Product::where('id', $productId)
@@ -1545,41 +1289,27 @@ class FranchiseeController extends Controller
             })
             ->first();
         if (! $product) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product not found',
-            ], 404);
+            return $this->notFoundResponse('Product not found');
         }
 
         $product->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Product deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Product deleted successfully');
     }
 
     /**
      * Create a new review
      */
-    public function createReview(Request $request, $unitId): JsonResponse
+    public function createReview(StoreReviewRequest $request, $unitId): JsonResponse
     {
         $user = $request->user();
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
-        $validated = $request->validate([
-            'customerName' => 'required|string|max:255',
-            'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'required|string|max:1000',
-            'date' => 'sometimes|date',
-        ]);
+        $validated = $request->validated();
 
         $review = $unit->reviews()->create([
             'customer_name' => $validated['customerName'],
@@ -1588,50 +1318,34 @@ class FranchiseeController extends Controller
             'review_date' => $validated['date'] ?? now(),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $review->id,
-                'customerName' => $review->customer_name,
-                'rating' => (int) $review->rating,
-                'comment' => $review->comment,
-                'date' => $review->review_date ?? $review->created_at->format('Y-m-d'),
-                'sentiment' => $review->rating >= 4 ? 'positive' : ($review->rating >= 3 ? 'neutral' : 'negative'),
-            ],
-            'message' => 'Review created successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $review->id,
+            'customerName' => $review->customer_name,
+            'rating' => (int) $review->rating,
+            'comment' => $review->comment,
+            'date' => $review->review_date ?? $review->created_at->format('Y-m-d'),
+            'sentiment' => $review->rating >= 4 ? 'positive' : ($review->rating >= 3 ? 'neutral' : 'negative'),
+        ], 'Review created successfully', 201);
     }
 
     /**
      * Update a review
      */
-    public function updateReview(Request $request, $unitId, $reviewId): JsonResponse
+    public function updateReview(UpdateReviewRequest $request, $unitId, $reviewId): JsonResponse
     {
         $user = $request->user();
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $review = $unit->reviews()->where('id', $reviewId)->first();
         if (! $review) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Review not found',
-            ], 404);
+            return $this->notFoundResponse('Review not found');
         }
 
-        $validated = $request->validate([
-            'customerName' => 'sometimes|string|max:255',
-            'customerEmail' => 'sometimes|nullable|email|max:255',
-            'rating' => 'sometimes|integer|min:1|max:5',
-            'comment' => 'sometimes|string|max:1000',
-            'date' => 'sometimes|date',
-        ]);
+        $validated = $request->validated();
 
         $review->update([
             'customer_name' => $validated['customerName'] ?? $review->customer_name,
@@ -1641,19 +1355,15 @@ class FranchiseeController extends Controller
             'review_date' => $validated['date'] ?? $review->review_date,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $review->id,
-                'customerName' => $review->customer_name,
-                'customerEmail' => $review->customer_email ?? '',
-                'rating' => (int) $review->rating,
-                'comment' => $review->comment,
-                'date' => $review->review_date ? $review->review_date->format('Y-m-d') : $review->created_at->format('Y-m-d'),
-                'sentiment' => $review->rating >= 4 ? 'positive' : ($review->rating >= 3 ? 'neutral' : 'negative'),
-            ],
-            'message' => 'Review updated successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $review->id,
+            'customerName' => $review->customer_name,
+            'customerEmail' => $review->customer_email ?? '',
+            'rating' => (int) $review->rating,
+            'comment' => $review->comment,
+            'date' => $review->review_date ? $review->review_date->format('Y-m-d') : $review->created_at->format('Y-m-d'),
+            'sentiment' => $review->rating >= 4 ? 'positive' : ($review->rating >= 3 ? 'neutral' : 'negative'),
+        ], 'Review updated successfully');
     }
 
     /**
@@ -1665,26 +1375,17 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $review = $unit->reviews()->where('id', $reviewId)->first();
         if (! $review) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Review not found',
-            ], 404);
+            return $this->notFoundResponse('Review not found');
         }
 
         $review->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Review deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Review deleted successfully');
     }
 
     /**
@@ -1696,10 +1397,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $validated = $request->validate([
@@ -1739,11 +1437,7 @@ class FranchiseeController extends Controller
         $documentId = count($documents);
         $newDocument['id'] = $documentId;
 
-        return response()->json([
-            'success' => true,
-            'data' => $newDocument,
-            'message' => 'Document created successfully',
-        ]);
+        return $this->successResponse($newDocument, 'Document created successfully', 201);
     }
 
     /**
@@ -1771,20 +1465,14 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $documents = $unit->documents ?? [];
         $docIndex = $documentId - 1;
 
         if (! isset($documents[$docIndex])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Document not found',
-            ], 404);
+            return $this->notFoundResponse('Document not found');
         }
 
         $validated = $request->validate([
@@ -1803,11 +1491,7 @@ class FranchiseeController extends Controller
         $updatedDocument = $documents[$docIndex];
         $updatedDocument['id'] = $documentId;
 
-        return response()->json([
-            'success' => true,
-            'data' => $updatedDocument,
-            'message' => 'Document updated successfully',
-        ]);
+        return $this->successResponse($updatedDocument, 'Document updated successfully');
     }
 
     /**
@@ -1819,30 +1503,21 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $documents = $unit->documents ?? [];
         $docIndex = $documentId - 1;
 
         if (! isset($documents[$docIndex])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Document not found',
-            ], 404);
+            return $this->notFoundResponse('Document not found');
         }
 
         unset($documents[$docIndex]);
         $documents = array_values($documents); // Re-index array
         $unit->update(['documents' => $documents]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Document deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Document deleted successfully');
     }
 
     /**
@@ -1854,20 +1529,14 @@ class FranchiseeController extends Controller
         $unit = Unit::where('id', $unitId)->where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unit not found or access denied',
-            ], 404);
+            return $this->notFoundResponse('Unit not found or access denied');
         }
 
         $documents = $unit->documents ?? [];
         $docIndex = $documentId - 1;
 
         if (! isset($documents[$docIndex])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Document not found',
-            ], 404);
+            return $this->notFoundResponse('Document not found');
         }
 
         $document = $documents[$docIndex];
@@ -1879,10 +1548,7 @@ class FranchiseeController extends Controller
         }
 
         // File doesn't exist - return error
-        return response()->json([
-            'success' => false,
-            'message' => 'File not found in storage. The document may have been uploaded before file storage was implemented.',
-        ], 404);
+        return $this->notFoundResponse('File not found in storage. The document may have been uploaded before file storage was implemented.');
     }
 
     /**
@@ -1916,10 +1582,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get all tasks related to this unit or assigned to the user
@@ -1947,30 +1610,21 @@ class FranchiseeController extends Controller
                 ];
             });
 
-        return response()->json([
-            'success' => true,
-            'data' => $tasks,
-            'message' => 'Tasks retrieved successfully',
-        ]);
+        return $this->successResponse($tasks, 'Tasks retrieved successfully');
     }
 
     /**
      * Update task status for my tasks
      */
-    public function updateMyTaskStatus(Request $request, $taskId): JsonResponse
+    public function updateMyTaskStatus(UpdateTaskStatusRequest $request, $taskId): JsonResponse
     {
-        $validated = $request->validate([
-            'status' => 'required|in:pending,in_progress,completed,cancelled,on_hold',
-        ]);
+        $validated = $request->validated();
 
         $user = $request->user();
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $task = \App\Models\Task::where(function ($query) use ($unit, $user) {
@@ -1980,10 +1634,7 @@ class FranchiseeController extends Controller
         })->find($taskId);
 
         if (! $task) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Task not found or you do not have permission to update it',
-            ], 404);
+                return $this->notFoundResponse('Task not found or you do not have permission to update it');
         }
 
         $task->update(['status' => $validated['status']]);
@@ -1998,22 +1649,18 @@ class FranchiseeController extends Controller
             $task->update(['started_at' => now()]);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $task->id,
-                'title' => $task->title,
-                'description' => $task->description,
-                'category' => $task->category,
-                'assignedTo' => $task->assignedTo ? $task->assignedTo->name : 'Unassigned',
-                'unitName' => $task->unit ? $task->unit->branch_name : 'N/A',
-                'startDate' => $task->started_at ? $task->started_at->format('Y-m-d') : $task->created_at->format('Y-m-d'),
-                'dueDate' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
-                'priority' => $task->priority,
-                'status' => $task->status,
-            ],
-            'message' => 'Task status updated successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $task->id,
+            'title' => $task->title,
+            'description' => $task->description,
+            'category' => $task->category,
+            'assignedTo' => $task->assignedTo ? $task->assignedTo->name : 'Unassigned',
+            'unitName' => $task->unit ? $task->unit->branch_name : 'N/A',
+            'startDate' => $task->started_at ? $task->started_at->format('Y-m-d') : $task->created_at->format('Y-m-d'),
+            'dueDate' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
+            'priority' => $task->priority,
+            'status' => $task->status,
+        ], 'Task status updated successfully');
     }
 
     /**
@@ -2025,10 +1672,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get product performance data
@@ -2043,16 +1687,12 @@ class FranchiseeController extends Controller
         // Get customer satisfaction
         $customerSatisfaction = $this->getCustomerSatisfaction($unit);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'productPerformance' => $productPerformance,
-                'royalty' => $royaltyData,
-                'tasksOverview' => $tasksOverview,
-                'customerSatisfaction' => $customerSatisfaction,
-            ],
-            'message' => 'Performance management data retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'productPerformance' => $productPerformance,
+            'royalty' => $royaltyData,
+            'tasksOverview' => $tasksOverview,
+            'customerSatisfaction' => $customerSatisfaction,
+        ], 'Performance management data retrieved successfully');
     }
 
     /**
@@ -2237,10 +1877,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         // Get sales data from revenues
@@ -2257,20 +1894,16 @@ class FranchiseeController extends Controller
         $totalExpenses = collect($expenseData)->sum('amount');
         $totalProfit = $totalSales - $totalExpenses;
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'sales' => $salesData,
-                'expenses' => $expenseData,
-                'profit' => $profitData,
-                'totals' => [
-                    'sales' => $totalSales,
-                    'expenses' => $totalExpenses,
-                    'profit' => $totalProfit,
-                ],
+        return $this->successResponse([
+            'sales' => $salesData,
+            'expenses' => $expenseData,
+            'profit' => $profitData,
+            'totals' => [
+                'sales' => $totalSales,
+                'expenses' => $totalExpenses,
+                'profit' => $totalProfit,
             ],
-            'message' => 'Financial overview data retrieved successfully',
-        ]);
+        ], 'Financial overview data retrieved successfully');
     }
 
     /**
@@ -2405,27 +2038,16 @@ class FranchiseeController extends Controller
     /**
      * Add new financial data (sale or expense)
      */
-    public function storeFinancialData(Request $request): JsonResponse
+    public function storeFinancialData(StoreFinancialDataRequest $request): JsonResponse
     {
         $user = $request->user();
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
-        $validated = $request->validate([
-            'category' => 'required|in:sales,expense',
-            'product' => 'required_if:category,sales|string|max:255',
-            'date' => 'required|date',
-            'quantitySold' => 'required_if:category,sales|integer|min:1',
-            'expenseCategory' => 'required_if:category,expense|string|max:255',
-            'amount' => 'required_if:category,expense|numeric|min:0',
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         if ($validated['category'] === 'sales') {
             // Find the product
@@ -2434,10 +2056,7 @@ class FranchiseeController extends Controller
                 ->first();
 
             if (! $product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not found',
-                ], 404);
+                return $this->notFoundResponse('Product not found');
             }
 
             // Check inventory
@@ -2446,20 +2065,14 @@ class FranchiseeController extends Controller
                 ->first();
 
             if (! $inventory) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not available in your unit inventory',
-                ], 400);
+                return $this->errorResponse('Product not available in your unit inventory', null, 400);
             }
 
             $quantity = (int) $validated['quantitySold'];
 
             // Validate stock availability
             if ($inventory->quantity < $quantity) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Insufficient stock. Only {$inventory->quantity} units available",
-                ], 400);
+                return $this->errorResponse("Insufficient stock. Only {$inventory->quantity} units available", null, 400);
             }
 
             $unitPrice = (float) $product->unit_price;
@@ -2496,19 +2109,15 @@ class FranchiseeController extends Controller
             $inventory->decrement('quantity', $quantity);
             $inventory->refresh(); // Refresh to get the updated quantity
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Sales data added successfully',
-                'data' => [
-                    'id' => $revenue->id . '-item',
-                    'product' => $validated['product'],
-                    'dateOfSale' => $validated['date'],
-                    'unitPrice' => $unitPrice,
-                    'quantitySold' => $quantity,
-                    'sale' => $saleAmount,
-                    'remainingStock' => $inventory->quantity,
-                ],
-            ], 201);
+            return $this->successResponse([
+                'id' => $revenue->id . '-item',
+                'product' => $validated['product'],
+                'dateOfSale' => $validated['date'],
+                'unitPrice' => $unitPrice,
+                'quantitySold' => $quantity,
+                'sale' => $saleAmount,
+                'remainingStock' => $inventory->quantity,
+            ], 'Sales data added successfully', 201);
         } else {
             // Create expense transaction
             $transaction = \App\Models\Transaction::create([
@@ -2525,44 +2134,29 @@ class FranchiseeController extends Controller
                 'status' => 'completed',
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Expense data added successfully',
-                'data' => [
-                    'id' => (string) $transaction->id,
-                    'expenseCategory' => $validated['expenseCategory'], // Return the original user-friendly name
-                    'dateOfExpense' => $validated['date'],
-                    'amount' => (float) $validated['amount'],
-                    'description' => $validated['description'] ?? '',
-                ],
-            ], 201);
+            return $this->successResponse([
+                'id' => (string) $transaction->id,
+                'expenseCategory' => $validated['expenseCategory'], // Return the original user-friendly name
+                'dateOfExpense' => $validated['date'],
+                'amount' => (float) $validated['amount'],
+                'description' => $validated['description'] ?? '',
+            ], 'Expense data added successfully', 201);
         }
     }
 
     /**
      * Update financial data (sale or expense)
      */
-    public function updateFinancialData(Request $request, string $id): JsonResponse
+    public function updateFinancialData(UpdateFinancialDataRequest $request, string $id): JsonResponse
     {
         $user = $request->user();
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
-        $validated = $request->validate([
-            'category' => 'required|in:sales,expense',
-            'product' => 'required_if:category,sales|string|max:255',
-            'date' => 'required|date',
-            'quantitySold' => 'required_if:category,sales|integer|min:1',
-            'expenseCategory' => 'required_if:category,expense|string|max:255',
-            'amount' => 'required_if:category,expense|numeric|min:0',
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         if ($validated['category'] === 'sales') {
             // Extract revenue ID from composite ID (format: "revenueId-item")
@@ -2574,10 +2168,7 @@ class FranchiseeController extends Controller
                 ->first();
 
             if (! $revenue) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sales record not found',
-                ], 404);
+                return $this->notFoundResponse('Sales record not found');
             }
 
             // Find the product
@@ -2586,10 +2177,7 @@ class FranchiseeController extends Controller
                 ->first();
 
             if (! $product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not found',
-                ], 404);
+                return $this->notFoundResponse('Product not found');
             }
 
             // Check inventory
@@ -2598,10 +2186,7 @@ class FranchiseeController extends Controller
                 ->first();
 
             if (! $inventory) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not available in your unit inventory',
-                ], 400);
+                return $this->errorResponse('Product not available in your unit inventory', null, 400);
             }
 
             $newQuantity = (int) $validated['quantitySold'];
@@ -2622,10 +2207,7 @@ class FranchiseeController extends Controller
 
             // Check if we have enough stock for the increase
             if ($quantityDifference > 0 && $inventory->quantity < $quantityDifference) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Insufficient stock. Only {$inventory->quantity} units available for increase",
-                ], 400);
+                return $this->errorResponse("Insufficient stock. Only {$inventory->quantity} units available for increase", null, 400);
             }
 
             $unitPrice = (float) $product->unit_price;
@@ -2659,19 +2241,15 @@ class FranchiseeController extends Controller
                 $inventory->refresh();
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Sales data updated successfully',
-                'data' => [
-                    'id' => $revenue->id . '-item',
-                    'product' => $validated['product'],
-                    'dateOfSale' => $validated['date'],
-                    'unitPrice' => $unitPrice,
-                    'quantitySold' => $newQuantity,
-                    'sale' => $saleAmount,
-                    'remainingStock' => $inventory->quantity,
-                ],
-            ]);
+            return $this->successResponse([
+                'id' => $revenue->id . '-item',
+                'product' => $validated['product'],
+                'dateOfSale' => $validated['date'],
+                'unitPrice' => $unitPrice,
+                'quantitySold' => $newQuantity,
+                'sale' => $saleAmount,
+                'remainingStock' => $inventory->quantity,
+            ], 'Sales data updated successfully');
         } else {
             // Update expense transaction
             $transaction = \App\Models\Transaction::where('unit_id', $unit->id)
@@ -2680,10 +2258,7 @@ class FranchiseeController extends Controller
                 ->first();
 
             if (! $transaction) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Expense record not found',
-                ], 404);
+                return $this->notFoundResponse('Expense record not found');
             }
 
             $transaction->update([
@@ -2693,17 +2268,13 @@ class FranchiseeController extends Controller
                 'transaction_date' => $validated['date'],
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Expense data updated successfully',
-                'data' => [
-                    'id' => (string) $transaction->id,
-                    'expenseCategory' => $validated['expenseCategory'],
-                    'dateOfExpense' => $validated['date'],
-                    'amount' => (float) $validated['amount'],
-                    'description' => $validated['description'] ?? '',
-                ],
-            ]);
+            return $this->successResponse([
+                'id' => (string) $transaction->id,
+                'expenseCategory' => $validated['expenseCategory'],
+                'dateOfExpense' => $validated['date'],
+                'amount' => (float) $validated['amount'],
+                'description' => $validated['description'] ?? '',
+            ], 'Expense data updated successfully');
         }
     }
 
@@ -2716,10 +2287,7 @@ class FranchiseeController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $validated = $request->validate([
@@ -2747,9 +2315,6 @@ class FranchiseeController extends Controller
         }
         // Note: Profit records are calculated, not stored, so no deletion needed
 
-        return response()->json([
-            'success' => true,
-            'message' => "$deletedCount record(s) deleted successfully",
-        ]);
+        return $this->successResponse(null, "$deletedCount record(s) deleted successfully");
     }
 }

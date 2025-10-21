@@ -1,14 +1,19 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
+use App\Http\Requests\StoreLeadRequest;
+use App\Http\Requests\UpdateLeadRequest;
+use App\Http\Requests\MarkLeadAsLostRequest;
+use App\Http\Requests\AssignLeadRequest;
+use App\Http\Requests\AddLeadNoteRequest;
 use App\Models\Lead;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class LeadController extends Controller
+class LeadController extends BaseResourceController
 {
     /**
      * Get franchise ID for the current user based on their role
@@ -38,11 +43,8 @@ class LeadController extends Controller
         $franchiseId = $this->getUserFranchiseId($user);
 
         // If not admin and no franchise found, return error
-        if (!$user->hasRole('admin') && !$franchiseId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for this user',
-            ], 404);
+        if (! $user->hasRole('admin') && ! $franchiseId) {
+            return $this->notFoundResponse('No franchise found for this user');
         }
 
         $query = Lead::with(['franchise', 'assignedUser']);
@@ -63,7 +65,7 @@ class LeadController extends Controller
 
         if ($request->has('owner') && $request->owner) {
             $query->whereHas('assignedUser', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . str_replace('_', ' ', $request->owner) . '%');
+                $q->where('name', 'like', '%'.str_replace('_', ' ', $request->owner).'%');
             });
         }
 
@@ -120,73 +122,38 @@ class LeadController extends Controller
             ];
         });
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'leads' => $transformedLeads,
             'total' => $leads->total(),
             'currentPage' => $leads->currentPage(),
             'perPage' => $leads->perPage(),
             'lastPage' => $leads->lastPage(),
-            'message' => 'Leads retrieved successfully',
-        ]);
+        ], 'Leads retrieved successfully');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreLeadRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'email' => 'required|email|max:255|unique:leads,email',
-            'phone' => 'required|string|max:20',
-            'company_name' => 'nullable|string|max:255', // Fixed: was 'company'
-            'job_title' => 'nullable|string|max:100',
-            'address' => 'nullable|string',
-            'city' => 'required|string|max:100',
-            'country' => 'required|string|max:100',
-            'lead_source' => 'required|in:website,referral,social_media,advertisement,cold_call,event,other', // Fixed: was 'source'
-            'status' => 'required|in:new,contacted,qualified,proposal_sent,negotiating,closed_won,closed_lost',
-            'priority' => 'required|in:low,medium,high,urgent',
-            'franchise_id' => 'nullable|exists:franchises,id',
-            'assigned_to' => 'nullable|exists:users,id',
-            'estimated_investment' => 'nullable|numeric|min:0',
-            'franchise_fee_quoted' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-            'expected_decision_date' => 'nullable|date',
-            'last_contact_date' => 'nullable|date',
-            'next_follow_up_date' => 'nullable|date',
-            'contact_attempts' => 'nullable|integer|min:0',
-            'interests' => 'nullable|array',
-            'documents' => 'nullable|array',
-            'communication_log' => 'nullable|array'
-        ]);
+        $validated = $request->validated();
 
         // Get the current user's franchise
         $user = Auth::user();
         $franchiseId = $this->getUserFranchiseId($user);
 
-        if (!$franchiseId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for this user',
-            ], 404);
+        if (! $franchiseId) {
+            return $this->notFoundResponse('No franchise found for this user');
         }
 
-        // Map fields to match database schema
-        $validated['lead_source'] = $validated['source'];
-        $validated['company_name'] = $validated['company'];
         $validated['franchise_id'] = $franchiseId;
-        unset($validated['source'], $validated['company']);
-
         $lead = Lead::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $lead->load(['franchise', 'assignedUser']),
-            'message' => 'Lead created successfully',
-        ], 201);
+        return $this->successResponse(
+            $lead->load(['franchise', 'assignedUser']),
+            'Lead created successfully',
+            201
+        );
     }
 
     /**
@@ -196,41 +163,15 @@ class LeadController extends Controller
     {
         $lead->load(['franchise', 'assignedUser']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $lead,
-            'message' => 'Lead retrieved successfully',
-        ]);
+        return $this->successResponse($lead, 'Lead retrieved successfully');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Lead $lead): JsonResponse
+    public function update(UpdateLeadRequest $request, Lead $lead): JsonResponse
     {
-        $validated = $request->validate([
-            'first_name' => 'sometimes|string|max:100',
-            'last_name' => 'sometimes|string|max:100',
-            'email' => 'sometimes|email|max:255',
-            'phone' => 'sometimes|string|max:20',
-            'company' => 'nullable|string|max:255',
-            'job_title' => 'nullable|string|max:100',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'postal_code' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:100',
-            'source' => 'sometimes|in:website,referral,social_media,email_campaign,phone_call,trade_show,advertisement,other',
-            'status' => 'sometimes|in:new,contacted,qualified,proposal_sent,negotiating,converted,lost,unqualified',
-            'priority' => 'sometimes|in:low,medium,high,urgent',
-            'franchise_id' => 'nullable|exists:franchises,id',
-            'assigned_to' => 'nullable|exists:users,id',
-            'budget_range' => 'nullable|string|max:100',
-            'timeline' => 'nullable|string|max:100',
-            'interests' => 'nullable|array',
-            'notes' => 'nullable|string',
-            'tags' => 'nullable|array',
-        ]);
+        $validated = $request->validated();
 
         // Map source to lead_source for database storage if source is provided
         if (isset($validated['source'])) {
@@ -240,11 +181,7 @@ class LeadController extends Controller
 
         $lead->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $lead->load(['franchise', 'assignedUser']),
-            'message' => 'Lead updated successfully',
-        ]);
+        return $this->successResponse($lead->load(['franchise', 'assignedUser']), 'Lead updated successfully');
     }
 
     /**
@@ -254,10 +191,7 @@ class LeadController extends Controller
     {
         $lead->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Lead deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Lead deleted successfully');
     }
 
     /**
@@ -270,21 +204,15 @@ class LeadController extends Controller
             'converted_at' => now(),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $lead,
-            'message' => 'Lead converted successfully',
-        ]);
+        return $this->successResponse($lead, 'Lead converted successfully');
     }
 
     /**
      * Mark lead as lost
      */
-    public function markAsLost(Request $request, Lead $lead): JsonResponse
+    public function markAsLost(MarkLeadAsLostRequest $request, Lead $lead): JsonResponse
     {
-        $validated = $request->validate([
-            'lost_reason' => 'required|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         $lead->update([
             'status' => 'lost',
@@ -292,51 +220,35 @@ class LeadController extends Controller
             'lost_at' => now(),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $lead,
-            'message' => 'Lead marked as lost',
-        ]);
+        return $this->successResponse($lead, 'Lead marked as lost');
     }
 
     /**
      * Assign lead to user
      */
-    public function assign(Request $request, Lead $lead): JsonResponse
+    public function assign(AssignLeadRequest $request, Lead $lead): JsonResponse
     {
-        $validated = $request->validate([
-            'assigned_to' => 'required|exists:users,id',
-        ]);
+        $validated = $request->validated();
 
         $lead->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $lead->load(['assignedUser']),
-            'message' => 'Lead assigned successfully',
-        ]);
+        return $this->successResponse($lead->load(['assignedUser']), 'Lead assigned successfully');
     }
 
     /**
      * Add note to lead
      */
-    public function addNote(Request $request, Lead $lead): JsonResponse
+    public function addNote(AddLeadNoteRequest $request, Lead $lead): JsonResponse
     {
-        $validated = $request->validate([
-            'note' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         $currentNotes = $lead->notes ?? '';
-        $newNote = '[' . now()->format('Y-m-d H:i:s') . '] ' . $validated['note'];
-        $updatedNotes = $currentNotes ? $currentNotes . "\n\n" . $newNote : $newNote;
+        $newNote = '['.now()->format('Y-m-d H:i:s').'] '.$validated['note'];
+        $updatedNotes = $currentNotes ? $currentNotes."\n\n".$newNote : $newNote;
 
         $lead->update(['notes' => $updatedNotes]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $lead,
-            'message' => 'Note added successfully',
-        ]);
+        return $this->successResponse($lead, 'Note added successfully');
     }
 
     /**
@@ -348,11 +260,8 @@ class LeadController extends Controller
             $user = Auth::user();
             $franchiseId = $this->getUserFranchiseId($user);
 
-            if (!$franchiseId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+            if (! $franchiseId) {
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $query = Lead::where('franchise_id', $franchiseId)
@@ -414,21 +323,15 @@ class LeadController extends Controller
                 ];
             });
 
-            return response()->json([
-                'success' => true,
+            return $this->successResponse([
                 'leads' => $leads->items(),
                 'total' => $leads->total(),
                 'perPage' => $leads->perPage(),
                 'currentPage' => $leads->currentPage(),
                 'lastPage' => $leads->lastPage(),
-                'message' => 'Leads retrieved successfully',
-            ]);
+            ], 'Leads retrieved successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch leads',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch leads', $e->getMessage(), 500);
         }
     }
 
@@ -514,11 +417,7 @@ class LeadController extends Controller
             ],
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Lead statistics retrieved successfully',
-        ]);
+        return $this->successResponse($stats, 'Lead statistics retrieved successfully');
     }
 
     /**
@@ -543,10 +442,7 @@ class LeadController extends Controller
 
         $deleted = $query->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => "{$deleted} lead(s) deleted successfully",
-        ]);
+        return $this->successResponse(null, "{$deleted} lead(s) deleted successfully");
     }
 
     /**
@@ -561,11 +457,8 @@ class LeadController extends Controller
         $user = Auth::user();
         $franchiseId = $this->getUserFranchiseId($user);
 
-        if (!$franchiseId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for this user',
-            ], 404);
+        if (! $franchiseId) {
+            return $this->notFoundResponse('No franchise found for this user');
         }
 
         $file = $request->file('file');
@@ -598,17 +491,16 @@ class LeadController extends Controller
 
                 $imported++;
             } catch (\Exception $e) {
-                $errors[] = "Row {$imported}: " . $e->getMessage();
+                $errors[] = "Row {$imported}: ".$e->getMessage();
             }
         }
 
         fclose($handle);
 
-        return response()->json([
-            'success' => true,
-            'message' => "{$imported} lead(s) imported successfully",
+        return $this->successResponse([
+            'imported' => $imported,
             'errors' => $errors,
-        ]);
+        ], "{$imported} lead(s) imported successfully");
     }
 
     /**
@@ -622,7 +514,7 @@ class LeadController extends Controller
         $query = Lead::with(['assignedUser']);
 
         // Scope to user's franchise (unless admin)
-        if (!$franchiseId && !$user->hasRole('admin')) {
+        if (! $franchiseId && ! $user->hasRole('admin')) {
             abort(404, 'No franchise found for this user');
         }
 
@@ -637,7 +529,7 @@ class LeadController extends Controller
 
         $leads = $query->get();
 
-        $fileName = 'leads_' . now()->format('Y-m-d_His') . '.csv';
+        $fileName = 'leads_'.now()->format('Y-m-d_His').'.csv';
 
         return response()->streamDownload(function () use ($leads) {
             $handle = fopen('php://output', 'w');
@@ -686,7 +578,7 @@ class LeadController extends Controller
      */
     private function findUserByName(?string $name): ?int
     {
-        if (!$name) {
+        if (! $name) {
             return null;
         }
 

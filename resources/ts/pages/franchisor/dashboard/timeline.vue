@@ -1,12 +1,29 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
+import { franchiseApi, type DashboardTimelineData } from '@/services/api'
+import type { ApiResponse } from '@/types/api'
 
 // 👉 Router composable
 const router = useRouter()
 
-// 👉 API composable
-const { data: timelineApiData, execute: fetchTimelineData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/timeline')
+// 👉 API data loading
+const timelineApiData = ref<ApiResponse<DashboardTimelineData> | null>(null)
+const isLoading = ref(false)
+
+// Load timeline data
+const fetchTimelineData = async () => {
+  isLoading.value = true
+  try {
+    const response = await franchiseApi.getDashboardTimeline()
+    timelineApiData.value = response
+  } catch (error) {
+    console.error('Error fetching timeline data:', error)
+    timelineApiData.value = null
+  } finally {
+    isLoading.value = false
+  }
+}
 
 // 👉 Vuetify composables
 const { smAndDown } = useDisplay()
@@ -119,7 +136,7 @@ const formatDate = (dateString: string): string => {
 
 // 👉 Watch for API data changes
 watch(timelineApiData, newData => {
-  const apiData = newData as ApiResponse
+  const apiData = newData as ApiResponse<DashboardTimelineData>
   if (apiData?.success && apiData?.data) {
     const data = apiData.data
 

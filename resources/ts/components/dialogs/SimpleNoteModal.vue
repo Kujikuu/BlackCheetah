@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { leadApi } from '@/services/api'
+
 interface Props {
   isDialogVisible: boolean
   leadId: number | null
@@ -29,12 +31,7 @@ const addNote = async () => {
 
   try {
     // API call to add note
-    await $api(`/v1/franchisor/leads/${props.leadId}/notes`, {
-      method: 'POST',
-      body: {
-        note: note.value.trim(),
-      },
-    })
+    await leadApi.addNoteToLead(props.leadId, note.value.trim())
 
     emit('noteAdded')
     updateModelValue(false)

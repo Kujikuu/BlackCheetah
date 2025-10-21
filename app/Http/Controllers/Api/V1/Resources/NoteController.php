@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Models\Lead;
 use App\Models\Note;
 use Illuminate\Http\JsonResponse;
@@ -11,7 +11,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-class NoteController extends Controller
+class NoteController extends BaseResourceController
 {
     /**
      * Check if the authenticated user can manage a note.
@@ -74,10 +74,7 @@ class NoteController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $notes,
-        ]);
+        return $this->successResponse($notes);
     }
 
     /**
@@ -117,11 +114,7 @@ class NoteController extends Controller
 
         $note->load('user:id,name,email');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Note created successfully',
-            'data' => $note,
-        ], 201);
+        return $this->successResponse($note, 'Note created successfully', 201);
     }
 
     /**
@@ -131,10 +124,7 @@ class NoteController extends Controller
     {
         $note->load('user:id,name,email', 'lead:id,first_name,last_name');
 
-        return response()->json([
-            'success' => true,
-            'data' => $note,
-        ]);
+        return $this->successResponse($note);
     }
 
     /**
@@ -144,10 +134,7 @@ class NoteController extends Controller
     {
         // Check if user can edit this note
         if (! $this->canManageNote($note)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized to edit this note',
-            ], 403);
+            return $this->forbiddenResponse('Unauthorized to edit this note');
         }
 
         $request->validate([
@@ -179,11 +166,7 @@ class NoteController extends Controller
 
         $note->load('user:id,name,email');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Note updated successfully',
-            'data' => $note,
-        ]);
+        return $this->successResponse($note, 'Note updated successfully');
     }
 
     /**
@@ -193,10 +176,7 @@ class NoteController extends Controller
     {
         // Check if user can delete this note
         if (! $this->canManageNote($note)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized to delete this note',
-            ], 403);
+            return $this->forbiddenResponse('Unauthorized to delete this note');
         }
 
         // Delete associated files
@@ -210,10 +190,7 @@ class NoteController extends Controller
 
         $note->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Note deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Note deleted successfully');
     }
 
     /**
@@ -223,19 +200,13 @@ class NoteController extends Controller
     {
         // Check if user can edit this note
         if (! $this->canManageNote($note)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized to edit this note',
-            ], 403);
+            return $this->forbiddenResponse('Unauthorized to edit this note');
         }
 
         $attachments = $note->attachments ?? [];
 
         if (! isset($attachments[$attachmentIndex])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Attachment not found',
-            ], 404);
+            return $this->notFoundResponse('Attachment not found');
         }
 
         // Delete the file
@@ -248,11 +219,7 @@ class NoteController extends Controller
 
         $note->update(['attachments' => $attachments]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Attachment removed successfully',
-            'data' => $note,
-        ]);
+        return $this->successResponse($note, 'Attachment removed successfully');
     }
 
     /**

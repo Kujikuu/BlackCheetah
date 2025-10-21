@@ -1,7 +1,6 @@
 import { $api } from '@/utils/api'
-
-// Base API URL
-const API_URL = '/v1/technical-requests'
+import { getEndpoint } from '@/utils/api-router'
+import type { ApiResponse, PaginatedResponse, TechnicalRequestStatus, TechnicalRequestCategory, Priority } from '@/types/api'
 
 // Type definitions
 export interface TechnicalRequest {
@@ -9,10 +8,10 @@ export interface TechnicalRequest {
   ticket_number: string
   title: string
   description: string
-  category: 'hardware' | 'software' | 'network' | 'pos_system' | 'website' | 'mobile_app' | 'training' | 'other'
+  category: `${TechnicalRequestCategory}`
   attachments?: string[]
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  status: 'open' | 'in_progress' | 'pending_info' | 'resolved' | 'closed' | 'cancelled'
+  priority: `${Priority}`
+  status: `${TechnicalRequestStatus}`
   requester_id: number
   requester?: {
     id: number
@@ -67,45 +66,37 @@ export interface UpdateTechnicalRequestData {
 }
 
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  current_page: number
-  last_page: number
-  per_page: number
-  total: number
-}
-
-// API Service
-export const technicalRequestApi = {
+// API Service Class
+export class TechnicalRequestApi {
+  private getBaseUrl(): string {
+    return getEndpoint('technical-requests')
+  }
   /**
    * Get all technical requests with filters
    */
   async getTechnicalRequests(filters?: TechnicalRequestFilters) {
-    return await $api<{ success: boolean; data: PaginatedResponse<TechnicalRequest>; message: string }>(
-      API_URL,
+    return await $api<ApiResponse<PaginatedResponse<TechnicalRequest>>>(
+      this.getBaseUrl(),
       {
         method: 'GET',
         params: filters,
       },
     )
-  },
+  }
 
   /**
    * Get a single technical request by ID
    */
-  async getTechnicalRequest(id: number | string) {
-    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
-      `${API_URL}/${id}`,
-      {
-        method: 'GET',
-      },
-    )
-  },
+  async getTechnicalRequest(id: number | string): Promise<ApiResponse<TechnicalRequest>> {
+    return await $api<ApiResponse<TechnicalRequest>>(`${this.getBaseUrl()}/${id}`, {
+      method: 'GET',
+    })
+  }
 
   /**
    * Create a new technical request
    */
-  async createTechnicalRequest(data: CreateTechnicalRequestData) {
+  async createTechnicalRequest(data: CreateTechnicalRequestData): Promise<ApiResponse<TechnicalRequest>> {
     // Create FormData for file uploads
     const formData = new FormData()
     formData.append('title', data.title)
@@ -125,110 +116,87 @@ export const technicalRequestApi = {
       })
     }
 
-    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
-      API_URL,
-      {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          // Don't set Content-Type - let browser set it for FormData with boundary
-        },
+    return await $api<ApiResponse<TechnicalRequest>>(this.getBaseUrl(), {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        // Don't set Content-Type - let browser set it for FormData with boundary
       },
-    )
-  },
+    })
+  }
 
   /**
    * Update a technical request
    */
-  async updateTechnicalRequest(id: number | string, data: UpdateTechnicalRequestData) {
-    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
-      `${API_URL}/${id}`,
-      {
-        method: 'PATCH',
-        body: data,
-      },
-    )
-  },
+  async updateTechnicalRequest(id: number | string, data: UpdateTechnicalRequestData): Promise<ApiResponse<TechnicalRequest>> {
+    return await $api<ApiResponse<TechnicalRequest>>(`${this.getBaseUrl()}/${id}`, {
+      method: 'PATCH',
+      body: data,
+    })
+  }
 
   /**
    * Delete a technical request
    */
-  async deleteTechnicalRequest(id: number | string) {
-    return await $api<{ success: boolean; message: string }>(
-      `${API_URL}/${id}`,
-      {
-        method: 'DELETE',
-      },
-    )
-  },
+  async deleteTechnicalRequest(id: number | string): Promise<ApiResponse<void>> {
+    return await $api<ApiResponse<void>>(`${this.getBaseUrl()}/${id}`, {
+      method: 'DELETE',
+    })
+  }
 
   /**
    * Get technical request statistics
    */
-  async getStatistics() {
-    return await $api<{ success: boolean; data: TechnicalRequestStatistics; message: string }>(
-      `${API_URL}/statistics`,
-      {
-        method: 'GET',
-      },
-    )
-  },
-
+  async getStatistics(): Promise<ApiResponse<TechnicalRequestStatistics>> {
+    return await $api<ApiResponse<TechnicalRequestStatistics>>(`${this.getBaseUrl()}/statistics`, {
+      method: 'GET',
+    })
+  }
 
   /**
    * Resolve a technical request
    */
-  async resolve(id: number | string) {
-    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
-      `${API_URL}/${id}/resolve`,
-      {
-        method: 'PATCH',
-      },
-    )
-  },
+  async resolve(id: number | string): Promise<ApiResponse<TechnicalRequest>> {
+    return await $api<ApiResponse<TechnicalRequest>>(`${this.getBaseUrl()}/${id}/resolve`, {
+      method: 'PATCH',
+    })
+  }
 
   /**
    * Close a technical request
    */
-  async close(id: number | string) {
-    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
-      `${API_URL}/${id}/close`,
-      {
-        method: 'PATCH',
-      },
-    )
-  },
+  async close(id: number | string): Promise<ApiResponse<TechnicalRequest>> {
+    return await $api<ApiResponse<TechnicalRequest>>(`${this.getBaseUrl()}/${id}/close`, {
+      method: 'PATCH',
+    })
+  }
 
   /**
    * Add attachments to a technical request
    */
-  async addAttachments(id: number | string, attachmentUrl: string) {
-    return await $api<{ success: boolean; data: TechnicalRequest; message: string }>(
-      `${API_URL}/${id}/attachments`,
-      {
-        method: 'POST',
-        body: {
-          attachment_url: attachmentUrl,
-        },
+  async addAttachments(id: number | string, attachmentUrl: string): Promise<ApiResponse<TechnicalRequest>> {
+    return await $api<ApiResponse<TechnicalRequest>>(`${this.getBaseUrl()}/${id}/attachments`, {
+      method: 'POST',
+      body: {
+        attachment_url: attachmentUrl,
       },
-    )
-  },
-
+    })
+  }
 
   /**
    * Bulk delete technical requests
    */
-  async bulkDelete(requestIds: (number | string)[]) {
-    return await $api<{ success: boolean; message: string; count: number }>(
-      '/v1/technical-requests/bulk-delete',
-      {
-        method: 'POST',
-        body: {
-          ids: requestIds,
-        },
+  async bulkDelete(requestIds: (number | string)[]): Promise<ApiResponse<{ count: number }>> {
+    return await $api<ApiResponse<{ count: number }>>(`${this.getBaseUrl()}/bulk-delete`, {
+      method: 'POST',
+      body: {
+        ids: requestIds,
       },
-    )
-  },
+    })
+  }
 }
+
+// Export class instance
+export const technicalRequestApi = new TechnicalRequestApi()

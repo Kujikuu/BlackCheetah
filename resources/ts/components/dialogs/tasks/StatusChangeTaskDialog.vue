@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { taskApi, type Task } from '@/services/api/task'
+import { taskApi, type Task } from '@/services/api'
 import { PRIORITY_OPTIONS, STATUS_OPTIONS } from '@/constants/taskConstants'
 
 interface Props {

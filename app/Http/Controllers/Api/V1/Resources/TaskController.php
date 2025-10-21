@@ -1,15 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Franchise;
 use App\Models\Task;
 use App\Models\Unit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class TaskController extends Controller
+class TaskController extends BaseResourceController
 {
     /**
      * Display a listing of the resource.
@@ -69,93 +71,62 @@ class TaskController extends Controller
         }
 
         // Apply sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sort = $this->parseSortParams($request, 'created_at');
+        $query->orderBy($sort['column'], $sort['order']);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $tasks = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $tasks,
-            'message' => 'Tasks retrieved successfully',
-        ]);
+        return $this->successResponse($tasks, 'Tasks retrieved successfully');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreTaskRequest $request): JsonResponse
     {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'category' => 'required|in:Operations,Training,Maintenance,Marketing,Finance,HR,Quality Control,Customer Service',
-                'priority' => 'required|in:low,medium,high',
-                'status' => 'required|in:pending,in_progress,completed',
-                'franchise_id' => 'nullable|exists:franchises,id',
-                'unit_id' => 'nullable|exists:units,id',
-                'assigned_to' => 'nullable|exists:users,id',
-                'due_date' => 'nullable|date|after_or_equal:today',
-                'estimated_hours' => 'nullable|numeric|min:0',
-                'actual_hours' => 'nullable|numeric|min:0',
-                'attachments' => 'nullable|array',
-                'checklist' => 'nullable|array',
-                'dependencies' => 'nullable|array',
-                'tags' => 'nullable|array',
-                'notes' => 'nullable|string',
-            ]);
+        $validated = $request->validated();
 
-            // Set the created_by field to the authenticated user
-            $validated['created_by'] = $request->user()->id;
+        // Set the created_by field to the authenticated user
+        $validated['created_by'] = $request->user()->id;
 
-            // If franchise_id is not provided, try to set it based on the authenticated user
-            if (! isset($validated['franchise_id'])) {
-                $user = $request->user();
+        // If franchise_id is not provided, try to set it based on the authenticated user
+        if (! isset($validated['franchise_id'])) {
+            $user = $request->user();
 
-                // If user is a franchisor, set franchise_id to their franchise
-                if ($user->role === 'franchisor') {
-                    $franchise = Franchise::where('franchisor_id', $user->id)->first();
-                    if ($franchise) {
-                        $validated['franchise_id'] = $franchise->id;
-                    }
+            // If user is a franchisor, set franchise_id to their franchise
+            if ($user->role === 'franchisor') {
+                $franchise = Franchise::where('franchisor_id', $user->id)->first();
+                if ($franchise) {
+                    $validated['franchise_id'] = $franchise->id;
                 }
             }
-
-            // Map frontend category to database type
-            $categoryToTypeMap = [
-                'Operations' => 'operations',
-                'Training' => 'training',
-                'Maintenance' => 'maintenance',
-                'Marketing' => 'marketing',
-                'Finance' => 'finance',
-                'HR' => 'other', // Map HR to 'other' since 'hr' is not in database enum
-                'Quality Control' => 'compliance',
-                'Customer Service' => 'support',
-            ];
-
-            $validated['type'] = $categoryToTypeMap[$validated['category']] ?? 'other';
-            unset($validated['category']); // Remove category as it doesn't exist in database
-
-            $task = Task::create($validated);
-
-            return response()->json([
-                'success' => true,
-                'data' => $task->load(['franchise', 'unit', 'assignedTo', 'createdBy']),
-                'message' => 'Task created successfully',
-            ], 201);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-                'data_received' => $request->all(),
-            ], 422);
         }
+
+        // Map frontend category to database type
+        $categoryToTypeMap = [
+            'Operations' => 'operations',
+            'Training' => 'training',
+            'Maintenance' => 'maintenance',
+            'Marketing' => 'marketing',
+            'Finance' => 'finance',
+            'HR' => 'other', // Map HR to 'other' since 'hr' is not in database enum
+            'Quality Control' => 'compliance',
+            'Customer Service' => 'support',
+        ];
+
+        $validated['type'] = $categoryToTypeMap[$validated['category']] ?? 'other';
+        unset($validated['category']); // Remove category as it doesn't exist in database
+
+        $task = Task::create($validated);
+
+        return $this->successResponse(
+            $task->load(['franchise', 'unit', 'assignedTo', 'createdBy']),
+            'Task created successfully',
+            201
+        );
+
     }
 
     /**
@@ -165,36 +136,15 @@ class TaskController extends Controller
     {
         $task->load(['franchise', 'unit', 'assignedTo', 'createdBy']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $task,
-            'message' => 'Task retrieved successfully',
-        ]);
+        return $this->successResponse($task, 'Task retrieved successfully');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Task $task): JsonResponse
+    public function update(UpdateTaskRequest $request, Task $task): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'category' => 'sometimes|in:Operations,Training,Maintenance,Marketing,Finance,HR,Quality Control,Customer Service',
-            'priority' => 'sometimes|in:low,medium,high',
-            'status' => 'sometimes|in:pending,in_progress,completed',
-            'franchise_id' => 'nullable|exists:franchises,id',
-            'unit_id' => 'nullable|exists:units,id',
-            'assigned_to' => 'nullable|exists:users,id',
-            'due_date' => 'nullable|date',
-            'estimated_hours' => 'nullable|numeric|min:0',
-            'actual_hours' => 'nullable|numeric|min:0',
-            'attachments' => 'nullable|array',
-            'checklist' => 'nullable|array',
-            'dependencies' => 'nullable|array',
-            'tags' => 'nullable|array',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // Map frontend category to database type if provided
         if (isset($validated['category'])) {
@@ -215,11 +165,10 @@ class TaskController extends Controller
 
         $task->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $task->load(['franchise', 'unit', 'assignedTo', 'createdBy']),
-            'message' => 'Task updated successfully',
-        ]);
+        return $this->successResponse(
+            $task->load(['franchise', 'unit', 'assignedTo', 'createdBy']),
+            'Task updated successfully'
+        );
     }
 
     /**
@@ -229,10 +178,7 @@ class TaskController extends Controller
     {
         $task->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Task deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Task deleted successfully');
     }
 
     /**
@@ -254,11 +200,7 @@ class TaskController extends Controller
                 'Completion Notes: '.$validated['completion_notes']) : $task->notes,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $task,
-            'message' => 'Task completed successfully',
-        ]);
+        return $this->successResponse($task, 'Task completed successfully');
     }
 
     /**
@@ -271,11 +213,7 @@ class TaskController extends Controller
             'started_at' => now(),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $task,
-            'message' => 'Task started successfully',
-        ]);
+        return $this->successResponse($task, 'Task started successfully');
     }
 
     /**
@@ -289,11 +227,7 @@ class TaskController extends Controller
 
         $task->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $task->load(['assignedTo']),
-            'message' => 'Task assigned successfully',
-        ]);
+        return $this->successResponse($task->load(['assignedTo']), 'Task assigned successfully');
     }
 
     /**
@@ -318,11 +252,7 @@ class TaskController extends Controller
 
         $task->update($updateData);
 
-        return response()->json([
-            'success' => true,
-            'data' => $task,
-            'message' => 'Task progress updated successfully',
-        ]);
+        return $this->successResponse($task, 'Task progress updated successfully');
     }
 
     /**
@@ -362,11 +292,7 @@ class TaskController extends Controller
                 ->value('avg_hours'),
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Task statistics retrieved successfully',
-        ]);
+        return $this->successResponse($stats, 'Task statistics retrieved successfully');
     }
 
     /**
@@ -378,21 +304,14 @@ class TaskController extends Controller
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $tasks = Task::where('franchise_id', $franchise->id)
             ->with(['franchise', 'unit', 'assignedTo', 'createdBy'])
             ->paginate(15);
 
-        return response()->json([
-            'success' => true,
-            'data' => $tasks,
-            'message' => 'Tasks retrieved successfully',
-        ]);
+        return $this->successResponse($tasks, 'Tasks retrieved successfully');
     }
 
     /**
@@ -404,21 +323,14 @@ class TaskController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $tasks = Task::where('unit_id', $unit->id)
             ->with(['franchise', 'unit', 'assignedTo', 'createdBy'])
             ->paginate(15);
 
-        return response()->json([
-            'success' => true,
-            'data' => $tasks,
-            'message' => 'Unit tasks retrieved successfully',
-        ]);
+        return $this->successResponse($tasks, 'Unit tasks retrieved successfully');
     }
 
     /**
@@ -431,11 +343,7 @@ class TaskController extends Controller
             ->with(['franchise', 'unit', 'assignedTo', 'createdBy'])
             ->paginate(15);
 
-        return response()->json([
-            'success' => true,
-            'data' => $tasks,
-            'message' => 'Assigned tasks retrieved successfully',
-        ]);
+        return $this->successResponse($tasks, 'Assigned tasks retrieved successfully');
     }
 
     /**
@@ -451,10 +359,7 @@ class TaskController extends Controller
             ->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         // Build query for tasks assigned to this sales user
@@ -515,8 +420,7 @@ class TaskController extends Controller
             ];
         });
 
-        return response()->json([
-            'success' => true,
+        return $this->successResponse([
             'data' => $transformedTasks,
             'pagination' => [
                 'total' => $tasks->total(),
@@ -524,8 +428,7 @@ class TaskController extends Controller
                 'currentPage' => $tasks->currentPage(),
                 'lastPage' => $tasks->lastPage(),
             ],
-            'message' => 'Tasks retrieved successfully',
-        ]);
+        ], 'Tasks retrieved successfully');
     }
 
     /**
@@ -541,10 +444,7 @@ class TaskController extends Controller
             ->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         // Get tasks for this sales user
@@ -564,16 +464,12 @@ class TaskController extends Controller
                    $task->status !== 'completed';
         })->count();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'totalTasks' => $totalTasks,
-                'completedTasks' => $completedTasks,
-                'inProgressTasks' => $inProgressTasks,
-                'dueTasks' => $dueTasks,
-            ],
-            'message' => 'Statistics retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'totalTasks' => $totalTasks,
+            'completedTasks' => $completedTasks,
+            'inProgressTasks' => $inProgressTasks,
+            'dueTasks' => $dueTasks,
+        ], 'Statistics retrieved successfully');
     }
 
     /**
@@ -585,10 +481,7 @@ class TaskController extends Controller
 
         // Verify the task belongs to this user
         if ($task->assigned_to !== $user->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized to update this task',
-            ], 403);
+            return $this->forbiddenResponse('Unauthorized to update this task');
         }
 
         $validated = $request->validate([
@@ -608,10 +501,6 @@ class TaskController extends Controller
 
         $task->save();
 
-        return response()->json([
-            'success' => true,
-            'data' => $task,
-            'message' => 'Task status updated successfully',
-        ]);
+        return $this->successResponse($task, 'Task status updated successfully');
     }
 }

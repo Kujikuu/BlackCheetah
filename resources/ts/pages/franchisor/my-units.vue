@@ -3,6 +3,7 @@ import { SaudiRiyal } from 'lucide-vue-next'
 import { formatCurrency } from '@/@core/utils/formatters'
 import AddFranchiseeDialog from '@/components/dialogs/units/AddFranchiseeDialog.vue'
 import ChangeStatusDialog from '@/components/dialogs/units/ChangeStatusDialog.vue'
+import { franchiseApi } from '@/services/api'
 
 // 👉 Pagination helper
 const paginationMeta = (page: number, perPage: number, total: number) => {
@@ -101,7 +102,7 @@ const loadUnitsData = async () => {
   error.value = null
 
   try {
-    const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/units')
+    const response = await franchiseApi.getUnits()
 
     if (response.success && response.data.data) {
       // Transform API data to match frontend structure
@@ -142,7 +143,7 @@ const loadUnitsData = async () => {
 
 const loadStatisticsData = async () => {
   try {
-    const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/units/statistics')
+    const response = await franchiseApi.getUnitsStatistics()
 
     if (response.success && response.data) {
       statisticsData.value = {
@@ -211,12 +212,7 @@ const changeUnitStatus = async () => {
     return
 
   try {
-    const response = await $api(`/v1/units/${selectedUnit.value.id}/status`, {
-      method: 'PATCH',
-      body: {
-        status: newStatus.value,
-      },
-    })
+    const response = await franchiseApi.updateUnitStatus(selectedUnit.value.id, newStatus.value)
 
     if (response.success) {
       // Update local data

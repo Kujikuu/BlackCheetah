@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api\Admin;
+namespace App\Http\Controllers\Api\V1\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\Admin\BaseAdminController;
+use App\Http\Requests\CreateUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\Franchise;
 use App\Models\Revenue;
 use App\Models\TechnicalRequest;
@@ -18,541 +20,8 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
-class AdminController extends Controller
+class AdminController extends BaseAdminController
 {
-    /**
-     * Parse sorting parameters from request
-     * Handles both string and JSON object formats
-     */
-    private function parseSortParams(Request $request, string $defaultColumn = 'created_at', string $defaultOrder = 'desc'): array
-    {
-        $sortBy = $request->get('sortBy', $defaultColumn);
-
-        // Handle if sortBy is a JSON string
-        if (is_string($sortBy) && (str_starts_with($sortBy, '{') || str_starts_with($sortBy, '['))) {
-            $sortByDecoded = json_decode($sortBy, true);
-            if ($sortByDecoded && isset($sortByDecoded['key'])) {
-                return [
-                    'column' => $sortByDecoded['key'],
-                    'order' => $sortByDecoded['order'] ?? $defaultOrder,
-                ];
-            }
-
-            return ['column' => $defaultColumn, 'order' => $defaultOrder];
-        }
-
-        return [
-            'column' => $sortBy,
-            'order' => $request->get('sortOrder', $defaultOrder),
-        ];
-    }
-
-    /**
-     * Get theme color for primary
-     */
-    private function getPrimaryColor(): string
-    {
-        return '#696CFF'; // Default primary color
-    }
-
-    /**
-     * Get theme color for success
-     */
-    private function getSuccessColor(): string
-    {
-        return '#71DD37'; // Default success color
-    }
-
-    /**
-     * Get theme color for info
-     */
-    private function getInfoColor(): string
-    {
-        return '#03C3EC'; // Default info color
-    }
-
-    /**
-     * Get theme color for warning
-     */
-    private function getWarningColor(): string
-    {
-        return '#FFAB00'; // Default warning color
-    }
-
-    /**
-     * Get admin dashboard statistics
-     */
-    public function dashboardStats(): JsonResponse
-    {
-        try {
-            // User statistics
-            $totalUsers = User::count();
-            $franchisors = User::where('role', 'franchisor')->count();
-            $franchisees = User::where('role', 'franchisee')->count();
-            $salesUsers = User::where('role', 'sales')->count();
-
-            // Calculate growth percentages (compared to last month)
-            $lastMonth = Carbon::now()->subMonth();
-
-            $totalUsersLastMonth = User::where('created_at', '<=', $lastMonth)->count();
-            $franchisorsLastMonth = User::where('role', 'franchisor')->where('created_at', '<=', $lastMonth)->count();
-            $franchiseesLastMonth = User::where('role', 'franchisee')->where('created_at', '<=', $lastMonth)->count();
-            $salesUsersLastMonth = User::where('role', 'sales')->where('created_at', '<=', $lastMonth)->count();
-
-            $totalUsersGrowth = $totalUsersLastMonth > 0 ? (($totalUsers - $totalUsersLastMonth) / $totalUsersLastMonth) * 100 : 0;
-            $franchisorsGrowth = $franchisorsLastMonth > 0 ? (($franchisors - $franchisorsLastMonth) / $franchisorsLastMonth) * 100 : 0;
-            $franchiseesGrowth = $franchiseesLastMonth > 0 ? (($franchisees - $franchiseesLastMonth) / $franchiseesLastMonth) * 100 : 0;
-            $salesUsersGrowth = $salesUsersLastMonth > 0 ? (($salesUsers - $salesUsersLastMonth) / $salesUsersLastMonth) * 100 : 0;
-
-            // Calculate chart data for last 7 days
-            $chartData = [];
-            for ($i = 6; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i);
-                $chartData[] = User::whereDate('created_at', $date->format('Y-m-d'))->count();
-            }
-
-            // Calculate franchisors chart data for last 7 days
-            $franchisorsChartData = [];
-            for ($i = 6; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i);
-                $franchisorsChartData[] = User::where('role', 'franchisor')
-                    ->whereDate('created_at', $date->format('Y-m-d'))
-                    ->count();
-            }
-
-            // Calculate franchisees chart data for last 7 days
-            $franchiseesChartData = [];
-            for ($i = 6; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i);
-                $franchiseesChartData[] = User::where('role', 'franchisee')
-                    ->whereDate('created_at', $date->format('Y-m-d'))
-                    ->count();
-            }
-
-            // Calculate sales users chart data for last 7 days
-            $salesChartData = [];
-            for ($i = 6; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i);
-                $salesChartData[] = User::where('role', 'sales')
-                    ->whereDate('created_at', $date->format('Y-m-d'))
-                    ->count();
-            }
-
-            $stats = [
-                [
-                    'title' => 'All registered users',
-                    'color' => 'primary',
-                    'icon' => 'tabler-users',
-                    'stats' => number_format($totalUsers),
-                    'height' => 90,
-                    'series' => [
-                        [
-                            'data' => $chartData,
-                        ],
-                    ],
-                    'chartOptions' => [
-                        'chart' => [
-                            'height' => 90,
-                            'type' => 'area',
-                            'toolbar' => [
-                                'show' => false,
-                            ],
-                            'sparkline' => [
-                                'enabled' => true,
-                            ],
-                        ],
-                        'tooltip' => [
-                            'enabled' => false,
-                        ],
-                        'markers' => [
-                            'colors' => 'transparent',
-                            'strokeColors' => 'transparent',
-                        ],
-                        'grid' => [
-                            'show' => false,
-                        ],
-                        'colors' => [$this->getPrimaryColor()],
-                        'fill' => [
-                            'type' => 'gradient',
-                            'gradient' => [
-                                'shadeIntensity' => 0.8,
-                                'opacityFrom' => 0.6,
-                                'opacityTo' => 0.1,
-                            ],
-                        ],
-                        'dataLabels' => [
-                            'enabled' => false,
-                        ],
-                        'stroke' => [
-                            'width' => 2,
-                            'curve' => 'smooth',
-                        ],
-                        'xaxis' => [
-                            'show' => true,
-                            'lines' => [
-                                'show' => false,
-                            ],
-                            'labels' => [
-                                'show' => false,
-                            ],
-                            'stroke' => [
-                                'width' => 0,
-                            ],
-                            'axisBorder' => [
-                                'show' => false,
-                            ],
-                        ],
-                        'yaxis' => [
-                            'stroke' => [
-                                'width' => 0,
-                            ],
-                            'show' => false,
-                        ],
-                    ],
-                ],
-                [
-                    'title' => 'Active franchisors',
-                    'color' => 'success',
-                    'icon' => 'tabler-building-store',
-                    'stats' => number_format($franchisors),
-                    'height' => 90,
-                    'series' => [
-                        [
-                            'data' => $franchisorsChartData,
-                        ],
-                    ],
-                    'chartOptions' => [
-                        'chart' => [
-                            'height' => 90,
-                            'type' => 'area',
-                            'toolbar' => [
-                                'show' => false,
-                            ],
-                            'sparkline' => [
-                                'enabled' => true,
-                            ],
-                        ],
-                        'tooltip' => [
-                            'enabled' => false,
-                        ],
-                        'markers' => [
-                            'colors' => 'transparent',
-                            'strokeColors' => 'transparent',
-                        ],
-                        'grid' => [
-                            'show' => false,
-                        ],
-                        'colors' => [$this->getSuccessColor()],
-                        'fill' => [
-                            'type' => 'gradient',
-                            'gradient' => [
-                                'shadeIntensity' => 0.8,
-                                'opacityFrom' => 0.6,
-                                'opacityTo' => 0.1,
-                            ],
-                        ],
-                        'dataLabels' => [
-                            'enabled' => false,
-                        ],
-                        'stroke' => [
-                            'width' => 2,
-                            'curve' => 'smooth',
-                        ],
-                        'xaxis' => [
-                            'show' => true,
-                            'lines' => [
-                                'show' => false,
-                            ],
-                            'labels' => [
-                                'show' => false,
-                            ],
-                            'stroke' => [
-                                'width' => 0,
-                            ],
-                            'axisBorder' => [
-                                'show' => false,
-                            ],
-                        ],
-                        'yaxis' => [
-                            'stroke' => [
-                                'width' => 0,
-                            ],
-                            'show' => false,
-                        ],
-                    ],
-                ],
-                [
-                    'title' => 'Active franchisees',
-                    'color' => 'info',
-                    'icon' => 'tabler-user-check',
-                    'stats' => number_format($franchisees),
-                    'height' => 90,
-                    'series' => [
-                        [
-                            'data' => $franchiseesChartData,
-                        ],
-                    ],
-                    'chartOptions' => [
-                        'chart' => [
-                            'height' => 90,
-                            'type' => 'area',
-                            'toolbar' => [
-                                'show' => false,
-                            ],
-                            'sparkline' => [
-                                'enabled' => true,
-                            ],
-                        ],
-                        'tooltip' => [
-                            'enabled' => false,
-                        ],
-                        'markers' => [
-                            'colors' => 'transparent',
-                            'strokeColors' => 'transparent',
-                        ],
-                        'grid' => [
-                            'show' => false,
-                        ],
-                        'colors' => [$this->getInfoColor()],
-                        'fill' => [
-                            'type' => 'gradient',
-                            'gradient' => [
-                                'shadeIntensity' => 0.8,
-                                'opacityFrom' => 0.6,
-                                'opacityTo' => 0.1,
-                            ],
-                        ],
-                        'dataLabels' => [
-                            'enabled' => false,
-                        ],
-                        'stroke' => [
-                            'width' => 2,
-                            'curve' => 'smooth',
-                        ],
-                        'xaxis' => [
-                            'show' => true,
-                            'lines' => [
-                                'show' => false,
-                            ],
-                            'labels' => [
-                                'show' => false,
-                            ],
-                            'stroke' => [
-                                'width' => 0,
-                            ],
-                            'axisBorder' => [
-                                'show' => false,
-                            ],
-                        ],
-                        'yaxis' => [
-                            'stroke' => [
-                                'width' => 0,
-                            ],
-                            'show' => false,
-                        ],
-                    ],
-                ],
-                [
-                    'title' => 'Sales team members',
-                    'color' => 'warning',
-                    'icon' => 'tabler-chart-line',
-                    'stats' => number_format($salesUsers),
-                    'height' => 90,
-                    'series' => [
-                        [
-                            'data' => $salesChartData,
-                        ],
-                    ],
-                    'chartOptions' => [
-                        'chart' => [
-                            'height' => 90,
-                            'type' => 'area',
-                            'toolbar' => [
-                                'show' => false,
-                            ],
-                            'sparkline' => [
-                                'enabled' => true,
-                            ],
-                        ],
-                        'tooltip' => [
-                            'enabled' => false,
-                        ],
-                        'markers' => [
-                            'colors' => 'transparent',
-                            'strokeColors' => 'transparent',
-                        ],
-                        'grid' => [
-                            'show' => false,
-                        ],
-                        'colors' => [$this->getWarningColor()],
-                        'fill' => [
-                            'type' => 'gradient',
-                            'gradient' => [
-                                'shadeIntensity' => 0.8,
-                                'opacityFrom' => 0.6,
-                                'opacityTo' => 0.1,
-                            ],
-                        ],
-                        'dataLabels' => [
-                            'enabled' => false,
-                        ],
-                        'stroke' => [
-                            'width' => 2,
-                            'curve' => 'smooth',
-                        ],
-                        'xaxis' => [
-                            'show' => true,
-                            'lines' => [
-                                'show' => false,
-                            ],
-                            'labels' => [
-                                'show' => false,
-                            ],
-                            'stroke' => [
-                                'width' => 0,
-                            ],
-                            'axisBorder' => [
-                                'show' => false,
-                            ],
-                        ],
-                        'yaxis' => [
-                            'stroke' => [
-                                'width' => 0,
-                            ],
-                            'show' => false,
-                        ],
-                    ],
-                ],
-            ];
-
-            return response()->json([
-                'success' => true,
-                'data' => $stats,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch dashboard statistics',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Get recent users for dashboard
-     */
-    public function recentUsers(): JsonResponse
-    {
-        try {
-            $recentUsers = User::with(['franchise'])
-                ->whereIn('role', ['franchisor', 'franchisee', 'sales'])
-                ->orderBy('created_at', 'desc')
-                ->limit(5)
-                ->get()
-                ->map(function ($user) {
-                    $userData = [
-                        'id' => $user->id,
-                        'fullName' => $user->name,
-                        'email' => $user->email,
-                        'role' => $user->role,
-                        'status' => $user->status,
-                        'avatar' => $user->avatar,
-                        'joinedDate' => $user->created_at->format('Y-m-d'),
-                        'lastLogin' => $user->last_login_at ? $user->last_login_at->format('Y-m-d') : null,
-                        'phone' => $user->phone,
-                    ];
-
-                    // Add role-specific data
-                    if ($user->role === 'franchisor' && $user->franchise) {
-                        $userData['franchiseName'] = $user->franchise->name;
-                        $userData['plan'] = $user->franchise->plan ?? 'Basic';
-                    } elseif ($user->role === 'franchisee') {
-                        $userData['location'] = $user->city;
-                    } elseif ($user->role === 'sales') {
-                        $userData['city'] = $user->city;
-                    }
-
-                    return $userData;
-                });
-
-            return response()->json([
-                'success' => true,
-                'data' => $recentUsers,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch recent users',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Get chart data for admin dashboard
-     */
-    public function chartData(): JsonResponse
-    {
-        try {
-            // User registration chart data (last 12 months)
-            $userChartData = [];
-            for ($i = 11; $i >= 0; $i--) {
-                $month = Carbon::now()->subMonths($i);
-                $count = User::whereYear('created_at', $month->year)
-                    ->whereMonth('created_at', $month->month)
-                    ->count();
-
-                $userChartData[] = [
-                    'month' => $month->format('M Y'),
-                    'users' => $count,
-                ];
-            }
-
-            // Revenue chart data (last 12 months)
-            $revenueChartData = [];
-            for ($i = 11; $i >= 0; $i--) {
-                $month = Carbon::now()->subMonths($i);
-                $revenue = Revenue::whereYear('created_at', $month->year)
-                    ->whereMonth('created_at', $month->month)
-                    ->sum('amount');
-
-                $revenueChartData[] = [
-                    'month' => $month->format('M Y'),
-                    'revenue' => $revenue,
-                ];
-            }
-
-            // Technical requests chart data (last 12 months)
-            $requestsChartData = [];
-            for ($i = 11; $i >= 0; $i--) {
-                $month = Carbon::now()->subMonths($i);
-                $requests = TechnicalRequest::whereYear('created_at', $month->year)
-                    ->whereMonth('created_at', $month->month)
-                    ->count();
-
-                $requestsChartData[] = [
-                    'month' => $month->format('M Y'),
-                    'requests' => $requests,
-                ];
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'users' => $userChartData,
-                    'revenue' => $revenueChartData,
-                    'requests' => $requestsChartData,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch chart data',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
     /**
      * Get all franchisors
      */
@@ -602,16 +71,9 @@ class AdminController extends Controller
                 ];
             });
 
-            return response()->json([
-                'success' => true,
-                'data' => $franchisors,
-            ]);
+            return $this->successResponse($franchisors);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch franchisors',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch franchisors', $e->getMessage(), 500);
         }
     }
 
@@ -660,16 +122,9 @@ class AdminController extends Controller
                 ];
             });
 
-            return response()->json([
-                'success' => true,
-                'data' => $franchisees,
-            ]);
+            return $this->successResponse($franchisees);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch franchisees',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch franchisees', $e->getMessage(), 500);
         }
     }
 
@@ -718,158 +173,102 @@ class AdminController extends Controller
                 ];
             });
 
-            return response()->json([
-                'success' => true,
-                'data' => $salesUsers,
-            ]);
+            return $this->successResponse($salesUsers);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch sales users',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch sales users', $e->getMessage(), 500);
         }
     }
 
     /**
      * Create a new user
      */
-    public function createUser(Request $request): JsonResponse
+    public function createUser(CreateUserRequest $request): JsonResponse
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'fullName' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
-                'role' => 'required|in:franchisor,franchisee,sales',
-                'phone' => 'nullable|string|max:20',
-                'city' => 'nullable|string|max:100',
-                'status' => 'required|in:active,pending,inactive',
-                'franchiseName' => 'required_if:role,franchisor|string|max:255',
-                'plan' => 'required_if:role,franchisor|in:Basic,Pro,Enterprise',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
+            $validatedData = $request->validated();
 
             DB::beginTransaction();
 
             // Create user
             $user = User::create([
-                'name' => $request->fullName,
-                'email' => $request->email,
+                'name' => $validatedData['fullName'],
+                'email' => $validatedData['email'],
                 'password' => Hash::make('password123'), // Default password
-                'role' => $request->role,
-                'status' => $request->status,
-                'phone' => $request->phone,
-                'city' => $request->city,
+                'role' => $validatedData['role'],
+                'status' => $validatedData['status'],
+                'phone' => $validatedData['phone'] ?? null,
+                'city' => $validatedData['city'] ?? null,
             ]);
 
             // Create franchise if user is franchisor
-            if ($request->role === 'franchisor') {
+            if ($validatedData['role'] === 'franchisor') {
                 Franchise::create([
-                    'business_name' => $request->franchiseName,
+                    'business_name' => $validatedData['franchiseName'],
                     'franchisor_id' => $user->id,
-                    'plan' => $request->plan,
+                    'plan' => $validatedData['plan'],
                     'status' => 'active',
                 ]);
             }
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'User created successfully',
-                'data' => [
+            return $this->successResponse([
                     'id' => $user->id,
                     'fullName' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
                     'status' => $user->status,
                     'joinedDate' => $user->created_at->format('Y-m-d'),
-                ],
-            ], 201);
+            ], 'User created successfully', 201);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create user',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to create user', $e->getMessage(), 500);
         }
     }
 
     /**
      * Update a user
      */
-    public function updateUser(Request $request, $id): JsonResponse
+    public function updateUser(UpdateUserRequest $request, $id): JsonResponse
     {
         try {
             $user = User::findOrFail($id);
 
-            $validator = Validator::make($request->all(), [
-                'fullName' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email,' . $id,
-                'phone' => 'nullable|string|max:20',
-                'city' => 'nullable|string|max:100',
-                'status' => 'required|in:active,pending,inactive',
-                'franchiseName' => 'required_if:role,franchisor|string|max:255',
-                'plan' => 'required_if:role,franchisor|in:Basic,Pro,Enterprise',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
+            $validatedData = $request->validated();
 
             DB::beginTransaction();
 
             // Update user
             $user->update([
-                'name' => $request->fullName,
-                'email' => $request->email,
-                'status' => $request->status,
-                'phone' => $request->phone,
-                'city' => $request->city,
+                'name' => $validatedData['fullName'],
+                'email' => $validatedData['email'],
+                'status' => $validatedData['status'],
+                'phone' => $validatedData['phone'] ?? null,
+                'city' => $validatedData['city'] ?? null,
             ]);
 
             // Update franchise if user is franchisor
             if ($user->role === 'franchisor' && $user->franchise) {
                 $user->franchise->update([
-                    'business_name' => $request->franchiseName,
-                    'plan' => $request->plan,
+                    'business_name' => $validatedData['franchiseName'] ?? $user->franchise->business_name,
+                    'plan' => $validatedData['plan'] ?? $user->franchise->plan,
                 ]);
             }
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'User updated successfully',
-                'data' => [
+            return $this->successResponse([
                     'id' => $user->id,
                     'fullName' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
                     'status' => $user->status,
-                ],
-            ]);
+            ], 'User updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update user',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to update user', $e->getMessage(), 500);
         }
     }
 
@@ -893,18 +292,11 @@ class AdminController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'User deleted successfully',
-            ]);
+            return $this->successResponse(null, 'User deleted successfully');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete user',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to delete user', $e->getMessage(), 500);
         }
     }
 
@@ -921,27 +313,16 @@ class AdminController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
+                return $this->validationErrorResponse($validator->errors());
             }
 
             $user->update([
                 'password' => Hash::make($request->password),
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Password reset successfully',
-            ]);
+            return $this->successResponse(null, 'Password reset successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to reset password',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to reset password', $e->getMessage(), 500);
         }
     }
 
@@ -1003,16 +384,9 @@ class AdminController extends Controller
                 ];
             });
 
-            return response()->json([
-                'success' => true,
-                'data' => $requests,
-            ]);
+            return $this->successResponse($requests);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch technical requests',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch technical requests', $e->getMessage(), 500);
         }
     }
 
@@ -1029,11 +403,7 @@ class AdminController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
+                return $this->validationErrorResponse($validator->errors());
             }
 
             $technicalRequest->update([
@@ -1041,16 +411,9 @@ class AdminController extends Controller
                 'updated_at' => now(),
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Technical request status updated successfully',
-            ]);
+            return $this->successResponse(null, 'Technical request status updated successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update technical request status',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to update technical request status', $e->getMessage(), 500);
         }
     }
 
@@ -1063,16 +426,9 @@ class AdminController extends Controller
             $technicalRequest = TechnicalRequest::findOrFail($id);
             $technicalRequest->delete();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Technical request deleted successfully',
-            ]);
+            return $this->successResponse(null, 'Technical request deleted successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete technical request',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to delete technical request', $e->getMessage(), 500);
         }
     }
 
@@ -1144,16 +500,9 @@ class AdminController extends Controller
                 ],
             ];
 
-            return response()->json([
-                'success' => true,
-                'data' => $stats,
-            ]);
+            return $this->successResponse($stats);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch franchisor stats',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch franchisor stats', $e->getMessage(), 500);
         }
     }
 
@@ -1217,16 +566,9 @@ class AdminController extends Controller
                 ],
             ];
 
-            return response()->json([
-                'success' => true,
-                'data' => $stats,
-            ]);
+            return $this->successResponse($stats);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch franchisee stats',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch franchisee stats', $e->getMessage(), 500);
         }
     }
 
@@ -1290,16 +632,9 @@ class AdminController extends Controller
                 ],
             ];
 
-            return response()->json([
-                'success' => true,
-                'data' => $stats,
-            ]);
+            return $this->successResponse($stats);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch sales stats',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch sales stats', $e->getMessage(), 500);
         }
     }
 
@@ -1331,11 +666,7 @@ class AdminController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
+                return $this->validationErrorResponse($validator->errors());
             }
 
             DB::beginTransaction();
@@ -1403,10 +734,7 @@ class AdminController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Franchisee and unit created successfully',
-                'data' => [
+            return $this->successResponse([
                     'franchisee' => [
                         'id' => $franchisee->id,
                         'name' => $franchisee->name,
@@ -1427,16 +755,11 @@ class AdminController extends Controller
                         'status' => $unit->status,
                         'franchisee_id' => $unit->franchisee_id,
                     ],
-                ],
-            ], 201);
+            ], 'Franchisee and unit created successfully', 201);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create franchisee and unit',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to create franchisee and unit', $e->getMessage(), 500);
         }
     }
 }

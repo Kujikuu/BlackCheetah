@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 
-class UnitInventoryController extends Controller
+class UnitInventoryController extends BaseResourceController
 {
     /**
      * Display a listing of the resource.
@@ -17,17 +17,15 @@ class UnitInventoryController extends Controller
             $q->select('products.id', 'products.name', 'products.unit_price');
         }])->findOrFail($unitId);
 
-        return response()->json([
-            'data' => $unit->products->map(function ($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'unit_price' => $product->unit_price,
-                    'quantity' => $product->pivot->quantity,
-                    'reorder_level' => $product->pivot->reorder_level,
-                ];
-            }),
-        ]);
+        return $this->successResponse($unit->products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'unit_price' => $product->unit_price,
+                'quantity' => $product->pivot->quantity,
+                'reorder_level' => $product->pivot->reorder_level,
+            ];
+        }));
     }
 
     /**
@@ -48,7 +46,7 @@ class UnitInventoryController extends Controller
 
         $unit->products()->attach($productId, $data);
 
-        return response()->json(['message' => 'Product added to unit inventory'], 201);
+        return $this->successResponse(null, 'Product added to unit inventory', 201);
     }
 
     /**
@@ -76,7 +74,7 @@ class UnitInventoryController extends Controller
 
         $unit->products()->updateExistingPivot($productId, $data);
 
-        return response()->json(['message' => 'Inventory updated']);
+        return $this->successResponse(null, 'Inventory updated');
     }
 
     /**
@@ -91,6 +89,6 @@ class UnitInventoryController extends Controller
 
         $unit->products()->detach($productId);
 
-        return response()->json(['message' => 'Product removed from inventory']);
+        return $this->successResponse(null, 'Product removed from inventory');
     }
 }

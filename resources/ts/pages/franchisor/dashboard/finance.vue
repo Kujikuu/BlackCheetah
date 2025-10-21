@@ -2,9 +2,25 @@
 import { SaudiRiyal } from 'lucide-vue-next'
 import { useTheme } from 'vuetify'
 import { formatCurrency } from '@/@core/utils/formatters'
+import { franchiseApi, type DashboardFinanceData } from '@/services/api'
 
-// API composable - with immediate execution
-const { data: financeData, execute: fetchFinanceData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/finance', { immediate: true })
+// API data loading
+const financeData = ref<ApiResponse | null>(null)
+const isLoading = ref(false)
+
+// Load finance data
+const fetchFinanceData = async () => {
+  isLoading.value = true
+  try {
+    const response = await franchiseApi.getDashboardFinance()
+    financeData.value = response
+  } catch (error) {
+    console.error('Error fetching finance data:', error)
+    financeData.value = null
+  } finally {
+    isLoading.value = false
+  }
+}
 const vuetifyTheme = useTheme()
 
 const chartColors = {
@@ -21,7 +37,7 @@ const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))'
 
 // 👉 Reactive data with proper types
 interface FinanceStat {
-  icon: string
+  icon: string | any
   color: string
   title: string
   value: string
@@ -532,6 +548,11 @@ const summaryHeaders = [
   { title: 'Royalties', key: 'royalties', align: 'end' as const },
   { title: 'Profit', key: 'profit', align: 'end' as const },
 ]
+
+// Load data on component mount
+onMounted(() => {
+  fetchFinanceData()
+})
 </script>
 
 <template>

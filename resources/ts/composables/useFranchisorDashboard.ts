@@ -1,15 +1,9 @@
-import { $api } from '@/utils/api'
+import { franchiseApi, leadApi, usersApi, type FranchisorDashboardStats, type ProfileCompletionStatus, type SalesAssociate as ApiSalesAssociate, type Lead } from '@/services/api'
 
-export interface DashboardStats {
-  totalFranchisees: number
-  totalUnits: number
-  totalLeads: number
-  activeTasks: number
-  currentMonthRevenue: number
-  revenueChange: number
-  pendingRoyalties: number
-}
+// Use the imported types from API services
+type DashboardStats = FranchisorDashboardStats
 
+// Local interface for the composable's specific needs
 export interface SalesAssociate {
   id: number
   name: string
@@ -30,33 +24,6 @@ export interface RecentActivity {
   color: string
   user?: string
   amount?: number
-}
-
-export interface Lead {
-  id: number
-  firstName: string
-  lastName: string
-  email: string
-  phone?: string
-  company?: string
-  country?: string
-  state?: string
-  city?: string
-  source: string
-  status: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost'
-  owner?: string
-  lastContacted?: string
-  scheduledMeeting?: string
-  created_at?: string
-  updated_at?: string
-}
-
-export interface ProfileCompletionStatus {
-  is_complete: boolean
-  completion_percentage: number
-  completed_fields: number
-  total_fields: number
-  missing_fields: string[]
 }
 
 export const useFranchisorDashboard = () => {
@@ -129,9 +96,9 @@ export const useFranchisorDashboard = () => {
       isLoading.value = true
       error.value = null
 
-      const response = await $api<{ success: boolean; data: DashboardStats }>('/v1/franchisor/dashboard/stats')
+      const response = await franchiseApi.getDashboardStats()
 
-      if (response.success)
+      if (response.success && response.data)
         dashboardStats.value = response.data
       else
         throw new Error('Failed to fetch dashboard stats')
@@ -150,10 +117,20 @@ export const useFranchisorDashboard = () => {
    */
   const fetchSalesAssociates = async () => {
     try {
-      const response = await $api<{ success: boolean; data: SalesAssociate[] }>('/v1/franchisor/sales-associates')
+      const response = await usersApi.getSalesAssociates()
 
-      if (response.success && Array.isArray(response.data))
-        salesAssociates.value = response.data
+      if (response.success && response.data) {
+        // Map the API response to match the composable's expected interface
+        salesAssociates.value = response.data.map((associate: ApiSalesAssociate) => ({
+          id: associate.id,
+          name: associate.name,
+          email: associate.email,
+          phone: '', // Default empty string since phone is not in API response
+          status: (associate.status as 'active' | 'inactive') || 'active',
+          leads_count: 0, // Default value since it's not in the API response
+          created_at: associate.created_at,
+        }))
+      }
       else
         salesAssociates.value = []
     }
@@ -168,9 +145,9 @@ export const useFranchisorDashboard = () => {
    */
   const fetchLeads = async (limit = 10) => {
     try {
-      const response = await $api<{ success: boolean; data: Lead[] }>(`/v1/franchisor/leads?limit=${limit}`)
+      const response = await leadApi.getLeadsWithLimit(limit)
 
-      if (response.success && Array.isArray(response.data))
+      if (response.success && response.data)
         leads.value = response.data
       else
         leads.value = []
@@ -186,10 +163,10 @@ export const useFranchisorDashboard = () => {
    */
   const fetchProfileCompletion = async () => {
     try {
-      const response = await $api<{ success: boolean; data?: ProfileCompletionStatus; message?: string }>('/v1/franchisor/profile/completion-status')
+      const response = await franchiseApi.getProfileCompletionStatus()
 
-      if (response.success) {
-        profileCompletionStatus.value = response.data!
+      if (response.success && response.data) {
+        profileCompletionStatus.value = response.data
         franchiseExists.value = true // Franchise exists if we get a successful response
       }
       else {
@@ -230,7 +207,8 @@ export const useFranchisorDashboard = () => {
     if (Array.isArray(leads.value) && leads.value.length > 0) {
       leads.value.slice(0, 3).forEach(lead => {
         const fullName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'Unknown Lead'
-        const createdAt = lead.created_at || new Date().toISOString()
+        // Since the API Lead interface doesn't have created_at, use current time as fallback
+        const createdAt = new Date().toISOString()
 
         activities.push({
           id: lead.id,
@@ -303,7 +281,7 @@ export const useFranchisorDashboard = () => {
 
   const checkFranchiseExists = async (): Promise<boolean> => {
     try {
-      const response = await $api('/v1/franchisor/profile/completion-status')
+      const response = await franchiseApi.getFranchiseData()
 
       // If we get a successful response, the franchise exists
       return response.success === true

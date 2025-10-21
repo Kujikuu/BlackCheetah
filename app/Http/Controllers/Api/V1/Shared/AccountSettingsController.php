@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\Users;
+namespace App\Http\Controllers\Api\V1\Shared;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,30 +18,26 @@ class AccountSettingsController extends Controller
     {
         $user = $request->user();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar ? asset('uploads/'.$user->avatar) : null,
-                'role' => $user->role,
-                'status' => $user->status,
-                'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
-                'gender' => $user->gender,
-                'country' => $user->country,
-                'state' => $user->state,
-                'city' => $user->city,
-                'address' => $user->address,
-                'preferences' => $user->preferences ?? [
-                    'timezone' => '(GMT+03:00) Riyadh',
-                    'language' => 'en',
-                    'notifications' => [],
-                ],
+        return $this->successResponse([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'avatar' => $user->avatar ? asset('uploads/'.$user->avatar) : null,
+            'role' => $user->role,
+            'status' => $user->status,
+            'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+            'gender' => $user->gender,
+            'country' => $user->country,
+            'state' => $user->state,
+            'city' => $user->city,
+            'address' => $user->address,
+            'preferences' => $user->preferences ?? [
+                'timezone' => '(GMT+03:00) Riyadh',
+                'language' => 'en',
+                'notifications' => [],
             ],
-            'message' => 'Profile retrieved successfully',
-        ]);
+        ], 'Profile retrieved successfully');
     }
 
     /**
@@ -67,11 +63,7 @@ class AccountSettingsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $data = $validator->validated();
@@ -86,26 +78,22 @@ class AccountSettingsController extends Controller
 
         $user->update($data);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar ? asset('uploads/'.$user->avatar) : null,
-                'role' => $user->role,
-                'status' => $user->status,
-                'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
-                'gender' => $user->gender,
-                'country' => $user->country,
-                'state' => $user->state,
-                'city' => $user->city,
-                'address' => $user->address,
-                'preferences' => $user->preferences,
-            ],
-            'message' => 'Profile updated successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'avatar' => $user->avatar ? asset('uploads/'.$user->avatar) : null,
+            'role' => $user->role,
+            'status' => $user->status,
+            'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+            'gender' => $user->gender,
+            'country' => $user->country,
+            'state' => $user->state,
+            'city' => $user->city,
+            'address' => $user->address,
+            'preferences' => $user->preferences,
+        ], 'Profile updated successfully');
     }
 
     /**
@@ -121,19 +109,12 @@ class AccountSettingsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         // Verify current password
         if (! Hash::check($request->current_password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Current password is incorrect',
-            ], 422);
+            return $this->validationErrorResponse(['current_password' => ['Current password is incorrect']]);
         }
 
         // Update password
@@ -141,11 +122,7 @@ class AccountSettingsController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => null,
-            'message' => 'Password updated successfully',
-        ]);
+        return $this->successResponse(null, 'Password updated successfully');
     }
 
     /**
@@ -161,27 +138,17 @@ class AccountSettingsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         if (! $request->hasFile('avatar')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No avatar file was uploaded',
-            ], 422);
+            return $this->validationErrorResponse(['avatar' => ['No avatar file was uploaded']]);
         }
 
         $file = $request->file('avatar');
 
         if (! $file->isValid()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'The uploaded file is invalid',
-            ], 422);
+            return $this->validationErrorResponse(['avatar' => ['The uploaded file is invalid']]);
         }
 
         try {
@@ -202,19 +169,12 @@ class AccountSettingsController extends Controller
             // Update user record
             $user->update(['avatar' => $path]);
 
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'avatar' => asset('uploads/'.$path),
-                    'avatar_path' => $path,
-                ],
-                'message' => 'Avatar uploaded successfully',
-            ]);
+            return $this->successResponse([
+                'avatar' => asset('uploads/'.$path),
+                'avatar_path' => $path,
+            ], 'Avatar uploaded successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to upload avatar: '.$e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to upload avatar: '.$e->getMessage(), null, 500);
         }
     }
 
@@ -235,11 +195,7 @@ class AccountSettingsController extends Controller
             $user->update(['avatar' => null]);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => null,
-            'message' => 'Avatar deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Avatar deleted successfully');
     }
 
     /**
@@ -254,11 +210,7 @@ class AccountSettingsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         // Merge with existing preferences
@@ -267,15 +219,11 @@ class AccountSettingsController extends Controller
 
         $user->update(['preferences' => $preferences]);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'preferences' => $user->preferences,
-            ],
-            'message' => 'Notification preferences updated successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'preferences' => $user->preferences,
+        ], 'Notification preferences updated successfully');
     }
 }

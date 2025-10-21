@@ -1,4 +1,5 @@
 import { $api } from '@/utils/api'
+import type { ApiResponse } from '@/types/api'
 
 // Base API URL
 const API_URL = '/v1/account'
@@ -65,73 +66,71 @@ export interface UpdateAvatarPayload {
   avatar: File
 }
 
-export interface ApiResponse<T> {
-  success: boolean
-  data: T
-  message: string
-}
+// API Service Class
+export class AccountSettingsApi {
+  private readonly baseUrl = API_URL
 
-// API Service
-export const accountSettingsApi = {
   /**
    * Get current user profile
    */
   async getProfile(): Promise<ApiResponse<UserProfile>> {
-    return await $api<ApiResponse<UserProfile>>(`${API_URL}/profile`, {
+    return await $api<ApiResponse<UserProfile>>(`${this.baseUrl}/profile`, {
       method: 'GET',
     })
-  },
+  }
 
   /**
    * Update user profile
    */
   async updateProfile(payload: UpdateProfilePayload): Promise<ApiResponse<UserProfile>> {
-    return await $api<ApiResponse<UserProfile>>(`${API_URL}/profile`, {
+    return await $api<ApiResponse<UserProfile>>(`${this.baseUrl}/profile`, {
       method: 'PUT',
       body: payload,
     })
-  },
+  }
 
   /**
    * Update user password
    */
   async updatePassword(payload: UpdatePasswordPayload): Promise<ApiResponse<void>> {
-    return await $api<ApiResponse<void>>(`${API_URL}/password`, {
+    return await $api<ApiResponse<void>>(`${this.baseUrl}/password`, {
       method: 'PUT',
       body: payload,
     })
-  },
+  }
 
   /**
    * Upload user avatar
    */
   async uploadAvatar(file: File): Promise<ApiResponse<{ avatar: string }>> {
     const formData = new FormData()
-
     formData.append('avatar', file)
 
-    return await $api<ApiResponse<{ avatar: string }>>(`${API_URL}/avatar`, {
+    return await $api<ApiResponse<{ avatar: string }>>(`${this.baseUrl}/avatar`, {
       method: 'POST',
       body: formData,
     })
-  },
+  }
 
   /**
    * Delete user avatar
    */
   async deleteAvatar(): Promise<ApiResponse<void>> {
-    return await $api<ApiResponse<void>>(`${API_URL}/avatar`, {
+    return await $api<ApiResponse<void>>(`${this.baseUrl}/avatar`, {
       method: 'DELETE',
     })
-  },
+  }
 
   /**
    * Update notification preferences
    */
   async updateNotificationPreferences(preferences: NotificationPreferences): Promise<ApiResponse<UserProfile>> {
-    return await $api<ApiResponse<UserProfile>>(`${API_URL}/notifications`, {
+    return await $api<ApiResponse<UserProfile>>(`${this.baseUrl}/notifications`, {
       method: 'PUT',
       body: { notifications: preferences },
     })
-  },
+  }
 }
+
+// Export class instance
+export const accountSettingsApi = new AccountSettingsApi()

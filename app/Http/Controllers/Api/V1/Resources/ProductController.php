@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Http\Requests\StoreProductRequest;
 use App\Models\Franchise;
 use App\Models\Product;
@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class ProductController extends Controller
+class ProductController extends BaseResourceController
 {
     /**
      * Display a listing of products for the authenticated user's franchise.
@@ -29,18 +29,12 @@ class ProductController extends Controller
             }
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user.',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user.');
             }
 
             // Ensure user has access to this franchise
             if ($franchise->franchisor_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized access to franchise.',
-                ], 403);
+                return $this->forbiddenResponse('Unauthorized access to franchise.');
             }
 
             $query = $franchise->products()->latest();
@@ -68,16 +62,9 @@ class ProductController extends Controller
 
             $products = $query->paginate($request->get('per_page', 15));
 
-            return response()->json([
-                'success' => true,
-                'data' => $products,
-            ]);
+            return $this->successResponse($products);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve products.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to retrieve products.', $e->getMessage(), 500);
         }
     }
 
@@ -97,18 +84,12 @@ class ProductController extends Controller
             }
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user.',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user.');
             }
 
             // Ensure user has access to this franchise
             if ($franchise->franchisor_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized access to franchise.',
-                ], 403);
+                return $this->forbiddenResponse('Unauthorized access to franchise.');
             }
 
             $productData = $request->validated();
@@ -124,17 +105,9 @@ class ProductController extends Controller
 
             $product = Product::create($productData);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Product created successfully.',
-                'data' => $product,
-            ], 201);
+            return $this->successResponse($product, 'Product created successfully.', 201);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create product.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to create product.', $e->getMessage(), 500);
         }
     }
 
@@ -152,21 +125,17 @@ class ProductController extends Controller
 
             // Check if user has access to the franchise (user must be the franchisor)
             if ($franchise->franchisor_id !== $user->id) {
-                return response()->json(['message' => 'Unauthorized'], 403);
+                return $this->forbiddenResponse('Unauthorized');
             }
 
             // Verify the product belongs to the franchise
             if ($product->franchise_id !== $franchise->id) {
-                return response()->json(['message' => 'Product not found'], 404);
+                return $this->notFoundResponse('Product not found');
             }
 
-            return response()->json($product);
+            return $this->successResponse($product);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve product.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to retrieve product.', $e->getMessage(), 500);
         }
     }
 
@@ -184,12 +153,12 @@ class ProductController extends Controller
 
             // Check if user has access to the franchise (user must be the franchisor)
             if ($franchise->franchisor_id !== $user->id) {
-                return response()->json(['message' => 'Unauthorized'], 403);
+                return $this->forbiddenResponse('Unauthorized');
             }
 
             // Verify the product belongs to the franchise
             if ($product->franchise_id !== $franchise->id) {
-                return response()->json(['message' => 'Product not found'], 404);
+                return $this->notFoundResponse('Product not found');
             }
 
             // Handle both regular form data and FormData
@@ -218,10 +187,7 @@ class ProductController extends Controller
 
                 // Check if FormData is empty
                 if ($request->all() === []) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'No data received. Please ensure all required fields are filled.',
-                    ], 422);
+                    return $this->validationErrorResponse(['data' => ['No data received. Please ensure all required fields are filled.']]);
                 }
 
                 $validatedData = [
@@ -272,23 +238,11 @@ class ProductController extends Controller
 
             $product->update($validatedData);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Product updated successfully.',
-                'data' => $product->fresh(),
-            ]);
+            return $this->successResponse($product->fresh(), 'Product updated successfully.');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'errors' => $e->errors(),
-            ], 422);
+            return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update product.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to update product.', $e->getMessage(), 500);
         }
     }
 
@@ -306,12 +260,12 @@ class ProductController extends Controller
 
             // Check if user has access to the franchise (user must be the franchisor)
             if ($franchise->franchisor_id !== $user->id) {
-                return response()->json(['message' => 'Unauthorized'], 403);
+                return $this->forbiddenResponse('Unauthorized');
             }
 
             // Verify the product belongs to the franchise
             if ($product->franchise_id !== $franchise->id) {
-                return response()->json(['message' => 'Product not found'], 404);
+                return $this->notFoundResponse('Product not found');
             }
 
             // Delete product image if exists
@@ -322,16 +276,9 @@ class ProductController extends Controller
             // Delete the product record
             $product->delete();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Product deleted successfully.',
-            ]);
+            return $this->successResponse(null, 'Product deleted successfully.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete product.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to delete product.', $e->getMessage(), 500);
         }
     }
 
@@ -345,10 +292,7 @@ class ProductController extends Controller
             $franchise = $user->franchise;
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user.',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user.');
             }
 
             $categories = $franchise->products()
@@ -357,16 +301,9 @@ class ProductController extends Controller
                 ->whereNotNull('category')
                 ->pluck('category');
 
-            return response()->json([
-                'success' => true,
-                'data' => $categories,
-            ]);
+            return $this->successResponse($categories);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve categories.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to retrieve categories.', $e->getMessage(), 500);
         }
     }
 
@@ -381,10 +318,7 @@ class ProductController extends Controller
             // Check if the product belongs to the user's franchise (user must be the franchisor)
             $franchise = Franchise::find($product->franchise_id);
             if (! $franchise || $franchise->franchisor_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not found.',
-                ], 404);
+                return $this->notFoundResponse('Product not found.');
             }
 
             $validatedData = $request->validate([
@@ -406,17 +340,9 @@ class ProductController extends Controller
 
             $product->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Stock updated successfully.',
-                'data' => $product->fresh(),
-            ]);
+            return $this->successResponse($product->fresh(), 'Stock updated successfully.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update stock.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to update stock.', $e->getMessage(), 500);
         }
     }
 }

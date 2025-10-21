@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { adminApi, type AdminChartData } from '@/services/api'
+
 // Reactive data
 const isLoading = ref(true)
 const error = ref('')
@@ -17,7 +19,7 @@ const fetchChartData = async () => {
   try {
     isLoading.value = true
 
-    const response = await $api('/v1/admin/dashboard/chart-data')
+    const response = await adminApi.getDashboardChartData()
 
     if (response.success && response.data.requests) {
       // Get last 7 months of requests data

@@ -1,16 +1,8 @@
 import { $api } from '@/utils/api'
+import { getEndpoint } from '@/utils/api-router'
+import type { ApiResponse, PaginatedResponse, ChartData, PeriodFilter } from '@/types/api'
 
-// Base API URL
-const API_URL = '/v1/franchisor/financial'
-
-// Type definitions
-export interface ChartData {
-  categories: string[]
-  series: {
-    name: string
-    data: number[]
-  }[]
-}
+// Type definitions (keeping domain-specific types here)
 
 export interface FinancialStatistics {
   totalSales: number
@@ -58,16 +50,8 @@ export interface UnitPerformance {
   profitMargin: number
 }
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  current_page: number
-  last_page: number
-  per_page: number
-  total: number
-}
-
 export interface ChartFilters {
-  period: 'daily' | 'monthly' | 'yearly'
+  period: PeriodFilter
   unit?: string
   startDate?: string
   endDate?: string
@@ -81,96 +65,93 @@ export interface TableFilters {
   sortOrder?: 'asc' | 'desc'
 }
 
-// API response wrapper
-interface ApiResponse<T> {
-  success: boolean
-  data: T
-  message?: string
-}
+// API Service Class
+export class FinancialApi {
+  private getBaseUrl(): string {
+    return getEndpoint('financial')
+  }
 
-// API functions
-export const financialApi = {
   // Chart data
   async getCharts(filters: ChartFilters): Promise<ApiResponse<ChartData>> {
-    return await $api<ApiResponse<ChartData>>(`${API_URL}/charts`, {
+    return await $api<ApiResponse<ChartData>>(`${this.getBaseUrl()}/charts`, {
       params: filters,
     })
-  },
+  }
 
   // Financial statistics
   async getStatistics(filters: ChartFilters): Promise<ApiResponse<FinancialStatistics>> {
-    return await $api<ApiResponse<FinancialStatistics>>(`${API_URL}/statistics`, {
+    return await $api<ApiResponse<FinancialStatistics>>(`${this.getBaseUrl()}/statistics`, {
       params: filters,
     })
-  },
+  }
 
   // Sales data
   async getSales(filters: TableFilters & ChartFilters): Promise<ApiResponse<PaginatedResponse<SalesData>>> {
-    return await $api<ApiResponse<PaginatedResponse<SalesData>>>(`${API_URL}/sales`, {
+    return await $api<ApiResponse<PaginatedResponse<SalesData>>>(`${this.getBaseUrl()}/sales`, {
       params: filters,
     })
-  },
+  }
 
   async createSale(data: Partial<SalesData>): Promise<ApiResponse<SalesData>> {
-    return await $api<ApiResponse<SalesData>>(`${API_URL}/sales`, {
+    return await $api<ApiResponse<SalesData>>(`${this.getBaseUrl()}/sales`, {
       method: 'POST',
       body: data,
     })
-  },
+  }
 
   async updateSale(id: number, data: Partial<SalesData>): Promise<ApiResponse<SalesData>> {
-    return await $api<ApiResponse<SalesData>>(`${API_URL}/sales/${id}`, {
+    return await $api<ApiResponse<SalesData>>(`${this.getBaseUrl()}/sales/${id}`, {
       method: 'PUT',
       body: data,
     })
-  },
+  }
 
   async deleteSale(id: number): Promise<void> {
-    await $api(`${API_URL}/sales/${id}`, {
+    await $api(`${this.getBaseUrl()}/sales/${id}`, {
       method: 'DELETE',
     })
-  },
+  }
 
   // Expense data
   async getExpenses(filters: TableFilters & ChartFilters): Promise<ApiResponse<PaginatedResponse<ExpenseData>>> {
-    return await $api<ApiResponse<PaginatedResponse<ExpenseData>>>(`${API_URL}/expenses`, {
+    return await $api<ApiResponse<PaginatedResponse<ExpenseData>>>(`${this.getBaseUrl()}/expenses`, {
       params: filters,
     })
-  },
+  }
 
   async createExpense(data: Partial<ExpenseData>): Promise<ApiResponse<ExpenseData>> {
-    return await $api<ApiResponse<ExpenseData>>(`${API_URL}/expenses`, {
+    return await $api<ApiResponse<ExpenseData>>(`${this.getBaseUrl()}/expenses`, {
       method: 'POST',
       body: data,
     })
-  },
+  }
 
   async updateExpense(id: number, data: Partial<ExpenseData>): Promise<ApiResponse<ExpenseData>> {
-    return await $api<ApiResponse<ExpenseData>>(`${API_URL}/expenses/${id}`, {
+    return await $api<ApiResponse<ExpenseData>>(`${this.getBaseUrl()}/expenses/${id}`, {
       method: 'PUT',
       body: data,
     })
-  },
+  }
 
   async deleteExpense(id: number): Promise<void> {
-    await $api(`${API_URL}/expenses/${id}`, {
+    await $api(`${this.getBaseUrl()}/expenses/${id}`, {
       method: 'DELETE',
     })
-  },
+  }
 
   // Profit data
   async getProfit(filters: TableFilters & ChartFilters): Promise<ApiResponse<PaginatedResponse<ProfitData>>> {
-    return await $api<ApiResponse<PaginatedResponse<ProfitData>>>(`${API_URL}/profit`, {
+    return await $api<ApiResponse<PaginatedResponse<ProfitData>>>(`${this.getBaseUrl()}/profit`, {
       params: filters,
     })
-  },
+  }
 
   // Unit performance
   async getUnitPerformance(filters: ChartFilters): Promise<ApiResponse<PaginatedResponse<UnitPerformance>>> {
-    return await $api<ApiResponse<PaginatedResponse<UnitPerformance>>>(`${API_URL}/unit-performance`, {
+    return await $api<ApiResponse<PaginatedResponse<UnitPerformance>>>(`${this.getBaseUrl()}/unit-performance`, {
       params: filters,
     })
-  },
+  }
 
   // Import/Export
   async importData(file: File, category: 'sales' | 'expenses'): Promise<void> {
@@ -179,16 +160,19 @@ export const financialApi = {
     formData.append('file', file)
     formData.append('category', category)
 
-    await $api(`${API_URL}/import`, {
+    await $api(`${this.getBaseUrl()}/import`, {
       method: 'POST',
       body: formData,
     })
-  },
+  }
 
   async exportData(category: 'sales' | 'expenses' | 'profit', filters: ChartFilters): Promise<Blob> {
-    return await $api<Blob>(`${API_URL}/export`, {
+    return await $api<Blob>(`${this.getBaseUrl()}/export`, {
       params: { ...filters, category },
       parseResponse: data => data,
     })
-  },
+  }
 }
+
+// Export class instance
+export const financialApi = new FinancialApi()

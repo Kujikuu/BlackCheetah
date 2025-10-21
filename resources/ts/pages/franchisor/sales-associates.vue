@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ConfirmDeleteDialog from '@/components/dialogs/common/ConfirmDeleteDialog.vue'
+import { usersApi } from '@/services/api'
 
 // 👉 Interfaces
 interface Lead {
@@ -104,22 +105,13 @@ const fetchSalesAssociates = async () => {
   try {
     isLoading.value = true
 
-    const params = new URLSearchParams({
-      page: page.value.toString(),
-      per_page: itemsPerPage.value.toString(),
-    })
-
-    if (searchQuery.value)
-      params.append('search', searchQuery.value)
-    if (selectedStatus.value)
-      params.append('status', selectedStatus.value)
-    if (sortBy.value)
-      params.append('sort_by', sortBy.value)
-    if (orderBy.value)
-      params.append('order_by', orderBy.value)
-
-    const response = await $api(`/v1/franchisor/sales-associates?${params.toString()}`, {
-      method: 'GET',
+    const response = await usersApi.getSalesAssociatesWithFilters({
+      page: page.value,
+      per_page: itemsPerPage.value,
+      search: searchQuery.value || undefined,
+      status: selectedStatus.value || undefined,
+      sort_by: sortBy.value || undefined,
+      order_by: orderBy.value || undefined,
     })
 
     if (response.success) {
@@ -188,9 +180,7 @@ const deleteAssociate = async () => {
   try {
     isSubmitting.value = true
 
-    const response = await $api(`/v1/franchisor/sales-associates/${associateToDelete.value}`, {
-      method: 'DELETE',
-    })
+    const response = await usersApi.deleteSalesAssociate(associateToDelete.value)
 
     if (response.success) {
       // Remove from local data
@@ -238,7 +228,7 @@ const viewAssociate = async (id: number | null) => {
       isLoading.value = true
 
       // Fetch detailed associate data including leads
-      const response = await $api(`/v1/franchisor/sales-associates/${associate.id}`)
+      const response = await usersApi.getSalesAssociateDetails(associate.id)
 
       if (response.success) {
         selectedAssociate.value = response.data
@@ -303,11 +293,6 @@ const saveAssociate = async () => {
     isSubmitting.value = true
 
     const isEditing = selectedAssociate.value.id !== null
-    const method = isEditing ? 'PUT' : 'POST'
-
-    const url = isEditing
-      ? `/v1/franchisor/sales-associates/${selectedAssociate.value.id}`
-      : '/v1/franchisor/sales-associates'
 
     // Prepare form data
     const formData: any = {
@@ -324,10 +309,9 @@ const saveAssociate = async () => {
     if (!isEditing && selectedAssociate.value.password)
       formData.password = selectedAssociate.value.password
 
-    const response = await $api(url, {
-      method,
-      body: formData,
-    })
+    const response = isEditing
+      ? await usersApi.updateSalesAssociate(selectedAssociate.value.id!, formData)
+      : await usersApi.createSalesAssociate(formData)
 
     if (response.success) {
       // Reset form validation first

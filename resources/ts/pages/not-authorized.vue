@@ -32,7 +32,7 @@ const authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark)
     </VBtn>
 
     <!-- 👉 Image -->
-    <div class="misc-avatar w-100 text-center">
+    <!-- <div class="misc-avatar w-100 text-center">
       <VImg
         :src="pages401"
         alt="not autorized"
@@ -46,7 +46,7 @@ const authThemeMask = useGenerateImageVariant(miscMaskLight, miscMaskDark)
       :src="authThemeMask"
       alt="misc-footer-img"
       height="320"
-    >
+    > -->
   </div>
 </template>
 

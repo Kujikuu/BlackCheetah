@@ -35,7 +35,7 @@ const login = async () => {
   errorMessages.value = null
   try {
     const resp = await $api<{ accessToken: string; userData: any; userAbilityRules: any[] }>(
-      '/auth/login',
+      '/v1/auth/login',
       {
         method: 'POST',
         body: {

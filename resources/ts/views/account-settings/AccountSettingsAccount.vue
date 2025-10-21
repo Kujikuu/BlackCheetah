@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import type { UserProfile } from '@/services/api/account-settings'
-import { accountSettingsApi } from '@/services/api/account-settings'
+import { type UserProfile, accountSettingsApi } from '@/services/api'
 
 const refInputEl = ref<HTMLElement>()
 const isLoading = ref(false)

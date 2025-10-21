@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { UnitStaff } from '@/services/api/franchisee-dashboard'
+import type { UnitStaff } from '@/services/api'
 
 interface Props {
   isDialogVisible: boolean

@@ -25,8 +25,8 @@ import type {
   UnitReview,
   UnitStaff,
   UnitTask,
-} from '@/services/api/franchisee-dashboard'
-import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+} from '@/services/api'
+import { franchiseeDashboardApi } from '@/services/api'
 
 // 👉 Router
 const route = useRoute()

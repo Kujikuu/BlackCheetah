@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
+use App\Http\Requests\StoreFranchiseRequest;
+use App\Http\Requests\UpdateFranchiseRequest;
 use App\Models\Franchise;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 
-class FranchiseController extends Controller
+class FranchiseController extends BaseResourceController
 {
     /**
      * Display a listing of the resource.
@@ -36,60 +38,28 @@ class FranchiseController extends Controller
         }
 
         // Apply sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sort = $this->parseSortParams($request, 'created_at');
+        $query->orderBy($sort['column'], $sort['order']);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $franchises = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $franchises,
-            'message' => 'Franchises retrieved successfully'
-        ]);
+        return $this->successResponse($franchises, 'Franchises retrieved successfully');
     }
 
     /**
  * Store a newly created resource in storage.
  */
-public function store(Request $request): JsonResponse
+public function store(StoreFranchiseRequest $request): JsonResponse
 {
-    $validated = $request->validate([
-        'franchisor_id' => 'required|exists:users,id',
-        'business_name' => 'required|string|max:255',
-        'brand_name' => 'nullable|string|max:255',
-        'industry' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'website' => 'nullable|url',
-        'logo' => 'nullable|string|max:255',
-        'business_registration_number' => 'required|string|unique:franchises,business_registration_number',
-        'tax_id' => 'nullable|string|max:255',
-        'business_type' => 'required|in:corporation,llc,partnership,sole_proprietorship',
-        'established_date' => 'nullable|date',
-        'headquarters_country' => 'required|string|max:100',
-        'headquarters_city' => 'required|string|max:100',
-        'headquarters_address' => 'required|string',
-        'contact_phone' => 'required|string|max:20',
-        'contact_email' => 'required|email|max:255|unique:franchises,contact_email',
-        'franchise_fee' => 'nullable|numeric|min:0',
-        'royalty_percentage' => 'nullable|numeric|min:0|max:100',
-        'marketing_fee_percentage' => 'nullable|numeric|min:0|max:100',
-        'status' => 'required|in:active,inactive,pending_approval,suspended',
-        'plan' => 'nullable|string|max:255',
-        'business_hours' => 'nullable|array',
-        'social_media' => 'nullable|array',
-        'documents' => 'nullable|array'
-    ]);
+    $franchise = Franchise::create($request->validated());
 
-    $franchise = Franchise::create($validated);
-
-    return response()->json([
-        'success' => true,
-        'data' => $franchise->load(['franchisor', 'units']),
-        'message' => 'Franchise created successfully'
-    ], 201);
+    return $this->successResponse(
+        $franchise->load(['franchisor', 'units']),
+        'Franchise created successfully',
+        201
+    );
 }
 
     /**
@@ -99,11 +69,7 @@ public function store(Request $request): JsonResponse
     {
         $franchise->load(['owner', 'units', 'leads', 'tasks', 'transactions', 'royalties', 'revenues']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $franchise,
-            'message' => 'Franchise retrieved successfully'
-        ]);
+        return $this->successResponse($franchise, 'Franchise retrieved successfully');
     }
 
     /**
@@ -140,11 +106,7 @@ public function update(Request $request, Franchise $franchise): JsonResponse
 
     $franchise->update($validated);
 
-    return response()->json([
-        'success' => true,
-        'data' => $franchise->load(['franchisor', 'units']),
-        'message' => 'Franchise updated successfully'
-    ]);
+    return $this->successResponse($franchise->load(['franchisor', 'units']), 'Franchise updated successfully');
 }
 
     /**
@@ -154,18 +116,12 @@ public function update(Request $request, Franchise $franchise): JsonResponse
     {
         // Check if franchise has active units
         if ($franchise->units()->where('status', 'active')->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete franchise with active units'
-            ], 422);
+            return $this->validationErrorResponse(['status' => ['Cannot delete franchise with active units']]);
         }
 
         $franchise->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Franchise deleted successfully'
-        ]);
+        return $this->successResponse(null, 'Franchise deleted successfully');
     }
 
     /**
@@ -187,11 +143,7 @@ public function update(Request $request, Franchise $franchise): JsonResponse
             'overdue_royalties' => $franchise->royalties()->where('status', 'overdue')->sum('total_amount')
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Franchise statistics retrieved successfully'
-        ]);
+        return $this->successResponse($stats, 'Franchise statistics retrieved successfully');
     }
 
     /**
@@ -201,11 +153,7 @@ public function update(Request $request, Franchise $franchise): JsonResponse
     {
         $franchise->update(['status' => 'active']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $franchise,
-            'message' => 'Franchise activated successfully'
-        ]);
+        return $this->successResponse($franchise, 'Franchise activated successfully');
     }
 
     /**
@@ -215,11 +163,7 @@ public function update(Request $request, Franchise $franchise): JsonResponse
     {
         $franchise->update(['status' => 'inactive']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $franchise,
-            'message' => 'Franchise deactivated successfully'
-        ]);
+        return $this->successResponse($franchise, 'Franchise deactivated successfully');
     }
 
     /**
@@ -233,17 +177,10 @@ public function update(Request $request, Franchise $franchise): JsonResponse
             ->first();
 
         if (!$franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user'
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $franchise,
-            'message' => 'Franchise retrieved successfully'
-        ]);
+        return $this->successResponse($franchise, 'Franchise retrieved successfully');
     }
 
     /**
@@ -255,10 +192,7 @@ public function update(Request $request, Franchise $franchise): JsonResponse
         $franchise = Franchise::where('owner_id', $user->id)->first();
 
         if (!$franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user'
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $stats = [
@@ -274,10 +208,6 @@ public function update(Request $request, Franchise $franchise): JsonResponse
             'overdue_royalties' => $franchise->royalties()->where('status', 'overdue')->sum('total_amount')
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Franchise statistics retrieved successfully'
-        ]);
+        return $this->successResponse($stats, 'Franchise statistics retrieved successfully');
     }
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { UnitProduct } from '@/services/api/franchisee-dashboard'
+import type { UnitProduct } from '@/services/api'
 
 interface InventoryForm {
   quantity: number

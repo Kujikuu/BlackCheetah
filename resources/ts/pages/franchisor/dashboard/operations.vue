@@ -2,9 +2,26 @@
 import ViewTaskDialog from '@/components/dialogs/tasks/ViewTaskDialog.vue'
 import EditTaskDialog from '@/components/dialogs/tasks/EditTaskDialog.vue'
 import DeleteTaskDialog from '@/components/dialogs/tasks/DeleteTaskDialog.vue'
+import { taskApi, franchiseApi, type Task as ApiTask, type DashboardOperationsData } from '@/services/api'
+import type { ApiResponse } from '@/types/api'
 
-// 👉 API composable
-const { data: operationsApiData, execute: fetchOperationsData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/operations')
+// 👉 API data loading
+const operationsApiData = ref<ApiResponse<DashboardOperationsData> | null>(null)
+const isLoading = ref(false)
+
+// Load operations data
+const fetchOperationsData = async () => {
+  isLoading.value = true
+  try {
+    const response = await franchiseApi.getDashboardOperations()
+    operationsApiData.value = response
+  } catch (error) {
+    console.error('Error fetching operations data:', error)
+    operationsApiData.value = null
+  } finally {
+    isLoading.value = false
+  }
+}
 
 // 👉 Store
 const currentTab = ref('franchisee')
@@ -158,7 +175,7 @@ const statsData = ref<{
 
 // 👉 Watch for API data changes
 watch(operationsApiData, newData => {
-  const apiData = newData as ApiResponse
+  const apiData = newData as ApiResponse<DashboardOperationsData>
   if (apiData?.success && apiData?.data) {
     const data = apiData.data
 
@@ -307,24 +324,61 @@ const deleteTask = async () => {
   if (taskToDelete.value === null)
     return
 
-  // TODO: Implement API call for delete
-  const taskList = currentTab.value === 'franchisee'
-    ? tasksData.value.franchisee.tasks
-    : currentTab.value === 'sales'
-      ? tasksData.value.sales.tasks
-      : tasksData.value.staff.tasks
+  try {
+    const response = await taskApi.deleteTask(taskToDelete.value)
+    
+    if (response.success) {
+      // Remove from local state
+      const taskList = currentTab.value === 'franchisee'
+        ? tasksData.value.franchisee.tasks
+        : currentTab.value === 'sales'
+          ? tasksData.value.sales.tasks
+          : tasksData.value.staff.tasks
 
-  const index = taskList.findIndex(task => task.id === taskToDelete.value)
-  if (index !== -1)
-    taskList.splice(index, 1)
+      const index = taskList.findIndex(task => task.id === taskToDelete.value)
+      if (index !== -1)
+        taskList.splice(index, 1)
 
-  // Delete from selectedRows
-  const selectedIndex = selectedRows.value.findIndex(row => row === taskToDelete.value)
-  if (selectedIndex !== -1)
-    selectedRows.value.splice(selectedIndex, 1)
+      // Delete from selectedRows
+      const selectedIndex = selectedRows.value.findIndex(row => row === taskToDelete.value)
+      if (selectedIndex !== -1)
+        selectedRows.value.splice(selectedIndex, 1)
+    }
+  } catch (error) {
+    console.error('Error deleting task:', error)
+  }
 
   isDeleteDialogVisible.value = false
   taskToDelete.value = null
+}
+
+// Bulk delete tasks
+const bulkDelete = async () => {
+  if (selectedRows.value.length === 0) return
+
+  try {
+    // Delete multiple tasks sequentially
+    for (const taskId of selectedRows.value) {
+      await taskApi.deleteTask(taskId)
+    }
+
+    // Remove deleted tasks from local state
+    const taskList = currentTab.value === 'franchisee'
+      ? tasksData.value.franchisee.tasks
+      : currentTab.value === 'sales'
+        ? tasksData.value.sales.tasks
+        : tasksData.value.staff.tasks
+
+    selectedRows.value.forEach(taskId => {
+      const index = taskList.findIndex(task => task.id === taskId)
+      if (index !== -1) taskList.splice(index, 1)
+    })
+
+    selectedRows.value = [] // Clear selection
+  }
+  catch (error) {
+    console.error('Error bulk deleting tasks:', error)
+  }
 }
 
 // 👉 Modal states
@@ -367,16 +421,34 @@ const saveTask = async () => {
   if (!selectedTask.value)
     return
 
-  // TODO: Implement API call for update
-  const taskList = currentTab.value === 'franchisee'
-    ? tasksData.value.franchisee.tasks
-    : currentTab.value === 'sales'
-      ? tasksData.value.sales.tasks
-      : tasksData.value.staff.tasks
+  try {
+    const response = await taskApi.updateTask(selectedTask.value.id, selectedTask.value)
+    
+    if (response.success && response.data) {
+      // Update local state with the response data
+      const taskList = currentTab.value === 'franchisee'
+        ? tasksData.value.franchisee.tasks
+        : currentTab.value === 'sales'
+          ? tasksData.value.sales.tasks
+          : tasksData.value.staff.tasks
 
-  const index = taskList.findIndex(task => task.id === selectedTask.value!.id)
-  if (index !== -1)
-    taskList[index] = { ...selectedTask.value }
+      const index = taskList.findIndex(task => task.id === selectedTask.value!.id)
+      if (index !== -1 && response.data) {
+        // Map API response to local Task interface
+        const apiTask = response.data
+        taskList[index] = {
+          id: apiTask.id,
+          task: apiTask.title || selectedTask.value!.task,
+          assignedTo: apiTask.assignedTo || selectedTask.value!.assignedTo,
+          priority: apiTask.priority || selectedTask.value!.priority,
+          status: apiTask.status || selectedTask.value!.status,
+          dueDate: apiTask.dueDate || selectedTask.value!.dueDate,
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error updating task:', error)
+  }
 
   isEditTaskModalVisible.value = false
   selectedTask.value = null
@@ -454,6 +526,11 @@ const tabs = [
   { title: 'Sales Associate', value: 'sales', icon: 'tabler-users' },
   { title: 'Staff', value: 'staff', icon: 'tabler-user' },
 ]
+
+// Load data on component mount
+onMounted(() => {
+  fetchOperationsData()
+})
 </script>
 
 <template>
@@ -758,7 +835,20 @@ const tabs = [
     <!-- 👉 View Task Dialog -->
     <ViewTaskDialog
       v-model:is-dialog-visible="isViewTaskModalVisible"
-      :task="selectedTask ? { ...selectedTask, title: selectedTask.task, category: 'general', description: selectedTask.task, startDate: null, assignedTo: selectedTask.assignedTo, dueDate: selectedTask.dueDate, priority: selectedTask.priority, status: selectedTask.status, estimatedHours: 0, actualHours: 0 } : null"
+      :task="selectedTask ? {
+        id: selectedTask.id,
+        title: selectedTask.task,
+        description: selectedTask.task,
+        category: 'general',
+        assignedTo: selectedTask.assignedTo,
+        unitName: null,
+        startDate: null,
+        dueDate: selectedTask.dueDate,
+        priority: selectedTask.priority as any,
+        status: selectedTask.status as any,
+        leadId: null,
+        leadName: null
+      } : null"
     />
 
     <!-- 👉 Edit Task Modal -->

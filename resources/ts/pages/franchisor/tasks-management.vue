@@ -6,6 +6,7 @@ import EditTaskDialog from '@/components/dialogs/tasks/EditTaskDialog.vue'
 import DeleteTaskDialog from '@/components/dialogs/tasks/DeleteTaskDialog.vue'
 import { useTaskUsers } from '@/composables/useTaskUsers'
 import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES, TASK_HEADERS } from '@/constants/taskConstants'
+import { taskApi } from '@/services/api'
 
 // 👉 Router
 const router = useRouter()
@@ -42,7 +43,7 @@ const loadFranchiseeTasks = async () => {
   franchiseeError.value = null
 
   try {
-    const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/tasks')
+    const response = await taskApi.getFranchisorTasks()
 
     if (response.success && response.data?.data) {
       // Filter tasks to only show those assigned to franchisee users
@@ -87,7 +88,7 @@ const loadSalesTasks = async () => {
 
   try {
     // Load franchisor tasks and filter for sales-related categories
-    const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/tasks')
+    const response = await taskApi.getFranchisorTasks()
 
     if (response.success && response.data?.data) {
       // Filter tasks that are likely sales-related or assigned to sales team members
@@ -218,20 +219,17 @@ const resolvePriorityVariant = (priority: string) => {
 
 const onTaskCreated = async (task: any) => {
   try {
-    const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/tasks', {
-      method: 'POST',
-      body: {
-        title: task.title,
-        description: task.description,
-        category: task.category,
-        priority: task.priority,
-        status: task.status || 'pending',
-        due_date: task.dueDate,
-        estimated_hours: task.estimatedHours,
+    const response = await taskApi.createFranchisorTask({
+      title: task.title,
+      description: task.description,
+      category: task.category,
+      priority: task.priority,
+      status: task.status || 'pending',
+      due_date: task.dueDate,
+      estimated_hours: task.estimatedHours,
 
-        // Note: assigned_to, franchise_id, and unit_id are not provided by CreateTaskModal
-        // They will be set by the backend based on the authenticated user
-      },
+      // Note: assigned_to, franchise_id, and unit_id are not provided by CreateTaskModal
+      // They will be set by the backend based on the authenticated user
     })
 
     if (response.success) {

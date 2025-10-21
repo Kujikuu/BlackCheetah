@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Models\Franchise;
 use App\Models\Unit;
 use App\Models\UnitPerformance;
@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class UnitPerformanceController extends Controller
+class UnitPerformanceController extends BaseResourceController
 {
     /**
      * Get performance data for the franchisor's units
@@ -24,10 +24,7 @@ class UnitPerformanceController extends Controller
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $periodType = $request->get('period_type', 'monthly');
@@ -47,11 +44,7 @@ class UnitPerformanceController extends Controller
 
         $performances = $query->orderByDate()->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $performances,
-            'message' => 'Performance data retrieved successfully',
-        ]);
+        return $this->successResponse($performances, 'Performance data retrieved successfully');
     }
 
     /**
@@ -66,10 +59,7 @@ class UnitPerformanceController extends Controller
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $periodType = $request->get('period_type', 'monthly');
@@ -142,11 +132,7 @@ class UnitPerformanceController extends Controller
             $chartData['datasets']['all']['profit'][] = $allRevenue - $allExpenses;
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $chartData,
-            'message' => 'Chart data retrieved successfully',
-        ]);
+        return $this->successResponse($chartData, 'Chart data retrieved successfully');
     }
 
     /**
@@ -160,10 +146,7 @@ class UnitPerformanceController extends Controller
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $periodType = $request->get('period_type', 'monthly');
@@ -214,11 +197,7 @@ class UnitPerformanceController extends Controller
             })
             ->values();
 
-        return response()->json([
-            'success' => true,
-            'data' => $topPerformers,
-            'message' => 'Top performers retrieved successfully',
-        ]);
+        return $this->successResponse($topPerformers, 'Top performers retrieved successfully');
     }
 
     /**
@@ -232,10 +211,7 @@ class UnitPerformanceController extends Controller
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $periodType = $request->get('period_type', 'monthly');
@@ -288,11 +264,7 @@ class UnitPerformanceController extends Controller
             'trend' => ($trend >= 0 ? '+' : '') . number_format($trend, 1),
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $satisfactionData,
-            'message' => 'Customer satisfaction data retrieved successfully',
-        ]);
+        return $this->successResponse($satisfactionData, 'Customer satisfaction data retrieved successfully');
     }
 
     /**
@@ -306,10 +278,7 @@ class UnitPerformanceController extends Controller
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $periodType = $request->get('period_type', 'monthly');
@@ -346,11 +315,7 @@ class UnitPerformanceController extends Controller
             'lowest_rated' => $sortedRatings->count() > 1 ? $sortedRatings->last() : null,
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $ratingsData,
-            'message' => 'Ratings data retrieved successfully',
-        ]);
+        return $this->successResponse($ratingsData, 'Ratings data retrieved successfully');
     }
 
     /**
@@ -364,10 +329,7 @@ class UnitPerformanceController extends Controller
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $periodType = $request->get('period_type', 'monthly');
@@ -412,11 +374,7 @@ class UnitPerformanceController extends Controller
             $exportData['stats'] = $stats;
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $exportData,
-            'message' => 'Export data retrieved successfully',
-        ]);
+        return $this->successResponse($exportData, 'Export data retrieved successfully');
     }
 
     /**
@@ -430,10 +388,7 @@ class UnitPerformanceController extends Controller
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $units = Unit::where('franchise_id', $franchise->id)
@@ -458,11 +413,7 @@ class UnitPerformanceController extends Controller
             ],
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => collect($allUnits)->concat($units),
-            'message' => 'Units retrieved successfully',
-        ]);
+        return $this->successResponse(collect($allUnits)->concat($units), 'Units retrieved successfully');
     }
 
     // Helper methods

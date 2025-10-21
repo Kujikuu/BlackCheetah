@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { $api } from '@/utils/api'
 import ConfirmDeleteDialog from '@/components/dialogs/common/ConfirmDeleteDialog.vue'
 import AddDocumentDialog from '@/components/dialogs/franchise/AddDocumentDialog.vue'
+import { franchiseApi } from '@/services/api'
 
 // 👉 Router
 const router = useRouter()
@@ -152,7 +152,7 @@ const loadFranchiseData = async () => {
   try {
     isLoading.value = true
 
-    const response = await $api('/v1/franchisor/franchise/data')
+    const response = await franchiseApi.getFranchiseData()
 
     if (response.success && response.data) {
       const apiData = response.data.franchise
@@ -210,7 +210,7 @@ const loadDocuments = async () => {
       return
     }
 
-    const response = await $api(`/v1/franchises/${franchiseData.value.id}/documents`)
+    const response = await franchiseApi.getDocuments(franchiseData.value.id)
     if (response.success && response.data)
       documentsData.value = response.data.data || []
   }
@@ -229,7 +229,7 @@ const loadProducts = async () => {
       return
     }
 
-    const response = await $api(`/v1/franchises/${franchiseData.value.id}/products`)
+    const response = await franchiseApi.getProducts(franchiseData.value.id)
     if (response.success && response.data)
       productsData.value = response.data.data || []
   }
@@ -247,14 +247,7 @@ const uploadLogo = async (): Promise<string | null> => {
   isUploadingLogo.value = true
 
   try {
-    const formData = new FormData()
-
-    formData.append('logo', logoFile.value)
-
-    const response = await $api('/v1/franchisor/franchise/upload-logo', {
-      method: 'POST',
-      body: formData,
-    })
+    const response = await franchiseApi.uploadLogo(logoFile.value)
 
     if (response.success) {
       return response.data.logo_url
@@ -329,10 +322,7 @@ const updateFranchiseData = async () => {
       },
     }
 
-    const response = await $api('/v1/franchisor/franchise/update', {
-      method: 'PUT',
-      body: updatePayload,
-    })
+    const response = await franchiseApi.updateFranchise(updatePayload)
 
     if (response.success) {
       showSnackbar('Franchise information updated successfully', 'success')
@@ -561,34 +551,24 @@ const saveDocument = async () => {
       return
     }
 
-    const formData = new FormData()
-
-    formData.append('name', selectedDocument.value.name)
-    formData.append('description', selectedDocument.value.description || '')
-    formData.append('type', selectedDocument.value.type)
-    formData.append('status', selectedDocument.value.status)
-    formData.append('is_confidential', selectedDocument.value.is_confidential ? '1' : '0')
-
-    if (selectedDocument.value.expiry_date)
-      formData.append('expiry_date', selectedDocument.value.expiry_date)
-
-    if (selectedDocument.value.file)
-      formData.append('file', selectedDocument.value.file)
+    const payload = {
+      name: selectedDocument.value.name,
+      description: selectedDocument.value.description || '',
+      type: selectedDocument.value.type,
+      status: selectedDocument.value.status,
+      is_confidential: selectedDocument.value.is_confidential,
+      expiry_date: selectedDocument.value.expiry_date,
+      file: selectedDocument.value.file,
+    }
 
     let response
     if (selectedDocument.value.id !== null) {
       // Update existing document (metadata only)
-      response = await $api(`/v1/franchises/${franchiseData.value.id}/documents/${selectedDocument.value.id}`, {
-        method: 'PUT',
-        body: formData,
-      })
+      response = await franchiseApi.updateDocument(franchiseData.value.id, selectedDocument.value.id, payload)
     }
     else {
       // Add new document
-      response = await $api(`/v1/franchises/${franchiseData.value.id}/documents`, {
-        method: 'POST',
-        body: formData,
-      })
+      response = await franchiseApi.createDocument(franchiseData.value.id, payload)
     }
 
     if (response.success) {
@@ -624,9 +604,7 @@ const downloadDocument = async (document: any) => {
       return
     }
 
-    const response = await $api(`/v1/franchises/${franchiseData.value.id}/documents/${document.id}/download`, {
-      method: 'GET',
-    })
+    const response = await franchiseApi.downloadDocument(franchiseData.value.id, document.id)
 
     // Create a blob from the response and trigger download
     const blob = new Blob([response], { type: 'application/octet-stream' })
@@ -661,9 +639,7 @@ const deleteDocument = async () => {
       return
     }
 
-    const response = await $api(`/v1/franchises/${franchiseData.value.id}/documents/${documentToDelete.value.id}`, {
-      method: 'DELETE',
-    })
+    const response = await franchiseApi.deleteDocument(franchiseData.value.id, documentToDelete.value.id)
 
     if (response.success) {
       showSnackbar('Document deleted successfully', 'success')
@@ -724,29 +700,13 @@ const saveProduct = async () => {
 
     let response
 
-    const apiUrl = selectedProduct.value.id !== null
-      ? `/v1/franchises/${franchiseData.value.id}/products/${selectedProduct.value.id}`
-      : `/v1/franchises/${franchiseData.value.id}/products`
-
     if (selectedProduct.value.id !== null) {
-      // Update existing product - send as JSON instead of FormData
-      response = await $api(apiUrl, {
-        method: 'PUT',
-        body: productData,
-      })
+      // Update existing product
+      response = await franchiseApi.updateProduct(franchiseData.value.id, selectedProduct.value.id, productData)
     }
     else {
-      // Add new product - use FormData for file uploads
-      const formData = new FormData()
-
-      Object.entries(productData).forEach(([key, value]) => {
-        formData.append(key, value.toString())
-      })
-
-      response = await $api(apiUrl, {
-        method: 'POST',
-        body: formData,
-      })
+      // Add new product
+      response = await franchiseApi.createProduct(franchiseData.value.id, productData)
     }
 
     if (response.success) {
@@ -787,9 +747,7 @@ const deleteProduct = async () => {
       return
     }
 
-    const response = await $api(`/v1/franchises/${franchiseData.value.id}/products/${productToDelete.value.id}`, {
-      method: 'DELETE',
-    })
+    const response = await franchiseApi.deleteProduct(franchiseData.value.id, productToDelete.value.id)
 
     if (response.success) {
       showSnackbar('Product deleted successfully', 'success')

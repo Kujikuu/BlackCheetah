@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { leadApi } from '@/services/api'
+
 interface Props {
   isDialogVisible: boolean
   leadId: number | null
@@ -29,12 +31,7 @@ const convertLead = async () => {
   isLoading.value = true
 
   try {
-    await $api(`/v1/franchisor/leads/${props.leadId}/convert`, {
-      method: 'POST',
-      body: {
-        notes: conversionNotes.value.trim(),
-      },
-    })
+    await leadApi.convertLead(props.leadId, conversionNotes.value.trim())
 
     emit('leadConverted')
     updateModelValue(false)

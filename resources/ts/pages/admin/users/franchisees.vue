@@ -3,6 +3,7 @@ import AddEditFranchiseeDrawer from '@/views/admin/modals/AddEditFranchiseeDrawe
 import ConfirmDeleteDialog from '@/views/admin/modals/ConfirmDeleteDialog.vue'
 import ResetPasswordDialog from '@/views/admin/modals/ResetPasswordDialog.vue'
 import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
+import { adminApi } from '@/services/api'
 
 // TypeScript interfaces
 interface Franchisee {
@@ -66,16 +67,37 @@ const fetchFranchisees = async () => {
       page: page.value,
     }
 
-    const response = await $api('/v1/admin/users/franchisees', {
-      method: 'GET',
-      params,
-    })
+    const response = await adminApi.getFranchisees()
 
-    if (response.success) {
-      franchisees.value = response.data.data || []
-      totalFranchisees.value = response.data.total || 0
+    if (response.success && response.data) {
+      // Handle both direct array and paginated response structures
+      let userData: any[] = []
+      
+      if (Array.isArray(response.data)) {
+        // Direct array response
+        userData = response.data
+      } else if (response.data && typeof response.data === 'object' && 'data' in response.data && Array.isArray((response.data as any).data)) {
+        // Paginated response structure
+        userData = (response.data as any).data
+      }
+      
+      console.log('Franchisees API Response:', { response, userData }) // Debug log
+      
+      franchisees.value = userData.map((user: any) => ({
+        id: user.id,
+        fullName: user.fullName || user.name, // Try both possible field names
+        email: user.email,
+        phone: user.phone || '',
+        location: user.location || '',
+        status: user.status,
+        avatar: user.avatar || '',
+        joinedDate: user.joinedDate || user.createdAt || user.created_at,
+      }))
+      totalFranchisees.value = franchisees.value.length
     }
     else {
+      franchisees.value = []
+      totalFranchisees.value = 0
       error.value = response.message || 'Failed to fetch franchisees'
     }
   }
@@ -157,10 +179,7 @@ const addNewFranchisee = async (franchiseeData: any) => {
     // Remove location field as backend expects city
     delete apiData.location
 
-    const response = await $api('/v1/admin/users', {
-      method: 'POST',
-      body: apiData,
-    })
+    const response = await adminApi.createUser(apiData)
 
     if (response.success)
       await fetchFranchisees() // Refresh the list
@@ -191,10 +210,7 @@ const updateFranchisee = async (franchiseeData: any) => {
     // Remove location field as backend expects city
     delete apiData.location
 
-    const response = await $api(`/v1/admin/users/${franchiseeData.id}`, {
-      method: 'PUT',
-      body: apiData,
-    })
+    const response = await adminApi.updateUser(franchiseeData.id, apiData)
 
     if (response.success) {
       await fetchFranchisees() // Refresh the list
@@ -231,9 +247,7 @@ const deleteUser = async () => {
     return
 
   try {
-    const response = await $api(`/v1/admin/users/${userToDelete.value.id}`, {
-      method: 'DELETE',
-    })
+    const response = await adminApi.deleteUser(userToDelete.value.id)
 
     if (response.success) {
       await fetchFranchisees() // Refresh the list
@@ -256,6 +270,25 @@ const deleteUser = async () => {
   userToDelete.value = null
 }
 
+// Bulk delete users
+const bulkDelete = async () => {
+  if (selectedRows.value.length === 0) return
+
+  try {
+    // Delete multiple users sequentially
+    for (const userId of selectedRows.value) {
+      await adminApi.deleteUser(userId)
+    }
+
+    await fetchFranchisees() // Refresh the list
+    selectedRows.value = [] // Clear selection
+  }
+  catch (err) {
+    console.error('Error bulk deleting franchisees:', err)
+    error.value = 'Failed to delete selected franchisees'
+  }
+}
+
 // Open reset password dialog
 const openResetPasswordDialog = (franchisee: any) => {
   selectedFranchisee.value = franchisee
@@ -268,12 +301,7 @@ const resetPassword = async (password: string) => {
     return
 
   try {
-    const response = await $api(`/v1/admin/users/${selectedFranchisee.value.id}/reset-password`, {
-      method: 'POST',
-      body: {
-        password,
-      },
-    })
+    const response = await adminApi.resetUserPassword(selectedFranchisee.value.id, password)
 
     if (response.success)
       console.log('Password reset successfully for:', selectedFranchisee.value?.fullName)
@@ -335,7 +363,7 @@ const widgetData = ref([
 // Fetch widget statistics
 const fetchWidgetStats = async () => {
   try {
-    const response = await $api('/v1/admin/users/franchisees/stats')
+    const response = await adminApi.getFranchiseesStats()
     if (response.success)
       widgetData.value = response.data
   }

@@ -3,10 +3,10 @@ import AddNoteDialog from '@/components/dialogs/notes/AddNoteDialog.vue'
 import EditNoteDialog from '@/components/dialogs/notes/EditNoteDialog.vue'
 import ViewNoteDialog from '@/components/dialogs/notes/ViewNoteDialog.vue'
 import DeleteNoteDialog from '@/components/dialogs/notes/DeleteNoteDialog.vue'
-import { type Lead, leadApi } from '@/services/api/lead'
+import { type Lead, leadApi, notesApi } from '@/services/api'
 import { avatarText } from '@core/utils/formatters'
 
-const route = useRoute('sales-lead-view-id')
+const route = useRoute('sales-leads-id')
 const leadId = computed(() => Number(route.params.id))
 
 const currentTab = ref('overview')
@@ -59,10 +59,7 @@ const fetchNotes = async () => {
   try {
     isLoadingNotes.value = true
 
-    const response = await $api('/v1/notes', {
-      method: 'GET',
-      query: { lead_id: leadId.value },
-    })
+    const response = await notesApi.getNotes({ lead_id: leadId.value })
 
     if (response.success) {
       notesData.value = response.data.map((note: any) => ({
@@ -141,9 +138,7 @@ const deleteNote = async () => {
     return
 
   try {
-    const response = await $api(`/v1/notes/${noteToDelete.value}`, {
-      method: 'DELETE',
-    })
+    const response = await notesApi.deleteNote(noteToDelete.value)
 
     if (response.success) {
       // Refresh notes from API

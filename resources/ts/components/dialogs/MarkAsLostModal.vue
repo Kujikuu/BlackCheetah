@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { leadApi } from '@/services/api'
+
 interface Props {
   isDialogVisible: boolean
   leadId: number | null
@@ -38,12 +40,7 @@ const markAsLost = async () => {
   isLoading.value = true
 
   try {
-    await $api(`/v1/franchisor/leads/${props.leadId}/mark-lost`, {
-      method: 'POST',
-      body: {
-        reason: reason.value,
-      },
-    })
+    await leadApi.markAsLost(props.leadId, reason.value)
 
     emit('leadMarkedAsLost')
     updateModelValue(false)

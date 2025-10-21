@@ -3,6 +3,7 @@ import { useDisplay } from 'vuetify'
 import AdditionalDetails from '@/views/franchisor/add-lead/AdditionalDetails.vue'
 import BasicInfo from '@/views/franchisor/add-lead/BasicInfo.vue'
 import type { AddLeadData } from '@/views/franchisor/add-lead/types'
+import { leadApi } from '@/services/api'
 
 const { mdAndUp } = useDisplay()
 
@@ -52,26 +53,23 @@ const onSubmit = async () => {
 
     // Map form data to API format
     const leadData = {
-      first_name: addLeadData.value.basicInfo.firstName,
-      last_name: addLeadData.value.basicInfo.lastName,
+      firstName: addLeadData.value.basicInfo.firstName,
+      lastName: addLeadData.value.basicInfo.lastName,
       email: addLeadData.value.basicInfo.email,
       phone: addLeadData.value.basicInfo.contactNumber,
-      company: addLeadData.value.basicInfo.companyName || null,
-      country: addLeadData.value.basicInfo.country || null,
-      state: addLeadData.value.basicInfo.state || null,
-      city: addLeadData.value.basicInfo.city || null,
+      company: addLeadData.value.basicInfo.companyName || undefined,
+      country: addLeadData.value.basicInfo.country || undefined,
+      state: addLeadData.value.basicInfo.state || undefined,
+      city: addLeadData.value.basicInfo.city || undefined,
       source: addLeadData.value.additionalDetails.leadSource || 'website',
-      status: addLeadData.value.additionalDetails.leadStatus || 'new',
+      status: (addLeadData.value.additionalDetails.leadStatus || 'new') as any,
       priority: 'medium', // Default priority
-      notes: addLeadData.value.additionalDetails.note || null,
+      note: addLeadData.value.additionalDetails.note || undefined,
 
       // assigned_to: addLeadData.value.additionalDetails.leadOwner, // TODO: Map owner ID
     }
 
-    const response = await $api('/v1/franchisor/leads', {
-      method: 'POST',
-      body: leadData,
-    })
+    const response = await leadApi.createLead(leadData)
 
     if (response.success) {
       // Show success message

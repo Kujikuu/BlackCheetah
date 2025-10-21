@@ -1,44 +1,6 @@
-import { $api } from '@/utils/api'
+import { notificationsApi, type BackendNotification, type NotificationStats } from '@/services/api'
 import type { Notification } from '@layouts/types'
-
-interface NotificationStats {
-  total: number
-  unread: number
-  read: number
-}
-
-interface BackendNotification {
-  id: string
-  type: string
-  notifiable_type: string
-  notifiable_id: number
-  data: {
-    title?: string
-    message?: string
-    subtitle?: string
-    icon?: string
-    img?: string
-    text?: string
-    color?: string
-  } | string // Can be object or JSON string from API
-  read_at: string | null
-  created_at: string
-  updated_at: string
-}
-
-interface NotificationResponse {
-  data: BackendNotification[]
-  current_page: number
-  last_page: number
-  per_page: number
-  total: number
-}
-
-interface ApiResponse<T> {
-  success: boolean
-  data: T
-  message?: string
-}
+import type { PaginatedResponse } from '@/types/api'
 
 export const useNotifications = () => {
   const notifications = ref<Notification[]>([])
@@ -97,16 +59,15 @@ export const useNotifications = () => {
     try {
       loading.value = true
 
-      const params = unreadOnly ? { unread_only: true } : {}
+      const filters = unreadOnly ? { unread_only: true } : {}
+      const response = await notificationsApi.getNotifications(filters)
 
-      const response = await $api<ApiResponse<NotificationResponse>>('/v1/notifications', {
-        method: 'GET',
-        params,
-      })
-
-      notifications.value = response.data.data.map(transformNotification)
-
-      return response.data
+      if (response.success && response.data) {
+        notifications.value = response.data.data.map(transformNotification)
+        return response.data
+      }
+      
+      return null
     }
     catch (error) {
       console.error('Error fetching notifications:', error)
@@ -120,13 +81,14 @@ export const useNotifications = () => {
   // Get notification stats
   const fetchStats = async () => {
     try {
-      const response = await $api<ApiResponse<NotificationStats>>('/v1/notifications/stats', {
-        method: 'GET',
-      })
+      const response = await notificationsApi.getStats()
 
-      stats.value = response.data
-
-      return response.data
+      if (response.success && response.data) {
+        stats.value = response.data
+        return response.data
+      }
+      
+      return null
     }
     catch (error) {
       console.error('Error fetching notification stats:', error)
@@ -138,15 +100,10 @@ export const useNotifications = () => {
   const markAsRead = async (notificationIds: (number | string)[]) => {
     try {
       if (notificationIds.length === 1) {
-        await $api(`/v1/notifications/${notificationIds[0]}/read`, {
-          method: 'PATCH',
-        })
+        await notificationsApi.markAsRead(notificationIds[0])
       }
       else {
-        await $api('/v1/notifications/mark-multiple-read', {
-          method: 'PATCH',
-          body: { notification_ids: notificationIds },
-        })
+        await notificationsApi.markMultipleAsRead({ notification_ids: notificationIds })
       }
 
       // Update local state
@@ -168,16 +125,10 @@ export const useNotifications = () => {
   const markAsUnread = async (notificationIds: (number | string)[]) => {
     try {
       if (notificationIds.length === 1) {
-        await $api(`/v1/notifications/${notificationIds[0]}/unread`, {
-          method: 'PATCH',
-        })
+        await notificationsApi.markAsUnread(notificationIds[0])
       }
       else {
-        // Use the mark multiple as unread endpoint
-        await $api('/v1/notifications/mark-multiple-unread', {
-          method: 'PATCH',
-          body: { notification_ids: notificationIds },
-        })
+        await notificationsApi.markMultipleAsUnread({ notification_ids: notificationIds })
       }
 
       // Update local state
@@ -198,9 +149,7 @@ export const useNotifications = () => {
   // Mark all notifications as read
   const markAllAsRead = async () => {
     try {
-      await $api('/v1/notifications/mark-all-read', {
-        method: 'PATCH',
-      })
+      await notificationsApi.markAllAsRead()
 
       // Update local state
       notifications.value.forEach(notification => {
@@ -219,9 +168,7 @@ export const useNotifications = () => {
   // Remove notification
   const removeNotification = async (notificationId: number | string) => {
     try {
-      await $api(`/v1/notifications/${notificationId}`, {
-        method: 'DELETE',
-      })
+      await notificationsApi.deleteNotification(notificationId)
 
       // Update local state
       const index = notifications.value.findIndex(n => n.id === notificationId)

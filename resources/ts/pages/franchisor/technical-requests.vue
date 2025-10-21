@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { type TechnicalRequest, technicalRequestApi } from '@/services/api/technical-request'
+import { type TechnicalRequest, technicalRequestApi } from '@/services/api'
 import SubmitRequestForm from '@/views/technical-requests/SubmitRequestForm.vue'
 import ViewRequestDialog from '@/views/technical-requests/ViewRequestDialog.vue'
 import EditRequestDialog from '@/views/technical-requests/EditRequestDialog.vue'

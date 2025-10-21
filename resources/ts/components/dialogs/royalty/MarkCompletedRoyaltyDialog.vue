@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { type PaymentData, type RoyaltyRecord, royaltyApi } from '@/services/api/royalty'
+import { type PaymentData, type RoyaltyRecord, royaltyApi } from '@/services/api'
 
 interface Props {
   isDialogVisible: boolean

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Task } from '@/services/api/task'
+import { type Task } from '@/services/api'
 
 interface Props {
   isDialogVisible: boolean

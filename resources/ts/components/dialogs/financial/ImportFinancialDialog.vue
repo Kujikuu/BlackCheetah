@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { financialApi } from '@/services/api/financial'
+import { financialApi } from '@/services/api'
 
 interface Props {
   isDialogVisible: boolean

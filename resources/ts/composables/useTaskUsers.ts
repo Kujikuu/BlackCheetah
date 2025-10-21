@@ -1,3 +1,5 @@
+import { franchiseApi, usersApi } from '@/services/api'
+
 export interface TaskUser {
   id: number
   name: string
@@ -20,7 +22,7 @@ export const useTaskUsers = () => {
       loading.value = true
       error.value = null
 
-      const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/franchisees')
+      const response = await franchiseApi.getFranchisees()
 
       if (response.success && response.data?.data) {
         // API returns paginated data, so we access response.data.data for the actual users array
@@ -54,7 +56,7 @@ export const useTaskUsers = () => {
       loading.value = true
       error.value = null
 
-      const response = await $api<{ success: boolean; data: any }>('/v1/franchisor/sales-associates')
+      const response = await usersApi.getSalesAssociates()
 
       if (response.success && response.data) {
         salesUsers.value = response.data.map((user: any) => ({

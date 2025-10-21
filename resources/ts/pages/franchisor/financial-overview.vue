@@ -2,7 +2,7 @@
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
-import { type ChartData, type ExpenseData, type FinancialStatistics, type ProfitData, type SalesData, type UnitPerformance, financialApi } from '@/services/api/financial'
+import { type ChartData, type ExpenseData, type FinancialStatistics, type ProfitData, type SalesData, type UnitPerformance, financialApi } from '@/services/api'
 import { formatCurrency } from '@/@core/utils/formatters'
 import ImportDataDialog from '@/components/dialogs/common/ImportDataDialog.vue'
 import ViewSaleDetailsDialog from '@/components/dialogs/financial/ViewSaleDetailsDialog.vue'

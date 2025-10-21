@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { technicalRequestApi } from '@/services/api/technical-request'
+import { technicalRequestApi } from '@/services/api'
 
 // Props
 interface Props {

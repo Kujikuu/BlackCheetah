@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
-import { $api } from '@/utils/api'
+import { authApi } from '@/services/api'
 
 const router = useRouter()
 const ability = useAbility()
@@ -11,9 +11,7 @@ const userData = useCookie<any>('userData')
 const logout = async () => {
   try {
     // Call logout API to revoke token on server
-    await $api('/auth/logout', {
-      method: 'POST',
-    })
+    await authApi.logout()
   }
   catch (error) {
     // Log error but continue with logout process

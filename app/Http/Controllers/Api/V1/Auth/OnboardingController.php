@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\Auth;
+namespace App\Http\Controllers\Api\V1\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\Controller;
 use App\Http\Requests\CompleteProfileRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -19,13 +19,12 @@ class OnboardingController extends Controller
         $user = Auth::user();
 
         if (! $user || $user->role !== 'franchisee') {
-            return response()->json([
+            return $this->successResponse([
                 'requires_onboarding' => false,
-                'message' => 'User is not a franchisee',
-            ]);
+            ], 'User is not a franchisee');
         }
 
-        return response()->json([
+        return $this->successResponse([
             'requires_onboarding' => ! $user->profile_completed,
             'profile_completed' => $user->profile_completed,
             'user' => [
@@ -63,8 +62,7 @@ class OnboardingController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'message' => 'Profile completed successfully',
+            return $this->successResponse([
                 'user' => [
                     'name' => $user->name,
                     'email' => $user->email,
@@ -75,14 +73,11 @@ class OnboardingController extends Controller
                     'address' => $user->address,
                     'profile_completed' => $user->profile_completed,
                 ],
-            ]);
+            ], 'Profile completed successfully');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json([
-                'message' => 'Failed to complete profile',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to complete profile', $e->getMessage(), 500);
         }
     }
 }

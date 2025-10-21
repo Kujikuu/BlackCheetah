@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
+use App\Http\Requests\StoreTechnicalRequestRequest;
+use App\Http\Requests\UpdateTechnicalRequestRequest;
 use App\Http\Resources\TechnicalRequestResource;
 use App\Models\TechnicalRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class TechnicalRequestController extends Controller
+class TechnicalRequestController extends BaseResourceController
 {
     /**
      * Display a listing of the resource.
@@ -52,41 +54,22 @@ class TechnicalRequestController extends Controller
         }
 
         // Apply sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $sort = $this->parseSortParams($request, 'created_at');
+        $query->orderBy($sort['column'], $sort['order']);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $requests = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $requests,
-            'message' => 'Technical requests retrieved successfully',
-        ]);
+        return $this->successResponse($requests, 'Technical requests retrieved successfully');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreTechnicalRequestRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'category' => 'required|in:hardware,software,network,pos_system,website,mobile_app,training,other',
-            'priority' => 'required|in:low,medium,high,urgent',
-            'status' => 'sometimes|in:open,in_progress,pending_info,resolved,closed,cancelled',
-            'requester_id' => 'required|exists:users,id',
-            'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:10240', // 10MB max per file
-        ]);
-
-        // Set default status if not provided
-        if (!isset($validated['status'])) {
-            $validated['status'] = 'open';
-        }
+        $validated = $request->validated();
 
         // Handle file uploads
         $attachmentPaths = [];
@@ -114,11 +97,11 @@ class TechnicalRequestController extends Controller
 
         $technicalRequest = TechnicalRequest::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => new TechnicalRequestResource($technicalRequest->load(['requester'])),
-            'message' => 'Technical request created successfully',
-        ], 201);
+        return $this->successResponse(
+            new TechnicalRequestResource($technicalRequest->load(['requester'])),
+            'Technical request created successfully',
+            201
+        );
     }
 
     /**
@@ -128,34 +111,22 @@ class TechnicalRequestController extends Controller
     {
         $technicalRequest->load(['requester']);
 
-        return response()->json([
-            'success' => true,
-            'data' => new TechnicalRequestResource($technicalRequest),
-            'message' => 'Technical request retrieved successfully',
-        ]);
+        return $this->successResponse(new TechnicalRequestResource($technicalRequest), 'Technical request retrieved successfully');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, TechnicalRequest $technicalRequest): JsonResponse
+    public function update(UpdateTechnicalRequestRequest $request, TechnicalRequest $technicalRequest): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'category' => 'sometimes|in:hardware,software,network,pos_system,website,mobile_app,training,other',
-            'priority' => 'sometimes|in:low,medium,high,urgent',
-            'status' => 'sometimes|in:open,in_progress,pending_info,resolved,closed,cancelled',
-            'attachments' => 'nullable|array',
-        ]);
+        $validated = $request->validated();
 
         $technicalRequest->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => new TechnicalRequestResource($technicalRequest->load(['requester'])),
-            'message' => 'Technical request updated successfully',
-        ]);
+        return $this->successResponse(
+            new TechnicalRequestResource($technicalRequest->load(['requester'])),
+            'Technical request updated successfully'
+        );
     }
 
     /**
@@ -165,10 +136,7 @@ class TechnicalRequestController extends Controller
     {
         $technicalRequest->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Technical request deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Technical request deleted successfully');
     }
 
     /**
@@ -183,11 +151,7 @@ class TechnicalRequestController extends Controller
 
         $count = TechnicalRequest::whereIn('id', $validated['ids'])->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => "{$count} technical request(s) deleted successfully",
-            'count' => $count,
-        ]);
+        return $this->successResponse(['count' => $count], "{$count} technical request(s) deleted successfully");
     }
 
 
@@ -203,11 +167,7 @@ class TechnicalRequestController extends Controller
 
         $technicalRequest->updateStatus($validated['status']);
 
-        return response()->json([
-            'success' => true,
-            'data' => new TechnicalRequestResource($technicalRequest->load(['requester'])),
-            'message' => 'Technical request status updated successfully',
-        ]);
+        return $this->successResponse(new TechnicalRequestResource($technicalRequest->load(['requester'])), 'Technical request status updated successfully');
     }
 
     /**
@@ -217,11 +177,7 @@ class TechnicalRequestController extends Controller
     {
         $technicalRequest->updateStatus('resolved');
 
-        return response()->json([
-            'success' => true,
-            'data' => new TechnicalRequestResource($technicalRequest->load(['requester'])),
-            'message' => 'Technical request resolved successfully',
-        ]);
+        return $this->successResponse(new TechnicalRequestResource($technicalRequest->load(['requester'])), 'Technical request resolved successfully');
     }
 
     /**
@@ -231,11 +187,7 @@ class TechnicalRequestController extends Controller
     {
         $technicalRequest->updateStatus('closed');
 
-        return response()->json([
-            'success' => true,
-            'data' => new TechnicalRequestResource($technicalRequest->load(['requester'])),
-            'message' => 'Technical request closed successfully',
-        ]);
+        return $this->successResponse(new TechnicalRequestResource($technicalRequest->load(['requester'])), 'Technical request closed successfully');
     }
 
     /**
@@ -249,11 +201,7 @@ class TechnicalRequestController extends Controller
 
         $technicalRequest->addAttachment($validated['attachment_url']);
 
-        return response()->json([
-            'success' => true,
-            'data' => new TechnicalRequestResource($technicalRequest->load(['requester'])),
-            'message' => 'Attachment added successfully',
-        ]);
+        return $this->successResponse(new TechnicalRequestResource($technicalRequest->load(['requester'])), 'Attachment added successfully');
     }
 
     /**
@@ -291,11 +239,7 @@ class TechnicalRequestController extends Controller
                 ->pluck('count', 'status'),
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Technical request statistics retrieved successfully',
-        ]);
+        return $this->successResponse($stats, 'Technical request statistics retrieved successfully');
     }
 
     /**
@@ -330,16 +274,12 @@ class TechnicalRequestController extends Controller
         $perPage = $request->get('per_page', 15);
         $requests = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'data' => TechnicalRequestResource::collection($requests->items()),
-                'current_page' => $requests->currentPage(),
-                'last_page' => $requests->lastPage(),
-                'per_page' => $requests->perPage(),
-                'total' => $requests->total(),
-            ],
-            'message' => 'Technical requests retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'data' => TechnicalRequestResource::collection($requests->items()),
+            'current_page' => $requests->currentPage(),
+            'last_page' => $requests->lastPage(),
+            'per_page' => $requests->perPage(),
+            'total' => $requests->total(),
+        ], 'Technical requests retrieved successfully');
     }
 }

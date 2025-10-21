@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ConfirmDeleteDialog from '@/components/dialogs/common/ConfirmDeleteDialog.vue'
-import { $api } from '@/utils/api'
+import { notesApi } from '@/services/api'
 
 interface Props {
   isDialogVisible: boolean
@@ -23,9 +23,7 @@ const onDeleteConfirm = async () => {
 
   isLoading.value = true
   try {
-    const response = await $api(`/v1/notes/${props.noteId}`, {
-      method: 'DELETE',
-    })
+    const response = await notesApi.deleteNote(props.noteId)
 
     if (response.success) {
       emit('note-deleted')

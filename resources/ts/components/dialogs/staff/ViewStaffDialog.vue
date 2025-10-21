@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { UnitStaff } from '@/services/api/franchisee-dashboard'
+import type { UnitStaff } from '@/services/api'
+import { franchiseeDashboardApi } from '@/services/api'
 
 interface Props {
   isDialogVisible: boolean
@@ -86,17 +87,6 @@ const handleClose = () => {
             md="6"
           >
             <div class="text-body-2 text-disabled mb-1">
-              Phone
-            </div>
-            <div class="text-body-1 font-weight-medium">
-              {{ selectedStaff.phone || 'N/A' }}
-            </div>
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <div class="text-body-2 text-disabled mb-1">
               Job Title
             </div>
             <div class="text-body-1 font-weight-medium">
@@ -108,32 +98,10 @@ const handleClose = () => {
             md="6"
           >
             <div class="text-body-2 text-disabled mb-1">
-              Department
+              Shift Time
             </div>
             <div class="text-body-1 font-weight-medium">
-              {{ selectedStaff.department || 'N/A' }}
-            </div>
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <div class="text-body-2 text-disabled mb-1">
-              Salary
-            </div>
-            <div class="text-body-1 font-weight-medium">
-              {{ selectedStaff.salary ? `SAR ${selectedStaff.salary}` : 'N/A' }}
-            </div>
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <div class="text-body-2 text-disabled mb-1">
-              Hire Date
-            </div>
-            <div class="text-body-1 font-weight-medium">
-              {{ selectedStaff.hireDate || 'N/A' }}
+              {{ selectedStaff.shiftTime || 'N/A' }}
             </div>
           </VCol>
           <VCol
@@ -152,17 +120,6 @@ const handleClose = () => {
             md="6"
           >
             <div class="text-body-2 text-disabled mb-1">
-              Employment Type
-            </div>
-            <div class="text-body-1 font-weight-medium text-capitalize">
-              {{ selectedStaff.employmentType?.replace('_', ' ') || 'N/A' }}
-            </div>
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <div class="text-body-2 text-disabled mb-1">
               Status
             </div>
             <VChip
@@ -173,17 +130,6 @@ const handleClose = () => {
             >
               {{ selectedStaff.status }}
             </VChip>
-          </VCol>
-          <VCol
-            v-if="selectedStaff.notes"
-            cols="12"
-          >
-            <div class="text-body-2 text-disabled mb-1">
-              Notes
-            </div>
-            <div class="text-body-1">
-              {{ selectedStaff.notes }}
-            </div>
           </VCol>
         </VRow>
       </VCardText>

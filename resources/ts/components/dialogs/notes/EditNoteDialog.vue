@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { notesApi } from '@/services/api'
+
 interface Attachment {
   name: string
   path: string
@@ -65,9 +67,7 @@ const removeExistingAttachment = async (index: number) => {
     return
 
   try {
-    const response = await $api(`/v1/notes/${editedNote.value.id}/attachments/${index}`, {
-      method: 'DELETE',
-    })
+    const response = await notesApi.deleteNoteAttachment(editedNote.value.id, index)
 
     if (response.success) {
       // Remove from local array
@@ -108,10 +108,7 @@ const onSubmit = async () => {
       formData.append('attachments[]', file)
     })
 
-    const response = await $api(`/v1/notes/${editedNote.value.id}`, {
-      method: 'POST',
-      body: formData,
-    })
+    const response = await notesApi.updateNoteWithFormData(editedNote.value.id, formData)
 
     if (response.success) {
       console.log('Note updated successfully')

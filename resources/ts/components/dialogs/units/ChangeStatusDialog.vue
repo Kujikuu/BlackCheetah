@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { franchiseApi } from '@/services/api'
+
 interface Props {
   isDialogVisible: boolean
   unitId: number | null
@@ -29,12 +31,7 @@ const changeUnitStatus = async () => {
   try {
     isLoading.value = true
     
-    const response = await $api(`/v1/units/${props.unitId}/status`, {
-      method: 'PATCH',
-      body: {
-        status: newStatus.value,
-      },
-    })
+    const response = await franchiseApi.updateUnitStatus(props.unitId, newStatus.value)
 
     if (response.success) {
       emit('status-updated', { 

@@ -5,6 +5,7 @@ import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
+import { authApi } from '@/services/api'
 
 definePage({
   meta: {
@@ -28,9 +29,11 @@ onMounted(async () => {
 
   loading.value = true
   try {
-    const resp = await $api<{ success: boolean; data: { user: { email: string } } }>('/auth/me', { method: 'GET' })
+    const resp = await authApi.me()
 
-    userEmail.value = resp.data.user.email
+    if (resp.success && resp.data) {
+      userEmail.value = resp.data.email
+    }
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null

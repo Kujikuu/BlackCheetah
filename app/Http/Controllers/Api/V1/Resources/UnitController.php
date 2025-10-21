@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
+use App\Http\Requests\StoreUnitRequest;
+use App\Http\Requests\UpdateUnitRequest;
 use App\Models\Franchise;
 use App\Models\Unit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class UnitController extends Controller
+class UnitController extends BaseResourceController
 {
     /**
      * Display a listing of the resource.
@@ -53,45 +55,15 @@ class UnitController extends Controller
         $perPage = $request->get('per_page', 15);
         $units = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $units,
-            'message' => 'Units retrieved successfully',
-        ]);
+        return $this->successResponse($units, 'Units retrieved successfully');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreUnitRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'unit_name' => 'required|string|max:255',
-            'unit_code' => 'nullable|string|max:50|unique:units,unit_code',
-            'franchise_id' => 'required|exists:franchises,id',
-            'unit_type' => 'nullable|in:store,kiosk,mobile,online,warehouse,office',
-            'address' => 'required|string',
-            'city' => 'required|string|max:100',
-            'state_province' => 'required|string|max:100',
-            'postal_code' => 'required|string|max:20',
-            'country' => 'required|string|max:100',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'franchisee_id' => 'nullable|exists:users,id',
-            'size_sqft' => 'nullable|numeric|min:0',
-            'initial_investment' => 'nullable|numeric|min:0',
-            'lease_start_date' => 'nullable|date',
-            'lease_end_date' => 'nullable|date|after:lease_start_date',
-            'opening_date' => 'nullable|date',
-            'status' => 'required|in:planning,construction,training,active,temporarily_closed,permanently_closed',
-            'employee_count' => 'nullable|integer|min:0',
-            'monthly_revenue' => 'nullable|numeric|min:0',
-            'monthly_expenses' => 'nullable|numeric|min:0',
-            'operating_hours' => 'nullable|array',
-            'amenities' => 'nullable|array',
-            'equipment' => 'nullable|array',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // Generate unit_code if not provided
         if (empty($validated['unit_code'])) {
@@ -100,11 +72,7 @@ class UnitController extends Controller
 
         $unit = Unit::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $unit->load(['franchise', 'franchisee']),
-            'message' => 'Unit created successfully',
-        ], 201);
+        return $this->successResponse($unit->load(['franchise', 'franchisee']), 'Unit created successfully', 201);
     }
 
     /**
@@ -114,51 +82,19 @@ class UnitController extends Controller
     {
         $unit->load(['franchise', 'franchisee', 'tasks']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $unit,
-            'message' => 'Unit retrieved successfully',
-        ]);
+        return $this->successResponse($unit, 'Unit retrieved successfully');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Unit $unit): JsonResponse
+    public function update(UpdateUnitRequest $request, Unit $unit): JsonResponse
     {
-        $validated = $request->validate([
-            'unit_name' => 'sometimes|string|max:255',
-            'franchise_id' => 'sometimes|exists:franchises,id',
-            'unit_type' => 'sometimes|in:store,kiosk,mobile,online,warehouse,office',
-            'address' => 'sometimes|string',
-            'city' => 'sometimes|string|max:100',
-            'state_province' => 'sometimes|string|max:100',
-            'postal_code' => 'sometimes|string|max:20',
-            'country' => 'sometimes|string|max:100',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'franchisee_id' => 'nullable|exists:users,id',
-            'size_sqft' => 'nullable|numeric|min:0',
-            'initial_investment' => 'nullable|numeric|min:0',
-            'opening_date' => 'nullable|date',
-            'status' => 'sometimes|in:planning,construction,training,active,temporarily_closed,permanently_closed',
-            'lease_start_date' => 'nullable|date',
-            'lease_end_date' => 'nullable|date|after:lease_start_date',
-            'monthly_revenue' => 'nullable|numeric|min:0',
-            'monthly_expenses' => 'nullable|numeric|min:0',
-            'operating_hours' => 'nullable|array',
-            'amenities' => 'nullable|array',
-            'equipment' => 'nullable|array',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $unit->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $unit->load(['franchise', 'franchisee']),
-            'message' => 'Unit updated successfully',
-        ]);
+        return $this->successResponse($unit->load(['franchise', 'franchisee']), 'Unit updated successfully');
     }
 
     /**
@@ -168,18 +104,12 @@ class UnitController extends Controller
     {
         // Check if unit has active tasks
         if ($unit->tasks()->where('status', 'in_progress')->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete unit with active tasks',
-            ], 422);
+            return $this->validationErrorResponse(null, 'Cannot delete unit with active tasks');
         }
 
         $unit->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Unit deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Unit deleted successfully');
     }
 
     /**
@@ -196,11 +126,7 @@ class UnitController extends Controller
             'monthly_profit' => $unit->monthly_profit ?: 0,
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Unit statistics retrieved successfully',
-        ]);
+        return $this->successResponse($stats, 'Unit statistics retrieved successfully');
     }
 
     /**
@@ -210,11 +136,7 @@ class UnitController extends Controller
     {
         $unit->update(['status' => 'active']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $unit,
-            'message' => 'Unit activated successfully',
-        ]);
+        return $this->successResponse($unit, 'Unit activated successfully');
     }
 
     /**
@@ -224,11 +146,7 @@ class UnitController extends Controller
     {
         $unit->update(['status' => 'inactive']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $unit,
-            'message' => 'Unit deactivated successfully',
-        ]);
+        return $this->successResponse($unit, 'Unit deactivated successfully');
     }
 
     /**
@@ -247,11 +165,7 @@ class UnitController extends Controller
             'notes' => $validated['notes'] ?? $unit->notes,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $unit,
-            'message' => 'Unit closed successfully',
-        ]);
+        return $this->successResponse($unit, 'Unit closed successfully');
     }
 
     /**
@@ -263,21 +177,14 @@ class UnitController extends Controller
         $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
         if (! $franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user',
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $units = $franchise->units()
             ->with(['franchise', 'franchisee', 'tasks'])
             ->paginate(15);
 
-        return response()->json([
-            'success' => true,
-            'data' => $units,
-            'message' => 'Units retrieved successfully',
-        ]);
+        return $this->successResponse($units, 'Units retrieved successfully');
     }
 
     /**
@@ -291,17 +198,10 @@ class UnitController extends Controller
             ->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $unit,
-            'message' => 'Unit retrieved successfully',
-        ]);
+        return $this->successResponse($unit, 'Unit retrieved successfully');
     }
 
     /**
@@ -313,10 +213,7 @@ class UnitController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $stats = [
@@ -329,11 +226,7 @@ class UnitController extends Controller
             'monthly_profit' => $unit->monthly_profit ?: 0,
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Unit statistics retrieved successfully',
-        ]);
+        return $this->successResponse($stats, 'Unit statistics retrieved successfully');
     }
 
     /**
@@ -398,16 +291,9 @@ class UnitController extends Controller
                 ];
             });
 
-            return response()->json([
-                'success' => true,
-                'data' => $transformedStaff,
-            ]);
+            return $this->successResponse($transformedStaff);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch staff data',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch staff data', $e->getMessage(), 500);
         }
     }
 }

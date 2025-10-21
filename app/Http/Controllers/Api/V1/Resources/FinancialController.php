@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\StoreSaleRequest;
 use App\Models\Franchise;
@@ -15,7 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class FinancialController extends Controller
+class FinancialController extends BaseResourceController
 {
     /**
      * Get chart data for financial overview
@@ -27,10 +27,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validate([
@@ -94,16 +91,9 @@ class FinancialController extends Controller
                 ],
             ];
 
-            return response()->json([
-                'success' => true,
-                'data' => $chartData,
-            ]);
+            return $this->successResponse($chartData);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch chart data',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch chart data', $e->getMessage(), 500);
         }
     }
 
@@ -117,10 +107,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validate([
@@ -171,16 +158,9 @@ class FinancialController extends Controller
                 ],
             ];
 
-            return response()->json([
-                'success' => true,
-                'data' => $statistics,
-            ]);
+            return $this->successResponse($statistics);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch statistics',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch statistics', $e->getMessage(), 500);
         }
     }
 
@@ -194,10 +174,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validate([
@@ -263,16 +240,9 @@ class FinancialController extends Controller
 
             $sales->setCollection($transformedSales);
 
-            return response()->json([
-                'success' => true,
-                'data' => $sales,
-            ]);
+            return $this->successResponse($sales);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch sales data',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch sales data', $e->getMessage(), 500);
         }
     }
 
@@ -286,10 +256,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validated();
@@ -321,17 +288,9 @@ class FinancialController extends Controller
                 'verified_at' => now(),
             ]);
 
-            return response()->json([
-                'success' => true,
-                'data' => $revenue->load(['unit', 'user']),
-                'message' => 'Sales record created successfully',
-            ], 201);
+            return $this->successResponse($revenue->load(['unit', 'user']), 'Sales record created successfully', 201);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create sales record',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to create sales record', $e->getMessage(), 500);
         }
     }
 
@@ -345,10 +304,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validate([
@@ -414,16 +370,9 @@ class FinancialController extends Controller
 
             $expenses->setCollection($transformedExpenses);
 
-            return response()->json([
-                'success' => true,
-                'data' => $expenses,
-            ]);
+            return $this->successResponse($expenses);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch expenses data',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch expenses data', $e->getMessage(), 500);
         }
     }
 
@@ -437,10 +386,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validated();
@@ -462,17 +408,9 @@ class FinancialController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            return response()->json([
-                'success' => true,
-                'data' => $transaction->load(['unit', 'user']),
-                'message' => 'Expense record created successfully',
-            ], 201);
+            return $this->successResponse($transaction->load(['unit', 'user']), 'Expense record created successfully', 201);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create expense record',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to create expense record', $e->getMessage(), 500);
         }
     }
 
@@ -486,10 +424,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $revenue = Revenue::where('franchise_id', $franchise->id)
@@ -498,10 +433,7 @@ class FinancialController extends Controller
                 ->first();
 
             if (! $revenue) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sales record not found',
-                ], 404);
+                return $this->notFoundResponse('Sales record not found');
             }
 
             $validated = $request->validate([
@@ -537,17 +469,9 @@ class FinancialController extends Controller
                 ]);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $revenue->load(['unit', 'user']),
-                'message' => 'Sales record updated successfully',
-            ]);
+            return $this->successResponse($revenue->load(['unit', 'user']), 'Sales record updated successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update sales record',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to update sales record', $e->getMessage(), 500);
         }
     }
 
@@ -561,10 +485,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $revenue = Revenue::where('franchise_id', $franchise->id)
@@ -573,21 +494,14 @@ class FinancialController extends Controller
                 ->first();
 
             if (! $revenue) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sales record not found',
-                ], 404);
+                return $this->notFoundResponse('Sales record not found');
             }
 
             $revenue->delete();
 
-            return response()->json(null, 204);
+            return $this->successResponse(null, 'Sales record deleted successfully', 204);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete sales record',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to delete sales record', $e->getMessage(), 500);
         }
     }
 
@@ -601,10 +515,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $transaction = Transaction::where('franchise_id', $franchise->id)
@@ -613,10 +524,7 @@ class FinancialController extends Controller
                 ->first();
 
             if (! $transaction) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Expense record not found',
-                ], 404);
+                return $this->notFoundResponse('Expense record not found');
             }
 
             $validated = $request->validate([
@@ -641,17 +549,9 @@ class FinancialController extends Controller
                 'notes' => $validated['notes'] ?? $transaction->notes,
             ]);
 
-            return response()->json([
-                'success' => true,
-                'data' => $transaction->load(['unit', 'user']),
-                'message' => 'Expense record updated successfully',
-            ]);
+            return $this->successResponse($transaction->load(['unit', 'user']), 'Expense record updated successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update expense record',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to update expense record', $e->getMessage(), 500);
         }
     }
 
@@ -665,10 +565,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $transaction = Transaction::where('franchise_id', $franchise->id)
@@ -677,21 +574,14 @@ class FinancialController extends Controller
                 ->first();
 
             if (! $transaction) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Expense record not found',
-                ], 404);
+                return $this->notFoundResponse('Expense record not found');
             }
 
             $transaction->delete();
 
-            return response()->json(null, 204);
+            return $this->successResponse(null, 'Expense record deleted successfully', 204);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete expense record',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to delete expense record', $e->getMessage(), 500);
         }
     }
 
@@ -705,10 +595,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validate([
@@ -819,16 +706,9 @@ class FinancialController extends Controller
                 ]
             );
 
-            return response()->json([
-                'success' => true,
-                'data' => $paginated,
-            ]);
+            return $this->successResponse($paginated);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch profit data',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch profit data', $e->getMessage(), 500);
         }
     }
 
@@ -842,10 +722,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validate([
@@ -920,16 +797,9 @@ class FinancialController extends Controller
                 ]
             );
 
-            return response()->json([
-                'success' => true,
-                'data' => $paginated,
-            ]);
+            return $this->successResponse($paginated);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch unit performance data',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to fetch unit performance data', $e->getMessage(), 500);
         }
     }
 
@@ -1127,10 +997,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validate([
@@ -1204,18 +1071,12 @@ class FinancialController extends Controller
                 }
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => "Successfully imported {$importedCount} records",
+            return $this->successResponse([
                 'imported_count' => $importedCount,
                 'errors' => $errors,
-            ]);
+            ], "Successfully imported {$importedCount} records");
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to import data',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to import data', $e->getMessage(), 500);
         }
     }
 
@@ -1229,10 +1090,7 @@ class FinancialController extends Controller
             $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user');
             }
 
             $validated = $request->validate([
@@ -1328,11 +1186,7 @@ class FinancialController extends Controller
                 ->header('Content-Type', 'text/csv')
                 ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to export data',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to export data', $e->getMessage(), 500);
         }
     }
 }

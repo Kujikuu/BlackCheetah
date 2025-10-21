@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\Auth;
+namespace App\Http\Controllers\Api\V1\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -24,21 +24,14 @@ class AuthController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
+                return $this->validationErrorResponse($validator->errors());
             }
 
             // Manually verify user credentials to avoid guard-related issues
             $user = \App\Models\User::where('email', $request->email)->first();
 
             if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid credentials'
-                ], 401);
+                return $this->unauthorizedResponse('Invalid credentials');
             }
 
             $token = $user->createToken('API Token')->plainTextToken;
@@ -98,11 +91,7 @@ class AuthController extends Controller
                 'userAbilityRules' => $userAbilityRules,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Login failed',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Login failed', $e->getMessage(), 500);
         }
     }
 
@@ -120,11 +109,7 @@ class AuthController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
+                return $this->validationErrorResponse($validator->errors());
             }
 
             $user = User::create([
@@ -137,26 +122,18 @@ class AuthController extends Controller
 
             $token = $user->createToken('API Token')->plainTextToken;
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Registration successful',
-                'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'role' => $user->role,
-                        'status' => $user->status,
-                    ],
-                    'token' => $token,
-                ]
-            ], 201);
+            return $this->successResponse([
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'status' => $user->status,
+                ],
+                'token' => $token,
+            ], 'Registration successful', 201);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Registration failed',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Registration failed', $e->getMessage(), 500);
         }
     }
 
@@ -168,16 +145,9 @@ class AuthController extends Controller
         try {
             $request->user()->currentAccessToken()->delete();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Logout successful'
-            ]);
+            return $this->successResponse(null, 'Logout successful');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Logout failed',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Logout failed', $e->getMessage(), 500);
         }
     }
 
@@ -189,29 +159,22 @@ class AuthController extends Controller
         try {
             $user = $request->user();
 
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'role' => $user->role,
-                        'status' => $user->status,
-                        'avatar' => $user->avatar,
-                        'phone' => $user->phone,
-                        'city' => $user->city,
-                        'country' => $user->country,
-                        'last_login_at' => $user->last_login_at,
-                    ]
+            return $this->successResponse([
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'status' => $user->status,
+                    'avatar' => $user->avatar,
+                    'phone' => $user->phone,
+                    'city' => $user->city,
+                    'country' => $user->country,
+                    'last_login_at' => $user->last_login_at,
                 ]
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to get user data',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Failed to get user data', $e->getMessage(), 500);
         }
     }
 }

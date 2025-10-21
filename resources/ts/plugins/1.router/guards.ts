@@ -1,5 +1,5 @@
 import type { RouteNamedMap, _RouterTyped } from 'unplugin-vue-router'
-import { $api } from '@/utils/api'
+import { onboardingApi } from '@/services/api'
 import { canNavigate } from '@layouts/plugins/casl'
 
 export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]: any }>) => {
@@ -51,9 +51,9 @@ export const setupGuards = (router: _RouterTyped<RouteNamedMap & { [key: string]
 
       if (userData?.role === 'franchisee') {
         try {
-          const response = await $api('/v1/onboarding/status')
+          const response = await onboardingApi.getStatus()
 
-          if (!response.profile_completed)
+          if (!response.success || !response.data.is_completed)
             return { name: 'onboarding' }
         }
         catch (error) {

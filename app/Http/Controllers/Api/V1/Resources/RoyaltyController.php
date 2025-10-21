@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Http\Requests\StoreRoyaltyRequest;
 use App\Http\Resources\RoyaltyResource;
 use App\Models\Franchise;
@@ -11,7 +11,7 @@ use App\Models\Unit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class RoyaltyController extends Controller
+class RoyaltyController extends BaseResourceController
 {
     /**
      * Display a listing of the resource.
@@ -70,20 +70,16 @@ class RoyaltyController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $royalties = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'data' => RoyaltyResource::collection($royalties->items()),
-                'current_page' => $royalties->currentPage(),
-                'last_page' => $royalties->lastPage(),
-                'per_page' => $royalties->perPage(),
-                'total' => $royalties->total(),
-            ],
-            'message' => 'Royalties retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'data' => RoyaltyResource::collection($royalties->items()),
+            'current_page' => $royalties->currentPage(),
+            'last_page' => $royalties->lastPage(),
+            'per_page' => $royalties->perPage(),
+            'total' => $royalties->total(),
+        ], 'Royalties retrieved successfully');
     }
 
     /**
@@ -95,11 +91,7 @@ class RoyaltyController extends Controller
 
         $royalty = Royalty::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $royalty->load(['franchise', 'unit', 'franchisee']),
-            'message' => 'Royalty created successfully',
-        ], 201);
+        return $this->successResponse($royalty->load(['franchise', 'unit', 'franchisee']), 'Royalty created successfully', 201);
     }
 
     /**
@@ -109,11 +101,7 @@ class RoyaltyController extends Controller
     {
         $royalty->load(['franchise', 'unit', 'franchisee', 'generatedBy']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $royalty,
-            'message' => 'Royalty retrieved successfully',
-        ]);
+        return $this->successResponse($royalty, 'Royalty retrieved successfully');
     }
 
     /**
@@ -149,11 +137,7 @@ class RoyaltyController extends Controller
 
         $royalty->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $royalty->load(['franchise', 'unit', 'franchisee']),
-            'message' => 'Royalty updated successfully',
-        ]);
+        return $this->successResponse($royalty->load(['franchise', 'unit', 'franchisee']), 'Royalty updated successfully');
     }
 
     /**
@@ -163,18 +147,12 @@ class RoyaltyController extends Controller
     {
         // Check if royalty can be deleted
         if ($royalty->status === 'paid') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete paid royalty',
-            ], 422);
+            return $this->validationErrorResponse(['status' => 'Cannot delete paid royalty'], 'Cannot delete paid royalty');
         }
 
         $royalty->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Royalty deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Royalty deleted successfully');
     }
 
     /**
@@ -214,11 +192,7 @@ class RoyaltyController extends Controller
             $royalty->update(['notes' => $validated['notes']]);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $royalty->fresh(['franchise', 'unit', 'franchisee']),
-            'message' => 'Royalty marked as paid successfully',
-        ]);
+        return $this->successResponse($royalty->fresh(['franchise', 'unit', 'franchisee']), 'Royalty marked as paid successfully');
     }
 
     /**
@@ -228,15 +202,11 @@ class RoyaltyController extends Controller
     {
         $lateFee = $royalty->calculateLateFee();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'royalty' => $royalty,
-                'late_fee' => $lateFee,
-                'days_overdue' => $royalty->days_overdue,
-            ],
-            'message' => 'Late fee calculated successfully',
-        ]);
+        return $this->successResponse([
+            'royalty' => $royalty,
+            'late_fee' => $lateFee,
+            'days_overdue' => $royalty->days_overdue,
+        ], 'Late fee calculated successfully');
     }
 
     /**
@@ -251,11 +221,7 @@ class RoyaltyController extends Controller
 
         $royalty->addAdjustment($validated['adjustment_amount'], $validated['adjustment_reason']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $royalty,
-            'message' => 'Adjustment added successfully',
-        ]);
+        return $this->successResponse($royalty, 'Adjustment added successfully');
     }
 
     /**
@@ -270,11 +236,7 @@ class RoyaltyController extends Controller
 
         $royalty->addAttachment($validated['attachment_url'], $validated['attachment_name']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $royalty,
-            'message' => 'Attachment added successfully',
-        ]);
+        return $this->successResponse($royalty, 'Attachment added successfully');
     }
 
     /**
@@ -294,11 +256,7 @@ class RoyaltyController extends Controller
             $validated['franchise_id'] ?? null
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => $royalties,
-            'message' => 'Monthly royalties generated successfully',
-        ]);
+        return $this->successResponse($royalties, 'Monthly royalties generated successfully');
     }
 
     /**
@@ -317,14 +275,10 @@ class RoyaltyController extends Controller
             $query->byUnit($request->unit_id);
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $royalties = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $royalties,
-            'message' => 'Pending royalties retrieved successfully',
-        ]);
+        return $this->successResponse($royalties, 'Pending royalties retrieved successfully');
     }
 
     /**
@@ -343,14 +297,10 @@ class RoyaltyController extends Controller
             $query->byUnit($request->unit_id);
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $royalties = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $royalties,
-            'message' => 'Overdue royalties retrieved successfully',
-        ]);
+        return $this->successResponse($royalties, 'Overdue royalties retrieved successfully');
     }
 
     /**
@@ -409,11 +359,7 @@ class RoyaltyController extends Controller
                 ((clone $query)->paid()->count() / (clone $query)->count()) * 100 : 0,
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Royalty statistics retrieved successfully',
-        ]);
+        return $this->successResponse($stats, 'Royalty statistics retrieved successfully');
     }
 
     /**
@@ -513,17 +459,13 @@ class RoyaltyController extends Controller
         $franchiseIds = Franchise::where('franchisor_id', $user->id)->pluck('id');
 
         if ($franchiseIds->isEmpty()) {
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'data' => [],
-                    'current_page' => 1,
-                    'last_page' => 1,
-                    'per_page' => 15,
-                    'total' => 0,
-                ],
-                'message' => 'No franchises found for current user',
-            ]);
+            return $this->successResponse([
+                'data' => [],
+                'current_page' => 1,
+                'last_page' => 1,
+                'per_page' => 15,
+                'total' => 0,
+            ], 'No franchises found for current user');
         }
 
         $query = Royalty::whereIn('franchise_id', $franchiseIds)
@@ -542,20 +484,16 @@ class RoyaltyController extends Controller
             });
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $royalties = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'data' => RoyaltyResource::collection($royalties->items()),
-                'current_page' => $royalties->currentPage(),
-                'last_page' => $royalties->lastPage(),
-                'per_page' => $royalties->perPage(),
-                'total' => $royalties->total(),
-            ],
-            'message' => 'Royalties retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'data' => RoyaltyResource::collection($royalties->items()),
+            'current_page' => $royalties->currentPage(),
+            'last_page' => $royalties->lastPage(),
+            'per_page' => $royalties->perPage(),
+            'total' => $royalties->total(),
+        ], 'Royalties retrieved successfully');
     }
 
     /**
@@ -567,10 +505,7 @@ class RoyaltyController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $query = Royalty::where('unit_id', $unit->id)
@@ -592,20 +527,16 @@ class RoyaltyController extends Controller
             }
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $royalties = $query->orderBy('due_date', 'desc')->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'data' => RoyaltyResource::collection($royalties->items()),
-                'current_page' => $royalties->currentPage(),
-                'last_page' => $royalties->lastPage(),
-                'per_page' => $royalties->perPage(),
-                'total' => $royalties->total(),
-            ],
-            'message' => 'Unit royalties retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'data' => RoyaltyResource::collection($royalties->items()),
+            'current_page' => $royalties->currentPage(),
+            'last_page' => $royalties->lastPage(),
+            'per_page' => $royalties->perPage(),
+            'total' => $royalties->total(),
+        ], 'Unit royalties retrieved successfully');
     }
 
     /**
@@ -617,10 +548,7 @@ class RoyaltyController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $query = Royalty::where('unit_id', $unit->id);
@@ -662,11 +590,7 @@ class RoyaltyController extends Controller
                 ((clone $query)->paid()->count() / (clone $query)->count()) * 100 : 0,
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Unit royalty statistics retrieved successfully',
-        ]);
+        return $this->successResponse($stats, 'Unit royalty statistics retrieved successfully');
     }
 
     /**
@@ -684,10 +608,7 @@ class RoyaltyController extends Controller
         $unit = Unit::where('franchisee_id', $user->id)->first();
 
         if (! $unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user',
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $query = Royalty::where('unit_id', $unit->id)

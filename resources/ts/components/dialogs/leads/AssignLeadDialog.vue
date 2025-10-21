@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { leadApi, usersApi } from '@/services/api'
+
 interface SalesAssociate {
   id: number
   name: string
@@ -35,11 +37,11 @@ const fetchSalesAssociates = async () => {
   isLoadingAssociates.value = true
 
   try {
-    const response = await $api('/v1/franchisor/sales-associates')
+    const response = await usersApi.getSalesAssociates()
 
     if (response.success) {
       // Transform the data to match the expected format
-      salesAssociates.value = response.data.map((associate: any) => ({
+      salesAssociates.value = response.data.map((associate) => ({
         id: associate.id,
         name: associate.name,
         email: associate.email,
@@ -65,12 +67,7 @@ const assignLead = async () => {
   isLoading.value = true
 
   try {
-    await $api(`/v1/franchisor/leads/${props.leadId}/assign`, {
-      method: 'PATCH',
-      body: {
-        assigned_to: selectedAssociateId.value,
-      },
-    })
+    await leadApi.assignLead(props.leadId, selectedAssociateId.value!)
 
     emit('leadAssigned')
     updateModelValue(false)

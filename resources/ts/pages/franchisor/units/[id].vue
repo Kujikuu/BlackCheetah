@@ -6,6 +6,7 @@ import DocumentActionModal from '@/components/dialogs/DocumentActionModal.vue'
 import ViewTaskDialog from '@/components/dialogs/tasks/ViewTaskDialog.vue'
 import EditTaskDialog from '@/components/dialogs/tasks/EditTaskDialog.vue'
 import DeleteTaskDialog from '@/components/dialogs/tasks/DeleteTaskDialog.vue'
+import { taskApi } from '@/services/api'
 
 // 👉 Router
 const router = useRouter()
@@ -412,10 +413,7 @@ const onTaskCreated = async (task: any) => {
       actual_hours: task.actualHours ?? 0,
     }
 
-    const response = await $api<{ success: boolean; data: any; message: string }>('/v1/tasks', {
-      method: 'POST',
-      body: payload,
-    })
+    const response = await taskApi.createTask(payload)
 
     if (response.success) {
       // Push the newly created task returned by API so it includes IDs and relationships

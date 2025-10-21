@@ -6,6 +6,7 @@ import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
+import { onboardingApi } from '@/services/api'
 
 definePage({
   meta: {
@@ -49,8 +50,8 @@ const countries = [
 // Check onboarding status on mount
 onMounted(async () => {
   try {
-    const response = await $api('/v1/onboarding/status')
-    if (response.profile_completed) {
+    const response = await onboardingApi.getStatus()
+    if (response.success && response.data.is_completed) {
       // If profile is already completed, redirect to dashboard
       const userRole = userData.value?.role
       switch (userRole) {
@@ -81,10 +82,7 @@ const completeProfile = async () => {
   errorMessages.value = null
 
   try {
-    const response = await $api('/v1/onboarding/complete', {
-      method: 'POST',
-      body: form.value,
-    })
+    const response = await onboardingApi.complete(form.value)
 
     // Update user data in cookie to reflect profile completion
     const userDataCookie = useCookie<any>('userData')

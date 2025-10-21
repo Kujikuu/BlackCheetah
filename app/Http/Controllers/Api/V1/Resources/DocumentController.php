@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Requests\UpdateDocumentRequest;
 use App\Models\Document;
@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class DocumentController extends Controller
+class DocumentController extends BaseResourceController
 {
     /**
      * Display a listing of documents for the authenticated user's franchise.
@@ -30,18 +30,12 @@ class DocumentController extends Controller
             }
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user.',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user.');
             }
 
             // Ensure user has access to this franchise
             if ($franchise->franchisor_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized access to franchise.',
-                ], 403);
+                return $this->forbiddenResponse('Unauthorized access to franchise.');
             }
 
             $query = $franchise->documents()->latest();
@@ -64,16 +58,9 @@ class DocumentController extends Controller
 
             $documents = $query->paginate($request->get('per_page', 15));
 
-            return response()->json([
-                'success' => true,
-                'data' => $documents,
-            ]);
+            return $this->successResponse($documents);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve documents.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to retrieve documents.', $e->getMessage(), 500);
         }
     }
 
@@ -93,18 +80,12 @@ class DocumentController extends Controller
             }
 
             if (! $franchise) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No franchise found for this user.',
-                ], 404);
+                return $this->notFoundResponse('No franchise found for this user.');
             }
 
             // Ensure user has access to this franchise
             if ($franchise->franchisor_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized access to franchise.',
-                ], 403);
+                return $this->forbiddenResponse('Unauthorized access to franchise.');
             }
 
             $file = $request->file('file');
@@ -126,17 +107,9 @@ class DocumentController extends Controller
                 'metadata' => $request->metadata ?? [],
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Document uploaded successfully.',
-                'data' => $document,
-            ], 201);
+            return $this->successResponse($document, 'Document uploaded successfully.', 201);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to upload document.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to upload document.', $e->getMessage(), 500);
         }
     }
 
@@ -154,30 +127,17 @@ class DocumentController extends Controller
 
             // Check if user has access to the franchise
             if (! $franchise || ($user->franchise?->id !== $franchise->id)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Access denied.',
-                ], 403);
+                return $this->forbiddenResponse('Access denied.');
             }
 
             // Check if the document belongs to the franchise
             if ($document->franchise_id !== $franchise->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Document not found.',
-                ], 404);
+                return $this->notFoundResponse('Document not found.');
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $document,
-            ]);
+            return $this->successResponse($document);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve document.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to retrieve document.', $e->getMessage(), 500);
         }
     }
 
@@ -195,34 +155,21 @@ class DocumentController extends Controller
 
             // Check if user has access to the franchise
             if (! $franchise || ($user->franchise?->id !== $franchise->id)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Access denied.',
-                ], 403);
+                return $this->forbiddenResponse('Access denied.');
             }
 
             // Check if the document belongs to the franchise
             if ($document->franchise_id !== $franchise->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Document not found.',
-                ], 404);
+                return $this->notFoundResponse('Document not found.');
             }
 
             if (! Storage::disk('local')->exists($document->file_path)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'File not found.',
-                ], 404);
+                return $this->notFoundResponse('File not found.');
             }
 
             return Storage::disk('local')->download($document->file_path, $document->file_name);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to download document.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to download document.', $e->getMessage(), 500);
         }
     }
 
@@ -240,33 +187,19 @@ class DocumentController extends Controller
 
             // Check if user has access to the franchise
             if (! $franchise || ($user->franchise?->id !== $franchise->id)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Access denied.',
-                ], 403);
+                return $this->forbiddenResponse('Access denied.');
             }
 
             // Check if the document belongs to the franchise
             if ($document->franchise_id !== $franchise->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Document not found.',
-                ], 404);
+                return $this->notFoundResponse('Document not found.');
             }
 
             $document->update($request->validated());
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Document updated successfully.',
-                'data' => $document->fresh(),
-            ]);
+            return $this->successResponse($document->fresh(), 'Document updated successfully.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update document.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to update document.', $e->getMessage(), 500);
         }
     }
 
@@ -284,18 +217,12 @@ class DocumentController extends Controller
 
             // Check if user has access to the franchise
             if (! $franchise || ($user->franchise?->id !== $franchise->id)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Access denied.',
-                ], 403);
+                return $this->forbiddenResponse('Access denied.');
             }
 
             // Check if the document belongs to the franchise
             if ($document->franchise_id !== $franchise->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Document not found.',
-                ], 404);
+                return $this->notFoundResponse('Document not found.');
             }
 
             // Delete the file from storage
@@ -306,16 +233,9 @@ class DocumentController extends Controller
             // Delete the document record
             $document->delete();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Document deleted successfully.',
-            ]);
+            return $this->successResponse(null, 'Document deleted successfully.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete document.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to delete document.', $e->getMessage(), 500);
         }
     }
 
@@ -337,18 +257,12 @@ class DocumentController extends Controller
 
             // Check if user is the franchisor (owner) of the franchise
             if ($franchise->franchisor_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Only franchisors can approve documents.',
-                ], 403);
+                return $this->forbiddenResponse('Only franchisors can approve documents.');
             }
 
             // Check if the document belongs to the franchise
             if ($document->franchise_id !== $franchise->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Document not found.',
-                ], 404);
+                return $this->notFoundResponse('Document not found.');
             }
 
             // Update document status to approved and add comment to metadata
@@ -363,17 +277,9 @@ class DocumentController extends Controller
                 'metadata' => $metadata,
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Document approved successfully.',
-                'data' => $document->fresh(),
-            ]);
+            return $this->successResponse($document->fresh(), 'Document approved successfully.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to approve document.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to approve document.', $e->getMessage(), 500);
         }
     }
 
@@ -395,18 +301,12 @@ class DocumentController extends Controller
 
             // Check if user is the franchisor (owner) of the franchise
             if ($franchise->franchisor_id !== $user->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Only franchisors can reject documents.',
-                ], 403);
+                return $this->forbiddenResponse('Only franchisors can reject documents.');
             }
 
             // Check if the document belongs to the franchise
             if ($document->franchise_id !== $franchise->id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Document not found.',
-                ], 404);
+                return $this->notFoundResponse('Document not found.');
             }
 
             // Update document status to rejected and add comment to metadata
@@ -421,17 +321,9 @@ class DocumentController extends Controller
                 'metadata' => $metadata,
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Document rejected successfully.',
-                'data' => $document->fresh(),
-            ]);
+            return $this->successResponse($document->fresh(), 'Document rejected successfully.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to reject document.',
-                'error' => $e->getMessage(),
-            ], 500);
+            return $this->errorResponse('Failed to reject document.', $e->getMessage(), 500);
         }
     }
 }

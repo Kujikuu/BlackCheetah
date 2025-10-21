@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
-import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api/royalty'
-import { $api } from '@/utils/api'
+import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi, franchiseApi } from '@/services/api'
 import ExportRoyaltyDialog from '@/components/dialogs/royalty/ExportRoyaltyDialog.vue'
 import MarkCompletedRoyaltyDialog from '@/components/dialogs/royalty/MarkCompletedRoyaltyDialog.vue'
 import ViewRoyaltyDetailsDialog from '@/components/dialogs/royalty/ViewRoyaltyDetailsDialog.vue'
@@ -288,7 +287,7 @@ const formatDate = (dateString: string) => {
 // Fetch dropdown data
 const fetchFranchises = async () => {
   try {
-    const response = await $api('/api/v1/franchisor/franchise')
+    const response = await franchiseApi.getFranchiseData()
 
     if (response.success && response.data) {
       // myFranchise returns a single franchise object, so wrap it in an array
@@ -302,7 +301,7 @@ const fetchFranchises = async () => {
 
 const fetchUnits = async () => {
   try {
-    const response = await $api('/api/v1/franchisor/units')
+    const response = await franchiseApi.getUnits()
 
     if (response.success && response.data) {
       // myUnits returns paginated data, extract the actual units from data.data
@@ -316,7 +315,7 @@ const fetchUnits = async () => {
 
 const fetchFranchisees = async () => {
   try {
-    const response = await $api('/api/v1/franchisor/franchisees')
+    const response = await franchiseApi.getFranchisees()
 
     if (response.success && response.data) {
       // myFranchisees returns paginated data, extract the actual franchisees from data.data

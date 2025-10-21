@@ -2,9 +2,26 @@
 import DeleteLeadDialog from '@/components/dialogs/leads/DeleteLeadDialog.vue'
 import ViewLeadDialog from '@/components/dialogs/leads/ViewLeadDialog.vue'
 import EditLeadDialog from '@/components/dialogs/leads/EditLeadDialog.vue'
+import { leadApi, franchiseApi, type Lead as ApiLead, type DashboardLeadsData } from '@/services/api'
+import type { ApiResponse } from '@/types/api'
 
-// 👉 API composable
-const { data: leadsApiData, execute: fetchLeadsData, isFetching: isLoading } = useApi('/v1/franchisor/dashboard/leads')
+// 👉 API data loading
+const leadsApiData = ref<ApiResponse<DashboardLeadsData> | null>(null)
+const isLoading = ref(false)
+
+// Load leads data
+const fetchLeadsData = async () => {
+  isLoading.value = true
+  try {
+    const response = await franchiseApi.getDashboardLeads()
+    leadsApiData.value = response
+  } catch (error) {
+    console.error('Error fetching leads data:', error)
+    leadsApiData.value = null
+  } finally {
+    isLoading.value = false
+  }
+}
 
 // 👉 Store
 const searchQuery = ref('')
@@ -107,7 +124,7 @@ const widgetData = ref<Widget[]>([
 
 // 👉 Watch for API data changes
 watch(leadsApiData, newData => {
-  const apiData = newData as ApiResponse
+  const apiData = newData as ApiResponse<DashboardLeadsData>
   if (apiData?.success && apiData?.data) {
     const data = apiData.data
 
@@ -239,18 +256,49 @@ const deleteLead = async () => {
   if (leadToDelete.value === null)
     return
 
-  // TODO: Implement API call for delete
-  const index = leadsData.value.leads.findIndex(lead => lead.id === leadToDelete.value)
-  if (index !== -1)
-    leadsData.value.leads.splice(index, 1)
+  try {
+    const response = await leadApi.deleteLead(leadToDelete.value)
+    
+    if (response.success) {
+      // Remove from local state
+      const index = leadsData.value.leads.findIndex(lead => lead.id === leadToDelete.value)
+      if (index !== -1)
+        leadsData.value.leads.splice(index, 1)
 
-  // Delete from selectedRows
-  const selectedIndex = selectedRows.value.findIndex(row => row === leadToDelete.value)
-  if (selectedIndex !== -1)
-    selectedRows.value.splice(selectedIndex, 1)
+      // Delete from selectedRows
+      const selectedIndex = selectedRows.value.findIndex(row => row === leadToDelete.value)
+      if (selectedIndex !== -1)
+        selectedRows.value.splice(selectedIndex, 1)
+    }
+  } catch (error) {
+    console.error('Error deleting lead:', error)
+  }
 
   isDeleteDialogVisible.value = false
   leadToDelete.value = null
+}
+
+// Bulk delete leads
+const bulkDelete = async () => {
+  if (selectedRows.value.length === 0) return
+
+  try {
+    // Delete multiple leads sequentially
+    for (const leadId of selectedRows.value) {
+      await leadApi.deleteLead(leadId)
+    }
+
+    // Remove deleted leads from local state
+    selectedRows.value.forEach(leadId => {
+      const index = leadsData.value.leads.findIndex(lead => lead.id === leadId)
+      if (index !== -1) leadsData.value.leads.splice(index, 1)
+    })
+
+    selectedRows.value = [] // Clear selection
+  }
+  catch (error) {
+    console.error('Error bulk deleting leads:', error)
+  }
 }
 
 // 👉 Save edited lead
@@ -259,10 +307,38 @@ const saveLead = async (updatedLead?: Lead) => {
   if (!leadToSave)
     return
 
-  // TODO: Implement API call for update
-  const index = leadsData.value.leads.findIndex(lead => lead.id === leadToSave.id)
-  if (index !== -1)
-    leadsData.value.leads[index] = { ...leadToSave }
+  try {
+    // Convert local Lead interface to API Lead format
+    const apiLeadData: Partial<ApiLead> = {
+      firstName: leadToSave.name.split(' ')[0] || '',
+      lastName: leadToSave.name.split(' ').slice(1).join(' ') || '',
+      email: leadToSave.email,
+      phone: leadToSave.phone,
+      source: leadToSave.source,
+      status: leadToSave.status as any, // Cast to satisfy type system
+    }
+
+    const response = await leadApi.updateLead(leadToSave.id, apiLeadData)
+    
+    if (response.success && response.data) {
+      // Update local state - need to convert API response back to local format
+      const index = leadsData.value.leads.findIndex(lead => lead.id === leadToSave.id)
+      if (index !== -1) {
+        const apiData = response.data
+        leadsData.value.leads[index] = {
+          id: apiData.id,
+          name: `${apiData.firstName} ${apiData.lastName}`.trim(),
+          email: apiData.email,
+          phone: apiData.phone,
+          source: apiData.source,
+          status: apiData.status,
+          createdDate: leadToSave.createdDate, // Keep original since API doesn't return this
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error updating lead:', error)
+  }
 
   isEditLeadModalVisible.value = false
   selectedLead.value = null
@@ -311,6 +387,11 @@ const onLeadDeleted = async () => {
   isDeleteDialogVisible.value = false
   leadToDelete.value = null
 }
+
+// Load data on component mount
+onMounted(() => {
+  fetchLeadsData()
+})
 </script>
 
 <template>

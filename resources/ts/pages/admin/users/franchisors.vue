@@ -3,6 +3,7 @@ import AddEditFranchisorDrawer from '@/views/admin/modals/AddEditFranchisorDrawe
 import ConfirmDeleteDialog from '@/views/admin/modals/ConfirmDeleteDialog.vue'
 import ResetPasswordDialog from '@/views/admin/modals/ResetPasswordDialog.vue'
 import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
+import { adminApi } from '@/services/api'
 
 interface Franchisor {
   id: number
@@ -13,6 +14,9 @@ interface Franchisor {
   status: string
   avatar?: string
   joinedDate: string
+  franchiseName?: string
+  lastLogin?: string
+  plan?: string
 }
 
 // Store
@@ -57,29 +61,49 @@ const fetchFranchisors = async () => {
   error.value = ''
 
   try {
-    const response = await $api('/v1/admin/users/franchisors', {
-      method: 'GET',
-      query: {
-        search: searchQuery.value,
-        status: selectedStatus.value,
-        sort_by: sortBy.value[0]?.key || 'created_at',
-        sort_direction: sortBy.value[0]?.order || 'desc',
-        page: page.value,
-        per_page: itemsPerPage.value,
-      },
-    })
+    const response = await adminApi.getFranchisors()
 
-    if (response.success) {
-      franchisors.value = response.data.data || []
-      totalFranchisors.value = response.data.total || 0
+    if (response.success && response.data) {
+      // Handle both direct array and paginated response structures
+      let userData: any[] = []
+      
+      if (Array.isArray(response.data)) {
+        // Direct array response
+        userData = response.data
+      } else if (response.data && typeof response.data === 'object' && 'data' in response.data && Array.isArray((response.data as any).data)) {
+        // Paginated response structure
+        userData = (response.data as any).data
+      }
+      
+      console.log('Franchisors API Response:', { response, userData }) // Debug log
+      
+      franchisors.value = userData.map((user: any) => ({
+        id: user.id,
+        fullName: user.fullName || user.name, // Try both possible field names
+        email: user.email,
+        phone: user.phone || '',
+        location: user.location || '',
+        status: user.status,
+        avatar: user.avatar,
+        joinedDate: user.joinedDate || user.createdAt || user.created_at,
+        franchiseName: user.franchiseName,
+        lastLogin: user.lastLogin,
+        plan: user.plan,
+      }))
+      totalFranchisors.value = franchisors.value.length
     }
     else {
+      franchisors.value = []
+      totalFranchisors.value = 0
       error.value = response.message || 'Failed to fetch franchisors'
     }
   }
-  catch (err) {
+  catch (err: any) {
     console.error('Error fetching franchisors:', err)
-    error.value = 'Failed to fetch franchisors'
+    console.error('Full error details:', { err, response: err?.response })
+    franchisors.value = []
+    totalFranchisors.value = 0
+    error.value = `Failed to fetch franchisors: ${err?.message || 'Unknown error'}`
   }
   finally {
     isLoading.value = false
@@ -106,7 +130,7 @@ const filteredFranchisors = computed(() => {
     filtered = filtered.filter(user =>
       user.fullName.toLowerCase().includes(searchQuery.value.toLowerCase())
       || user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
-      || user.franchiseName.toLowerCase().includes(searchQuery.value.toLowerCase()),
+      || (user.franchiseName?.toLowerCase().includes(searchQuery.value.toLowerCase()) || false),
     )
   }
 
@@ -135,7 +159,9 @@ const resolveUserStatusVariant = (stat: string) => {
   return 'primary'
 }
 
-const resolveUserPlanVariant = (plan: string) => {
+const resolveUserPlanVariant = (plan: string | undefined) => {
+  if (!plan) return 'primary'
+  
   const planLowerCase = plan.toLowerCase()
   if (planLowerCase === 'basic')
     return 'primary'
@@ -157,12 +183,9 @@ const userToDelete = ref<any>(null)
 // Add new franchisor
 const addNewFranchisor = async (franchisorData: any) => {
   try {
-    const response = await $api('/v1/admin/users', {
-      method: 'POST',
-      body: {
-        ...franchisorData,
-        role: 'franchisor',
-      },
+    const response = await adminApi.createUser({
+      ...franchisorData,
+      role: 'franchisor',
     })
 
     if (response.success)
@@ -185,10 +208,7 @@ const editFranchisor = (franchisor: Franchisor) => {
 // Update franchisor
 const updateFranchisor = async (franchisorData: any) => {
   try {
-    const response = await $api(`/v1/admin/users/${franchisorData.id}`, {
-      method: 'PUT',
-      body: franchisorData,
-    })
+    const response = await adminApi.updateUser(franchisorData.id, franchisorData)
 
     if (response.success) {
       await fetchFranchisors() // Refresh the list
@@ -225,9 +245,7 @@ const deleteUser = async () => {
     return
 
   try {
-    const response = await $api(`/v1/admin/users/${userToDelete.value.id}`, {
-      method: 'DELETE',
-    })
+    const response = await adminApi.deleteUser(userToDelete.value.id)
 
     if (response.success) {
       await fetchFranchisors() // Refresh the list
@@ -250,6 +268,25 @@ const deleteUser = async () => {
   userToDelete.value = null
 }
 
+// Bulk delete users
+const bulkDelete = async () => {
+  if (selectedRows.value.length === 0) return
+
+  try {
+    // Delete multiple users sequentially
+    for (const userId of selectedRows.value) {
+      await adminApi.deleteUser(userId)
+    }
+
+    await fetchFranchisors() // Refresh the list
+    selectedRows.value = [] // Clear selection
+  }
+  catch (err) {
+    console.error('Error bulk deleting franchisors:', err)
+    error.value = 'Failed to delete selected franchisors'
+  }
+}
+
 // Open reset password dialog
 const openResetPasswordDialog = (franchisor: any) => {
   selectedFranchisor.value = franchisor
@@ -262,12 +299,7 @@ const resetPassword = async (password: string) => {
     return
 
   try {
-    const response = await $api(`/v1/admin/users/${selectedFranchisor.value.id}/reset-password`, {
-      method: 'POST',
-      body: {
-        password,
-      },
-    })
+    const response = await adminApi.resetUserPassword(selectedFranchisor.value.id, password)
 
     if (response.success)
       console.log('Password reset successfully for:', selectedFranchisor.value?.fullName)
@@ -298,7 +330,7 @@ const widgetData = ref([
 // Fetch widget statistics
 const fetchWidgetStats = async () => {
   try {
-    const response = await $api('/v1/admin/users/franchisors/stats')
+    const response = await adminApi.getFranchisorsStats()
     if (response.success)
       widgetData.value = response.data
   }

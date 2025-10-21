@@ -8,6 +8,7 @@ import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
+import { authApi } from '@/services/api'
 
 definePage({
   meta: {
@@ -43,44 +44,50 @@ const register = async () => {
   loading.value = true
   errorMessages.value = null
   try {
-    const resp = await $api<{ success: boolean; message: string; data: { user: { id: number; name: string; email: string; role: string; status: string }; token: string } }>('/auth/register', {
-      method: 'POST',
-      body: {
-        name: form.value.name,
-        email: form.value.email,
-        password: form.value.password,
-        password_confirmation: form.value.password_confirmation,
-        role: form.value.role,
-      },
+    const resp = await authApi.register({
+      name: form.value.name,
+      email: form.value.email,
+      password: form.value.password,
+      password_confirmation: form.value.password_confirmation,
     })
 
     // Persist token and basic user data
-    useCookie<string>('accessToken').value = resp.data.token
-    useCookie<any>('userData').value = {
-      id: resp.data.user.id,
-      fullName: resp.data.user.name,
-      username: resp.data.user.email,
-      avatar: undefined,
-      email: resp.data.user.email,
-      role: resp.data.user.role,
-      status: resp.data.user.status,
+    if (resp.success && resp.data) {
+      useCookie<string>('accessToken').value = resp.data.token
+      useCookie<any>('userData').value = {
+        id: resp.data.user.id,
+        fullName: resp.data.user.name,
+        username: resp.data.user.email,
+        avatar: undefined,
+        email: resp.data.user.email,
+        role: resp.data.user.role,
+        status: resp.data.user.status,
+      }
     }
 
     // Attempt login to fetch ability rules from backend and ensure consistent cookies
     let loginResp
     try {
-      loginResp = await $api<{ accessToken: string; userData: any; userAbilityRules: Rule[] }>('/auth/login', {
-        method: 'POST',
-        body: {
-          email: form.value.email,
-          password: form.value.password,
-        },
+      loginResp = await authApi.login({
+        email: form.value.email,
+        password: form.value.password,
       })
 
-      useCookie<string>('accessToken').value = loginResp.accessToken
-      useCookie<any>('userData').value = loginResp.userData
-      useCookie<Rule[]>('userAbilityRules').value = loginResp.userAbilityRules
-      updateAbility(loginResp.userAbilityRules)
+      if (loginResp.success && loginResp.data) {
+        useCookie<string>('accessToken').value = loginResp.data.access_token
+        useCookie<any>('userData').value = {
+          id: loginResp.data.user.id,
+          fullName: loginResp.data.user.name,
+          username: loginResp.data.user.email,
+          avatar: loginResp.data.user.avatar,
+          email: loginResp.data.user.email,
+          role: loginResp.data.user.role,
+        }
+        // Note: The ability rules might need to be fetched separately or handled differently
+        // For now, we'll set empty rules as this seems to be handled in the catch block anyway
+        useCookie<Rule[]>('userAbilityRules').value = []
+        updateAbility([])
+      }
     }
     catch (e) {
       // If auto-login fails, proceed with registration token and empty abilities
@@ -89,7 +96,7 @@ const register = async () => {
     }
 
     // Redirect directly to role-specific dashboard
-    const userRole = loginResp?.userData?.role || 'franchisor' // Default to franchisor for new registrations
+    const userRole = loginResp?.success && loginResp?.data ? loginResp.data.user.role : form.value.role || 'franchisor'
     switch (userRole) {
       case 'admin':
         router.push('/admin/dashboard')

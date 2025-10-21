@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
+use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Transaction;
 use App\Models\Franchise;
 use App\Models\Unit;
@@ -10,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 
-class TransactionController extends Controller
+class TransactionController extends BaseResourceController
 {
     /**
      * Display a listing of the resource.
@@ -73,55 +74,22 @@ class TransactionController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $transactions = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $transactions,
-            'message' => 'Transactions retrieved successfully'
-        ]);
+        return $this->successResponse($transactions, 'Transactions retrieved successfully');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreTransactionRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'type' => 'required|in:revenue,expense,transfer,refund,adjustment',
-            'category' => 'required|string|max:100',
-            'amount' => 'required|numeric|min:0',
-            'currency' => 'required|string|size:3',
-            'description' => 'required|string|max:500',
-            'transaction_date' => 'required|date',
-            'franchise_id' => 'nullable|exists:franchises,id',
-            'unit_id' => 'nullable|exists:units,id',
-            'user_id' => 'required|exists:users,id',
-            'payment_method' => 'nullable|string|max:50',
-            'reference_number' => 'nullable|string|max:100',
-            'invoice_number' => 'nullable|string|max:100',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'net_amount' => 'nullable|numeric',
-            'status' => 'required|in:pending,completed,cancelled,refunded',
-            'notes' => 'nullable|string',
-            'metadata' => 'nullable|array',
-            'is_recurring' => 'boolean',
-            'recurrence_type' => 'nullable|in:daily,weekly,monthly,quarterly,yearly',
-            'recurrence_interval' => 'nullable|integer|min:1',
-            'recurrence_end_date' => 'nullable|date|after:transaction_date',
-            'parent_transaction_id' => 'nullable|exists:transactions,id',
-            'attachments' => 'nullable|array'
-        ]);
+        $validated = $request->validated();
 
         $transaction = Transaction::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $transaction->load(['franchise', 'unit', 'user']),
-            'message' => 'Transaction created successfully'
-        ], 201);
+        return $this->successResponse($transaction->load(['franchise', 'unit', 'user']), 'Transaction created successfully', 201);
     }
 
     /**
@@ -131,11 +99,7 @@ class TransactionController extends Controller
     {
         $transaction->load(['franchise', 'unit', 'user', 'parentTransaction', 'childTransactions']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $transaction,
-            'message' => 'Transaction retrieved successfully'
-        ]);
+        return $this->successResponse($transaction, 'Transaction retrieved successfully');
     }
 
     /**
@@ -171,11 +135,7 @@ class TransactionController extends Controller
 
         $transaction->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $transaction->load(['franchise', 'unit', 'user']),
-            'message' => 'Transaction updated successfully'
-        ]);
+        return $this->successResponse($transaction->load(['franchise', 'unit', 'user']), 'Transaction updated successfully');
     }
 
     /**
@@ -185,18 +145,12 @@ class TransactionController extends Controller
     {
         // Check if transaction can be deleted
         if ($transaction->status === 'completed') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete completed transaction'
-            ], 422);
+            return $this->validationErrorResponse(['status' => ['Cannot delete completed transaction']]);
         }
 
         $transaction->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Transaction deleted successfully'
-        ]);
+        return $this->successResponse(null, 'Transaction deleted successfully');
     }
 
     /**
@@ -206,11 +160,7 @@ class TransactionController extends Controller
     {
         $transaction->markAsCompleted();
 
-        return response()->json([
-            'success' => true,
-            'data' => $transaction,
-            'message' => 'Transaction marked as completed'
-        ]);
+        return $this->successResponse($transaction, 'Transaction marked as completed');
     }
 
     /**
@@ -220,11 +170,7 @@ class TransactionController extends Controller
     {
         $transaction->markAsCancelled();
 
-        return response()->json([
-            'success' => true,
-            'data' => $transaction,
-            'message' => 'Transaction cancelled successfully'
-        ]);
+        return $this->successResponse($transaction, 'Transaction cancelled successfully');
     }
 
     /**
@@ -242,11 +188,7 @@ class TransactionController extends Controller
             $validated['refund_reason']
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => $refundTransaction,
-            'message' => 'Transaction refunded successfully'
-        ]);
+        return $this->successResponse($refundTransaction, 'Transaction refunded successfully');
     }
 
     /**
@@ -261,11 +203,7 @@ class TransactionController extends Controller
 
         $transaction->addAttachment($validated['attachment_url'], $validated['attachment_name']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $transaction,
-            'message' => 'Attachment added successfully'
-        ]);
+        return $this->successResponse($transaction, 'Attachment added successfully');
     }
 
     /**
@@ -288,14 +226,10 @@ class TransactionController extends Controller
             $query->byDateRange($request->date_from, $request->date_to);
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $transactions = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $transactions,
-            'message' => 'Revenue transactions retrieved successfully'
-        ]);
+        return $this->successResponse($transactions, 'Revenue transactions retrieved successfully');
     }
 
     /**
@@ -318,14 +252,10 @@ class TransactionController extends Controller
             $query->byDateRange($request->date_from, $request->date_to);
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $transactions = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $transactions,
-            'message' => 'Expense transactions retrieved successfully'
-        ]);
+        return $this->successResponse($transactions, 'Expense transactions retrieved successfully');
     }
 
     /**
@@ -380,11 +310,7 @@ class TransactionController extends Controller
                 ->get()
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Transaction statistics retrieved successfully'
-        ]);
+        return $this->successResponse($stats, 'Transaction statistics retrieved successfully');
     }
 
     /**
@@ -396,21 +322,14 @@ class TransactionController extends Controller
         $franchise = Franchise::where('owner_id', $user->id)->first();
 
         if (!$franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user'
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $transactions = Transaction::where('franchise_id', $franchise->id)
             ->with(['franchise', 'unit'])
-            ->paginate(15);
+            ->paginate($this->getPaginationParams($request));
 
-        return response()->json([
-            'success' => true,
-            'data' => $transactions,
-            'message' => 'Transactions retrieved successfully'
-        ]);
+        return $this->successResponse($transactions, 'Transactions retrieved successfully');
     }
 
     /**
@@ -422,20 +341,13 @@ class TransactionController extends Controller
         $unit = Unit::where('manager_id', $user->id)->first();
 
         if (!$unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user'
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $transactions = Transaction::where('unit_id', $unit->id)
             ->with(['franchise', 'unit'])
-            ->paginate(15);
+            ->paginate($this->getPaginationParams($request));
 
-        return response()->json([
-            'success' => true,
-            'data' => $transactions,
-            'message' => 'Unit transactions retrieved successfully'
-        ]);
+        return $this->successResponse($transactions, 'Unit transactions retrieved successfully');
     }
 }

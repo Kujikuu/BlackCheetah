@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { royaltyApi } from '@/services/api/royalty'
+import { royaltyApi } from '@/services/api'
 
 interface Props {
   isDialogVisible: boolean

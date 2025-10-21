@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Task, type TaskStatistics, taskApi } from '@/services/api/task'
+import { type Task, type TaskStatistics, taskApi } from '@/services/api'
 import ViewTaskDialog from '@/components/dialogs/tasks/ViewTaskDialog.vue'
 import StatusChangeTaskDialog from '@/components/dialogs/tasks/StatusChangeTaskDialog.vue'
 

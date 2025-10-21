@@ -6,6 +6,7 @@ import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import { useAbility } from '@/plugins/casl/useAbility'
+import { authApi } from '@/services/api'
 
 definePage({
   meta: {
@@ -32,20 +33,25 @@ const onFinish = async () => {
     await new Promise(resolve => setTimeout(resolve, 800))
 
     // Fetch latest user data and abilities after successful verification
-    const loginResp = await $api<{ accessToken: string; userData: any; userAbilityRules: any[] }>('/auth/login', {
-      method: 'POST',
-      body: {
-        email: userData.value?.email,
-
-        // This is a placeholder, replace with a secure way to re-authenticate
-        password: 'password',
-      },
+    const loginResp = await authApi.login({
+      email: userData.value?.email || '',
+      password: 'password', // This is a placeholder, replace with a secure way to re-authenticate
     })
 
-    useCookie<string>('accessToken').value = loginResp.accessToken
-    useCookie<any>('userData').value = loginResp.userData
-    useCookie<any[]>('userAbilityRules').value = loginResp.userAbilityRules
-    updateAbility(loginResp.userAbilityRules)
+    if (loginResp.success && loginResp.data) {
+      useCookie<string>('accessToken').value = loginResp.data.access_token
+      useCookie<any>('userData').value = {
+        id: loginResp.data.user.id,
+        fullName: loginResp.data.user.name,
+        username: loginResp.data.user.email,
+        avatar: loginResp.data.user.avatar,
+        email: loginResp.data.user.email,
+        role: loginResp.data.user.role,
+      }
+      // Note: Ability rules need to be handled separately or set to empty
+      useCookie<any[]>('userAbilityRules').value = []
+      updateAbility([])
+    }
 
     infoMessage.value = 'Code verified successfully. Redirecting...'
 
@@ -54,7 +60,7 @@ const onFinish = async () => {
     infoMessage.value = null
 
     // Redirect directly to role-specific dashboard
-    const userRole = loginResp.userData.role
+    const userRole = loginResp.success && loginResp.data ? loginResp.data.user.role : 'franchisor'
     switch (userRole) {
       case 'admin':
         router.push('/admin/dashboard')

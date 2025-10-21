@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Api\Users;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class NotificationController extends Controller
+class NotificationController extends BaseResourceController
 {
     /**
      * Display a listing of the user's notifications.
@@ -43,16 +43,13 @@ class NotificationController extends Controller
             ];
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'data' => $transformedNotifications,
-                'current_page' => $notifications->currentPage(),
-                'last_page' => $notifications->lastPage(),
-                'per_page' => $notifications->perPage(),
-                'total' => $notifications->total(),
-                'unread_count' => $user->unreadNotifications()->count(),
-            ],
+        return $this->successResponse([
+            'data' => $transformedNotifications,
+            'current_page' => $notifications->currentPage(),
+            'last_page' => $notifications->lastPage(),
+            'per_page' => $notifications->perPage(),
+            'total' => $notifications->total(),
+            'unread_count' => $user->unreadNotifications()->count(),
         ]);
     }
 
@@ -69,21 +66,18 @@ class NotificationController extends Controller
             $notification->markAsRead();
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $notification->id,
-                'type' => $notification->type,
-                'title' => $notification->data['title'] ?? 'Notification',
-                'subtitle' => $notification->data['subtitle'] ?? '',
-                'icon' => $notification->data['icon'] ?? 'tabler-bell',
-                'color' => $notification->data['color'] ?? 'primary',
-                'time' => $notification->created_at->diffForHumans(),
-                'isSeen' => ! is_null($notification->read_at),
-                'url' => $notification->data['url'] ?? null,
-                'created_at' => $notification->created_at->toISOString(),
-                'data' => $notification->data,
-            ],
+        return $this->successResponse([
+            'id' => $notification->id,
+            'type' => $notification->type,
+            'title' => $notification->data['title'] ?? 'Notification',
+            'subtitle' => $notification->data['subtitle'] ?? '',
+            'icon' => $notification->data['icon'] ?? 'tabler-bell',
+            'color' => $notification->data['color'] ?? 'primary',
+            'time' => $notification->created_at->diffForHumans(),
+            'isSeen' => ! is_null($notification->read_at),
+            'url' => $notification->data['url'] ?? null,
+            'created_at' => $notification->created_at->toISOString(),
+            'data' => $notification->data,
         ]);
     }
 
@@ -97,14 +91,10 @@ class NotificationController extends Controller
 
         $notification->markAsRead();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Notification marked as read',
-            'data' => [
-                'id' => $notification->id,
-                'read_at' => $notification->read_at,
-            ],
-        ]);
+        return $this->successResponse([
+            'id' => $notification->id,
+            'read_at' => $notification->read_at,
+        ], 'Notification marked as read');
     }
 
     /**
@@ -117,14 +107,10 @@ class NotificationController extends Controller
 
         $notification->markAsUnread();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Notification marked as unread',
-            'data' => [
-                'id' => $notification->id,
-                'read_at' => $notification->read_at,
-            ],
-        ]);
+        return $this->successResponse([
+            'id' => $notification->id,
+            'read_at' => $notification->read_at,
+        ], 'Notification marked as unread');
     }
 
     /**
@@ -146,11 +132,9 @@ class NotificationController extends Controller
             $notification->markAsRead();
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Notifications marked as read',
+        return $this->successResponse([
             'count' => $notifications->count(),
-        ]);
+        ], 'Notifications marked as read');
     }
 
     /**
@@ -172,10 +156,9 @@ class NotificationController extends Controller
             $notification->markAsUnread();
         }
 
-        return response()->json([
-            'message' => 'Notifications marked as unread',
+        return $this->successResponse([
             'count' => $notifications->count(),
-        ]);
+        ], 'Notifications marked as unread');
     }
 
     /**
@@ -188,11 +171,9 @@ class NotificationController extends Controller
 
         $user->unreadNotifications->markAsRead();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'All notifications marked as read',
+        return $this->successResponse([
             'count' => $count,
-        ]);
+        ], 'All notifications marked as read');
     }
 
     /**
@@ -205,10 +186,7 @@ class NotificationController extends Controller
 
         $notification->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Notification deleted successfully',
-        ]);
+        return $this->successResponse(null, 'Notification deleted successfully');
     }
 
     /**
@@ -218,13 +196,10 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total' => $user->notifications()->count(),
-                'unread' => $user->unreadNotifications()->count(),
-                'read' => $user->readNotifications()->count(),
-            ],
+        return $this->successResponse([
+            'total' => $user->notifications()->count(),
+            'unread' => $user->unreadNotifications()->count(),
+            'read' => $user->readNotifications()->count(),
         ]);
     }
 }

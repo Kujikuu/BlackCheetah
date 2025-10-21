@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { accountSettingsApi } from '@/services/api/account-settings'
+import { accountSettingsApi } from '@/services/api'
 
 const isCurrentPasswordVisible = ref(false)
 const isNewPasswordVisible = ref(false)

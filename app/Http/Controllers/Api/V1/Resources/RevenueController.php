@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api\Business;
+namespace App\Http\Controllers\Api\V1\Resources;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseResourceController;
+use App\Http\Requests\StoreRevenueRequest;
+use App\Http\Requests\UpdateRevenueRequest;
 use App\Models\Revenue;
 use App\Models\Franchise;
 use App\Models\Unit;
@@ -10,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 
-class RevenueController extends Controller
+class RevenueController extends BaseResourceController
 {
     /**
      * Display a listing of the resource.
@@ -80,61 +82,22 @@ class RevenueController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         // Pagination
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $revenues = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenues,
-            'message' => 'Revenues retrieved successfully'
-        ]);
+        return $this->successResponse($revenues, 'Revenues retrieved successfully');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreRevenueRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'type' => 'required|in:sales,fees,royalties,commissions,other',
-            'category' => 'required|string|max:100',
-            'amount' => 'required|numeric|min:0',
-            'currency' => 'required|string|size:3',
-            'description' => 'required|string|max:500',
-            'revenue_date' => 'required|date',
-            'period_year' => 'required|integer|min:2020|max:2030',
-            'period_month' => 'required|integer|min:1|max:12',
-            'franchise_id' => 'nullable|exists:franchises,id',
-            'unit_id' => 'nullable|exists:units,id',
-            'user_id' => 'required|exists:users,id',
-            'source' => 'nullable|string|max:100',
-            'customer_name' => 'nullable|string|max:255',
-            'invoice_number' => 'nullable|string|max:100',
-            'payment_method' => 'nullable|string|max:50',
-            'payment_status' => 'required|in:pending,paid,partial,failed,refunded',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'net_amount' => 'nullable|numeric',
-            'line_items' => 'nullable|array',
-            'metadata' => 'nullable|array',
-            'status' => 'required|in:pending,verified,disputed,cancelled',
-            'notes' => 'nullable|string',
-            'is_recurring' => 'boolean',
-            'recurrence_type' => 'nullable|in:daily,weekly,monthly,quarterly,yearly',
-            'recurrence_interval' => 'nullable|integer|min:1',
-            'recurrence_end_date' => 'nullable|date|after:revenue_date',
-            'parent_revenue_id' => 'nullable|exists:revenues,id',
-            'attachments' => 'nullable|array',
-            'is_auto_generated' => 'boolean'
-        ]);
+        $validated = $request->validated();
 
         $revenue = Revenue::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenue->load(['franchise', 'unit', 'user']),
-            'message' => 'Revenue created successfully'
-        ], 201);
+        return $this->successResponse($revenue->load(['franchise', 'unit', 'user']), 'Revenue created successfully', 201);
     }
 
     /**
@@ -144,56 +107,19 @@ class RevenueController extends Controller
     {
         $revenue->load(['franchise', 'unit', 'user', 'verifiedBy', 'parentRevenue', 'childRevenues']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenue,
-            'message' => 'Revenue retrieved successfully'
-        ]);
+        return $this->successResponse($revenue, 'Revenue retrieved successfully');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Revenue $revenue): JsonResponse
+    public function update(UpdateRevenueRequest $request, Revenue $revenue): JsonResponse
     {
-        $validated = $request->validate([
-            'type' => 'sometimes|in:sales,fees,royalties,commissions,other',
-            'category' => 'sometimes|string|max:100',
-            'amount' => 'sometimes|numeric|min:0',
-            'currency' => 'sometimes|string|size:3',
-            'description' => 'sometimes|string|max:500',
-            'revenue_date' => 'sometimes|date',
-            'period_year' => 'sometimes|integer|min:2020|max:2030',
-            'period_month' => 'sometimes|integer|min:1|max:12',
-            'franchise_id' => 'nullable|exists:franchises,id',
-            'unit_id' => 'nullable|exists:units,id',
-            'user_id' => 'sometimes|exists:users,id',
-            'source' => 'nullable|string|max:100',
-            'customer_name' => 'nullable|string|max:255',
-            'invoice_number' => 'nullable|string|max:100',
-            'payment_method' => 'nullable|string|max:50',
-            'payment_status' => 'sometimes|in:pending,paid,partial,failed,refunded',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'net_amount' => 'nullable|numeric',
-            'line_items' => 'nullable|array',
-            'metadata' => 'nullable|array',
-            'status' => 'sometimes|in:pending,verified,disputed,cancelled',
-            'notes' => 'nullable|string',
-            'is_recurring' => 'sometimes|boolean',
-            'recurrence_type' => 'nullable|in:daily,weekly,monthly,quarterly,yearly',
-            'recurrence_interval' => 'nullable|integer|min:1',
-            'recurrence_end_date' => 'nullable|date|after:revenue_date',
-            'attachments' => 'nullable|array'
-        ]);
+        $validated = $request->validated();
 
         $revenue->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenue->load(['franchise', 'unit', 'user']),
-            'message' => 'Revenue updated successfully'
-        ]);
+        return $this->successResponse($revenue->load(['franchise', 'unit', 'user']), 'Revenue updated successfully');
     }
 
     /**
@@ -203,18 +129,12 @@ class RevenueController extends Controller
     {
         // Check if revenue can be deleted
         if ($revenue->status === 'verified') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot delete verified revenue'
-            ], 422);
+            return $this->validationErrorResponse(['status' => ['Cannot delete verified revenue']]);
         }
 
         $revenue->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Revenue deleted successfully'
-        ]);
+        return $this->successResponse(null, 'Revenue deleted successfully');
     }
 
     /**
@@ -228,11 +148,7 @@ class RevenueController extends Controller
 
         $revenue->verify($validated['verification_notes'] ?? null);
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenue,
-            'message' => 'Revenue verified successfully'
-        ]);
+        return $this->successResponse($revenue, 'Revenue verified successfully');
     }
 
     /**
@@ -246,11 +162,7 @@ class RevenueController extends Controller
 
         $revenue->dispute($validated['dispute_reason']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenue,
-            'message' => 'Revenue disputed successfully'
-        ]);
+        return $this->successResponse($revenue, 'Revenue disputed successfully');
     }
 
     /**
@@ -268,11 +180,7 @@ class RevenueController extends Controller
             $validated['refund_reason']
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => $refundRevenue,
-            'message' => 'Revenue refunded successfully'
-        ]);
+        return $this->successResponse($refundRevenue, 'Revenue refunded successfully');
     }
 
     /**
@@ -294,11 +202,7 @@ class RevenueController extends Controller
             $validated['total_price']
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenue,
-            'message' => 'Line item added successfully'
-        ]);
+        return $this->successResponse($revenue, 'Line item added successfully');
     }
 
     /**
@@ -313,11 +217,7 @@ class RevenueController extends Controller
 
         $revenue->addAttachment($validated['attachment_url'], $validated['attachment_name']);
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenue,
-            'message' => 'Attachment added successfully'
-        ]);
+        return $this->successResponse($revenue, 'Attachment added successfully');
     }
 
     /**
@@ -340,14 +240,10 @@ class RevenueController extends Controller
             $query->byDateRange($request->date_from, $request->date_to);
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $revenues = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenues,
-            'message' => 'Sales revenues retrieved successfully'
-        ]);
+        return $this->successResponse($revenues, 'Sales revenues retrieved successfully');
     }
 
     /**
@@ -370,14 +266,10 @@ class RevenueController extends Controller
             $query->byDateRange($request->date_from, $request->date_to);
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $this->getPaginationParams($request);
         $revenues = $query->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenues,
-            'message' => 'Fee revenues retrieved successfully'
-        ]);
+        return $this->successResponse($revenues, 'Fee revenues retrieved successfully');
     }
 
     /**
@@ -435,11 +327,7 @@ class RevenueController extends Controller
                 ($query->verified()->count() / $query->count()) * 100 : 0
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-            'message' => 'Revenue statistics retrieved successfully'
-        ]);
+        return $this->successResponse($stats, 'Revenue statistics retrieved successfully');
     }
 
     /**
@@ -461,11 +349,7 @@ class RevenueController extends Controller
             $validated['unit_id'] ?? null
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => $breakdown,
-            'message' => 'Revenue breakdown retrieved successfully'
-        ]);
+        return $this->successResponse($breakdown, 'Revenue breakdown retrieved successfully');
     }
 
     /**
@@ -487,21 +371,17 @@ class RevenueController extends Controller
             $validated['unit_id'] ?? null
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total_revenue' => $total,
-                'period' => [
-                    'year' => $validated['period_year'],
-                    'month' => $validated['period_month'] ?? null
-                ],
-                'filters' => [
-                    'franchise_id' => $validated['franchise_id'] ?? null,
-                    'unit_id' => $validated['unit_id'] ?? null
-                ]
+        return $this->successResponse([
+            'total_revenue' => $total,
+            'period' => [
+                'year' => $validated['period_year'],
+                'month' => $validated['period_month'] ?? null
             ],
-            'message' => 'Total revenue by period retrieved successfully'
-        ]);
+            'filters' => [
+                'franchise_id' => $validated['franchise_id'] ?? null,
+                'unit_id' => $validated['unit_id'] ?? null
+            ]
+        ], 'Total revenue by period retrieved successfully');
     }
 
     /**
@@ -513,21 +393,14 @@ class RevenueController extends Controller
         $franchise = Franchise::where('owner_id', $user->id)->first();
 
         if (!$franchise) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No franchise found for current user'
-            ], 404);
+            return $this->notFoundResponse('No franchise found for current user');
         }
 
         $revenues = Revenue::where('franchise_id', $franchise->id)
             ->with(['franchise', 'unit'])
-            ->paginate(15);
+            ->paginate($this->getPaginationParams($request));
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenues,
-            'message' => 'Revenues retrieved successfully'
-        ]);
+        return $this->successResponse($revenues, 'Revenues retrieved successfully');
     }
 
     /**
@@ -539,20 +412,13 @@ class RevenueController extends Controller
         $unit = Unit::where('manager_id', $user->id)->first();
 
         if (!$unit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No unit found for current user'
-            ], 404);
+            return $this->notFoundResponse('No unit found for current user');
         }
 
         $revenues = Revenue::where('unit_id', $unit->id)
             ->with(['franchise', 'unit'])
-            ->paginate(15);
+            ->paginate($this->getPaginationParams($request));
 
-        return response()->json([
-            'success' => true,
-            'data' => $revenues,
-            'message' => 'Unit revenues retrieved successfully'
-        ]);
+        return $this->successResponse($revenues, 'Unit revenues retrieved successfully');
     }
 }

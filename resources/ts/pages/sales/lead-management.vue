@@ -2,7 +2,7 @@
 import AddNoteDialog from '@/components/dialogs/notes/AddNoteDialog.vue'
 import ImportLeadsDialog from '@/components/dialogs/leads/ImportLeadsDialog.vue'
 import DeleteLeadDialog from '@/components/dialogs/leads/DeleteLeadDialog.vue'
-import { type Lead, type LeadStatistic, leadApi } from '@/services/api/lead'
+import { type Lead, type LeadStatistic, leadApi } from '@/services/api'
 
 // 👉 Store
 const searchQuery = ref('')

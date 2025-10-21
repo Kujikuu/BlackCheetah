@@ -5,7 +5,7 @@ import MarkAsLostDialog from '@/components/dialogs/leads/MarkAsLostDialog.vue'
 import AddNoteDialog from '@/components/dialogs/notes/AddNoteDialog.vue'
 import ImportLeadsDialog from '@/components/dialogs/leads/ImportLeadsDialog.vue'
 import DeleteLeadDialog from '@/components/dialogs/leads/DeleteLeadDialog.vue'
-import { type Lead, leadApi } from '@/services/api/lead'
+import { type Lead, leadApi, usersApi } from '@/services/api'
 import { avatarText, prefixWithPlus } from '@core/utils/formatters'
 
 // 👉 Store
@@ -139,9 +139,7 @@ const salesAssociates = ref([])
 
 const fetchSalesAssociates = async () => {
   try {
-    const response = await $api('/v1/franchisor/sales-associates', {
-      method: 'GET',
-    })
+    const response = await usersApi.getSalesAssociates()
 
     if (response.success)
       salesAssociates.value = response.data || []

@@ -7,6 +7,7 @@ import AddEditFranchiseeDrawer from '@/views/admin/modals/AddEditFranchiseeDrawe
 import AddEditFranchisorDrawer from '@/views/admin/modals/AddEditFranchisorDrawer.vue'
 import AddEditSalesDrawer from '@/views/admin/modals/AddEditSalesDrawer.vue'
 import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
+import { adminApi } from '@/services/api'
 
 interface StatData {
   title: string
@@ -43,7 +44,7 @@ const error = ref('')
 // Fetch dashboard statistics
 const fetchStats = async () => {
   try {
-    const response = await $api('/v1/admin/dashboard/stats')
+    const response = await adminApi.getDashboardStats()
     if (response.success) {
       // Use the actual API response structure
       statsData.value = response.data
@@ -58,7 +59,7 @@ const fetchStats = async () => {
 // Fetch recent users
 const fetchRecentUsers = async () => {
   try {
-    const response = await $api('/v1/admin/dashboard/recent-users')
+    const response = await adminApi.getRecentUsers()
     if (response.success)
       recentUsers.value = response.data
   }

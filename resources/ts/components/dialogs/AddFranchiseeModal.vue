@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { emailValidator, requiredValidator } from '@core/utils/validators'
+import { franchiseApi } from '@/services/api'
 
 interface Props {
   isDialogVisible: boolean
@@ -114,8 +115,8 @@ const submitForm = async () => {
 
   try {
     // Get the franchisor's franchise ID
-    const franchiseResponse = await $api('/v1/franchisor/franchise')
-    const franchiseId = franchiseResponse.data?.id || franchiseResponse.id
+    const franchiseResponse = await franchiseApi.getFranchises()
+    const franchiseId = franchiseResponse.data?.[0]?.id || null
 
     // Prepare franchisee and unit data
     const franchiseeUnitData = {
@@ -140,10 +141,7 @@ const submitForm = async () => {
     }
 
     // Create franchisee with unit
-    const response = await $api('/v1/franchisor/franchisees-with-unit', {
-      method: 'POST',
-      body: franchiseeUnitData,
-    })
+    const response = await franchiseApi.createFranchiseeWithUnit(franchiseeUnitData)
 
     if (response.success) {
       // Transform the response to match expected format

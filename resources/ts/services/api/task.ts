@@ -1,22 +1,6 @@
 import { $api } from '@/utils/api'
-
-// Get base API URL based on user role
-const getBaseUrl = (): string => {
-  const userDataCookie = useCookie('userData')
-  const userData = userDataCookie.value as any
-  const userRole = userData?.role
-
-  // Sales users use /v1/sales/tasks
-  if (userRole === 'sales')
-    return '/v1/sales/tasks'
-
-  // Franchisors use /v1/franchisor/tasks
-  if (userRole === 'franchisor')
-    return '/v1/franchisor/tasks'
-
-  // Admin and others use /v1/tasks
-  return '/v1/tasks'
-}
+import { getEndpoint } from '@/utils/api-router'
+import type { ApiResponse, PaginatedResponse, TaskStatus, Priority } from '@/types/api'
 
 // Type definitions
 export interface Task {
@@ -28,8 +12,8 @@ export interface Task {
   unitName: string | null
   startDate: string | null
   dueDate: string
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold'
+  priority: `${Priority}`
+  status: `${TaskStatus}`
   leadId: number | null
   leadName: string | null
 }
@@ -41,29 +25,18 @@ export interface TaskStatistics {
   dueTasks: number
 }
 
-export interface TaskListResponse {
-  success: boolean
-  data: Task[]
+export interface TaskListResponse extends ApiResponse<Task[]> {
   pagination: {
     total: number
     perPage: number
     currentPage: number
     lastPage: number
   }
-  message: string
 }
 
-export interface TaskStatisticsResponse {
-  success: boolean
-  data: TaskStatistics
-  message: string
-}
+export interface TaskStatisticsResponse extends ApiResponse<TaskStatistics> {}
 
-export interface TaskResponse {
-  success: boolean
-  data: Task
-  message: string
-}
+export interface TaskResponse extends ApiResponse<Task> {}
 
 export interface TaskFilters {
   status?: string
@@ -73,13 +46,17 @@ export interface TaskFilters {
   perPage?: number
 }
 
-// API Functions
-export const taskApi = {
+// API Service Class
+export class TaskApi {
+  private getBaseUrl(): string {
+    return getEndpoint('tasks')
+  }
+
   /**
    * Get tasks for the current user
    */
   async getMyTasks(filters?: TaskFilters): Promise<TaskListResponse> {
-    const baseUrl = getBaseUrl()
+    const baseUrl = this.getBaseUrl()
     const params = new URLSearchParams()
 
     if (filters?.status)
@@ -99,24 +76,41 @@ export const taskApi = {
     return await $api<TaskListResponse>(url, {
       method: 'GET',
     })
-  },
+  }
+
+  /**
+   * Get franchisor tasks
+   */
+  async getFranchisorTasks(): Promise<ApiResponse<{ data: any[] }>> {
+    return await $api('/v1/franchisor/tasks')
+  }
+
+  /**
+   * Create franchisor task
+   */
+  async createFranchisorTask(taskData: any): Promise<ApiResponse<any>> {
+    return await $api('/v1/franchisor/tasks', {
+      method: 'POST',
+      body: taskData,
+    })
+  }
 
   /**
    * Get task statistics for the current user
    */
   async getStatistics(): Promise<TaskStatisticsResponse> {
-    const baseUrl = getBaseUrl()
+    const baseUrl = this.getBaseUrl()
 
     return await $api<TaskStatisticsResponse>(`${baseUrl}/statistics`, {
       method: 'GET',
     })
-  },
+  }
 
   /**
    * Update task status
    */
   async updateTaskStatus(taskId: number, status: string): Promise<TaskResponse> {
-    const baseUrl = getBaseUrl()
+    const baseUrl = this.getBaseUrl()
 
     return await $api<TaskResponse>(`${baseUrl}/${taskId}/status`, {
       method: 'PATCH',
@@ -124,16 +118,54 @@ export const taskApi = {
         status,
       },
     })
-  },
+  }
 
   /**
    * Get a single task by ID
    */
   async getTask(taskId: number): Promise<TaskResponse> {
-    const baseUrl = getBaseUrl()
+    const baseUrl = this.getBaseUrl()
 
     return await $api<TaskResponse>(`${baseUrl}/${taskId}`, {
       method: 'GET',
     })
-  },
+  }
+
+  /**
+   * Create new task
+   */
+  async createTask(taskData: any): Promise<TaskResponse> {
+    const baseUrl = this.getBaseUrl()
+
+    return await $api<TaskResponse>(baseUrl, {
+      method: 'POST',
+      body: taskData,
+    })
+  }
+
+  /**
+   * Update task
+   */
+  async updateTask(taskId: number, taskData: any): Promise<TaskResponse> {
+    const baseUrl = this.getBaseUrl()
+
+    return await $api<TaskResponse>(`${baseUrl}/${taskId}`, {
+      method: 'PUT',
+      body: taskData,
+    })
+  }
+
+  /**
+   * Delete task
+   */
+  async deleteTask(taskId: number): Promise<ApiResponse<null>> {
+    const baseUrl = this.getBaseUrl()
+
+    return await $api<ApiResponse<null>>(`${baseUrl}/${taskId}`, {
+      method: 'DELETE',
+    })
+  }
 }
+
+// Export class instance
+export const taskApi = new TaskApi()
