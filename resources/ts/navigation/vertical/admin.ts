@@ -27,8 +27,8 @@ export default [
         subject: 'User',
       },
       {
-        title: 'Sales Team',
-        to: 'admin-users-sales',
+        title: 'Brokers',
+        to: 'admin-users-brokers',
         icon: { icon: 'tabler-chart-line' },
         action: 'manage',
         subject: 'User',

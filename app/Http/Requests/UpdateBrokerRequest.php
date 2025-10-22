@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateSalesAssociateRequest extends FormRequest
+class UpdateBrokerRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -19,11 +19,11 @@ class UpdateSalesAssociateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $salesAssociateId = $this->route('id');
+        $brokerId = $this->route('id');
         
         return [
             'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $salesAssociateId,
+            'email' => 'sometimes|required|email|unique:users,email,' . $brokerId,
             'phone' => 'sometimes|required|string|max:20',
             'status' => 'sometimes|required|in:active,inactive',
             'nationality' => 'nullable|string|max:100',

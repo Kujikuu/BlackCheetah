@@ -69,11 +69,20 @@ class AuthController extends Controller
                     ['action' => 'read', 'subject' => 'Royalty'],
                     ['action' => 'create', 'subject' => 'TechnicalRequest'],
                 ];
-            } elseif ($user->role === 'sales') {
+            } elseif ($user->role === 'broker') {
                 $userAbilityRules = [
+                    ['action' => 'read', 'subject' => 'Dashboard'],
+                    ['action' => 'read', 'subject' => 'BrokerDashboard'],
+                    ['action' => 'manage', 'subject' => 'Brokerage'],
                     ['action' => 'manage', 'subject' => 'Lead'],
+                    ['action' => 'manage', 'subject' => 'LeadManagement'],
                     ['action' => 'read', 'subject' => 'Task'],
+                    ['action' => 'update', 'subject' => 'Task'],
+                    ['action' => 'read', 'subject' => 'TechnicalRequest'],
                     ['action' => 'create', 'subject' => 'TechnicalRequest'],
+                    ['action' => 'update', 'subject' => 'TechnicalRequest'],
+                    ['action' => 'read', 'subject' => 'Statistics'],
+                    ['action' => 'manage', 'subject' => 'Note'],
                 ];
             }
 
@@ -106,7 +115,7 @@ class AuthController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|string|min:6|confirmed',
-                'role' => 'required|in:franchisor,franchisee,sales',
+                'role' => 'required|in:franchisor,franchisee,broker',
             ]);
 
             if ($validator->fails()) {

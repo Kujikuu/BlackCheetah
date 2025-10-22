@@ -66,19 +66,20 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('franchisor')->gr
     // Franchisee with unit creation for franchisor
     Route::post('franchisees-with-unit', [FranchisorController::class, 'createFranchiseeWithUnit'])->name('api.v1.franchisor.franchisees-with-unit.create');
 
-    // Sales associates management for franchisor
-    Route::prefix('sales-associates')->group(function () {
-        Route::get('/', [FranchisorController::class, 'salesAssociatesIndex'])->name('api.v1.franchisor.sales-associates.index');
-        Route::post('/', [FranchisorController::class, 'salesAssociatesStore'])->name('api.v1.franchisor.sales-associates.store');
-        Route::get('{id}', [FranchisorController::class, 'salesAssociatesShow'])->name('api.v1.franchisor.sales-associates.show');
-        Route::put('{id}', [FranchisorController::class, 'salesAssociatesUpdate'])->name('api.v1.franchisor.sales-associates.update');
-        Route::delete('{id}', [FranchisorController::class, 'salesAssociatesDestroy'])->name('api.v1.franchisor.sales-associates.destroy');
+    // Brokers management for franchisor
+    Route::prefix('brokers')->group(function () {
+        Route::get('/', [FranchisorController::class, 'brokersIndex'])->name('api.v1.franchisor.brokers.index');
+        Route::post('/', [FranchisorController::class, 'brokersStore'])->name('api.v1.franchisor.brokers.store');
+        Route::get('{id}', [FranchisorController::class, 'brokersShow'])->name('api.v1.franchisor.brokers.show');
+        Route::put('{id}', [FranchisorController::class, 'brokersUpdate'])->name('api.v1.franchisor.brokers.update');
+        Route::delete('{id}', [FranchisorController::class, 'brokersDestroy'])->name('api.v1.franchisor.brokers.destroy');
     });
 
     // Financial data for franchisor
     Route::prefix('financial')->group(function () {
         Route::get('transactions', [TransactionController::class, 'myTransactions'])->name('api.v1.franchisor.financial.transactions');
         Route::get('royalties', [RoyaltyController::class, 'myRoyalties'])->name('api.v1.franchisor.financial.royalties');
+        Route::post('royalties', [RoyaltyController::class, 'store'])->name('api.v1.franchisor.financial.royalties.store');
         Route::get('royalties/statistics', [RoyaltyController::class, 'statistics'])->name('api.v1.franchisor.financial.royalties.statistics');
         Route::get('royalties/export', [RoyaltyController::class, 'export'])->name('api.v1.franchisor.financial.royalties.export');
         Route::get('revenues', [RevenueController::class, 'myRevenues'])->name('api.v1.franchisor.financial.revenues');

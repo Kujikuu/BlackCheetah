@@ -4,18 +4,18 @@
  */
 
 // Supported resources that have role-based routing
-export type ApiResource = 
-  | 'leads' 
-  | 'tasks' 
-  | 'royalties' 
-  | 'technical-requests' 
-  | 'units' 
+export type ApiResource =
+  | 'leads'
+  | 'tasks'
+  | 'royalties'
+  | 'technical-requests'
+  | 'units'
   | 'financial'
   | 'franchise'
   | 'users'
 
 // User roles from the application
-export type UserRole = 'admin' | 'franchisor' | 'sales' | 'unit-manager' | 'franchisee'
+export type UserRole = 'admin' | 'franchisor' | 'broker' | 'franchisee'
 
 /**
  * Get the base API endpoint for a resource based on user role
@@ -27,8 +27,8 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
   switch (resource) {
     case 'leads':
       switch (userRole) {
-        case 'sales':
-          return '/v1/sales/leads'
+        case 'broker':
+          return '/v1/brokers/leads'
         case 'franchisor':
           return '/v1/franchisor/leads'
         default:
@@ -37,11 +37,10 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
 
     case 'tasks':
       switch (userRole) {
-        case 'sales':
-          return '/v1/sales/tasks'
+        case 'broker':
+          return '/v1/brokers/tasks'
         case 'franchisor':
           return '/v1/franchisor/tasks'
-        case 'unit-manager':
         case 'franchisee':
           return '/v1/unit-manager/tasks'
         default:
@@ -52,7 +51,6 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
       switch (userRole) {
         case 'franchisor':
           return '/v1/franchisor/financial/royalties'
-        case 'unit-manager':
         case 'franchisee':
           return '/v1/unit-manager/royalties'
         default:
@@ -61,7 +59,6 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
 
     case 'technical-requests':
       switch (userRole) {
-        case 'unit-manager':
         case 'franchisee':
           return '/v1/unit-manager/technical-requests'
         default:
@@ -70,7 +67,6 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
 
     case 'units':
       switch (userRole) {
-        case 'unit-manager':
         case 'franchisee':
           return '/v1/unit-manager'
         case 'franchisor':
@@ -83,7 +79,6 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
       switch (userRole) {
         case 'franchisor':
           return '/v1/franchisor/financial'
-        case 'unit-manager':
         case 'franchisee':
           return '/v1/unit-manager'
         default:
@@ -120,7 +115,7 @@ function getCurrentUserRole(): UserRole {
   try {
     const userDataCookie = useCookie('userData')
     const userData = userDataCookie.value as any
-    
+
     if (!userData?.role) {
       console.warn('User role not found in userData cookie, defaulting to admin')
       return 'admin'
@@ -138,13 +133,13 @@ function getCurrentUserRole(): UserRole {
  */
 export function buildApiUrl(resource: ApiResource, pathSegments?: string | string[], role?: UserRole): string {
   const baseEndpoint = getEndpoint(resource, role)
-  
+
   if (!pathSegments) {
     return baseEndpoint
   }
 
   const segments = Array.isArray(pathSegments) ? pathSegments : [pathSegments]
   const path = segments.filter(Boolean).join('/')
-  
+
   return path ? `${baseEndpoint}/${path}` : baseEndpoint
 }

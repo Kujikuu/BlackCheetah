@@ -309,12 +309,25 @@ class LeadController extends BaseResourceController
             }
 
             // Apply sorting
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortOrder = $request->get('sort_order', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sortBy = $request->get('sortBy', 'created_at');
+            $sortOrder = $request->get('orderBy', 'desc');
+            
+            // Map frontend field names to database columns
+            $sortMapping = [
+                'name' => 'first_name',
+                'company' => 'company_name',
+                'lastContacted' => 'last_contact_date',
+            ];
+
+            $sortColumn = $sortMapping[$sortBy] ?? $sortBy;
+            $query->orderBy($sortColumn, $sortOrder);
 
             // Pagination
-            $perPage = $request->get('per_page', 10);
+            $perPage = $request->get('itemsPerPage', 10);
+            if ($perPage == -1) {
+                $perPage = $query->count();
+            }
+            
             $leads = $query->paginate($perPage);
 
             // Transform the data to match frontend expectations

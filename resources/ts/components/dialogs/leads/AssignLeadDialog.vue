@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { leadApi, usersApi } from '@/services/api'
 
-interface SalesAssociate {
+interface Broker {
   id: number
   name: string
   email: string
@@ -11,7 +11,7 @@ interface Props {
   isDialogVisible: boolean
   leadId: number | null
   currentAssigneeId?: number | null
-  salesAssociates?: any[]
+  brokers?: any[]
 }
 
 interface Emit {
@@ -23,7 +23,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
 const selectedAssociateId = ref<number | null>(props.currentAssigneeId || null)
-const salesAssociates = ref<SalesAssociate[]>([])
+const brokers = ref<Broker[]>([])
 const isLoading = ref(false)
 const isLoadingAssociates = ref(false)
 
@@ -37,26 +37,26 @@ const fetchSalesAssociates = async () => {
   isLoadingAssociates.value = true
 
   try {
-    const response = await usersApi.getSalesAssociates()
+    const response = await usersApi.getBrokers()
 
     if (response.success) {
       // API returns paginated data, handle both array and paginated response
       const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
       
       // Transform the data to match the expected format
-      salesAssociates.value = associatesArray.map((associate: any) => ({
+      brokers.value = associatesArray.map((associate: any) => ({
         id: associate.id,
         name: associate.name,
         email: associate.email,
       }))
     }
     else {
-      salesAssociates.value = []
+      brokers.value = []
     }
   }
   catch (error) {
-    console.error('Error fetching sales associates:', error)
-    salesAssociates.value = []
+    console.error('Error fetching brokers:', error)
+    brokers.value = []
   }
   finally {
     isLoadingAssociates.value = false
@@ -83,7 +83,7 @@ const assignLead = async () => {
   }
 }
 
-// Fetch sales associates when dialog opens
+// Fetch brokers when dialog opens
 watch(() => props.isDialogVisible, newVal => {
   if (newVal) {
     fetchSalesAssociates()
@@ -106,11 +106,11 @@ watch(() => props.isDialogVisible, newVal => {
       <VCardText>
         <VSelect
           v-model="selectedAssociateId"
-          :items="salesAssociates"
+          :items="brokers"
           item-title="name"
           item-value="id"
-          label="Sales Associate"
-          placeholder="Select a sales associate"
+          label="Broker"
+          placeholder="Select a broker"
           variant="outlined"
           :loading="isLoadingAssociates"
           :disabled="isLoading"

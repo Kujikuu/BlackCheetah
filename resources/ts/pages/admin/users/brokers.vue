@@ -163,7 +163,7 @@ const addNewSalesUser = async (salesUserData: any) => {
   try {
     const response = await adminApi.createUser({
       ...salesUserData,
-      role: 'sales',
+      role: 'broker',
     })
 
     if (response.success)

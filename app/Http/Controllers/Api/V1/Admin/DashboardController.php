@@ -20,7 +20,7 @@ class DashboardController extends BaseAdminController
             $totalUsers = User::count();
             $franchisors = User::where('role', 'franchisor')->count();
             $franchisees = User::where('role', 'franchisee')->count();
-            $salesUsers = User::where('role', 'sales')->count();
+            $salesUsers = User::where('role', 'broker')->count();
 
             // Calculate growth percentages (compared to last month)
             $lastMonth = Carbon::now()->subMonth();
@@ -28,7 +28,7 @@ class DashboardController extends BaseAdminController
             $totalUsersLastMonth = User::where('created_at', '<=', $lastMonth)->count();
             $franchisorsLastMonth = User::where('role', 'franchisor')->where('created_at', '<=', $lastMonth)->count();
             $franchiseesLastMonth = User::where('role', 'franchisee')->where('created_at', '<=', $lastMonth)->count();
-            $salesUsersLastMonth = User::where('role', 'sales')->where('created_at', '<=', $lastMonth)->count();
+            $salesUsersLastMonth = User::where('role', 'broker')->where('created_at', '<=', $lastMonth)->count();
 
             $totalUsersGrowth = $totalUsersLastMonth > 0 ? (($totalUsers - $totalUsersLastMonth) / $totalUsersLastMonth) * 100 : 0;
             $franchisorsGrowth = $franchisorsLastMonth > 0 ? (($franchisors - $franchisorsLastMonth) / $franchisorsLastMonth) * 100 : 0;
@@ -64,7 +64,7 @@ class DashboardController extends BaseAdminController
             $salesChartData = [];
             for ($i = 6; $i >= 0; $i--) {
                 $date = Carbon::now()->subDays($i);
-                $salesChartData[] = User::where('role', 'sales')
+                $salesChartData[] = User::where('role', 'broker')
                     ->whereDate('created_at', $date->format('Y-m-d'))
                     ->count();
             }
@@ -369,7 +369,7 @@ class DashboardController extends BaseAdminController
     {
         try {
             $recentUsers = User::with(['franchise'])
-                ->whereIn('role', ['franchisor', 'franchisee', 'sales'])
+                ->whereIn('role', ['franchisor', 'franchisee', 'broker'])
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()
@@ -392,7 +392,7 @@ class DashboardController extends BaseAdminController
                         $userData['plan'] = $user->franchise->plan ?? 'Basic';
                     } elseif ($user->role === 'franchisee') {
                         $userData['location'] = $user->city;
-                    } elseif ($user->role === 'sales') {
+                    } elseif ($user->role === 'broker') {
                         $userData['city'] = $user->city;
                     }
 

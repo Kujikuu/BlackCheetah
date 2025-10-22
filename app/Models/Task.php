@@ -109,9 +109,9 @@ class Task extends Model
         return $typeToCategoryMap[$this->type] ?? 'Other';
     }
 
-    public function getCategoryForSales(): string
+    public function getCategoryForBroker(): string
     {
-        // Map database type to sales-specific categories
+        // Map database type to broker-specific categories
         $typeToCategoryMap = [
             'lead_management' => 'Lead Management',
             'sales' => 'Sales',

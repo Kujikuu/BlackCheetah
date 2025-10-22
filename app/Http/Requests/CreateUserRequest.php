@@ -22,7 +22,7 @@ class CreateUserRequest extends FormRequest
         return [
             'fullName' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'role' => 'required|in:franchisor,franchisee,sales',
+            'role' => 'required|in:franchisor,franchisee,broker',
             'phone' => 'nullable|string|max:20',
             'city' => 'nullable|string|max:100',
             'status' => 'required|in:active,pending,inactive',
@@ -44,7 +44,7 @@ class CreateUserRequest extends FormRequest
             'email.email' => 'Email must be a valid email address.',
             'email.unique' => 'This email is already registered.',
             'role.required' => 'Role is required.',
-            'role.in' => 'Role must be one of: franchisor, franchisee, sales.',
+            'role.in' => 'Role must be one of: franchisor, franchisee, broker.',
             'phone.string' => 'Phone must be a string.',
             'phone.max' => 'Phone cannot exceed 20 characters.',
             'city.string' => 'City must be a string.',

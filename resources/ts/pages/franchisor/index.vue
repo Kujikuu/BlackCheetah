@@ -15,7 +15,7 @@ const {
   isLoading,
   error,
   dashboardStats: apiStats,
-  salesAssociates,
+  brokers,
   recentActivities,
   profileCompletionStatus,
   isProfileComplete,
@@ -30,7 +30,7 @@ const dashboardStats = computed(() => {
     return [
       { title: 'Total Leads', value: '0', change: 0, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
       { title: 'Active Tasks', value: '0', change: 0, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
-      { title: 'Sales Associates', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
+      { title: 'Brokers', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
       { title: 'Monthly Revenue', value: 'SAR0', change: 0, desc: 'This month\'s revenue', icon: SaudiRiyal, iconColor: 'warning' },
     ]
   }
@@ -53,10 +53,10 @@ const dashboardStats = computed(() => {
       iconColor: 'success',
     },
     {
-      title: 'Sales Associates',
-      value: salesAssociates.value.length.toString(),
+      title: 'Brokers',
+      value: brokers.value.length.toString(),
       change: 0,
-      desc: 'Active team members',
+      desc: 'Active brokers',
       icon: 'tabler-user-check',
       iconColor: 'info',
     },
@@ -76,7 +76,7 @@ const quickActions = [
   { title: 'Add New Lead', icon: 'tabler-user-plus', color: 'primary', to: '/franchisor/add-lead' },
   { title: 'Manage Leads', icon: 'tabler-users', color: 'success', to: '/franchisor/lead-management' },
   { title: 'View Operations', icon: 'tabler-settings', color: 'info', to: '/franchisor/dashboard/operations' },
-  { title: 'Sales Team', icon: 'tabler-user-check', color: 'warning', to: '/franchisor/sales-associates' },
+  { title: 'Brokers', icon: 'tabler-user-check', color: 'warning', to: '/franchisor/brokers' },
 ]
 
 // 👉 Navigate to onboarding
@@ -309,14 +309,14 @@ onMounted(async () => {
       </VCol>
 
       <VCol cols="12" md="4">
-        <VCard class="cursor-pointer" @click="router.push('/franchisor/sales-associates')">
+        <VCard class="cursor-pointer" @click="router.push('/franchisor/brokers')">
           <VCardText class="text-center pa-6">
             <VIcon icon="tabler-user-check" size="48" color="info" class="mb-4" />
             <h5 class="text-h5 mb-2">
-              Sales Associates
+              Brokers
             </h5>
             <p class="text-body-2 text-disabled mb-0">
-              Manage your sales team
+              Manage your brokers
             </p>
           </VCardText>
         </VCard>

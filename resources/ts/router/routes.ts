@@ -18,8 +18,8 @@ const routes: RouteRecordRaw[] = [
       if (userRole === 'franchisee')
         return { name: 'franchisee-dashboard-sales' }
 
-      if (userRole === 'sales')
-        return { name: 'sales-lead-management' }
+      if (userRole === 'broker')
+        return { name: 'broker-lead-management' }
 
       return { name: 'login', query: to.query }
     },
@@ -133,9 +133,9 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/admin/users/sales',
-    name: 'admin-users-sales',
-    component: () => import('@/pages/admin/users/sales.vue'),
+    path: '/admin/users/brokers',
+    name: 'admin-users-brokers',
+    component: () => import('@/pages/admin/users/brokers.vue'),
     meta: {
       action: 'manage',
       subject: 'User',
@@ -216,9 +216,9 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/franchisor/sales-associates',
-    name: 'franchisor-sales-associates',
-    component: () => import('@/pages/franchisor/sales-associates.vue'),
+    path: '/franchisor/brokers',
+    name: 'franchisor-brokers',
+    component: () => import('@/pages/franchisor/brokers.vue'),
     meta: {
       action: 'manage',
       subject: 'User',
@@ -389,47 +389,47 @@ const routes: RouteRecordRaw[] = [
     },
   },
 
-  // Sales Routes
+  // Broker Routes
   {
-    path: '/sales/lead-management',
-    name: 'sales-lead-management',
-    component: () => import('@/pages/sales/lead-management.vue'),
+    path: '/brokers/lead-management',
+    name: 'broker-lead-management',
+    component: () => import('@/pages/brokers/lead-management.vue'),
     meta: {
       action: 'manage',
       subject: 'Lead',
     },
   },
   {
-    path: '/sales/add-lead',
-    name: 'sales-add-lead',
-    component: () => import('@/pages/sales/add-lead.vue'),
+    path: '/brokers/add-lead',
+    name: 'broker-add-lead',
+    component: () => import('@/pages/brokers/add-lead.vue'),
     meta: {
       action: 'manage',
       subject: 'Lead',
     },
   },
   {
-    path: '/sales/leads/:id',
-    name: 'sales-leads-id',
-    component: () => import('@/pages/sales/leads/[id].vue'),
+    path: '/brokers/leads/:id',
+    name: 'broker-leads-id',
+    component: () => import('@/pages/brokers/leads/[id].vue'),
     meta: {
       action: 'manage',
       subject: 'Lead',
     },
   },
   {
-    path: '/sales/my-tasks',
-    name: 'sales-my-tasks',
-    component: () => import('@/pages/sales/my-tasks.vue'),
+    path: '/brokers/my-tasks',
+    name: 'broker-my-tasks',
+    component: () => import('@/pages/brokers/my-tasks.vue'),
     meta: {
       action: 'read',
       subject: 'Task',
     },
   },
   {
-    path: '/sales/technical-requests',
-    name: 'sales-technical-requests',
-    component: () => import('@/pages/sales/technical-requests.vue'),
+    path: '/brokers/technical-requests',
+    name: 'broker-technical-requests',
+    component: () => import('@/pages/brokers/technical-requests.vue'),
     meta: {
       action: 'create',
       subject: 'TechnicalRequest',

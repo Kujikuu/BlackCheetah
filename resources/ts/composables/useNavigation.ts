@@ -1,7 +1,7 @@
 import admin from '@/navigation/vertical/admin'
+import brokers from '@/navigation/vertical/brokers'
 import franchisee from '@/navigation/vertical/franchisee'
 import franchisor from '@/navigation/vertical/franchisor'
-import sales from '@/navigation/vertical/sales'
 import type { VerticalNavItems } from '@layouts/types'
 
 /**
@@ -25,8 +25,8 @@ export const useNavigation = () => {
         return [...franchisor] as VerticalNavItems
       case 'franchisee':
         return [...franchisee] as VerticalNavItems
-      case 'sales':
-        return [...sales] as VerticalNavItems
+      case 'broker':
+        return [...brokers] as VerticalNavItems
       default:
         return [] as VerticalNavItems
     }

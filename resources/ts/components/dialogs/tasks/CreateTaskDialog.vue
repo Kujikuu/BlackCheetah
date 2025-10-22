@@ -4,7 +4,7 @@ import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES } from '@/constants/t
 
 interface Props {
   isDialogVisible: boolean
-  currentTab?: 'franchisee' | 'sales'
+  currentTab?: 'franchisee' | 'broker'
   defaultAssignedTo?: string
   unitId?: string
   disableAssignedTo?: boolean

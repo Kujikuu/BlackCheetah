@@ -134,26 +134,26 @@ const statuses = [
   { title: 'Unqualified', value: 'unqualified' },
 ]
 
-// Fetch sales associates for assignment
-const salesAssociates = ref([])
+// Fetch brokers for assignment
+const brokers = ref([])
 
 const fetchSalesAssociates = async () => {
   try {
-    const response = await usersApi.getSalesAssociates()
+    const response = await usersApi.getBrokers()
 
     if (response.success) {
       // API returns paginated data, handle both array and paginated response
       const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
-      salesAssociates.value = associatesArray
+      brokers.value = associatesArray
     }
   }
   catch (error) {
-    console.error('Error fetching sales associates:', error)
+    console.error('Error fetching brokers:', error)
   }
 }
 
 const owners = computed(() => {
-  return salesAssociates.value.map((associate: any) => ({
+  return brokers.value.map((associate: any) => ({
     title: associate.name || `${associate.first_name || ''} ${associate.last_name || ''}`.trim(),
     value: associate.id.toString(),
   }))

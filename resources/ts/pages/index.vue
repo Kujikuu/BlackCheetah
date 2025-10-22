@@ -25,10 +25,10 @@ const redirectToDashboard = () => {
       router.push('/franchisor')
       break
     case 'franchisee':
-      router.push('/franchisee/dashboard/sales') // Default to sales dashboard
+      router.push('/franchisee/dashboard/sales') // Default to broker dashboard
       break
-    case 'sales':
-      router.push('/sales/lead-management')
+    case 'broker':
+      router.push('/brokers/lead-management')
       break
     default:
     // Fallback to login if role is unknown

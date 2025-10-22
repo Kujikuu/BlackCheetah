@@ -5,7 +5,7 @@ import { formatCurrency } from '@/@core/utils/formatters'
 type DashboardStats = FranchisorDashboardStats
 
 // Local interface for the composable's specific needs
-export interface SalesAssociate {
+export interface Broker {
   id: number
   name: string
   email: string
@@ -33,7 +33,7 @@ export const useFranchisorDashboard = () => {
 
   // Dashboard stats
   const dashboardStats = ref<DashboardStats | null>(null)
-  const salesAssociates = ref<SalesAssociate[]>([])
+  const salesAssociates = ref<Broker[]>([])
   const recentActivities = ref<RecentActivity[]>([])
   const leads = ref<Lead[]>([])
 
@@ -114,11 +114,11 @@ export const useFranchisorDashboard = () => {
   }
 
   /**
-   * Fetch sales associates
+   * Fetch brokers
    */
   const fetchSalesAssociates = async () => {
     try {
-      const response = await usersApi.getSalesAssociates()
+      const response = await usersApi.getBrokers()
 
       if (response.success && response.data) {
         // API returns paginated data, so we need to access response.data.data
@@ -139,8 +139,8 @@ export const useFranchisorDashboard = () => {
         salesAssociates.value = []
     }
     catch (err: any) {
-      console.error('Sales associates error:', err)
-      salesAssociates.value = [] // Ensure salesAssociates is always an array
+      console.error('Brokers error:', err)
+      salesAssociates.value = [] // Ensure brokers is always an array
     }
   }
 
@@ -225,7 +225,7 @@ export const useFranchisorDashboard = () => {
       })
     }
 
-    // Add sales associate activities - ensure salesAssociates.value exists before calling slice
+    // Add broker activities - ensure salesAssociates.value exists before calling slice
     if (Array.isArray(salesAssociates.value) && salesAssociates.value.length > 0) {
       salesAssociates.value.slice(0, 2).forEach(associate => {
         if (associate.status === 'active') {
@@ -307,7 +307,7 @@ export const useFranchisorDashboard = () => {
     isLoading: readonly(isLoading),
     error: readonly(error),
     dashboardStats: readonly(dashboardStats),
-    salesAssociates: readonly(salesAssociates),
+    brokers: readonly(salesAssociates),
     recentActivities: readonly(recentActivities),
     leads: readonly(leads),
     profileCompletionStatus: readonly(profileCompletionStatus),

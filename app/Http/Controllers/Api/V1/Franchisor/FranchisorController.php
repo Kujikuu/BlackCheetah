@@ -6,8 +6,8 @@ use App\Http\Controllers\Api\V1\BaseResourceController;
 use App\Http\Requests\RegisterFranchiseRequest;
 use App\Http\Requests\CreateFranchiseeWithUnitRequest;
 use App\Http\Requests\UpdateFranchiseRequest;
-use App\Http\Requests\StoreSalesAssociateRequest;
-use App\Http\Requests\UpdateSalesAssociateRequest;
+use App\Http\Requests\StoreBrokerRequest;
+use App\Http\Requests\UpdateBrokerRequest;
 use App\Models\Franchise;
 use App\Models\Lead;
 use App\Models\Revenue;
@@ -359,9 +359,9 @@ class FranchisorController extends BaseResourceController
                 ->with(['assignedTo', 'createdBy'])
                 ->get();
 
-            $salesTasks = Task::where('franchise_id', $franchise->id)
+            $brokerTasks = Task::where('franchise_id', $franchise->id)
                 ->whereHas('assignedTo', function ($q) {
-                    $q->where('role', 'sales');
+                    $q->where('role', 'broker');
                 })
                 ->with(['assignedTo', 'createdBy'])
                 ->get();
@@ -372,14 +372,14 @@ class FranchisorController extends BaseResourceController
             // Calculate statistics for each role
             $stats = [
                 'franchisee' => $this->calculateTaskStats($franchiseeTasks),
-                'sales' => $this->calculateTaskStats($salesTasks),
+                'broker' => $this->calculateTaskStats($brokerTasks),
                 'staff' => $this->calculateTaskStats($staffTasks),
             ];
 
             // Transform tasks for frontend
             $tasks = [
                 'franchisee' => $this->transformTasks($franchiseeTasks),
-                'sales' => $this->transformTasks($salesTasks),
+                'broker' => $this->transformTasks($brokerTasks),
                 'staff' => $this->transformTasks($staffTasks),
             ];
 
@@ -665,9 +665,9 @@ class FranchisorController extends BaseResourceController
     }
 
     /**
-     * Get sales associates for the franchisor
+     * Get brokers for the franchisor
      */
-    public function salesAssociatesIndex(Request $request): JsonResponse
+    public function brokersIndex(Request $request): JsonResponse
     {
         try {
             $user = Auth::user();
@@ -677,7 +677,7 @@ class FranchisorController extends BaseResourceController
                 return $this->notFoundResponse('No franchise found for this user');
             }
 
-            $query = User::where('role', 'sales')
+            $query = User::where('role', 'broker')
                 ->where('franchise_id', $franchise->id)
                 ->withCount('leads'); // Get the count of assigned leads
 
@@ -691,7 +691,7 @@ class FranchisorController extends BaseResourceController
                 });
             }
 
-            // Role filter removed - sales_role field no longer exists
+            // Role filter removed - broker_role field no longer exists
 
             // Apply status filter
             if ($request->has('status') && $request->status) {
@@ -704,10 +704,10 @@ class FranchisorController extends BaseResourceController
 
             // Pagination
             $perPage = $request->get('perPage', 10);
-            $salesAssociates = $query->paginate($perPage);
+            $brokers = $query->paginate($perPage);
 
             // Transform the data to include assignedLeads count
-            $salesAssociates->getCollection()->transform(function ($associate) {
+            $brokers->getCollection()->transform(function ($associate) {
                 $name = $associate->name;
 
                 return [
@@ -720,26 +720,26 @@ class FranchisorController extends BaseResourceController
                     'city' => $associate->city,
                     'assignedLeads' => $associate->leads_count,
                     'avatar' => $associate->avatar,
-                    'avatarText' => $name ? strtoupper(substr($name, 0, 2)) : 'SA',
+                    'avatarText' => $name ? strtoupper(substr($name, 0, 2)) : 'BR',
                 ];
             });
 
             return $this->successResponse([
-                'data' => $salesAssociates->items(),
-                'total' => $salesAssociates->total(),
-                'per_page' => $salesAssociates->perPage(),
-                'current_page' => $salesAssociates->currentPage(),
-                'last_page' => $salesAssociates->lastPage(),
+                'data' => $brokers->items(),
+                'total' => $brokers->total(),
+                'per_page' => $brokers->perPage(),
+                'current_page' => $brokers->currentPage(),
+                'last_page' => $brokers->lastPage(),
             ]);
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to fetch sales associates', $e->getMessage(), 500);
+            return $this->errorResponse('Failed to fetch brokers', $e->getMessage(), 500);
         }
     }
 
     /**
-     * Store a new sales associate
+     * Store a new broker
      */
-    public function salesAssociatesStore(StoreSalesAssociateRequest $request): JsonResponse
+    public function brokersStore(StoreBrokerRequest $request): JsonResponse
     {
         try {
             $user = Auth::user();
@@ -751,37 +751,37 @@ class FranchisorController extends BaseResourceController
 
             $validatedData = $request->validated();
 
-            $validatedData['role'] = 'sales';
+            $validatedData['role'] = 'broker';
             $validatedData['franchise_id'] = $franchise->id;
             $validatedData['password'] = bcrypt($validatedData['password']);
 
-            $salesAssociate = User::create($validatedData);
+            $broker = User::create($validatedData);
 
             // Load the leads count
-            $salesAssociate->loadCount('leads');
+            $broker->loadCount('leads');
 
             return $this->successResponse([
-                'id' => $salesAssociate->id,
-                'name' => $salesAssociate->name,
-                'email' => $salesAssociate->email,
-                'phone' => $salesAssociate->phone,
-                'status' => $salesAssociate->status,
-                'nationality' => $salesAssociate->nationality,
-                'state' => $salesAssociate->state,
-                'city' => $salesAssociate->city,
-                'assignedLeads' => $salesAssociate->leads_count,
-                'avatar' => $salesAssociate->avatar,
-                'avatarText' => strtoupper(substr($salesAssociate->name, 0, 2)),
-            ], 'Sales associate created successfully', 201);
+                'id' => $broker->id,
+                'name' => $broker->name,
+                'email' => $broker->email,
+                'phone' => $broker->phone,
+                'status' => $broker->status,
+                'nationality' => $broker->nationality,
+                'state' => $broker->state,
+                'city' => $broker->city,
+                'assignedLeads' => $broker->leads_count,
+                'avatar' => $broker->avatar,
+                'avatarText' => strtoupper(substr($broker->name, 0, 2)),
+            ], 'Broker created successfully', 201);
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to create sales associate', $e->getMessage(), 500);
+            return $this->errorResponse('Failed to create broker', $e->getMessage(), 500);
         }
     }
 
     /**
-     * Show a specific sales associate
+     * Show a specific broker
      */
-    public function salesAssociatesShow($id): JsonResponse
+    public function brokersShow($id): JsonResponse
     {
         try {
             $user = Auth::user();
@@ -791,7 +791,7 @@ class FranchisorController extends BaseResourceController
                 return $this->notFoundResponse('No franchise found for this user');
             }
 
-            $salesAssociate = User::where('role', 'sales')
+            $broker = User::where('role', 'broker')
                 ->where('franchise_id', $franchise->id)
                 ->where('id', $id)
                 ->withCount('leads')
@@ -800,33 +800,33 @@ class FranchisorController extends BaseResourceController
                 }])
                 ->first();
 
-            if (! $salesAssociate) {
-                return $this->notFoundResponse('Sales associate not found');
+            if (! $broker) {
+                return $this->notFoundResponse('Broker not found');
             }
 
             return $this->successResponse([
-                'id' => $salesAssociate->id,
-                'name' => $salesAssociate->name,
-                'email' => $salesAssociate->email,
-                'phone' => $salesAssociate->phone,
-                'status' => $salesAssociate->status,
-                'nationality' => $salesAssociate->nationality,
-                'state' => $salesAssociate->state,
-                'city' => $salesAssociate->city,
-                'assignedLeads' => $salesAssociate->leads_count,
-                'avatar' => $salesAssociate->avatar,
-                'avatarText' => strtoupper(substr($salesAssociate->name, 0, 2)),
-                'leads' => $salesAssociate->leads,
+                'id' => $broker->id,
+                'name' => $broker->name,
+                'email' => $broker->email,
+                'phone' => $broker->phone,
+                'status' => $broker->status,
+                'nationality' => $broker->nationality,
+                'state' => $broker->state,
+                'city' => $broker->city,
+                'assignedLeads' => $broker->leads_count,
+                'avatar' => $broker->avatar,
+                'avatarText' => strtoupper(substr($broker->name, 0, 2)),
+                'leads' => $broker->leads,
             ]);
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to fetch sales associate', $e->getMessage(), 500);
+            return $this->errorResponse('Failed to fetch broker', $e->getMessage(), 500);
         }
     }
 
     /**
-     * Update a sales associate
+     * Update a broker
      */
-    public function salesAssociatesUpdate(UpdateSalesAssociateRequest $request, $id): JsonResponse
+    public function brokersUpdate(UpdateBrokerRequest $request, $id): JsonResponse
     {
         try {
             $user = Auth::user();
@@ -836,13 +836,13 @@ class FranchisorController extends BaseResourceController
                 return $this->notFoundResponse('No franchise found for this user');
             }
 
-            $salesAssociate = User::where('role', 'sales')
+            $broker = User::where('role', 'broker')
                 ->where('franchise_id', $franchise->id)
                 ->where('id', $id)
                 ->first();
 
-            if (! $salesAssociate) {
-                return $this->notFoundResponse('Sales associate not found');
+            if (! $broker) {
+                return $this->notFoundResponse('Broker not found');
             }
 
             $validatedData = $request->validated();
@@ -851,33 +851,33 @@ class FranchisorController extends BaseResourceController
                 $validatedData['password'] = bcrypt($validatedData['password']);
             }
 
-            $salesAssociate->update($validatedData);
+            $broker->update($validatedData);
 
             // Load the leads count
-            $salesAssociate->loadCount('leads');
+            $broker->loadCount('leads');
 
             return $this->successResponse([
-                'id' => $salesAssociate->id,
-                'name' => $salesAssociate->name,
-                'email' => $salesAssociate->email,
-                'phone' => $salesAssociate->phone,
-                'status' => $salesAssociate->status,
-                'nationality' => $salesAssociate->nationality,
-                'state' => $salesAssociate->state,
-                'city' => $salesAssociate->city,
-                'assignedLeads' => $salesAssociate->leads_count,
-                'avatar' => $salesAssociate->avatar,
-                'avatarText' => strtoupper(substr($salesAssociate->name, 0, 2)),
-            ], 'Sales associate updated successfully');
+                'id' => $broker->id,
+                'name' => $broker->name,
+                'email' => $broker->email,
+                'phone' => $broker->phone,
+                'status' => $broker->status,
+                'nationality' => $broker->nationality,
+                'state' => $broker->state,
+                'city' => $broker->city,
+                'assignedLeads' => $broker->leads_count,
+                'avatar' => $broker->avatar,
+                'avatarText' => strtoupper(substr($broker->name, 0, 2)),
+            ], 'Broker updated successfully');
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to update sales associate', $e->getMessage(), 500);
+            return $this->errorResponse('Failed to update broker', $e->getMessage(), 500);
         }
     }
 
     /**
-     * Delete a sales associate
+     * Delete a broker
      */
-    public function salesAssociatesDestroy($id): JsonResponse
+    public function brokersDestroy($id): JsonResponse
     {
         try {
             $user = Auth::user();
@@ -887,23 +887,23 @@ class FranchisorController extends BaseResourceController
                 return $this->notFoundResponse('No franchise found for this user');
             }
 
-            $salesAssociate = User::where('role', 'sales')
+            $broker = User::where('role', 'broker')
                 ->where('franchise_id', $franchise->id)
                 ->where('id', $id)
                 ->first();
 
-            if (! $salesAssociate) {
-                return $this->notFoundResponse('Sales associate not found');
+            if (! $broker) {
+                return $this->notFoundResponse('Broker not found');
             }
 
-            // Unassign leads before deleting the sales associate
+            // Unassign leads before deleting the broker
             Lead::where('assigned_to', $id)->update(['assigned_to' => null]);
 
-            $salesAssociate->delete();
+            $broker->delete();
 
-            return $this->successResponse(null, 'Sales associate deleted successfully');
+            return $this->successResponse(null, 'Broker deleted successfully');
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to delete sales associate', $e->getMessage(), 500);
+            return $this->errorResponse('Failed to delete broker', $e->getMessage(), 500);
         }
     }
 

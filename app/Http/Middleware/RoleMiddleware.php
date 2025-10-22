@@ -60,7 +60,7 @@ class RoleMiddleware
             'admin' => 4,
             'franchisor' => 3,
             'franchisee' => 2,
-            'sales' => 1
+            'broker' => 1
         ];
 
         $userRoleLevel = $roleHierarchy[$userRole] ?? 0;

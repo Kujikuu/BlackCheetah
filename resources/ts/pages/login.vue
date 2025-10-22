@@ -57,8 +57,8 @@ const login = async () => {
       case 'franchisee':
         router.push('/franchisee/dashboard/sales')
         break
-      case 'sales':
-        router.push('/sales/lead-management')
+      case 'broker':
+        router.push('/brokers/lead-management')
         break
       default:
         router.push('/')

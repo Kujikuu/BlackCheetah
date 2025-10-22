@@ -186,6 +186,6 @@ export type {
 
 export type {
   // Users API
-  SalesAssociate,
+  Broker,
   UpdateUserPayload,
 } from './users'

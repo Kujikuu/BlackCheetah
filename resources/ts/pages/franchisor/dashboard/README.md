@@ -40,7 +40,7 @@ All pages are located in `/pages/franchisor/dashboard/`
 **Features:**
 - 3 Tabs:
   - Franchisee
-  - Sales Associate
+  - Broker
   - Staff
 - Each tab includes:
   - 4 Stat Cards (Total, Completed, In Progress, Due)

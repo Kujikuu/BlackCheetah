@@ -121,9 +121,9 @@ class DashboardController extends BaseResourceController
                 ->with(['assignedTo', 'createdBy'])
                 ->get();
 
-            $salesTasks = Task::where('franchise_id', $franchise->id)
+            $brokerTasks = Task::where('franchise_id', $franchise->id)
                 ->whereHas('assignedTo', function ($q) {
-                    $q->where('role', 'sales');
+                    $q->where('role', 'broker');
                 })
                 ->with(['assignedTo', 'createdBy'])
                 ->get();
@@ -134,14 +134,14 @@ class DashboardController extends BaseResourceController
             // Calculate statistics for each role
             $stats = [
                 'franchisee' => $this->calculateTaskStats($franchiseeTasks),
-                'sales' => $this->calculateTaskStats($salesTasks),
+                'broker' => $this->calculateTaskStats($brokerTasks),
                 'staff' => $this->calculateTaskStats($staffTasks),
             ];
 
             // Transform tasks for frontend
             $tasks = [
                 'franchisee' => $this->transformTasks($franchiseeTasks),
-                'sales' => $this->transformTasks($salesTasks),
+                'broker' => $this->transformTasks($brokerTasks),
                 'staff' => $this->transformTasks($staffTasks),
             ];
 

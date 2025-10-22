@@ -9,11 +9,11 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class SalesTasksTest extends TestCase
+class BrokerTasksTest extends TestCase
 {
     use RefreshDatabase;
 
-    private User $salesUser;
+    private User $brokerUser;
 
     private Franchise $franchise;
 
@@ -33,8 +33,8 @@ class SalesTasksTest extends TestCase
         ]);
 
         // Create sales user
-        $this->salesUser = User::factory()->create([
-            'role' => 'sales',
+        $this->brokerUser = User::factory()->create([
+            'role' => 'broker',
             'email' => 'sales@test.com',
             'franchise_id' => $this->franchise->id,
         ]);
@@ -45,14 +45,14 @@ class SalesTasksTest extends TestCase
         // Create lead for sales tasks
         $lead = Lead::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
+            'assigned_to' => $this->brokerUser->id,
         ]);
 
         // Create sales tasks
         $task1 = Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
-            'created_by' => $this->salesUser->id,
+            'assigned_to' => $this->brokerUser->id,
+            'created_by' => $this->brokerUser->id,
             'lead_id' => $lead->id,
             'type' => 'lead_management',
             'title' => 'Follow up with lead',
@@ -62,15 +62,15 @@ class SalesTasksTest extends TestCase
 
         $task2 = Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
-            'created_by' => $this->salesUser->id,
-            'type' => 'sales',
+            'assigned_to' => $this->brokerUser->id,
+            'created_by' => $this->brokerUser->id,
+            'type' => 'brokerage',
             'title' => 'Prepare presentation',
             'status' => 'in_progress',
             'priority' => 'medium',
         ]);
 
-        $response = $this->actingAs($this->salesUser, 'sanctum')
+        $response = $this->actingAs($this->brokerUser, 'sanctum')
             ->getJson('/api/v1/sales/tasks');
 
         $response->assertStatus(200)
@@ -109,27 +109,27 @@ class SalesTasksTest extends TestCase
         // Create tasks with different statuses
         Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
+            'assigned_to' => $this->brokerUser->id,
             'type' => 'lead_management',
             'status' => 'completed',
         ]);
 
         Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
-            'type' => 'sales',
+            'assigned_to' => $this->brokerUser->id,
+            'type' => 'brokerage',
             'status' => 'in_progress',
         ]);
 
         Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
+            'assigned_to' => $this->brokerUser->id,
             'type' => 'market_research',
             'status' => 'pending',
             'due_date' => now()->subDay(),
         ]);
 
-        $response = $this->actingAs($this->salesUser, 'sanctum')
+        $response = $this->actingAs($this->brokerUser, 'sanctum')
             ->getJson('/api/v1/sales/tasks/statistics');
 
         $response->assertStatus(200)
@@ -157,12 +157,12 @@ class SalesTasksTest extends TestCase
     {
         $task = Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
+            'assigned_to' => $this->brokerUser->id,
             'type' => 'lead_management',
             'status' => 'pending',
         ]);
 
-        $response = $this->actingAs($this->salesUser, 'sanctum')
+        $response = $this->actingAs($this->brokerUser, 'sanctum')
             ->patchJson("/api/v1/sales/tasks/{$task->id}/status", [
                 'status' => 'in_progress',
             ]);
@@ -190,7 +190,7 @@ class SalesTasksTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $response = $this->actingAs($this->salesUser, 'sanctum')
+        $response = $this->actingAs($this->brokerUser, 'sanctum')
             ->patchJson("/api/v1/sales/tasks/{$task->id}/status", [
                 'status' => 'in_progress',
             ]);
@@ -202,7 +202,7 @@ class SalesTasksTest extends TestCase
     {
         Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
+            'assigned_to' => $this->brokerUser->id,
             'type' => 'lead_management',
             'status' => 'completed',
             'title' => 'Completed Task',
@@ -210,13 +210,13 @@ class SalesTasksTest extends TestCase
 
         Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
-            'type' => 'sales',
+            'assigned_to' => $this->brokerUser->id,
+            'type' => 'brokerage',
             'status' => 'pending',
             'title' => 'Pending Task',
         ]);
 
-        $response = $this->actingAs($this->salesUser, 'sanctum')
+        $response = $this->actingAs($this->brokerUser, 'sanctum')
             ->getJson('/api/v1/sales/tasks?status=completed');
 
         $response->assertStatus(200)
@@ -228,7 +228,7 @@ class SalesTasksTest extends TestCase
     {
         Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
+            'assigned_to' => $this->brokerUser->id,
             'type' => 'lead_management',
             'priority' => 'high',
             'title' => 'High Priority Task',
@@ -236,13 +236,13 @@ class SalesTasksTest extends TestCase
 
         Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
-            'type' => 'sales',
+            'assigned_to' => $this->brokerUser->id,
+            'type' => 'brokerage',
             'priority' => 'low',
             'title' => 'Low Priority Task',
         ]);
 
-        $response = $this->actingAs($this->salesUser, 'sanctum')
+        $response = $this->actingAs($this->brokerUser, 'sanctum')
             ->getJson('/api/v1/sales/tasks?priority=high');
 
         $response->assertStatus(200)
@@ -254,19 +254,19 @@ class SalesTasksTest extends TestCase
     {
         Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
+            'assigned_to' => $this->brokerUser->id,
             'type' => 'lead_management',
             'title' => 'Lead Task',
         ]);
 
         Task::factory()->create([
             'franchise_id' => $this->franchise->id,
-            'assigned_to' => $this->salesUser->id,
-            'type' => 'sales',
+            'assigned_to' => $this->brokerUser->id,
+            'type' => 'brokerage',
             'title' => 'Sales Task',
         ]);
 
-        $response = $this->actingAs($this->salesUser, 'sanctum')
+        $response = $this->actingAs($this->brokerUser, 'sanctum')
             ->getJson('/api/v1/sales/tasks?category=Lead Management');
 
         $response->assertStatus(200)

@@ -220,29 +220,29 @@ const saveLead = async () => {
   }
 }
 
-// Sales associates for owner selection
-const salesAssociates = ref<Array<{ title: string; value: string }>>([])
+// Brokers for owner selection
+const brokers = ref<Array<{ title: string; value: string }>>([])
 
 const fetchSalesAssociates = async () => {
   try {
-    const response = await usersApi.getSalesAssociates() as any
+    const response = await usersApi.getBrokers() as any
 
     if (response.success && response.data) {
       // API returns paginated data, handle both array and paginated response
       const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
       
-      salesAssociates.value = associatesArray.map((user: any) => ({
+      brokers.value = associatesArray.map((user: any) => ({
         title: user.name,
         value: user.name,
       }))
     }
   }
   catch (error) {
-    console.error('Error fetching sales associates:', error)
+    console.error('Error fetching brokers:', error)
   }
 }
 
-// Fetch sales associates on mount
+// Fetch brokers on mount
 onMounted(() => {
   fetchSalesAssociates()
 })

@@ -35,8 +35,8 @@ export const setupGuards = (router: Router) => {
           return { name: 'franchisor' }
         if (userRole === 'franchisee')
           return { name: 'franchisee-dashboard-sales' }
-        if (userRole === 'sales')
-          return { name: 'sales-lead-management' }
+        if (userRole === 'broker')
+          return { name: 'broker-lead-management' }
 
         return '/'
       }

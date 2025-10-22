@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
+import type { PeriodFilter } from '@/types/api'
 import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi, franchiseApi } from '@/services/api'
 import ExportRoyaltyDialog from '@/components/dialogs/royalty/ExportRoyaltyDialog.vue'
 import MarkCompletedRoyaltyDialog from '@/components/dialogs/royalty/MarkCompletedRoyaltyDialog.vue'
@@ -13,7 +14,7 @@ const isLoadingStats = ref(false)
 const isCreating = ref(false)
 
 // Reactive data
-const selectedPeriod = ref<'monthly' | 'quarterly' | 'annual' | 'special'>('monthly')
+const selectedPeriod = ref<PeriodFilter>('all')
 const isExportDialogVisible = ref(false)
 const isMarkCompletedModalVisible = ref(false)
 const isViewRoyaltyDialogVisible = ref(false)
@@ -50,9 +51,9 @@ const createRoyaltyData = ref({
 })
 
 // Dropdown options
-const franchises = ref([])
-const units = ref([])
-const franchisees = ref([])
+const franchises = ref<any[]>([])
+const units = ref<any[]>([])
+const franchisees = ref<any[]>([])
 
 // Payment form data
 const paymentData = ref<PaymentData>({
@@ -88,10 +89,10 @@ const upcomingRoyalties = computed(() => {
 
 // Period options
 const periodOptions = [
-  { title: 'Monthly', value: 'monthly' },
-  { title: 'Quarterly', value: 'quarterly' },
-  { title: 'Annual', value: 'annual' },
-  { title: 'Special', value: 'special' },
+  { title: 'All Time', value: 'all' },
+  { title: 'This Year', value: 'yearly' },
+  { title: 'This Month', value: 'monthly' },
+  { title: 'Today', value: 'daily' },
 ]
 
 // Export options
@@ -291,12 +292,25 @@ const fetchFranchises = async () => {
     const response = await franchiseApi.getFranchiseData()
 
     if (response.success && response.data) {
-      // myFranchise returns a single franchise object, so wrap it in an array
-      franchises.value = [response.data]
+      // API returns nested structure with franchise data
+      // Handle both direct data and nested franchise property
+      const franchiseData = (response.data as any).franchise || response.data
+      
+      franchises.value = [{
+        id: franchiseData.id,
+        business_name: franchiseData.legalDetails?.legalEntityName 
+          || franchiseData.franchiseDetails?.franchiseName 
+          || 'Unknown',
+      }]
+      
+      // Auto-select the franchise if there's only one
+      if (franchises.value.length === 1) {
+        createRoyaltyData.value.franchise_id = franchises.value[0].id
+      }
     }
   }
   catch (error) {
-
+    console.error('Error fetching franchises:', error)
   }
 }
 
@@ -306,11 +320,15 @@ const fetchUnits = async () => {
 
     if (response.success && response.data) {
       // myUnits returns paginated data, extract the actual units from data.data
-      units.value = response.data.data || []
+      const unitData = response.data.data || []
+      units.value = unitData.map((unit: any) => ({
+        id: unit.id,
+        unit_name: unit.unit_name || unit.name || `Unit ${unit.id}`,
+      }))
     }
   }
   catch (error) {
-
+    console.error('Error fetching units:', error)
   }
 }
 
@@ -320,11 +338,15 @@ const fetchFranchisees = async () => {
 
     if (response.success && response.data) {
       // myFranchisees returns paginated data, extract the actual franchisees from data.data
-      franchisees.value = response.data.data || []
+      const franchiseeData = response.data.data || []
+      franchisees.value = franchiseeData.map((franchisee: any) => ({
+        id: franchisee.id,
+        name: franchisee.name || franchisee.fullName || `Franchisee ${franchisee.id}`,
+      }))
     }
   }
   catch (error) {
-
+    console.error('Error fetching franchisees:', error)
   }
 }
 
@@ -435,6 +457,12 @@ const openCreateRoyaltyModal = () => {
   isCreateRoyaltyModalVisible.value = true
 }
 
+// Watch for period changes
+watch(selectedPeriod, () => {
+  fetchRoyalties()
+  fetchStatistics()
+})
+
 // Lifecycle hooks
 onMounted(() => {
   fetchRoyalties()
@@ -446,6 +474,12 @@ onMounted(() => {
 
 // Validation errors
 const validationErrors = ref<Record<string, string[]>>({})
+
+// Royalty type options for create form
+const royaltyTypeOptions = [
+  { title: 'Monthly', value: 'monthly' },
+  { title: 'Quarterly', value: 'quarterly' },
+]
 
 // Validation rules
 const validationRules = {
@@ -660,7 +694,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
                 variant="tonal"
                 size="56"
               >
-                <SaudiRiyal size="28" />
+                <SaudiRiyal :size="28" />
               </VAvatar>
             </div>
           </VCardText>
@@ -872,7 +906,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
                   variant="outlined"
                   density="compact"
                   required
-                  clearable
+                  :return-object="false"
                   :rules="validationRules.franchise_id"
                   :error-messages="validationErrors.franchise_id"
                 />
@@ -891,6 +925,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
                   label="Unit"
                   variant="outlined"
                   density="compact"
+                  :return-object="false"
                   clearable
                 />
               </VCol>
@@ -909,7 +944,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
                   variant="outlined"
                   density="compact"
                   required
-                  clearable
+                  :return-object="false"
                   :rules="validationRules.franchisee_id"
                   :error-messages="validationErrors.franchisee_id"
                 />
@@ -922,7 +957,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
               >
                 <VSelect
                   v-model="createRoyaltyData.type"
-                  :items="periodOptions"
+                  :items="royaltyTypeOptions"
                   item-title="title"
                   item-value="value"
                   label="Royalty Type *"

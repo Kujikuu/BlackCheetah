@@ -76,11 +76,11 @@ class MinimalDataSeeder extends Seeder
             'address' => 'King Fahd Road, Al Olaya District',
         ]);
 
-        $sales = User::create([
-            'name' => 'Sales User',
-            'email' => 'sales@cheetah.com',
+        $broker = User::create([
+            'name' => 'Broker User',
+            'email' => 'broker@cheetah.com',
             'password' => Hash::make('password'),
-            'role' => 'sales',
+            'role' => 'broker',
             'phone' => '+966500000004',
             'status' => 'active',
             'email_verified_at' => now(),
@@ -92,11 +92,11 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created 4 users');
 
-        // Create 5 Sales Associates related to franchisor
-        $this->command->info('Creating sales associates...');
+        // Create 5 Brokers related to franchisor
+        $this->command->info('Creating brokers...');
 
-        $salesAssociates = [];
-        $salesAssociateData = [
+        $brokers = [];
+        $brokerData = [
             ['name' => 'Ahmed Al-Salem', 'email' => 'ahmed.salem@cheetah.com'],
             ['name' => 'Fatima Al-Khalid', 'email' => 'fatima.khalid@cheetah.com'],
             ['name' => 'Mohammed Al-Rashid', 'email' => 'mohammed.rashid@cheetah.com'],
@@ -104,12 +104,12 @@ class MinimalDataSeeder extends Seeder
             ['name' => 'Omar Al-Mansour', 'email' => 'omar.mansour@cheetah.com'],
         ];
 
-        foreach ($salesAssociateData as $index => $data) {
-            $salesAssociates[] = User::create([
+        foreach ($brokerData as $index => $data) {
+            $brokers[] = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make('password'),
-                'role' => 'sales',
+                'role' => 'broker',
                 'phone' => '+96650000' . str_pad($index + 5, 4, '0', STR_PAD_LEFT),
                 'status' => 'active',
                 'email_verified_at' => now(),
@@ -120,7 +120,7 @@ class MinimalDataSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('✅ Created 5 sales associates');
+        $this->command->info('✅ Created 5 brokers');
 
         // 2. Create Franchise
         $this->command->info('Creating franchise...');
@@ -151,17 +151,17 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created franchise');
 
-        // Link sales associates and franchisee to franchise
+        // Link brokers and franchisee to franchise
         $this->command->info('Linking users to franchise...');
 
-        foreach ($salesAssociates as $associate) {
-            $associate->update(['franchise_id' => $franchise->id]);
+        foreach ($brokers as $broker) {
+            $broker->update(['franchise_id' => $franchise->id]);
         }
 
         $franchisee->update(['franchise_id' => $franchise->id]);
-        $sales->update(['franchise_id' => $franchise->id]);
+        $broker->update(['franchise_id' => $franchise->id]);
 
-        $this->command->info('✅ Linked sales associates and franchisee to franchise');
+        $this->command->info('✅ Linked brokers and franchisee to franchise');
 
         // 3. Create 1 Unit linked to franchisee
         $this->command->info('Creating unit...');
@@ -334,10 +334,10 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created 5 royalties');
 
-        // 9. Create 5 Technical Requests (for franchisor, franchisee, sales - not admin)
+        // 9. Create 5 Technical Requests (for franchisor, franchisee, broker - not admin)
         $this->command->info('Creating technical requests...');
 
-        $requesters = [$franchisor, $franchisee, $sales, $franchisee, $sales];
+        $requesters = [$franchisor, $franchisee, $broker, $franchisee, $broker];
         $issues = [
             'POS System not working',
             'Internet connection issues',
@@ -359,7 +359,7 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created ' . count($requesters) . ' technical requests');
 
-        // Create 7 Leads (2 for main sales user, 5 for sales associates)
+        // Create 7 Leads (2 for main broker user, 5 for brokers)
         $this->command->info('Creating leads...');
         $leadNames = [
             ['Ahmed', 'Al-Rashid'],
@@ -372,11 +372,11 @@ class MinimalDataSeeder extends Seeder
         ];
 
         foreach ($leadNames as $i => $name) {
-            // Assign first 2 leads to main sales user, rest to sales associates
+            // Assign first 2 leads to main broker user, rest to brokers
             if ($i < 2) {
-                $assignedSales = $sales;
+                $assignedBroker = $broker;
             } else {
-                $assignedSales = $salesAssociates[($i - 2) % count($salesAssociates)];
+                $assignedBroker = $brokers[($i - 2) % count($brokers)];
             }
 
             // Create leads with varied timestamps (from 1 hour to 30 days ago)
@@ -385,7 +385,7 @@ class MinimalDataSeeder extends Seeder
 
             Lead::create([
                 'franchise_id' => $franchise->id,
-                'assigned_to' => $assignedSales->id,
+                'assigned_to' => $assignedBroker->id,
                 'first_name' => $name[0],
                 'last_name' => $name[1],
                 'email' => strtolower($name[0]) . '.' . strtolower($name[1]) . '@example.com',
@@ -402,7 +402,7 @@ class MinimalDataSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('✅ Created 7 leads (2 for main sales user, 5 for sales associates)');
+        $this->command->info('✅ Created 7 leads (2 for main broker user, 5 for brokers)');
 
         // Create 5 Documents
         $this->command->info('Creating documents...');
@@ -436,9 +436,9 @@ class MinimalDataSeeder extends Seeder
         $staffData = [
             ['Khalid Ahmed', 'khalid@example.com', 'Store Manager', 'manager'],
             ['Layla Mohammed', 'layla@example.com', 'Assistant Manager', 'assistant_manager'],
-            ['Yousef Ali', 'yousef@example.com', 'Sales Associate', 'sales_associate'],
+            ['Yousef Ali', 'yousef@example.com', 'Broker', 'broker'],
             ['Nora Hassan', 'nora@example.com', 'Cashier', 'cashier'],
-            ['Hassan Omar', 'hassan@example.com', 'Inventory Clerk', 'sales_associate'],
+            ['Hassan Omar', 'hassan@example.com', 'Inventory Clerk', 'broker'],
         ];
 
         foreach ($staffData as $index => $data) {
@@ -497,13 +497,13 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created 5 reviews');
 
-        // Create 5 Tasks (franchisor assigns to sales and franchisee)
+        // Create 5 Tasks (franchisor assigns to broker and franchisee)
         $this->command->info('Creating tasks...');
         $taskData = [
-            ['Complete Training Module 1', 'Complete the initial training module', $sales->id],
+            ['Complete Training Module 1', 'Complete the initial training module', $broker->id],
             ['Submit Monthly Report', 'Submit the monthly sales report', $franchisee->id],
             ['Schedule Inspection', 'Schedule the quarterly inspection', $franchisee->id],
-            ['Update Marketing Materials', 'Update all marketing materials', $sales->id],
+            ['Update Marketing Materials', 'Update all marketing materials', $broker->id],
             ['Review Contract Terms', 'Review and sign contract amendments', $franchisee->id],
         ];
 
@@ -597,20 +597,20 @@ class MinimalDataSeeder extends Seeder
             ]);
         }
 
-        // Sales notifications (4 notifications)
-        $salesNotifications = [
+        // Broker notifications (4 notifications)
+        $brokerNotifications = [
             ['type' => 'App\\Notifications\\TaskNotification', 'title' => 'New Task Assigned', 'message' => 'You have a new task to follow up with leads.'],
             ['type' => 'App\\Notifications\\LeadNotification', 'title' => 'New Lead Assigned', 'message' => 'You have been assigned 5 new leads to follow up.'],
             ['type' => 'App\\Notifications\\TrainingNotification', 'title' => 'Training Required', 'message' => 'Please complete Training Module 1 by the end of this week.'],
             ['type' => 'App\\Notifications\\TechnicalRequestNotification', 'title' => 'Technical Issue Resolved', 'message' => 'Your technical request has been resolved.'],
         ];
 
-        foreach ($salesNotifications as $notification) {
+        foreach ($brokerNotifications as $notification) {
             Notification::create([
                 'id' => \Illuminate\Support\Str::uuid(),
                 'type' => $notification['type'],
                 'notifiable_type' => 'App\\Models\\User',
-                'notifiable_id' => $sales->id,
+                'notifiable_id' => $broker->id,
                 'data' => json_encode([
                     'title' => $notification['title'],
                     'message' => $notification['message'],
@@ -619,16 +619,16 @@ class MinimalDataSeeder extends Seeder
             ]);
         }
 
-        $totalNotifications = count($adminNotifications) + count($franchisorNotifications) + count($franchiseeNotifications) + count($salesNotifications);
-        $this->command->info('✅ Created ' . $totalNotifications . ' notifications (Admin: ' . count($adminNotifications) . ', Franchisor: ' . count($franchisorNotifications) . ', Franchisee: ' . count($franchiseeNotifications) . ', Sales: ' . count($salesNotifications) . ')');
+        $totalNotifications = count($adminNotifications) + count($franchisorNotifications) + count($franchiseeNotifications) + count($brokerNotifications);
+        $this->command->info('✅ Created ' . $totalNotifications . ' notifications (Admin: ' . count($adminNotifications) . ', Franchisor: ' . count($franchisorNotifications) . ', Franchisee: ' . count($franchiseeNotifications) . ', Broker: ' . count($brokerNotifications) . ')');
 
         // Summary
         $this->command->info('');
         $this->command->info('🎉 Minimal data seeding completed successfully!');
         $this->command->info('');
         $this->command->info('📊 Summary:');
-        $this->command->info('  - 4 Users (admin, franchisor, franchisee, sales)');
-        $this->command->info('  - 5 Sales Associates (related to franchisor)');
+        $this->command->info('  - 4 Users (admin, franchisor, franchisee, broker)');
+        $this->command->info('  - 5 Brokers (related to franchisor)');
         $this->command->info('  - 1 Franchise');
         $this->command->info('  - 1 Unit');
         $this->command->info('  - 5 Products');
@@ -637,20 +637,20 @@ class MinimalDataSeeder extends Seeder
         $this->command->info('  - 5 Expenses');
         $this->command->info('  - 5 Royalties');
         $this->command->info('  - 5 Technical Requests');
-        $this->command->info('  - 7 Leads (2 for sales user, 5 for sales associates)');
+        $this->command->info('  - 7 Leads (2 for broker user, 5 for brokers)');
         $this->command->info('  - 5 Documents');
         $this->command->info('  - 5 Staff');
         $this->command->info('  - 5 Customer Reviews');
         $this->command->info('  - 5 Tasks');
-        $this->command->info('  - 16 Notifications (Admin: 3, Franchisor: 4, Franchisee: 5, Sales: 4)');
+        $this->command->info('  - 16 Notifications (Admin: 3, Franchisor: 4, Franchisee: 5, Broker: 4)');
         $this->command->info('');
         $this->command->info('🔑 Login Credentials:');
         $this->command->info('  Admin:      admin@cheetah.com / password');
         $this->command->info('  Franchisor: franchisor@cheetah.com / password');
         $this->command->info('  Franchisee: franchisee@cheetah.com / password');
-        $this->command->info('  Sales:      sales@cheetah.com / password');
+        $this->command->info('  Broker:     broker@cheetah.com / password');
         $this->command->info('');
-        $this->command->info('🔑 Sales Associates Credentials:');
+        $this->command->info('🔑 Brokers Credentials:');
         $this->command->info('  Ahmed:      ahmed.salem@cheetah.com / password');
         $this->command->info('  Fatima:     fatima.khalid@cheetah.com / password');
         $this->command->info('  Mohammed:   mohammed.rashid@cheetah.com / password');

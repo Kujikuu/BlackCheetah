@@ -53,7 +53,7 @@ export const prefixWithPlus = (value: number) => value > 0 ? `+${value}` : value
  * @param {boolean} showDecimals - Whether to show decimal places (default: true)
  * @returns {string} Formatted currency string
  */
-export const formatCurrency = (value: number, currency: string = 'SAR', showDecimals: boolean = true) => {
+export const formatCurrency = (value: number, currency: string = 'SAR', showDecimals: boolean = false) => {
   if (typeof value !== 'number' || Number.isNaN(value))
     return `0 ${currency}`
 

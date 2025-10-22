@@ -337,7 +337,7 @@ export class LeadApi {
   }
 
   /**
-   * Assign lead to sales associate
+   * Assign lead to broker
    */
   async assignLead(leadId: number, assignedTo: number): Promise<ApiResponse> {
     return await $api<ApiResponse>(`/v1/franchisor/leads/${leadId}/assign`, {

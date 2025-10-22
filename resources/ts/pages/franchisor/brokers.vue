@@ -15,7 +15,7 @@ interface Lead {
   priority: string
 }
 
-interface SalesAssociate {
+interface Broker {
   id: number | null
   name: string
   email: string
@@ -31,8 +31,8 @@ interface SalesAssociate {
   password?: string // For creating new associates
 }
 
-interface SalesAssociatesResponse {
-  associates: SalesAssociate[]
+interface BrokersResponse {
+  associates: Broker[]
   total: number
 }
 
@@ -62,7 +62,7 @@ const updateOptions = (options: any) => {
 
 // Headers
 const headers = [
-  { title: 'Sales Associate', key: 'name' },
+  { title: 'Broker', key: 'name' },
   { title: 'Email', key: 'email' },
   { title: 'Phone', key: 'phone' },
   { title: 'Status', key: 'status' },
@@ -71,7 +71,7 @@ const headers = [
 ]
 
 // API data
-const salesAssociatesData = ref<SalesAssociatesResponse>({
+const salesAssociatesData = ref<BrokersResponse>({
   associates: [],
   total: 0,
 })
@@ -108,7 +108,7 @@ const fetchSalesAssociates = async () => {
   try {
     isLoading.value = true
 
-    const response = await usersApi.getSalesAssociatesWithFilters({
+    const response = await usersApi.getBrokersWithFilters({
       page: page.value,
       per_page: itemsPerPage.value,
       search: searchQuery.value || undefined,
@@ -134,7 +134,7 @@ const fetchSalesAssociates = async () => {
     }
   }
   catch (error) {
-    console.error('Error fetching sales associates:', error)
+    console.error('Error fetching brokers:', error)
     salesAssociatesData.value = {
       associates: [],
       total: 0,
@@ -157,18 +157,6 @@ const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCoun
 
 // Get Saudi provinces and cities
 const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
-
-// Available cities based on selected province
-const availableCities = computed(() => {
-  if (!selectedAssociate.value) return []
-  return getCitiesForProvince(selectedAssociate.value.state || '')
-})
-
-// Watch province changes to clear city
-watch(() => selectedAssociate.value?.state, () => {
-  if (selectedAssociate.value)
-    selectedAssociate.value.city = ''
-})
 
 const resolveStatusVariant = (stat: string) => {
   const statLowerCase = stat.toLowerCase()
@@ -196,7 +184,7 @@ const deleteAssociate = async () => {
   try {
     isSubmitting.value = true
 
-    const response = await usersApi.deleteSalesAssociate(associateToDelete.value)
+    const response = await usersApi.deleteBroker(associateToDelete.value)
 
     if (response.success) {
       // Remove from local data
@@ -232,7 +220,19 @@ const deleteAssociate = async () => {
 const isViewAssociateModalVisible = ref(false)
 const isEditAssociateModalVisible = ref(false)
 const isAddAssociateModalVisible = ref(false)
-const selectedAssociate = ref<SalesAssociate | null>(null)
+const selectedAssociate = ref<Broker | null>(null)
+
+// Available cities based on selected province
+const availableCities = computed(() => {
+  if (!selectedAssociate.value) return []
+  return getCitiesForProvince(selectedAssociate.value.state || '')
+})
+
+// Watch province changes to clear city
+watch(() => selectedAssociate.value?.state, () => {
+  if (selectedAssociate.value)
+    selectedAssociate.value.city = ''
+})
 
 // 👉 View associate
 const viewAssociate = async (id: number | null) => {
@@ -244,7 +244,7 @@ const viewAssociate = async (id: number | null) => {
       isLoading.value = true
 
       // Fetch detailed associate data including leads
-      const response = await usersApi.getSalesAssociateDetails(associate.id)
+      const response = await usersApi.getBrokerDetails(associate.id)
 
       if (response.success) {
         selectedAssociate.value = response.data
@@ -275,7 +275,7 @@ const editAssociate = (id: number | null) => {
   }
 }
 
-// 👉 Add Sales Associate
+// 👉 Add Broker
 const addSalesAssociate = () => {
   selectedAssociate.value = {
     id: null,
@@ -326,8 +326,8 @@ const saveAssociate = async () => {
       formData.password = selectedAssociate.value.password
 
     const response = isEditing
-      ? await usersApi.updateSalesAssociate(selectedAssociate.value.id!, formData)
-      : await usersApi.createSalesAssociate(formData)
+      ? await usersApi.updateBroker(selectedAssociate.value.id!, formData)
+      : await usersApi.createBroker(formData)
 
     if (response.success) {
       // Reset form validation first
@@ -415,7 +415,7 @@ const bulkDelete = async () => {
     // Delete each associate sequentially
     for (const associateId of selectedRows.value) {
       if (associateId !== null) {
-        await usersApi.deleteSalesAssociate(associateId)
+        await usersApi.deleteBroker(associateId)
       }
     }
 
@@ -513,7 +513,7 @@ watch([searchQuery, selectedStatus], () => {
           <div style="inline-size: 15.625rem;">
             <AppTextField
               v-model="searchQuery"
-              placeholder="Search Sales Associate"
+              placeholder="Search Broker"
             />
           </div>
 
@@ -550,7 +550,7 @@ watch([searchQuery, selectedStatus], () => {
             prepend-icon="tabler-plus"
             @click="addSalesAssociate"
           >
-            Add Sales Associate
+            Add Broker
           </VBtn>
         </div>
       </VCardText>
@@ -570,7 +570,7 @@ watch([searchQuery, selectedStatus], () => {
         show-select
         @update:options="updateOptions"
       >
-        <!-- Sales Associate -->
+        <!-- Broker -->
         <template #item.name="{ item }">
           <div class="d-flex align-center gap-x-4">
             <VAvatar
@@ -678,7 +678,7 @@ watch([searchQuery, selectedStatus], () => {
       max-width="600"
     >
       <DialogCloseBtn @click="isViewAssociateModalVisible = false" />
-      <VCard v-if="selectedAssociate" title="Sales Associate Details">
+      <VCard v-if="selectedAssociate" title="Broker Details">
         <VCardText>
           <VRow>
             <VCol cols="12">
@@ -865,7 +865,7 @@ watch([searchQuery, selectedStatus], () => {
       @update:model-value="val => { if (!val) { isAddAssociateModalVisible = false; isEditAssociateModalVisible = false } }"
     >
       <DialogCloseBtn @click="isAddAssociateModalVisible = false; isEditAssociateModalVisible = false" />
-      <VCard v-if="selectedAssociate" :title="selectedAssociate.id === null ? 'Add New' : 'Edit' + ' Sales Associate'">
+      <VCard v-if="selectedAssociate" :title="selectedAssociate.id === null ? 'Add New Broker' : 'Edit Broker'">
         <VCardText>
           <VForm
             ref="associateForm"
@@ -1024,8 +1024,8 @@ watch([searchQuery, selectedStatus], () => {
     <!-- 👉 Delete Confirmation Dialog -->
     <ConfirmDeleteDialog
       v-model:is-dialog-visible="isDeleteDialogVisible"
-      title="Confirm Delete Sales Associate"
-      message="Are you sure you want to delete this sales associate? This action cannot be undone."
+      title="Confirm Delete Broker"
+      message="Are you sure you want to delete this broker? This action cannot be undone."
       @confirm="onDeleteConfirm"
     />
   </section>

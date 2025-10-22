@@ -100,8 +100,8 @@ const register = async () => {
       case 'franchisee':
         router.push('/franchisee/dashboard/sales')
         break
-      case 'sales':
-        router.push('/sales/lead-management')
+      case 'broker':
+        router.push('/brokers/lead-management')
         break
       default:
         router.push('/')
@@ -211,7 +211,7 @@ const register = async () => {
                 <VCol cols="12">
                 <AppSelect
                 v-model="form.role"
-                :items="['franchisor', 'franchisee', 'sales']"
+                :items="['franchisor', 'franchisee', 'broker']"
                 label="Role"
                 :error-messages="errorMessages?.role"
                 />

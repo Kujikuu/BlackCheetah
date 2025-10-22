@@ -10,7 +10,7 @@ export interface TaskUser {
 
 export const useTaskUsers = () => {
   const franchisees = ref<TaskUser[]>([])
-  const salesUsers = ref<TaskUser[]>([])
+  const brokers = ref<TaskUser[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -49,35 +49,35 @@ export const useTaskUsers = () => {
   }
 
   /**
-   * Fetch sales users for task assignment
+   * Fetch broker users for task assignment
    */
-  const fetchSalesUsers = async () => {
+  const fetchBrokers = async () => {
     try {
       loading.value = true
       error.value = null
 
-      const response = await usersApi.getSalesAssociates()
+      const response = await usersApi.getBrokers()
 
       if (response.success && response.data) {
         // API returns paginated data, handle both array and paginated response
         const usersArray = Array.isArray(response.data) ? response.data : response.data.data || []
         
-        salesUsers.value = usersArray.map((user: any) => ({
+        brokers.value = usersArray.map((user: any) => ({
           id: user.id,
           name: user.name,
           email: user.email,
-          role: 'sales',
+          role: 'broker',
           status: user.status,
         }))
       }
       else {
-        salesUsers.value = []
+        brokers.value = []
       }
     }
     catch (err: any) {
-      console.error('Failed to fetch sales users:', err)
-      error.value = err?.data?.message || 'Failed to fetch sales users'
-      salesUsers.value = []
+      console.error('Failed to fetch brokers:', err)
+      error.value = err?.data?.message || 'Failed to fetch brokers'
+      brokers.value = []
     }
     finally {
       loading.value = false
@@ -87,8 +87,8 @@ export const useTaskUsers = () => {
   /**
    * Get users formatted for select component
    */
-  const getUsersForSelect = (userType: 'franchisee' | 'sales') => {
-    const users = userType === 'franchisee' ? franchisees.value : salesUsers.value
+  const getUsersForSelect = (userType: 'franchisee' | 'broker') => {
+    const users = userType === 'franchisee' ? franchisees.value : brokers.value
 
     return users
       .filter(user => user.status === 'active') // Only show active users
@@ -102,8 +102,8 @@ export const useTaskUsers = () => {
   /**
    * Get user name by ID
    */
-  const getUserNameById = (userId: number, userType: 'franchisee' | 'sales') => {
-    const users = userType === 'franchisee' ? franchisees.value : salesUsers.value
+  const getUserNameById = (userId: number, userType: 'franchisee' | 'broker') => {
+    const users = userType === 'franchisee' ? franchisees.value : brokers.value
     const user = users.find(u => u.id === userId)
 
     return user ? user.name : 'Unknown User'
@@ -112,21 +112,21 @@ export const useTaskUsers = () => {
   /**
    * Initialize data based on user type
    */
-  const initializeUsers = async (userType: 'franchisee' | 'sales' | 'both' = 'both') => {
+  const initializeUsers = async (userType: 'franchisee' | 'broker' | 'both' = 'both') => {
     if (userType === 'franchisee' || userType === 'both')
       await fetchFranchisees()
 
-    if (userType === 'sales' || userType === 'both')
-      await fetchSalesUsers()
+    if (userType === 'broker' || userType === 'both')
+      await fetchBrokers()
   }
 
   return {
     franchisees: readonly(franchisees),
-    salesUsers: readonly(salesUsers),
+    brokers: readonly(brokers),
     loading: readonly(loading),
     error: readonly(error),
     fetchFranchisees,
-    fetchSalesUsers,
+    fetchBrokers,
     getUsersForSelect,
     getUserNameById,
     initializeUsers,

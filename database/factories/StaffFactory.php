@@ -19,7 +19,7 @@ class StaffFactory extends Factory
         $jobTitles = [
             'Store Manager',
             'Assistant Manager',
-            'Sales Associate',
+            'Broker',
             'Cashier',
             'Barista',
             'Cook',
@@ -31,7 +31,7 @@ class StaffFactory extends Factory
 
         $departments = [
             'Operations',
-            'Sales',
+            'Brokerage',
             'Customer Service',
             'Food & Beverage',
             'Maintenance',
@@ -41,7 +41,7 @@ class StaffFactory extends Factory
 
         $skills = [
             'Customer Service',
-            'Sales',
+            'Business Development',
             'Cash Handling',
             'Food Safety',
             'Coffee Making',

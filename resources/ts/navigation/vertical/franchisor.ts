@@ -47,8 +47,8 @@ export default [
     ],
   },
   {
-    title: 'Sales Associates',
-    to: 'franchisor-sales-associates',
+    title: 'Brokers',
+    to: 'franchisor-brokers',
     icon: { icon: 'tabler-user-star' },
     action: 'manage',
     subject: 'User',

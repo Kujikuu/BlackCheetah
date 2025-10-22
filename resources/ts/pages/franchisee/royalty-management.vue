@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
+import type { PeriodFilter } from '@/types/api'
 import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api'
 import MarkCompletedRoyaltyDialog from '@/components/dialogs/royalty/MarkCompletedRoyaltyDialog.vue'
 import ViewRoyaltyDetailsDialog from '@/components/dialogs/royalty/ViewRoyaltyDetailsDialog.vue'
@@ -11,7 +12,7 @@ const isLoading = ref(false)
 const isLoadingStats = ref(false)
 
 // Reactive data
-const selectedPeriod = ref('monthly')
+const selectedPeriod = ref<PeriodFilter>('all')
 const isExportDialogVisible = ref(false)
 const isMarkCompletedModalVisible = ref(false)
 const isViewRoyaltyDialogVisible = ref(false)
@@ -47,9 +48,10 @@ const upcomingRoyalties = computed(() => statistics.value.upcoming_royalties)
 
 // Period options
 const periodOptions = [
-  { title: 'Daily', value: 'daily' },
-  { title: 'Monthly', value: 'monthly' },
-  { title: 'Yearly', value: 'yearly' },
+  { title: 'All Time', value: 'all' },
+  { title: 'This Year', value: 'yearly' },
+  { title: 'This Month', value: 'monthly' },
+  { title: 'Today', value: 'daily' },
 ]
 
 // Export options
@@ -236,6 +238,12 @@ const formatDate = (dateString: string) => {
   })
 }
 
+// Watch for period changes
+watch(selectedPeriod, () => {
+  fetchRoyalties()
+  fetchStatistics()
+})
+
 // Lifecycle hooks
 onMounted(() => {
   fetchRoyalties()
@@ -293,7 +301,7 @@ onMounted(() => {
                 </h4>
               </div>
               <VAvatar color="success" variant="tonal" size="56">
-                <SaudiRiyal size="28" />
+                <SaudiRiyal :size="28" />
               </VAvatar>
             </div>
           </VCardText>

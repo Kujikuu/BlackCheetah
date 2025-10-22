@@ -521,7 +521,7 @@ const navigateToAddLead = () => {
             </VAvatar>
             <div class="d-flex flex-column">
               <RouterLink
-                :to="{ name: 'sales-leads-id', params: { id: item.id } }"
+                :to="{ name: 'broker-leads-id', params: { id: item.id } }"
                 class="text-link"
               >
                 {{ item.firstName }} {{ item.lastName }}

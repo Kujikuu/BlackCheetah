@@ -17,7 +17,7 @@ export interface User {
   location?: string
 }
 
-export interface SalesAssociate {
+export interface Broker {
   id: number
   name: string
   email: string
@@ -59,10 +59,10 @@ export class UsersApi {
   }
 
   /**
-   * Get sales associates list for franchisor
+   * Get brokers list for franchisor
    */
-  async getSalesAssociates(): Promise<ApiResponse<SalesAssociate[]>> {
-    return await $api('/v1/franchisor/sales-associates')
+  async getBrokers(): Promise<ApiResponse<Broker[]>> {
+    return await $api('/v1/franchisor/brokers')
   }
 
   /**
@@ -122,9 +122,9 @@ export class UsersApi {
   }
 
   /**
-   * Get sales associates with filters (for franchisor)
+   * Get brokers with filters (for franchisor)
    */
-  async getSalesAssociatesWithFilters(filters: { 
+  async getBrokersWithFilters(filters: { 
     search?: string; 
     status?: string; 
     order_by?: string; 
@@ -140,40 +140,40 @@ export class UsersApi {
     if (filters.page) params.append('page', filters.page.toString())
     if (filters.per_page) params.append('per_page', filters.per_page.toString())
 
-    return await $api(`/v1/franchisor/sales-associates?${params.toString()}`)
+    return await $api(`/v1/franchisor/brokers?${params.toString()}`)
   }
 
   /**
-   * Delete sales associate
+   * Delete broker
    */
-  async deleteSalesAssociate(associateId: number): Promise<ApiResponse<null>> {
-    return await $api(`/v1/franchisor/sales-associates/${associateId}`, {
+  async deleteBroker(brokerId: number): Promise<ApiResponse<null>> {
+    return await $api(`/v1/franchisor/brokers/${brokerId}`, {
       method: 'DELETE',
     })
   }
 
   /**
-   * Get detailed sales associate info
+   * Get detailed broker info
    */
-  async getSalesAssociateDetails(associateId: number): Promise<ApiResponse<any>> {
-    return await $api(`/v1/franchisor/sales-associates/${associateId}`)
+  async getBrokerDetails(brokerId: number): Promise<ApiResponse<any>> {
+    return await $api(`/v1/franchisor/brokers/${brokerId}`)
   }
 
   /**
-   * Create new sales associate
+   * Create new broker
    */
-  async createSalesAssociate(payload: any): Promise<ApiResponse<any>> {
-    return await $api('/v1/franchisor/sales-associates', {
+  async createBroker(payload: any): Promise<ApiResponse<any>> {
+    return await $api('/v1/franchisor/brokers', {
       method: 'POST',
       body: payload,
     })
   }
 
   /**
-   * Update sales associate
+   * Update broker
    */
-  async updateSalesAssociate(associateId: number, payload: any): Promise<ApiResponse<any>> {
-    return await $api(`/v1/franchisor/sales-associates/${associateId}`, {
+  async updateBroker(brokerId: number, payload: any): Promise<ApiResponse<any>> {
+    return await $api(`/v1/franchisor/brokers/${brokerId}`, {
       method: 'PUT',
       body: payload,
     })
