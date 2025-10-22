@@ -114,9 +114,9 @@ export class AdminApi {
   }
 
   /**
-   * Get sales users list
+   * Get brokers list
    */
-  async getSalesUsers(): Promise<ApiResponse<User[] | PaginatedResponse<User>>> {
+  async getBrokers(): Promise<ApiResponse<User[] | PaginatedResponse<User>>> {
     return await $api(`${this.baseUrl}/users/brokers`)
   }
 
@@ -176,7 +176,7 @@ export class AdminApi {
   /**
    * Get broker users statistics
    */
-  async getSalesUsersStats(): Promise<ApiResponse<any>> {
+  async getBrokersStats(): Promise<ApiResponse<any>> {
     return await $api(`${this.baseUrl}/users/brokers/stats`)
   }
 

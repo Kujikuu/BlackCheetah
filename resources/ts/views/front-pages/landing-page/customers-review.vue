@@ -226,10 +226,9 @@ const slide = (dir: string) => {
         </VRow>
       </VContainer>
 
-      <VDivider class="w-100 swiper-divider" />
+      <!-- <VDivider class="w-100 swiper-divider" /> -->
 
-      <VContainer>
-        <!-- 👉 Brand-logo Swiper  -->
+      <!-- <VContainer>
         <div class="swiper-brands-carousel">
           <swiper-container slides-per-view="2" :space-between="10" events-prefix="swiper-" :autoplay="{
             delay: 3000,
@@ -248,7 +247,7 @@ const slide = (dir: string) => {
             </swiper-slide>
           </swiper-container>
         </div>
-      </VContainer>
+      </VContainer> -->
     </div>
   </div>
 </template>
