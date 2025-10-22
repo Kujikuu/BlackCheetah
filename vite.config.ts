@@ -10,7 +10,6 @@ import svgLoader from 'vite-svg-loader'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // base: '/',
   plugins: [
     vue({
       template: {
@@ -78,7 +77,7 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 5000,
-    assetsDir: 'build/assets',
+    assetsDir: 'assets',
   },
   optimizeDeps: {
     exclude: ['vuetify'],
