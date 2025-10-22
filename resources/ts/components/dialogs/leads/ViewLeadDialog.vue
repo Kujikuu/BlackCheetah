@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
-interface Lead {
-  id: number
-  name: string
-  email: string
-  phone: string
-  source: string
-  status: string
-  createdDate: string
-}
+import type { Lead } from '@/services/api'
 
 interface Props {
   isDialogVisible: boolean
-  selectedLead: Lead | null
+  lead: Lead | null
 }
 
 interface Emits {
@@ -31,19 +21,41 @@ const dialogValue = computed({
 
 const resolveStatusVariant = (stat: string) => {
   const statLowerCase = stat.toLowerCase()
-  if (statLowerCase === 'pending')
-    return 'warning'
-  if (statLowerCase === 'won')
+  if (statLowerCase === 'new')
+    return 'info'
+  if (statLowerCase === 'contacted')
+    return 'primary'
+  if (statLowerCase === 'qualified')
     return 'success'
-  if (statLowerCase === 'lost')
+  if (statLowerCase === 'closed_won')
+    return 'success'
+  if (statLowerCase === 'closed_lost')
     return 'error'
-
+  
   return 'primary'
 }
 
+const resolvePriorityVariant = (priority: string) => {
+  const priorityLowerCase = priority.toLowerCase()
+  if (priorityLowerCase === 'low')
+    return 'success'
+  if (priorityLowerCase === 'medium')
+    return 'warning'
+  if (priorityLowerCase === 'high')
+    return 'error'
+  if (priorityLowerCase === 'urgent')
+    return 'error'
+  
+  return 'secondary'
+}
+
+const formatSource = (source: string) => {
+  return source.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+}
+
 const handleEditLead = () => {
-  if (props.selectedLead) {
-    emit('editLead', props.selectedLead)
+  if (props.lead) {
+    emit('editLead', props.lead)
     dialogValue.value = false
   }
 }
@@ -56,28 +68,47 @@ const handleClose = () => {
 <template>
   <VDialog
     v-model="dialogValue"
-    max-width="600"
+    max-width="900"
+    scrollable
   >
     <DialogCloseBtn @click="handleClose" />
     <VCard
-      v-if="selectedLead"
+      v-if="lead"
       title="Lead Details"
     >
       <VCardText>
         <VRow>
+          <!-- First Name -->
           <VCol
             cols="12"
             md="6"
           >
             <div class="mb-4">
               <div class="text-sm text-disabled mb-1">
-                Name
+                First Name
               </div>
               <div class="text-body-1 font-weight-medium">
-                {{ selectedLead.name }}
+                {{ lead.firstName }}
               </div>
             </div>
           </VCol>
+
+          <!-- Last Name -->
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                Last Name
+              </div>
+              <div class="text-body-1 font-weight-medium">
+                {{ lead.lastName }}
+              </div>
+            </div>
+          </VCol>
+
+          <!-- Email -->
           <VCol
             cols="12"
             md="6"
@@ -87,10 +118,12 @@ const handleClose = () => {
                 Email
               </div>
               <div class="text-body-1">
-                {{ selectedLead.email }}
+                <a :href="`mailto:${lead.email}`">{{ lead.email }}</a>
               </div>
             </div>
           </VCol>
+
+          <!-- Phone -->
           <VCol
             cols="12"
             md="6"
@@ -100,23 +133,104 @@ const handleClose = () => {
                 Phone
               </div>
               <div class="text-body-1">
-                {{ selectedLead.phone }}
+                <a :href="`tel:${lead.phone}`">{{ lead.phone }}</a>
               </div>
             </div>
           </VCol>
+
+          <!-- Company -->
+          <VCol
+            v-if="lead.company"
+            cols="12"
+            md="6"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                Company
+              </div>
+              <div class="text-body-1">
+                {{ lead.company }}
+              </div>
+            </div>
+          </VCol>
+
+          <!-- Job Title -->
+          <VCol
+            v-if="lead.jobTitle"
+            cols="12"
+            md="6"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                Job Title
+              </div>
+              <div class="text-body-1">
+                {{ lead.jobTitle }}
+              </div>
+            </div>
+          </VCol>
+
+          <!-- Nationality -->
           <VCol
             cols="12"
             md="6"
           >
             <div class="mb-4">
               <div class="text-sm text-disabled mb-1">
-                Source
+                Nationality
               </div>
-              <div class="text-body-1 text-capitalize">
-                {{ selectedLead.source }}
+              <div class="text-body-1">
+                {{ lead.nationality || 'N/A' }}
               </div>
             </div>
           </VCol>
+
+          <!-- Province/State -->
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                Province
+              </div>
+              <div class="text-body-1">
+                {{ lead.state || 'N/A' }}
+              </div>
+            </div>
+          </VCol>
+
+          <!-- City -->
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                City
+              </div>
+              <div class="text-body-1">
+                {{ lead.city }}
+              </div>
+            </div>
+          </VCol>
+
+          <!-- Source -->
+          <VCol
+            cols="12"
+            md="6"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                Lead Source
+              </div>
+              <div class="text-body-1">
+                {{ formatSource(lead.source) }}
+              </div>
+            </div>
+          </VCol>
+
+          <!-- Status -->
           <VCol
             cols="12"
             md="6"
@@ -126,25 +240,95 @@ const handleClose = () => {
                 Status
               </div>
               <VChip
-                :color="resolveStatusVariant(selectedLead.status)"
+                :color="resolveStatusVariant(lead.status)"
                 size="small"
                 label
                 class="text-capitalize"
               >
-                {{ selectedLead.status }}
+                {{ lead.status.replace(/_/g, ' ') }}
               </VChip>
             </div>
           </VCol>
+
+          <!-- Priority -->
+          <VCol
+            v-if="lead.priority"
+            cols="12"
+            md="6"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                Priority
+              </div>
+              <VChip
+                :color="resolvePriorityVariant(lead.priority)"
+                size="small"
+                label
+                class="text-capitalize"
+              >
+                {{ lead.priority }}
+              </VChip>
+            </div>
+          </VCol>
+
+          <!-- Owner -->
           <VCol
             cols="12"
             md="6"
           >
             <div class="mb-4">
               <div class="text-sm text-disabled mb-1">
-                Created Date
+                Assigned To
               </div>
               <div class="text-body-1">
-                {{ selectedLead.createdDate }}
+                {{ lead.owner }}
+              </div>
+            </div>
+          </VCol>
+
+          <!-- Last Contacted -->
+          <VCol
+            v-if="lead.lastContacted"
+            cols="12"
+            md="6"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                Last Contacted
+              </div>
+              <div class="text-body-1">
+                {{ lead.lastContacted }}
+              </div>
+            </div>
+          </VCol>
+
+          <!-- Scheduled Meeting -->
+          <VCol
+            v-if="lead.scheduledMeeting"
+            cols="12"
+            md="6"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                Scheduled Meeting
+              </div>
+              <div class="text-body-1">
+                {{ lead.scheduledMeeting }}
+              </div>
+            </div>
+          </VCol>
+
+          <!-- Notes -->
+          <VCol
+            v-if="lead.note"
+            cols="12"
+          >
+            <div class="mb-4">
+              <div class="text-sm text-disabled mb-1">
+                Notes
+              </div>
+              <div class="text-body-1">
+                {{ lead.note }}
               </div>
             </div>
           </VCol>
@@ -164,6 +348,10 @@ const handleClose = () => {
           color="primary"
           @click="handleEditLead"
         >
+          <VIcon
+            icon="tabler-edit"
+            class="me-1"
+          />
           Edit
         </VBtn>
       </VCardActions>

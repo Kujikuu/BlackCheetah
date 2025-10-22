@@ -29,10 +29,11 @@ const addLeadData = ref<AddLeadData>({
     lastName: '',
     email: '',
     contactNumber: '',
-    nationality: null,
-    state: null,
+    nationality: '',
+    state: '',
     city: '',
     companyName: '',
+    jobTitle: '',
   },
   additionalDetails: {
     leadSource: null,
@@ -58,32 +59,25 @@ const onSubmit = async () => {
       email: addLeadData.value.basicInfo.email,
       phone: addLeadData.value.basicInfo.contactNumber,
       company: addLeadData.value.basicInfo.companyName || undefined,
-      country: addLeadData.value.basicInfo.country || undefined,
+      jobTitle: addLeadData.value.basicInfo.jobTitle || undefined,
+      nationality: addLeadData.value.basicInfo.nationality || undefined,
       state: addLeadData.value.basicInfo.state || undefined,
       city: addLeadData.value.basicInfo.city || undefined,
       source: addLeadData.value.additionalDetails.leadSource || 'website',
       status: (addLeadData.value.additionalDetails.leadStatus || 'new') as any,
       priority: 'medium', // Default priority
       note: addLeadData.value.additionalDetails.note || undefined,
-
-      // assigned_to: addLeadData.value.additionalDetails.leadOwner, // TODO: Map owner ID
     }
 
     const response = await leadApi.createLead(leadData)
 
     if (response.success) {
-      // Show success message
-      // TODO: Add toast notification
-      console.log('Lead created successfully:', response.data)
-
       // Redirect to lead management page
       router.push({ name: 'franchisor-lead-management' })
     }
   }
   catch (error) {
     console.error('Error adding lead:', error)
-
-    // TODO: Show error toast notification
   }
   finally {
     isLoading.value = false

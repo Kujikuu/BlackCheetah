@@ -245,10 +245,15 @@ const availableCities = computed(() => {
   return getCitiesForProvince(leadData.value.state || '')
 })
 
-// Watch province changes to clear city
-watch(() => leadData.value?.state, () => {
-  if (leadData.value)
-    leadData.value.city = ''
+// Watch province changes to clear city only if necessary
+watch(() => leadData.value?.state, (newState, oldState) => {
+  if (leadData.value && oldState !== undefined && oldState !== newState) {
+    const cities = getCitiesForProvince(newState || '')
+    const currentCity = leadData.value.city
+    if (currentCity && !cities.includes(currentCity)) {
+      leadData.value.city = ''
+    }
+  }
 })
 
 const leadSources = [
@@ -439,10 +444,23 @@ const priorities = [
                         :readonly="!isEditMode"
                       />
                     </VCol>
-                    <VCol cols="12">
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
                       <AppTextField
                         v-model="leadData.company"
                         label="Company"
+                        :readonly="!isEditMode"
+                      />
+                    </VCol>
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
+                      <AppTextField
+                        v-model="leadData.jobTitle"
+                        label="Job Title"
                         :readonly="!isEditMode"
                       />
                     </VCol>

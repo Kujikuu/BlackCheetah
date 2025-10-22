@@ -7,6 +7,7 @@ export interface LeadBasicInfo {
   state: string
   city: string
   companyName: string
+  jobTitle: string
 }
 
 export interface LeadAdditionalDetails {

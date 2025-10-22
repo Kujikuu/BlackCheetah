@@ -33,6 +33,7 @@ const addLeadData = ref<AddLeadData>({
     state: '',
     city: '',
     companyName: '',
+    jobTitle: '',
   },
   additionalDetails: {
     leadSource: null,
@@ -57,33 +58,26 @@ const onSubmit = async () => {
       lastName: addLeadData.value.basicInfo.lastName,
       email: addLeadData.value.basicInfo.email,
       phone: addLeadData.value.basicInfo.contactNumber,
-      company: addLeadData.value.basicInfo.companyName || '',
-      nationality: addLeadData.value.basicInfo.nationality,
-      state: addLeadData.value.basicInfo.state,
-      city: addLeadData.value.basicInfo.city,
+      company: addLeadData.value.basicInfo.companyName || undefined,
+      jobTitle: addLeadData.value.basicInfo.jobTitle || undefined,
+      nationality: addLeadData.value.basicInfo.nationality || undefined,
+      state: addLeadData.value.basicInfo.state || undefined,
+      city: addLeadData.value.basicInfo.city || undefined,
       source: addLeadData.value.additionalDetails.leadSource || 'website',
-      status: (addLeadData.value.additionalDetails.leadStatus || 'new') as 'new' | 'qualified' | 'unqualified' | 'contacted' | 'converted' | 'lost',
+      status: (addLeadData.value.additionalDetails.leadStatus || 'new') as any,
       priority: 'medium', // Default priority
-      note: addLeadData.value.additionalDetails.note || '',
-
-      // assigned_to: addLeadData.value.additionalDetails.leadOwner, // TODO: Map owner ID
+      note: addLeadData.value.additionalDetails.note || undefined,
     }
 
     const response = await leadApi.createLead(leadData)
 
     if (response.success) {
-      // Show success message
-      // TODO: Add toast notification
-      console.log('Lead created successfully:', response.data)
-
       // Redirect to lead management page
       router.push({ name: 'sales-lead-management' })
     }
   }
   catch (error) {
     console.error('Error adding lead:', error)
-
-    // TODO: Show error toast notification
   }
   finally {
     isLoading.value = false

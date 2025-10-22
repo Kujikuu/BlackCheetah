@@ -143,5 +143,16 @@ watch(() => localFormData.value.state, () => {
         placeholder="Company Name"
       />
     </VCol>
+
+    <VCol
+      cols="12"
+      md="6"
+    >
+      <AppTextField
+        v-model="localFormData.jobTitle"
+        label="Job Title"
+        placeholder="Job Title"
+      />
+    </VCol>
   </VRow>
 </template>

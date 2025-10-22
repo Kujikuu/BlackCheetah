@@ -225,9 +225,9 @@ const salesAssociates = ref<Array<{ title: string; value: string }>>([])
 
 const fetchSalesAssociates = async () => {
   try {
-    const response = await usersApi.getSalesAssociates()
+    const response = await usersApi.getSalesAssociates() as any
 
-    if (response.success) {
+    if (response.success && response.data) {
       // API returns paginated data, handle both array and paginated response
       const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
       
@@ -260,10 +260,15 @@ const availableCities = computed(() => {
   return getCitiesForProvince(leadData.value.state || '')
 })
 
-// Watch province changes to clear city
-watch(() => leadData.value?.state, () => {
-  if (leadData.value)
-    leadData.value.city = ''
+// Watch province changes to clear city only if necessary
+watch(() => leadData.value?.state, (newState, oldState) => {
+  if (leadData.value && oldState !== undefined && oldState !== newState) {
+    const cities = getCitiesForProvince(newState || '')
+    const currentCity = leadData.value.city
+    if (currentCity && !cities.includes(currentCity)) {
+      leadData.value.city = ''
+    }
+  }
 })
 
 const leadSources = [
@@ -454,10 +459,23 @@ const priorities = [
                         :readonly="!isEditMode"
                       />
                     </VCol>
-                    <VCol cols="12">
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
                       <AppTextField
                         v-model="leadData.company"
                         label="Company"
+                        :readonly="!isEditMode"
+                      />
+                    </VCol>
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
+                      <AppTextField
+                        v-model="leadData.jobTitle"
+                        label="Job Title"
                         :readonly="!isEditMode"
                       />
                     </VCol>
