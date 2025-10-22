@@ -1,27 +1,14 @@
 import type { RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
-  // Root redirect
+  // Root redirect - Show landing page for all
   {
     path: '/',
     name: 'index',
-    redirect: to => {
-      const userData = useCookie<Record<string, unknown> | null | undefined>('userData')
-      const userRole = userData.value?.role
-
-      if (userRole === 'admin')
-        return { name: 'admin-dashboard' }
-
-      if (userRole === 'franchisor')
-        return { name: 'franchisor' }
-
-      if (userRole === 'franchisee')
-        return { name: 'franchisee-dashboard-sales' }
-
-      if (userRole === 'broker')
-        return { name: 'broker-lead-management' }
-
-      return { name: 'login', query: to.query }
+    component: () => import('@/pages/front-pages/landing-page/index.vue'),
+    meta: {
+      layout: 'blank',
+      public: true,
     },
   },
 
