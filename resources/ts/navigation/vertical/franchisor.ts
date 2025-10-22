@@ -54,13 +54,6 @@ export default [
     subject: 'User',
   },
   {
-    title: 'Lead Management',
-    to: 'franchisor-lead-management',
-    icon: { icon: 'tabler-user-search' },
-    action: 'manage',
-    subject: 'Lead',
-  },
-  {
     title: 'My Franchise',
     to: 'franchisor-my-franchise',
     icon: { icon: 'tabler-building-store' },
