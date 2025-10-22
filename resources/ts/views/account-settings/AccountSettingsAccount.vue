@@ -11,7 +11,6 @@ const accountDataLocal = ref({
   avatarImg: '',
   name: '',
   email: '',
-  role: '',
   phone: '',
   dateOfBirth: '',
   gender: '',
@@ -36,29 +35,24 @@ const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSa
 // Available cities based on selected province
 const availableCities = computed(() => getCitiesForProvince(accountDataLocal.value.state || ''))
 
-// Watch province changes to clear city
-watch(() => accountDataLocal.value.state, () => {
-  accountDataLocal.value.city = ''
+// Watch province changes to clear city only if it's not valid for the new province
+watch(() => accountDataLocal.value.state, (newState, oldState) => {
+  // Only clear city if state actually changed (not initial load) and city is not valid for new state
+  if (oldState !== undefined && oldState !== newState) {
+    const cities = getCitiesForProvince(newState || '')
+    const currentCity = accountDataLocal.value.city
+    // Clear city only if it's not in the list of cities for the new province
+    if (currentCity && !cities.includes(currentCity)) {
+      accountDataLocal.value.city = ''
+    }
+  }
 })
 
 const genders = [
-  'Male',
-  'Female',
+  { title: 'Male', value: 'male' },
+  { title: 'Female', value: 'female' },
+  { title: 'Other', value: 'other' },
 ]
-
-// Get role display name
-const getRoleDisplayName = (role: string): string => {
-  const roleMap: Record<string, string> = {
-    admin: 'Administrator',
-    franchisor: 'Franchisor',
-    franchisee: 'Franchisee',
-    unit_manager: 'Unit Manager',
-    sales_associate: 'Sales Associate',
-    employee: 'Employee',
-  }
-
-  return roleMap[role] || role
-}
 
 // Load user profile
 const loadProfile = async () => {
@@ -72,7 +66,6 @@ const loadProfile = async () => {
         avatarImg: response.data.avatar || '',
         name: response.data.name,
         email: response.data.email,
-        role: getRoleDisplayName(response.data.role),
         phone: response.data.phone || '',
         dateOfBirth: response.data.date_of_birth || '',
         gender: response.data.gender || '',
@@ -97,7 +90,6 @@ const resetForm = () => {
       avatarImg: accountData.value.avatar || '',
       name: accountData.value.name,
       email: accountData.value.email,
-      role: getRoleDisplayName(accountData.value.role),
       phone: accountData.value.phone || '',
       dateOfBirth: accountData.value.date_of_birth || '',
       gender: accountData.value.gender || '',
@@ -225,19 +217,34 @@ const onFormSubmit = async () => {
   try {
     isSaving.value = true
 
-    const response = await accountSettingsApi.updateProfile({
+    const payload = {
       name: accountDataLocal.value.name,
-      phone: accountDataLocal.value.phone,
+      phone: accountDataLocal.value.phone || null,
       date_of_birth: accountDataLocal.value.dateOfBirth || null,
       gender: accountDataLocal.value.gender || null,
       nationality: accountDataLocal.value.nationality || null,
       state: accountDataLocal.value.state || null,
       city: accountDataLocal.value.city || null,
       address: accountDataLocal.value.address || null,
-    })
+    }
+
+    const response = await accountSettingsApi.updateProfile(payload)
 
     if (response.success) {
       accountData.value = response.data
+
+      // Update local data with response to ensure sync
+      accountDataLocal.value = {
+        ...accountDataLocal.value,
+        name: response.data.name,
+        phone: response.data.phone || '',
+        dateOfBirth: response.data.date_of_birth || '',
+        gender: response.data.gender || '',
+        nationality: response.data.nationality || '',
+        state: response.data.state || '',
+        city: response.data.city || '',
+        address: response.data.address || '',
+      }
 
       // Update cookie - create new object to trigger reactivity
       const userData = useCookie<any>('userData')
@@ -380,7 +387,7 @@ onMounted(() => {
               <!-- Email -->
               <VCol
                 cols="12"
-                md="6"
+                md="12"
               >
                 <AppTextField
                   v-model="accountDataLocal.email"
@@ -389,19 +396,6 @@ onMounted(() => {
                   placeholder="admin@example.com"
                   readonly
                   persistent-hint
-                />
-              </VCol>
-
-              <!-- Role -->
-              <VCol
-                cols="12"
-                md="6"
-              >
-                <AppTextField
-                  v-model="accountDataLocal.role"
-                  label="Role"
-                  placeholder="Administrator"
-                  readonly
                 />
               </VCol>
 

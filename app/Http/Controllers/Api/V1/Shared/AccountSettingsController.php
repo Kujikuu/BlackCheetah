@@ -47,7 +47,7 @@ class AccountSettingsController extends Controller
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
-            'name' => ['sometimes', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             // Email is excluded from updates - users cannot change their email
             'phone' => ['nullable', 'string', 'max:20'],
             'date_of_birth' => ['nullable', 'date'],
@@ -66,8 +66,6 @@ class AccountSettingsController extends Controller
 
         $data = $validator->validated();
 
-        // nothing extra to map
-
         // Remove email from data if somehow it was included
         unset($data['email']);
 
@@ -76,7 +74,11 @@ class AccountSettingsController extends Controller
             $data['preferences'] = array_merge($user->preferences ?? [], $data['preferences']);
         }
 
+        // Update user with validated data
         $user->update($data);
+
+        // Refresh to get latest data
+        $user->refresh();
 
         return $this->successResponse([
             'id' => $user->id,
