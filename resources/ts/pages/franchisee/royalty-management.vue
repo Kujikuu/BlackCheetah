@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api'
 import MarkCompletedRoyaltyDialog from '@/components/dialogs/royalty/MarkCompletedRoyaltyDialog.vue'
 import ViewRoyaltyDetailsDialog from '@/components/dialogs/royalty/ViewRoyaltyDetailsDialog.vue'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // Loading states
 const isLoading = ref(false)
@@ -288,7 +289,7 @@ onMounted(() => {
                   Total payments received
                 </div>
                 <h4 class="text-h4 text-success">
-                  {{ (royaltyCollectedTillDate || 0).toLocaleString() }} SAR
+                  {{ formatCurrency(royaltyCollectedTillDate || 0, 'SAR', false) }}
                 </h4>
               </div>
               <VAvatar color="success" variant="tonal" size="56">
@@ -312,7 +313,7 @@ onMounted(() => {
                   Pending payments due
                 </div>
                 <h4 class="text-h4 text-warning">
-                  {{ (upcomingRoyalties || 0).toLocaleString() }} SAR
+                  {{ formatCurrency(upcomingRoyalties || 0, 'SAR', false) }}
                 </h4>
               </div>
               <VAvatar color="warning" variant="tonal" size="56">
@@ -357,7 +358,7 @@ onMounted(() => {
             <!-- Gross Sales Column -->
             <template #item.gross_sales="{ item }">
               <div class="font-weight-medium text-info">
-                {{ (item.gross_sales || 0).toLocaleString() }}
+                {{ formatCurrency(item.gross_sales || 0, 'SAR', false) }}
               </div>
             </template>
 
@@ -371,7 +372,7 @@ onMounted(() => {
             <!-- Amount Column -->
             <template #item.amount="{ item }">
               <div class="font-weight-medium text-success">
-                {{ (item.amount || 0).toLocaleString() }}
+                {{ formatCurrency(item.amount || 0, 'SAR', false) }}
               </div>
             </template>
 

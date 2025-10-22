@@ -1,4 +1,5 @@
 import { franchiseApi, leadApi, usersApi, type FranchisorDashboardStats, type ProfileCompletionStatus, type SalesAssociate as ApiSalesAssociate, type Lead } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // Use the imported types from API services
 type DashboardStats = FranchisorDashboardStats
@@ -247,7 +248,7 @@ export const useFranchisorDashboard = () => {
       activities.push({
         id: Date.now(),
         type: 'revenue',
-        title: `Monthly revenue: $${dashboardStats.value.currentMonthRevenue.toLocaleString()}`,
+        title: `Monthly revenue: ${formatCurrency(dashboardStats.value.currentMonthRevenue, 'SAR', false)}`,
         time: 'This month',
         icon: 'tabler-currency-riyal',
         color: 'warning',

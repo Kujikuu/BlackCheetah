@@ -5,6 +5,7 @@ import { useTheme } from 'vuetify'
 import type { ProductSalesItem, SalesWidgetData } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 import { getAreaChartSplineConfig } from '@core/libs/apex-chart/apexCharConfig'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // Sales dashboard data
 const vuetifyTheme = useTheme()
@@ -369,7 +370,7 @@ onMounted(() => {
               tooltip: {
                 theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
                 y: {
-                  formatter: (value: number) => `${value.toLocaleString()} SAR`,
+                  formatter: (value: number) => formatCurrency(value),
                 },
               },
             }"

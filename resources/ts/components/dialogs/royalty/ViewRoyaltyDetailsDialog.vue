@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { type RoyaltyRecord } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 interface Props {
   isDialogVisible: boolean
@@ -145,7 +146,7 @@ const handleMarkAsCompleted = () => {
                   Gross Sales
                 </div>
                 <div class="text-h6 font-weight-bold">
-                  {{ (props.viewedRoyalty.gross_sales || 0).toLocaleString() }} SAR
+                  {{ formatCurrency(props.viewedRoyalty.gross_sales || 0, 'SAR', false) }}
                 </div>
               </div>
             </VCard>
@@ -195,7 +196,7 @@ const handleMarkAsCompleted = () => {
                   Royalty Amount
                 </div>
                 <div class="text-h6 font-weight-bold">
-                  {{ (props.viewedRoyalty.amount || 0).toLocaleString() }} SAR
+                  {{ formatCurrency(props.viewedRoyalty.amount || 0, 'SAR', false) }}
                 </div>
               </div>
             </VCard>
@@ -265,7 +266,7 @@ const handleMarkAsCompleted = () => {
                     Gross Sales:
                   </td>
                   <td class="text-end">
-                    {{ (props.viewedRoyalty.gross_sales || 0).toLocaleString() }} SAR
+                    {{ formatCurrency(props.viewedRoyalty.gross_sales || 0, 'SAR', false) }}
                   </td>
                 </tr>
                 <tr>

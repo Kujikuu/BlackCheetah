@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { UnitProduct } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 interface InventoryForm {
   quantity: number
@@ -92,7 +93,7 @@ const handleClose = () => {
                 <VListItem v-bind="itemProps">
                   <VListItemTitle>{{ item.raw.name }}</VListItemTitle>
                   <VListItemSubtitle>
-                    {{ item.raw.category }} • SAR {{ item.raw.unitPrice.toFixed(2) }}
+                    {{ item.raw.category }} • {{ formatCurrency(item.raw.unitPrice) }}
                   </VListItemSubtitle>
                 </VListItem>
               </template>
@@ -136,8 +137,8 @@ const handleClose = () => {
                       {{ selectedProductPreview.description }}
                     </p>
                     <div class="text-body-2 text-medium-emphasis">
-                      Category: {{ selectedProductPreview.category }} • Price: SAR {{
-                        selectedProductPreview.unitPrice.toFixed(2) }}
+                      Category: {{ selectedProductPreview.category }} • Price: {{
+                        formatCurrency(selectedProductPreview.unitPrice) }}
                     </div>
                   </div>
                 </div>

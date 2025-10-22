@@ -5,6 +5,7 @@ import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyAp
 import ExportRoyaltyDialog from '@/components/dialogs/royalty/ExportRoyaltyDialog.vue'
 import MarkCompletedRoyaltyDialog from '@/components/dialogs/royalty/MarkCompletedRoyaltyDialog.vue'
 import ViewRoyaltyDetailsDialog from '@/components/dialogs/royalty/ViewRoyaltyDetailsDialog.vue'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // Loading states
 const isLoading = ref(false)
@@ -771,7 +772,7 @@ const handleValidationErrors = (errors: Record<string, string[]>) => {
             <!-- Amount Column -->
             <template #item.amount="{ item }">
               <div class="font-weight-medium text-success">
-                {{ (item.amount || 0).toLocaleString() }}
+                {{ formatCurrency(item.amount || 0, 'SAR', false) }}
               </div>
             </template>
 

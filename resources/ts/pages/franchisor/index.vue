@@ -2,6 +2,7 @@
 import { SaudiRiyal } from 'lucide-vue-next'
 import { useFranchisorDashboard } from '@/composables/useFranchisorDashboard'
 import { franchiseApi } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // 👉 Router
 const router = useRouter()
@@ -61,7 +62,7 @@ const dashboardStats = computed(() => {
     },
     {
       title: 'Monthly Revenue',
-      value: `SAR ${apiStats.value.currentMonthRevenue.toLocaleString()}`,
+      value: formatCurrency(apiStats.value.currentMonthRevenue, 'SAR', false),
       change: apiStats.value.revenueChange,
       desc: 'This month\'s revenue',
       icon: SaudiRiyal,
