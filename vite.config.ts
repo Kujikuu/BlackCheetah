@@ -4,28 +4,13 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import laravel from 'laravel-vite-plugin'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
-import { VueRouterAutoImports, getPascalCaseRouteName } from 'unplugin-vue-router'
-import VueRouter from 'unplugin-vue-router/vite'
 import { defineConfig } from 'vite'
-import MetaLayouts from 'vite-plugin-vue-meta-layouts'
 import vuetify from 'vite-plugin-vuetify'
 import svgLoader from 'vite-svg-loader'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // base: '/',
-  plugins: [// Docs: https://github.com/posva/unplugin-vue-router
-    // ℹ️ This plugin should be placed before vue plugin
-    VueRouter({
-      getRouteName: routeNode => {
-        // Convert pascal case to kebab case
-        return getPascalCaseRouteName(routeNode)
-          .replace(/([a-z\d])([A-Z])/g, '$1-$2')
-          .toLowerCase()
-      },
-
-      routesFolder: 'resources/ts/pages',
-    }),
+  plugins: [
     vue({
       template: {
         compilerOptions: {
@@ -47,10 +32,6 @@ export default defineConfig({
       styles: {
         configFile: 'resources/styles/variables/_vuetify.scss',
       },
-    }), // Docs: https://github.com/dishait/vite-plugin-vue-meta-layouts?tab=readme-ov-file
-    MetaLayouts({
-      target: './resources/ts/layouts',
-      defaultLayout: 'default',
     }), // Docs: https://github.com/antfu/unplugin-vue-components#unplugin-vue-components
     Components({
       dirs: ['resources/ts/@core/components', 'resources/ts/views/demos', 'resources/ts/components'],
@@ -64,7 +45,7 @@ export default defineConfig({
       ],
     }), // Docs: https://github.com/antfu/unplugin-auto-import#unplugin-auto-import
     AutoImport({
-      imports: ['vue', VueRouterAutoImports, '@vueuse/core', '@vueuse/math', 'vue-i18n', 'pinia'],
+      imports: ['vue', 'vue-router', '@vueuse/core', '@vueuse/math', 'vue-i18n', 'pinia'],
       dirs: [
         './resources/ts/@core/utils',
         './resources/ts/@core/composable/',
@@ -96,7 +77,7 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 5000,
-    assetsDir: 'build/assets',
+    assetsDir: 'assets',
   },
   optimizeDeps: {
     exclude: ['vuetify'],

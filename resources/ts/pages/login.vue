@@ -9,14 +9,6 @@ import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 
-definePage({
-  meta: {
-    layout: 'blank',
-    public: true,
-    unauthenticatedOnly: true,
-  },
-})
-
 const form = ref({
   email: '',
   password: '',
@@ -65,8 +57,8 @@ const login = async () => {
       case 'franchisee':
         router.push('/franchisee/dashboard/sales')
         break
-      case 'sales':
-        router.push('/sales/lead-management')
+      case 'broker':
+        router.push('/brokers/lead-management')
         break
       default:
         router.push('/')

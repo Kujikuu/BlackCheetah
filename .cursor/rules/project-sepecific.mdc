@@ -1,0 +1,1094 @@
+---
+globs: *.vue,app/Http/Controllers/*,*.ts
+alwaysApply: false
+---
+# BlackCheetah Franchise Management System - Cursor Rules
+
+## API Development Patterns
+
+### Backend API Structure
+
+#### 1. API Route Organization
+- **Location**: `routes/api/v1/`
+- **Pattern**: Separate route files by domain/role:
+  - `auth.php` - Authentication routes
+  - `resources.php` - Business resource routes (franchises, leads, tasks, etc.)
+  - `admin.php` - Admin-specific routes
+  - `franchisor.php` - Franchisor-specific routes
+  - `franchisee.php` - Franchisee-specific routes
+  - `sales.php` - Sales-specific routes
+  - `shared.php` - Shared routes across roles
+
+#### 2. Route Definition Standards
+```php
+// Use prefix groups for organization
+Route::prefix('v1')->group(function () {
+    require __DIR__ . '/api/v1/auth.php';
+    require __DIR__ . '/api/v1/resources.php';
+    // ...
+});
+
+// Always apply auth middleware for protected routes
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Protected routes
+});
+
+// Use named routes with 'api.v1.' prefix
+Route::post('/login', [AuthController::class, 'login'])->name('api.v1.login');
+
+// Use apiResource for standard CRUD
+Route::apiResource('franchises', FranchiseController::class);
+
+// Group related custom actions under resource prefix
+Route::prefix('franchises')->group(function () {
+    Route::get('statistics', [FranchiseController::class, 'statistics'])
+        ->name('api.v1.franchises.statistics');
+    Route::patch('{franchise}/activate', [FranchiseController::class, 'activate'])
+        ->name('api.v1.franchises.activate');
+});
+
+// Nested resource routes pattern
+Route::prefix('franchises/{franchise_id}/documents')->group(function () {
+    Route::get('/', [DocumentController::class, 'index']);
+    Route::post('/', [DocumentController::class, 'store']);
+    Route::get('{document_id}', [DocumentController::class, 'show']);
+    Route::put('{document_id}', [DocumentController::class, 'update']);
+    Route::delete('{document_id}', [DocumentController::class, 'destroy']);
+});
+```
+
+#### 3. Controller Structure
+- **Location**: `app/Http/Controllers/Api/V1/`
+- **Hierarchy**:
+  - `Controller.php` - Base controller with response helpers
+  - `BaseResourceController.php` - Base for resource controllers with common methods
+  - Resource-specific controllers in subdirectories:
+    - `Resources/` - Business resource controllers
+    - `Admin/` - Admin controllers
+    - `Franchisor/` - Franchisor controllers
+    - `Franchisee/` - Franchisee controllers
+    - `Auth/` - Authentication controllers
+
+#### 4. Controller Implementation Pattern
+```php
+<?php
+
+namespace App\Http\Controllers\Api\V1\Resources;
+
+use App\Http\Controllers\Api\V1\BaseResourceController;
+use App\Http\Requests\StoreResourceRequest;
+use App\Http\Requests\UpdateResourceRequest;
+use App\Models\Resource;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class ResourceController extends BaseResourceController
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $query = Resource::with(['relationships']);
+
+        // Apply filters
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply sorting
+        $sort = $this->parseSortParams($request, 'created_at');
+        $query->orderBy($sort['column'], $sort['order']);
+
+        // Pagination
+        $perPage = $this->getPaginationParams($request);
+        $items = $query->paginate($perPage);
+
+        return $this->successResponse($items, 'Resources retrieved successfully');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreResourceRequest $request): JsonResponse
+    {
+        $resource = Resource::create($request->validated());
+
+        return $this->successResponse(
+            $resource->load(['relationships']),
+            'Resource created successfully',
+            201
+        );
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Resource $resource): JsonResponse
+    {
+        $resource->load(['relationships']);
+        return $this->successResponse($resource, 'Resource retrieved successfully');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateResourceRequest $request, Resource $resource): JsonResponse
+    {
+        $resource->update($request->validated());
+        return $this->successResponse($resource->load(['relationships']), 'Resource updated successfully');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Resource $resource): JsonResponse
+    {
+        // Add business logic validation if needed
+        if ($resource->hasActiveRelationships()) {
+            return $this->validationErrorResponse(['status' => ['Cannot delete resource with active relationships']]);
+        }
+
+        $resource->delete();
+        return $this->successResponse(null, 'Resource deleted successfully');
+    }
+
+    /**
+     * Custom action: Get statistics
+     */
+    public function statistics(Request $request): JsonResponse
+    {
+        $stats = [
+            'total' => Resource::count(),
+            'active' => Resource::where('status', 'active')->count(),
+            // ... more stats
+        ];
+
+        return $this->successResponse($stats, 'Statistics retrieved successfully');
+    }
+
+    /**
+     * Custom action: Bulk delete
+     */
+    public function bulkDelete(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:resources,id',
+        ]);
+
+        Resource::whereIn('id', $validated['ids'])->delete();
+
+        return $this->successResponse(null, 'Resources deleted successfully');
+    }
+}
+```
+
+#### 5. Response Helper Methods (in Base Controller)
+- `successResponse($data, $message, $code = 200)` - Success responses
+- `errorResponse($message, $errors, $code)` - Error responses
+- `notFoundResponse($message)` - 404 responses
+- `unauthorizedResponse($message)` - 401 responses
+- `forbiddenResponse($message)` - 403 responses
+- `validationErrorResponse($errors, $message)` - 422 responses
+- `serverErrorResponse($message, $errors)` - 500 responses
+- `createdResponse($data, $message)` - 201 responses
+- `noContentResponse($message)` - 204 responses
+
+#### 6. Base Resource Controller Helpers
+- `parseSortParams($request, $defaultColumn, $defaultOrder)` - Parse sorting parameters
+- `applyFilters($query, $request, $filterableFields)` - Apply common filters
+- `applySearch($query, $request, $searchableFields)` - Apply search functionality
+- `getPaginationParams($request)` - Get pagination parameters
+
+#### 7. Form Request Validation
+- **Location**: `app/Http/Requests/`
+- **Naming**: `Store{Resource}Request.php` and `Update{Resource}Request.php`
+```php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreResourceRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return auth()->check();
+    }
+
+    public function rules(): array
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:resources,email',
+            'status' => 'required|in:active,inactive',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Name is required.',
+            'email.unique' => 'This email already exists.',
+        ];
+    }
+}
+```
+
+---
+
+## Frontend Development Patterns
+
+### 1. API Service Layer
+
+#### Service Organization
+- **Location**: `resources/ts/services/api/`
+- **Pattern**: One service file per domain/resource
+- **Export**: All services exported from `resources/ts/services/api/index.ts`
+
+#### Service Implementation Pattern
+```typescript
+import { $api } from '@/utils/api'
+import { getEndpoint } from '@/utils/api-router'
+import type { ApiResponse } from '@/types/api'
+
+// Type definitions for this service
+export interface Resource {
+  id: number
+  name: string
+  email: string
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ResourceFilters {
+  search?: string
+  status?: string
+  page?: number
+  per_page?: number
+  sortBy?: string
+  orderBy?: 'asc' | 'desc'
+}
+
+export interface CreateResourcePayload {
+  name: string
+  email: string
+  status?: string
+}
+
+export interface UpdateResourcePayload {
+  name?: string
+  email?: string
+  status?: string
+}
+
+export class ResourceApi {
+  private getBaseUrl(): string {
+    return getEndpoint('resources')
+  }
+
+  /**
+   * Get all resources with filters
+   */
+  async getResources(filters?: ResourceFilters): Promise<ApiResponse<{ data: Resource[] }>> {
+    return await $api(this.getBaseUrl(), {
+      method: 'GET',
+      query: filters,
+    })
+  }
+
+  /**
+   * Get single resource by ID
+   */
+  async getResource(id: number): Promise<ApiResponse<Resource>> {
+    return await $api(`${this.getBaseUrl()}/${id}`)
+  }
+
+  /**
+   * Create new resource
+   */
+  async createResource(payload: CreateResourcePayload): Promise<ApiResponse<Resource>> {
+    return await $api(this.getBaseUrl(), {
+      method: 'POST',
+      body: payload,
+    })
+  }
+
+  /**
+   * Update existing resource
+   */
+  async updateResource(id: number, payload: UpdateResourcePayload): Promise<ApiResponse<Resource>> {
+    return await $api(`${this.getBaseUrl()}/${id}`, {
+      method: 'PUT',
+      body: payload,
+    })
+  }
+
+  /**
+   * Delete resource
+   */
+  async deleteResource(id: number): Promise<ApiResponse<void>> {
+    return await $api(`${this.getBaseUrl()}/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  /**
+   * Get resource statistics
+   */
+  async getStatistics(): Promise<ApiResponse<any>> {
+    return await $api(`${this.getBaseUrl()}/statistics`)
+  }
+
+  /**
+   * Bulk delete resources
+   */
+  async bulkDelete(ids: number[]): Promise<ApiResponse<void>> {
+    return await $api(`${this.getBaseUrl()}/bulk-delete`, {
+      method: 'POST',
+      body: { ids },
+    })
+  }
+
+  /**
+   * File upload example
+   */
+  async uploadFile(id: number, file: File): Promise<ApiResponse<any>> {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('name', file.name)
+
+    return await $api(`${this.getBaseUrl()}/${id}/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+  }
+}
+
+export const resourceApi = new ResourceApi()
+```
+
+#### Service Export Pattern (`services/api/index.ts`)
+```typescript
+export { resourceApi, type ResourceApi } from './resource'
+
+// Export types
+export type {
+  Resource,
+  ResourceFilters,
+  CreateResourcePayload,
+  UpdateResourcePayload,
+} from './resource'
+```
+
+#### Role-Based API Routing
+- **File**: `resources/ts/utils/api-router.ts`
+- Automatically resolves endpoints based on user role
+- Use `getEndpoint(resource)` to get role-specific endpoints
+- Supported resources: 'leads', 'tasks', 'royalties', 'technical-requests', 'units', 'financial', 'franchise', 'users'
+
+### 2. Vue Component Patterns
+
+#### Component Organization
+- **Pages**: `resources/ts/pages/` - Full page components
+- **Views**: `resources/ts/views/` - Partial views/sections
+- **Components**: `resources/ts/components/` - Reusable components
+  - `dialogs/` - Modal/dialog components organized by domain
+
+#### Page Component Pattern
+```vue
+<script setup lang="ts">
+import { resourceApi, type Resource, type ResourceFilters } from '@/services/api'
+
+// Component imports
+import CreateResourceDialog from '@/components/dialogs/resources/CreateResourceDialog.vue'
+import EditResourceDialog from '@/components/dialogs/resources/EditResourceDialog.vue'
+import DeleteResourceDialog from '@/components/dialogs/resources/DeleteResourceDialog.vue'
+
+// Filters and search
+const searchQuery = ref('')
+const selectedStatus = ref('')
+
+// Data table state
+const itemsPerPage = ref(10)
+const page = ref(1)
+const sortBy = ref()
+const orderBy = ref()
+const selectedRows = ref([])
+const isLoading = ref(false)
+
+// Data
+const resources = ref<Resource[]>([])
+const totalResources = ref(0)
+
+// Modal states
+const isCreateDialogVisible = ref(false)
+const isEditDialogVisible = ref(false)
+const isDeleteDialogVisible = ref(false)
+const selectedResource = ref<Resource | null>(null)
+
+// Table headers
+const headers = [
+  { title: '#', key: 'index', sortable: false },
+  { title: 'Name', key: 'name' },
+  { title: 'Email', key: 'email' },
+  { title: 'Status', key: 'status' },
+  { title: 'Created At', key: 'created_at' },
+  { title: 'Actions', key: 'actions', sortable: false },
+]
+
+// API Functions
+const fetchResources = async () => {
+  try {
+    isLoading.value = true
+
+    const filters: ResourceFilters = {
+      page: page.value,
+      per_page: itemsPerPage.value,
+    }
+
+    if (searchQuery.value)
+      filters.search = searchQuery.value
+    if (selectedStatus.value)
+      filters.status = selectedStatus.value
+    if (sortBy.value)
+      filters.sortBy = sortBy.value
+    if (orderBy.value)
+      filters.orderBy = orderBy.value
+
+    const response = await resourceApi.getResources(filters)
+
+    if (response.success && response.data) {
+      resources.value = response.data.data || []
+      totalResources.value = response.data.total || 0
+    }
+  }
+  catch (error) {
+    console.error('Error fetching resources:', error)
+    // Error handling is done in $api interceptor
+  }
+  finally {
+    isLoading.value = false
+  }
+}
+
+// Statistics
+const statsData = ref([
+  { title: 'Total Resources', value: '0', change: 0, icon: 'tabler-users', iconColor: 'primary' },
+  { title: 'Active', value: '0', change: 0, icon: 'tabler-user-check', iconColor: 'success' },
+  { title: 'Inactive', value: '0', change: 0, icon: 'tabler-user-x', iconColor: 'error' },
+])
+
+const fetchStats = async () => {
+  try {
+    const response = await resourceApi.getStatistics()
+    if (response.success)
+      statsData.value = response.data
+  }
+  catch (error) {
+    console.error('Error fetching stats:', error)
+  }
+}
+
+// Actions
+const openEditDialog = (resource: Resource) => {
+  selectedResource.value = resource
+  isEditDialogVisible.value = true
+}
+
+const openDeleteDialog = (resource: Resource) => {
+  selectedResource.value = resource
+  isDeleteDialogVisible.value = true
+}
+
+const onResourceCreated = async () => {
+  await fetchResources()
+  await fetchStats()
+  isCreateDialogVisible.value = false
+}
+
+const onResourceUpdated = async () => {
+  await fetchResources()
+  await fetchStats()
+  isEditDialogVisible.value = false
+}
+
+const onResourceDeleted = async () => {
+  await fetchResources()
+  await fetchStats()
+  isDeleteDialogVisible.value = false
+}
+
+// Bulk actions
+const bulkDelete = async () => {
+  if (selectedRows.value.length === 0)
+    return
+
+  try {
+    const response = await resourceApi.bulkDelete(selectedRows.value)
+    if (response.success) {
+      await fetchResources()
+      await fetchStats()
+      selectedRows.value = []
+    }
+  }
+  catch (error) {
+    console.error('Error bulk deleting resources:', error)
+  }
+}
+
+// Update table options
+const updateOptions = (options: any) => {
+  sortBy.value = options.sortBy[0]?.key
+  orderBy.value = options.sortBy[0]?.order
+  fetchResources()
+}
+
+// Export functionality
+const exportResources = () => {
+  const dataToExport = selectedRows.value.length > 0
+    ? resources.value.filter(r => selectedRows.value.includes(r.id as never))
+    : resources.value
+
+  const csvContent = [
+    'Name,Email,Status,Created At',
+    ...dataToExport.map(r =>
+      `"${r.name}","${r.email}","${r.status}","${r.created_at}"`,
+    ),
+  ].join('\n')
+
+  const blob = new Blob([csvContent], { type: 'text/csv' })
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `resources_${new Date().toISOString().split('T')[0]}.csv`
+  a.click()
+  window.URL.revokeObjectURL(url)
+}
+
+// Lifecycle
+onMounted(async () => {
+  await Promise.all([
+    fetchResources(),
+    fetchStats(),
+  ])
+})
+
+// Watchers
+watch([searchQuery, selectedStatus], () => {
+  page.value = 1
+  fetchResources()
+})
+</script>
+
+<template>
+  <section>
+    <!-- Stats Cards -->
+    <div class="d-flex mb-6">
+      <VRow>
+        <template v-for="(data, id) in statsData" :key="id">
+          <VCol cols="12" md="4" sm="6">
+            <VCard>
+              <VCardText>
+                <div class="d-flex justify-space-between">
+                  <div class="d-flex flex-column gap-y-1">
+                    <div class="text-body-1 text-high-emphasis">
+                      {{ data.title }}
+                    </div>
+                    <div class="d-flex gap-x-2 align-center">
+                      <h4 class="text-h4">
+                        {{ data.value }}
+                      </h4>
+                      <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
+                        ({{ data.change > 0 ? '+' : '' }}{{ data.change }}%)
+                      </div>
+                    </div>
+                  </div>
+                  <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
+                    <VIcon :icon="data.icon" size="26" />
+                  </VAvatar>
+                </div>
+              </VCardText>
+            </VCard>
+          </VCol>
+        </template>
+      </VRow>
+    </div>
+
+    <!-- Main Card with Filters and Table -->
+    <VCard>
+      <!-- Filters -->
+      <VCardItem class="pb-4">
+        <VCardTitle>Filters</VCardTitle>
+      </VCardItem>
+
+      <VCardText>
+        <VRow>
+          <VCol cols="12" sm="4">
+            <AppSelect
+              v-model="selectedStatus"
+              placeholder="Select Status"
+              :items="[
+                { title: 'Active', value: 'active' },
+                { title: 'Inactive', value: 'inactive' },
+              ]"
+              clearable
+              clear-icon="tabler-x"
+            />
+          </VCol>
+        </VRow>
+      </VCardText>
+
+      <VDivider />
+
+      <!-- Toolbar -->
+      <VCardText class="d-flex flex-wrap gap-4">
+        <div class="me-3 d-flex gap-3">
+          <AppSelect
+            :model-value="itemsPerPage"
+            :items="[
+              { value: 10, title: '10' },
+              { value: 25, title: '25' },
+              { value: 50, title: '50' },
+              { value: 100, title: '100' },
+            ]"
+            style="inline-size: 6.25rem;"
+            @update:model-value="itemsPerPage = parseInt($event, 10)"
+          />
+
+          <VBtn
+            v-if="selectedRows.length > 0"
+            variant="tonal"
+            color="error"
+            @click="bulkDelete"
+          >
+            <VIcon icon="tabler-trash" class="me-2" />
+            Delete Selected ({{ selectedRows.length }})
+          </VBtn>
+        </div>
+        <VSpacer />
+
+        <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
+          <div style="inline-size: 15.625rem;">
+            <AppTextField
+              v-model="searchQuery"
+              placeholder="Search Resources"
+            />
+          </div>
+
+          <VBtn
+            variant="tonal"
+            color="secondary"
+            prepend-icon="tabler-upload"
+            @click="exportResources"
+          >
+            Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
+          </VBtn>
+
+          <VBtn
+            prepend-icon="tabler-plus"
+            @click="isCreateDialogVisible = true"
+          >
+            Add Resource
+          </VBtn>
+        </div>
+      </VCardText>
+
+      <VDivider />
+
+      <!-- Data Table -->
+      <VDataTableServer
+        v-model:items-per-page="itemsPerPage"
+        v-model:model-value="selectedRows"
+        v-model:page="page"
+        :items="resources"
+        item-value="id"
+        :items-length="totalResources"
+        :headers="headers"
+        :loading="isLoading"
+        class="text-no-wrap"
+        show-select
+        @update:options="updateOptions"
+      >
+        <!-- Index -->
+        <template #item.index="{ index }">
+          <div class="text-body-1 font-weight-medium">
+            {{ (page - 1) * itemsPerPage + index + 1 }}
+          </div>
+        </template>
+
+        <!-- Name -->
+        <template #item.name="{ item }">
+          <div class="text-body-1">
+            {{ item.name }}
+          </div>
+        </template>
+
+        <!-- Status -->
+        <template #item.status="{ item }">
+          <VChip
+            size="small"
+            :color="item.status === 'active' ? 'success' : 'error'"
+            variant="tonal"
+          >
+            {{ item.status }}
+          </VChip>
+        </template>
+
+        <!-- Actions -->
+        <template #item.actions="{ item }">
+          <VBtn icon variant="text" color="medium-emphasis">
+            <VIcon icon="tabler-dots-vertical" />
+            <VMenu activator="parent">
+              <VList>
+                <VListItem @click="openEditDialog(item)">
+                  <template #prepend>
+                    <VIcon icon="tabler-edit" />
+                  </template>
+                  <VListItemTitle>Edit</VListItemTitle>
+                </VListItem>
+
+                <VListItem @click="openDeleteDialog(item)">
+                  <template #prepend>
+                    <VIcon icon="tabler-trash" />
+                  </template>
+                  <VListItemTitle>Delete</VListItemTitle>
+                </VListItem>
+              </VList>
+            </VMenu>
+          </VBtn>
+        </template>
+
+        <!-- Pagination -->
+        <template #bottom>
+          <TablePagination
+            v-model:page="page"
+            :items-per-page="itemsPerPage"
+            :total-items="totalResources"
+          />
+        </template>
+      </VDataTableServer>
+    </VCard>
+
+    <!-- Dialogs -->
+    <CreateResourceDialog
+      v-model:is-dialog-visible="isCreateDialogVisible"
+      @resource-created="onResourceCreated"
+    />
+
+    <EditResourceDialog
+      v-model:is-dialog-visible="isEditDialogVisible"
+      :resource="selectedResource"
+      @resource-updated="onResourceUpdated"
+    />
+
+    <DeleteResourceDialog
+      v-model:is-dialog-visible="isDeleteDialogVisible"
+      :resource="selectedResource"
+      @resource-deleted="onResourceDeleted"
+    />
+  </section>
+</template>
+```
+
+#### Dialog/Modal Component Pattern
+```vue
+<script setup lang="ts">
+import { resourceApi, type Resource } from '@/services/api'
+
+interface Props {
+  isDialogVisible: boolean
+  resource?: Resource | null
+}
+
+interface Emit {
+  (e: 'update:isDialogVisible', value: boolean): void
+  (e: 'resourceUpdated'): void
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emit>()
+
+// Form state
+const formData = ref({
+  name: '',
+  email: '',
+  status: 'active',
+})
+
+// Computed for v-model dialog
+const dialogValue = computed({
+  get: () => props.isDialogVisible,
+  set: val => emit('update:isDialogVisible', val),
+})
+
+// Watch for resource changes to populate form
+watch(() => props.resource, (resource) => {
+  if (resource) {
+    formData.value = {
+      name: resource.name,
+      email: resource.email,
+      status: resource.status,
+    }
+  }
+}, { immediate: true })
+
+const resetForm = () => {
+  formData.value = {
+    name: '',
+    email: '',
+    status: 'active',
+  }
+}
+
+const onSubmit = async () => {
+  try {
+    const response = await resourceApi.updateResource(
+      props.resource!.id,
+      formData.value
+    )
+
+    if (response.success) {
+      emit('resourceUpdated')
+      dialogValue.value = false
+      resetForm()
+    }
+  }
+  catch (error) {
+    console.error('Error updating resource:', error)
+  }
+}
+
+const onCancel = () => {
+  dialogValue.value = false
+  resetForm()
+}
+</script>
+
+<template>
+  <VDialog
+    v-model="dialogValue"
+    max-width="600"
+  >
+    <DialogCloseBtn @click="onCancel" />
+    <VCard title="Edit Resource">
+      <VCardText>
+        <VForm @submit.prevent="onSubmit">
+          <VRow>
+            <VCol cols="12">
+              <AppTextField
+                v-model="formData.name"
+                label="Name"
+                placeholder="Enter name"
+              />
+            </VCol>
+
+            <VCol cols="12">
+              <AppTextField
+                v-model="formData.email"
+                label="Email"
+                placeholder="Enter email"
+                type="email"
+              />
+            </VCol>
+
+            <VCol cols="12">
+              <AppSelect
+                v-model="formData.status"
+                label="Status"
+                :items="[
+                  { title: 'Active', value: 'active' },
+                  { title: 'Inactive', value: 'inactive' },
+                ]"
+              />
+            </VCol>
+          </VRow>
+        </VForm>
+      </VCardText>
+
+      <VCardActions>
+        <VSpacer />
+        <VBtn
+          color="secondary"
+          variant="tonal"
+          @click="onCancel"
+        >
+          Cancel
+        </VBtn>
+        <VBtn
+          color="primary"
+          @click="onSubmit"
+        >
+          Update
+        </VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+</template>
+```
+
+### 3. Router/Navigation Patterns
+
+#### Route Definition
+- **Location**: `resources/ts/router/routes.ts`
+- **Pattern**: Group routes by role/section
+
+```typescript
+import type { RouteRecordRaw } from 'vue-router'
+
+const routes: RouteRecordRaw[] = [
+  // Root redirect based on role
+  {
+    path: '/',
+    name: 'index',
+    redirect: to => {
+      const userData = useCookie<Record<string, unknown> | null | undefined>('userData')
+      const userRole = userData.value?.role
+
+      if (userRole === 'admin')
+        return { name: 'admin-dashboard' }
+      if (userRole === 'franchisor')
+        return { name: 'franchisor' }
+      // ...
+      return { name: 'login', query: to.query }
+    },
+  },
+
+  // Authentication Routes
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/pages/login.vue'),
+    meta: {
+      layout: 'blank',
+      public: true,
+      unauthenticatedOnly: true,
+    },
+  },
+
+  // Role-specific routes with meta for permissions
+  {
+    path: '/admin/dashboard',
+    name: 'admin-dashboard',
+    component: () => import('@/pages/admin/dashboard.vue'),
+    meta: {
+      action: 'read',
+      subject: 'AdminDashboard',
+    },
+  },
+
+  // Dynamic routes
+  {
+    path: '/resources/:id',
+    name: 'resources-id',
+    component: () => import('@/pages/resources/[id].vue'),
+    meta: {
+      action: 'read',
+      subject: 'Resource',
+    },
+  },
+]
+
+export default routes
+```
+
+---
+
+## Key Conventions and Best Practices
+
+### Backend Conventions
+1. **Use strict typing**: `declare(strict_types=1)` in all PHP files
+2. **Use Form Requests**: Never validate directly in controllers
+3. **Use Resource Controllers**: Extend `BaseResourceController` for common functionality
+4. **Named routes**: Always use named routes with `api.v1.` prefix
+5. **Response consistency**: Always use response helper methods
+6. **Eager loading**: Always load relationships to avoid N+1 queries
+7. **Pagination**: Use `paginate()` for list endpoints
+8. **Soft deletes**: Consider using soft deletes for important data
+
+### Frontend Conventions
+1. **Service layer**: Never call `$api` directly in components, always use service classes
+2. **Type safety**: Always define TypeScript interfaces for API responses
+3. **Role-based routing**: Use `getEndpoint()` for role-specific API endpoints
+4. **Component organization**: Dialogs in `dialogs/`, pages in `pages/`, views in `views/`
+5. **State management**: Use `ref()` for component state, Pinia for global state
+6. **Error handling**: Let `$api` interceptor handle errors, show user feedback
+7. **Loading states**: Always show loading indicators during API calls
+8. **Composition API**: Always use `<script setup>` syntax
+9. **Emit pattern**: Use typed emits for component events
+10. **Props pattern**: Use typed props with interfaces
+
+### File Upload Pattern
+**Backend**:
+```php
+$request->validate([
+    'file' => 'required|file|mimes:pdf,doc,docx|max:10240',
+]);
+
+$path = $request->file('file')->store('documents', 'public');
+```
+
+**Frontend**:
+```typescript
+const formData = new FormData()
+formData.append('file', file)
+formData.append('name', file.name)
+
+await resourceApi.uploadFile(id, formData)
+```
+
+### Naming Conventions
+- **Backend**:
+  - Controllers: `ResourceController.php`
+  - Models: `Resource.php` (singular)
+  - Requests: `StoreResourceRequest.php`, `UpdateResourceRequest.php`
+  - Routes: `resource.php` (lowercase, plural or domain name)
+  
+- **Frontend**:
+  - Services: `resource.ts` (lowercase)
+  - Components: `ResourceDialog.vue` (PascalCase)
+  - Pages: `resource-management.vue` (kebab-case)
+  - Routes: `resource-management` (kebab-case)
+
+### API Response Format
+```json
+{
+  "success": true,
+  "data": { ... },
+  "message": "Operation successful"
+}
+```
+
+### Pagination Response Format
+```json
+{
+  "success": true,
+  "data": {
+    "current_page": 1,
+    "data": [...],
+    "first_page_url": "...",
+    "from": 1,
+    "last_page": 10,
+    "last_page_url": "...",
+    "links": [...],
+    "next_page_url": "...",
+    "path": "...",
+    "per_page": 15,
+    "prev_page_url": null,
+    "to": 15,
+    "total": 150
+  },
+  "message": "Resources retrieved successfully"
+}
+```

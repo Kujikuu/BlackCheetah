@@ -89,7 +89,7 @@ class Staff extends Model
     }
 
     // Methods
-    public function assignToUnit(int $unitId, string $role = 'sales_associate', bool $isPrimary = false): void
+    public function assignToUnit(int $unitId, string $role = 'broker', bool $isPrimary = false): void
     {
         $this->units()->attach($unitId, [
             'role' => $role,

@@ -7,18 +7,13 @@ import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import { onboardingApi } from '@/services/api'
-
-definePage({
-  meta: {
-    layout: 'blank',
-    requiresAuth: true,
-  },
-})
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
 
 const form = ref({
   name: '',
   phone: '',
-  country: '',
+  nationality: '',
   state: '',
   city: '',
   address: '',
@@ -31,44 +26,56 @@ const { smAndUp } = useDisplay()
 const userData = useCookie('userData')
 const { updateAbility } = useAbility()
 
-const countries = [
-  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
-  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
-  { title: 'Qatar', value: 'Qatar' },
-  { title: 'Kuwait', value: 'Kuwait' },
-  { title: 'Oman', value: 'Oman' },
-  { title: 'Bahrain', value: 'Bahrain' },
-  { title: 'Jordan', value: 'Jordan' },
-  { title: 'Lebanon', value: 'Lebanon' },
-  { title: 'Egypt', value: 'Egypt' },
-  { title: 'Iraq', value: 'Iraq' },
-  { title: 'Syria', value: 'Syria' },
-  { title: 'Palestine', value: 'Palestine' },
-  { title: 'Yemen', value: 'Yemen' },
-]
+// Get countries from composable
+const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
+
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => getCitiesForProvince(form.value.state || ''))
+
+// Watch province changes to clear city
+watch(() => form.value.state, () => {
+  form.value.city = ''
+})
 
 // Check onboarding status on mount
 onMounted(async () => {
   try {
     const response = await onboardingApi.getStatus()
-    if (response.success && response.data.is_completed) {
+    if (response.success && response.data) {
+      // Pre-fill form with existing user data if available
+      if (response.data.user) {
+        form.value = {
+          name: response.data.user.name || '',
+          phone: response.data.user.phone || '',
+          nationality: response.data.user.nationality || '',
+          state: response.data.user.state || '',
+          city: response.data.user.city || '',
+          address: response.data.user.address || '',
+        }
+      }
+
       // If profile is already completed, redirect to dashboard
-      const userRole = userData.value?.role
-      switch (userRole) {
-        case 'admin':
-          router.push('/admin/dashboard')
-          break
-        case 'franchisor':
-          router.push('/franchisor')
-          break
-        case 'franchisee':
-          router.push('/franchisee/dashboard/sales')
-          break
-        case 'sales':
-          router.push('/sales/lead-management')
-          break
-        default:
-          router.push('/')
+      if (response.data.profile_completed) {
+        const userRole = userData.value?.role
+        switch (userRole) {
+          case 'admin':
+            router.push('/admin/dashboard')
+            break
+          case 'franchisor':
+            router.push('/franchisor')
+            break
+          case 'franchisee':
+            router.push('/franchisee/dashboard/sales')
+            break
+          case 'broker':
+            router.push('/brokers/lead-management')
+            break
+          default:
+            router.push('/')
+        }
       }
     }
   }
@@ -82,38 +89,53 @@ const completeProfile = async () => {
   errorMessages.value = null
 
   try {
+    console.log('Submitting onboarding form:', form.value)
     const response = await onboardingApi.complete(form.value)
+    console.log('Onboarding response:', response)
 
-    // Update user data in cookie to reflect profile completion
-    const userDataCookie = useCookie<any>('userData')
-    if (userDataCookie.value) {
-      userDataCookie.value = {
-        ...userDataCookie.value,
-        profile_completed: true,
-        ...response.user,
+    if (response.success && response.data) {
+      console.log('Onboarding successful, updating user data...')
+      
+      // Update user data in cookie to reflect profile completion
+      const userDataCookie = useCookie<any>('userData')
+      if (userDataCookie.value) {
+        userDataCookie.value = {
+          ...userDataCookie.value,
+          profile_completed: true,
+          ...response.data.user,
+        }
+      }
+
+      console.log('Redirecting to dashboard...')
+      
+      // Redirect directly to role-specific dashboard
+      const userRole = userDataCookie.value?.role
+      switch (userRole) {
+        case 'admin':
+          router.push('/admin/dashboard')
+          break
+        case 'franchisor':
+          router.push('/franchisor')
+          break
+        case 'franchisee':
+          router.push('/franchisee/dashboard/sales')
+          break
+        case 'broker':
+          router.push('/brokers/lead-management')
+          break
+        default:
+          router.push('/')
       }
     }
-
-    // Redirect directly to role-specific dashboard
-    const userRole = userDataCookie.value?.role
-    switch (userRole) {
-      case 'admin':
-        router.push('/admin/dashboard')
-        break
-      case 'franchisor':
-        router.push('/franchisor')
-        break
-      case 'franchisee':
-        router.push('/franchisee/dashboard/sales')
-        break
-      case 'sales':
-        router.push('/sales/lead-management')
-        break
-      default:
-        router.push('/')
+    else {
+      console.error('Onboarding failed:', response)
+      errorMessages.value = {
+        general: [response.message || 'Failed to complete profile. Please try again.'],
+      }
     }
   }
   catch (e: any) {
+    console.error('Onboarding error:', e)
     const data = e?.data || e?.response?._data || null
     if (data?.errors) {
       errorMessages.value = data.errors
@@ -132,7 +154,7 @@ const completeProfile = async () => {
 const isFormValid = computed(() => {
   return form.value.name
     && form.value.phone
-    && form.value.country
+    && form.value.nationality
     && form.value.state
     && form.value.city
     && form.value.address
@@ -223,11 +245,13 @@ const isFormValid = computed(() => {
                 md="6"
               >
                 <AppSelect
-                  v-model="form.country"
-                  label="Country"
-                  placeholder="Select Country"
-                  :items="countries"
-                  :error-messages="errorMessages?.country"
+                  v-model="form.nationality"
+                  label="Nationality"
+                  placeholder="Select Nationality"
+                  :items="nationalityOptions"
+                  :loading="isLoadingCountries"
+                  :error-messages="errorMessages?.nationality"
+                  clearable
                   required
                 />
               </VCol>
@@ -236,22 +260,28 @@ const isFormValid = computed(() => {
                 cols="12"
                 md="6"
               >
-                <AppTextField
+                <AppSelect
                   v-model="form.state"
-                  label="State/Province"
-                  placeholder="Riyadh"
+                  label="Province"
+                  placeholder="Select Province"
+                  :items="provinces"
+                  :loading="isLoadingProvinces"
                   :error-messages="errorMessages?.state"
+                  clearable
                   required
                 />
               </VCol>
 
               <!-- City -->
               <VCol cols="12">
-                <AppTextField
+                <AppSelect
                   v-model="form.city"
                   label="City"
-                  placeholder="Riyadh"
+                  placeholder="Select City"
+                  :items="availableCities"
+                  :disabled="!form.state"
                   :error-messages="errorMessages?.city"
+                  clearable
                   required
                 />
               </VCol>

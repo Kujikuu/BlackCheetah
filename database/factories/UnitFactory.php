@@ -26,7 +26,7 @@ class UnitFactory extends Factory
             'city' => $this->faker->city(),
             'state_province' => $this->faker->state(),
             'postal_code' => $this->faker->postcode(),
-            'country' => $this->faker->countryCode(),
+            'nationality' => $this->faker->countryCode(),
             'phone' => $this->faker->phoneNumber(),
             'email' => $this->faker->companyEmail(),
             'size_sqft' => $this->faker->numberBetween(500, 5000),

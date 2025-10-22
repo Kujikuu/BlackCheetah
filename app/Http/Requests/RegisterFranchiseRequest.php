@@ -22,7 +22,7 @@ class RegisterFranchiseRequest extends FormRequest
         return [
             // Personal Info
             'personalInfo.contactNumber' => 'required|string|max:20',
-            'personalInfo.country' => 'required|string|max:100',
+            'personalInfo.nationality' => 'required|string|max:100',
             'personalInfo.state' => 'required|string|max:100',
             'personalInfo.city' => 'required|string|max:100',
             'personalInfo.address' => 'required|string|max:500',
@@ -44,7 +44,7 @@ class RegisterFranchiseRequest extends FormRequest
             'franchiseDetails.contactDetails.contactNumber' => 'required|string|max:20',
             'franchiseDetails.contactDetails.email' => 'required|email|max:255',
             'franchiseDetails.contactDetails.address' => 'required|string|max:500',
-            'franchiseDetails.contactDetails.country' => 'required|string|max:100',
+            'franchiseDetails.contactDetails.nationality' => 'required|string|max:100',
             'franchiseDetails.contactDetails.state' => 'required|string|max:100',
             'franchiseDetails.contactDetails.city' => 'required|string|max:100',
 
@@ -67,7 +67,7 @@ class RegisterFranchiseRequest extends FormRequest
     {
         return [
             'personalInfo.contactNumber.required' => 'Contact number is required.',
-            'personalInfo.country.required' => 'Country is required.',
+            'personalInfo.nationality.required' => 'Nationality is required.',
             'personalInfo.state.required' => 'State is required.',
             'personalInfo.city.required' => 'City is required.',
             'personalInfo.address.required' => 'Address is required.',

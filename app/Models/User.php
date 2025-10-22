@@ -30,7 +30,7 @@ class User extends Authenticatable
         'avatar',
         'date_of_birth',
         'gender',
-        'country',
+        'nationality',
         'state',
         'city',
         'address',
@@ -94,7 +94,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the franchise this user belongs to (for sales associates and franchisees)
+     * Get the franchise this user belongs to (for brokers and franchisees)
      */
     public function belongsToFranchise()
     {

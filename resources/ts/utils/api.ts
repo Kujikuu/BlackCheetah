@@ -33,6 +33,9 @@ export const $api = ofetch.create({
         Authorization: `Bearer ${accessToken}`,
       }
     }
+    else {
+      console.warn('No access token found in cookies for request:', options.method, options.baseURL + (options.path || ''))
+    }
   },
   async onResponseError({ response }) {
     const error = {

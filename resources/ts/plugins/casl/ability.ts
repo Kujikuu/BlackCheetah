@@ -22,10 +22,10 @@ export type Subjects =
   | 'AdminDashboard'
   | 'FranchisorDashboard'
   | 'FranchiseeDashboard'
-  | 'SalesDashboard'
+  | 'BrokerDashboard'
 
   // Feature-specific subjects
-  | 'Sales'
+  | 'Brokerage'
   | 'Finance'
   | 'Operations'
   | 'Timeline'
@@ -94,11 +94,11 @@ export function defineAbilitiesFor(role: string): Rule[] {
         { action: 'manage', subject: 'Note' },
     ]
 
-    case 'sales':
+    case 'broker':
       return [
         { action: 'read', subject: 'Dashboard' },
-        { action: 'read', subject: 'SalesDashboard' },
-        { action: 'manage', subject: 'Sales' },
+        { action: 'read', subject: 'BrokerDashboard' },
+        { action: 'manage', subject: 'Brokerage' },
         { action: 'manage', subject: 'Lead' },
         { action: 'manage', subject: 'LeadManagement' },
         { action: 'read', subject: 'Task' },

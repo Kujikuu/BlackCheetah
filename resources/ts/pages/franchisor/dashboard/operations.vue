@@ -87,7 +87,7 @@ interface ApiResponse {
         due: number
         due_change: number
       }
-      sales: {
+      broker: {
         total: number
         total_change: number
         completed: number
@@ -117,7 +117,7 @@ interface ApiResponse {
         status: string
         due_date: string
       }>
-      sales: Array<{
+      broker: Array<{
         id: number
         task: string
         assigned_to: string
@@ -140,17 +140,17 @@ interface ApiResponse {
 // 👉 Reactive data
 const tasksData = ref<{
   franchisee: { tasks: Task[]; total: number }
-  sales: { tasks: Task[]; total: number }
+  broker: { tasks: Task[]; total: number }
   staff: { tasks: Task[]; total: number }
 }>({
   franchisee: { tasks: [], total: 0 },
-  sales: { tasks: [], total: 0 },
+  broker: { tasks: [], total: 0 },
   staff: { tasks: [], total: 0 },
 })
 
 const statsData = ref<{
   franchisee: Widget[]
-  sales: Widget[]
+    broker: Widget[]
   staff: Widget[]
 }>({
   franchisee: [
@@ -159,7 +159,7 @@ const statsData = ref<{
     { title: 'In Progress', value: '0', change: 0, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
     { title: 'Due', value: '0', change: 0, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
   ],
-  sales: [
+  broker: [
     { title: 'Total', value: '0', change: 0, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
     { title: 'Completed', value: '0', change: 0, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
     { title: 'In Progress', value: '0', change: 0, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
@@ -194,11 +194,11 @@ watch(operationsApiData, newData => {
     }
 
     // Create fallback objects for safe access
-    const tasks = data.tasks ?? { franchisee: [], sales: [], staff: [] }
+    const tasks = data.tasks ?? { franchisee: [], broker: [], staff: [] }
 
     const stats = data.stats ?? {
       franchisee: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 },
-      sales: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 },
+      broker: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 },
       staff: { total: 0, total_change: 0, completed: 0, completed_change: 0, in_progress: 0, in_progress_change: 0, due: 0, due_change: 0 },
     }
 
@@ -208,9 +208,9 @@ watch(operationsApiData, newData => {
         tasks: mapTasks(tasks.franchisee),
         total: stats.franchisee.total,
       },
-      sales: {
-        tasks: mapTasks(tasks.sales),
-        total: stats.sales.total,
+      broker: {
+        tasks: mapTasks(tasks.broker),
+        total: stats.broker.total,
       },
       staff: {
         tasks: mapTasks(tasks.staff),
@@ -226,11 +226,11 @@ watch(operationsApiData, newData => {
         { title: 'In Progress', value: stats.franchisee.in_progress.toLocaleString(), change: stats.franchisee.in_progress_change, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
         { title: 'Due', value: stats.franchisee.due.toLocaleString(), change: stats.franchisee.due_change, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
       ],
-      sales: [
-        { title: 'Total', value: stats.sales.total.toLocaleString(), change: stats.sales.total_change, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
-        { title: 'Completed', value: stats.sales.completed.toLocaleString(), change: stats.sales.completed_change, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
-        { title: 'In Progress', value: stats.sales.in_progress.toLocaleString(), change: stats.sales.in_progress_change, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
-        { title: 'Due', value: stats.sales.due.toLocaleString(), change: stats.sales.due_change, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
+      broker: [
+        { title: 'Total', value: stats.broker.total.toLocaleString(), change: stats.broker.total_change, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
+        { title: 'Completed', value: stats.broker.completed.toLocaleString(), change: stats.broker.completed_change, desc: 'Finished tasks', icon: 'tabler-circle-check', iconColor: 'success' },
+        { title: 'In Progress', value: stats.broker.in_progress.toLocaleString(), change: stats.broker.in_progress_change, desc: 'Active tasks', icon: 'tabler-progress', iconColor: 'info' },
+        { title: 'Due', value: stats.broker.due.toLocaleString(), change: stats.broker.due_change, desc: 'Overdue tasks', icon: 'tabler-alert-circle', iconColor: 'error' },
       ],
       staff: [
         { title: 'Total', value: stats.staff.total.toLocaleString(), change: stats.staff.total_change, desc: 'All tasks', icon: 'tabler-list-check', iconColor: 'primary' },
@@ -245,8 +245,8 @@ watch(operationsApiData, newData => {
 const currentTasks = computed(() => {
   if (currentTab.value === 'franchisee')
     return tasksData.value.franchisee.tasks
-  if (currentTab.value === 'sales')
-    return tasksData.value.sales.tasks
+  if (currentTab.value === 'broker')
+    return tasksData.value.broker.tasks
 
   return tasksData.value.staff.tasks
 })
@@ -254,8 +254,8 @@ const currentTasks = computed(() => {
 const totalTasks = computed(() => {
   if (currentTab.value === 'franchisee')
     return tasksData.value.franchisee.total
-  if (currentTab.value === 'sales')
-    return tasksData.value.sales.total
+  if (currentTab.value === 'broker')
+    return tasksData.value.broker.total
 
   return tasksData.value.staff.total
 })
@@ -263,8 +263,8 @@ const totalTasks = computed(() => {
 const widgetData = computed(() => {
   if (currentTab.value === 'franchisee')
     return statsData.value.franchisee
-  if (currentTab.value === 'sales')
-    return statsData.value.sales
+  if (currentTab.value === 'broker')
+    return statsData.value.broker
 
   return statsData.value.staff
 })
@@ -331,8 +331,8 @@ const deleteTask = async () => {
       // Remove from local state
       const taskList = currentTab.value === 'franchisee'
         ? tasksData.value.franchisee.tasks
-        : currentTab.value === 'sales'
-          ? tasksData.value.sales.tasks
+        : currentTab.value === 'broker'
+          ? tasksData.value.broker.tasks
           : tasksData.value.staff.tasks
 
       const index = taskList.findIndex(task => task.id === taskToDelete.value)
@@ -365,8 +365,8 @@ const bulkDelete = async () => {
     // Remove deleted tasks from local state
     const taskList = currentTab.value === 'franchisee'
       ? tasksData.value.franchisee.tasks
-      : currentTab.value === 'sales'
-        ? tasksData.value.sales.tasks
+      : currentTab.value === 'broker'
+        ? tasksData.value.broker.tasks
         : tasksData.value.staff.tasks
 
     selectedRows.value.forEach(taskId => {
@@ -390,8 +390,8 @@ const selectedTask = ref<Task | null>(null)
 const viewTask = (id: number) => {
   const taskList = currentTab.value === 'franchisee'
     ? tasksData.value.franchisee.tasks
-    : currentTab.value === 'sales'
-      ? tasksData.value.sales.tasks
+    : currentTab.value === 'broker'
+      ? tasksData.value.broker.tasks
       : tasksData.value.staff.tasks
 
   const task = taskList.find(t => t.id === id)
@@ -405,8 +405,8 @@ const viewTask = (id: number) => {
 const editTask = (id: number) => {
   const taskList = currentTab.value === 'franchisee'
     ? tasksData.value.franchisee.tasks
-    : currentTab.value === 'sales'
-      ? tasksData.value.sales.tasks
+    : currentTab.value === 'broker'
+      ? tasksData.value.broker.tasks
       : tasksData.value.staff.tasks
 
   const task = taskList.find(t => t.id === id)
@@ -428,8 +428,8 @@ const saveTask = async () => {
       // Update local state with the response data
       const taskList = currentTab.value === 'franchisee'
         ? tasksData.value.franchisee.tasks
-        : currentTab.value === 'sales'
-          ? tasksData.value.sales.tasks
+        : currentTab.value === 'broker'
+          ? tasksData.value.broker.tasks
           : tasksData.value.staff.tasks
 
       const index = taskList.findIndex(task => task.id === selectedTask.value!.id)
@@ -458,8 +458,8 @@ const saveTask = async () => {
 const onTaskUpdated = (updatedTask: any) => {
   const taskList = currentTab.value === 'franchisee'
     ? tasksData.value.franchisee.tasks
-    : currentTab.value === 'sales'
-      ? tasksData.value.sales.tasks
+    : currentTab.value === 'broker'
+      ? tasksData.value.broker.tasks
       : tasksData.value.staff.tasks
 
   const index = taskList.findIndex(task => task.id === updatedTask.id)
@@ -473,8 +473,8 @@ const onTaskUpdated = (updatedTask: any) => {
 const onTaskDeleted = (taskId: number) => {
   const taskList = currentTab.value === 'franchisee'
     ? tasksData.value.franchisee.tasks
-    : currentTab.value === 'sales'
-      ? tasksData.value.sales.tasks
+    : currentTab.value === 'broker'
+      ? tasksData.value.broker.tasks
       : tasksData.value.staff.tasks
 
   const index = taskList.findIndex(task => task.id === taskId)
@@ -523,7 +523,7 @@ const avatarText = (name: string) => {
 
 const tabs = [
   { title: 'Franchisee', value: 'franchisee', icon: 'tabler-building-store' },
-  { title: 'Sales Associate', value: 'sales', icon: 'tabler-users' },
+  { title: 'Broker', value: 'broker', icon: 'tabler-users' },
   { title: 'Staff', value: 'staff', icon: 'tabler-user' },
 ]
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 interface Product {
   id: number
@@ -27,13 +28,6 @@ const dialogValue = computed({
   get: () => props.isDialogVisible,
   set: val => emit('update:isDialogVisible', val),
 })
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'SAR',
-  }).format(amount)
-}
 
 const resolveStatusVariant = (status: string) => {
   if (status === 'active' || status === 'completed' || status === 'approved' || status === 'working')

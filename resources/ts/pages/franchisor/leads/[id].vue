@@ -5,8 +5,10 @@ import ViewNoteDialog from '@/components/dialogs/notes/ViewNoteDialog.vue'
 import DeleteNoteDialog from '@/components/dialogs/notes/DeleteNoteDialog.vue'
 import { type Lead, leadApi, notesApi, usersApi } from '@/services/api'
 import { avatarText } from '@core/utils/formatters'
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
 
-const route = useRoute('franchisor-leads-id')
+const route = useRoute()
 const leadId = computed(() => Number(route.params.id))
 
 const currentTab = ref('overview')
@@ -218,61 +220,56 @@ const saveLead = async () => {
   }
 }
 
-// Sales associates for owner selection
-const salesAssociates = ref<Array<{ title: string; value: string }>>([])
+// Brokers for owner selection
+const brokers = ref<Array<{ title: string; value: string }>>([])
 
 const fetchSalesAssociates = async () => {
   try {
-    const response = await usersApi.getSalesAssociates()
+    const response = await usersApi.getBrokers() as any
 
-    if (response.success) {
-      salesAssociates.value = response.data.map((user) => ({
+    if (response.success && response.data) {
+      // API returns paginated data, handle both array and paginated response
+      const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
+      
+      brokers.value = associatesArray.map((user: any) => ({
         title: user.name,
         value: user.name,
       }))
     }
   }
   catch (error) {
-    console.error('Error fetching sales associates:', error)
+    console.error('Error fetching brokers:', error)
   }
 }
 
-// Fetch sales associates on mount
+// Fetch brokers on mount
 onMounted(() => {
   fetchSalesAssociates()
 })
 
 // Dropdown options
-const countries = [
-  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
-  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
-  { title: 'Qatar', value: 'Qatar' },
-  { title: 'Kuwait', value: 'Kuwait' },
-  { title: 'Oman', value: 'Oman' },
-  { title: 'Bahrain', value: 'Bahrain' },
-  { title: 'Jordan', value: 'Jordan' },
-  { title: 'Lebanon', value: 'Lebanon' },
-  { title: 'Egypt', value: 'Egypt' },
-  { title: 'Iraq', value: 'Iraq' },
-  { title: 'Syria', value: 'Syria' },
-  { title: 'Palestine', value: 'Palestine' },
-  { title: 'Yemen', value: 'Yemen' },
-]
+// Get countries from composable
+const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
 
-const usStates = [
-  { title: 'Riyadh', value: 'Riyadh' },
-  { title: 'Makkah', value: 'Makkah' },
-  { title: 'Medina', value: 'Medina' },
-  { title: 'Eastern Province', value: 'Eastern Province' },
-  { title: 'Asir', value: 'Asir' },
-  { title: 'Tabuk', value: 'Tabuk' },
-  { title: 'Hail', value: 'Hail' },
-  { title: 'Northern Borders', value: 'Northern Borders' },
-  { title: 'Jazan', value: 'Jazan' },
-  { title: 'Najran', value: 'Najran' },
-  { title: 'Al Bahah', value: 'Al Bahah' },
-  { title: 'Al Jawf', value: 'Al Jawf' },
-]
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => {
+  if (!leadData.value) return []
+  return getCitiesForProvince(leadData.value.state || '')
+})
+
+// Watch province changes to clear city only if necessary
+watch(() => leadData.value?.state, (newState, oldState) => {
+  if (leadData.value && oldState !== undefined && oldState !== newState) {
+    const cities = getCitiesForProvince(newState || '')
+    const currentCity = leadData.value.city
+    if (currentCity && !cities.includes(currentCity)) {
+      leadData.value.city = ''
+    }
+  }
+})
 
 const leadSources = [
   { title: 'Website', value: 'website' },
@@ -462,10 +459,23 @@ const priorities = [
                         :readonly="!isEditMode"
                       />
                     </VCol>
-                    <VCol cols="12">
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
                       <AppTextField
                         v-model="leadData.company"
                         label="Company"
+                        :readonly="!isEditMode"
+                      />
+                    </VCol>
+                    <VCol
+                      cols="12"
+                      md="6"
+                    >
+                      <AppTextField
+                        v-model="leadData.jobTitle"
+                        label="Job Title"
                         :readonly="!isEditMode"
                       />
                     </VCol>
@@ -487,15 +497,17 @@ const priorities = [
                     >
                       <AppSelect
                         v-if="isEditMode"
-                        v-model="leadData.country"
-                        label="Country"
-                        placeholder="Select Country"
-                        :items="countries"
+                        v-model="leadData.nationality"
+                        label="Nationality"
+                        placeholder="Select Nationality"
+                        :items="nationalityOptions"
+                        :loading="isLoadingCountries"
+                        clearable
                       />
                       <AppTextField
                         v-else
-                        v-model="leadData.country"
-                        label="Country"
+                        v-model="leadData.nationality"
+                        label="Nationality"
                         readonly
                       />
                     </VCol>
@@ -506,14 +518,16 @@ const priorities = [
                       <AppSelect
                         v-if="isEditMode"
                         v-model="leadData.state"
-                        label="State"
-                        placeholder="Select State"
-                        :items="usStates"
+                        label="Province"
+                        placeholder="Select Province"
+                        :items="provinces"
+                        :loading="isLoadingProvinces"
+                        clearable
                       />
                       <AppTextField
                         v-else
                         v-model="leadData.state"
-                        label="State"
+                        label="Province"
                         readonly
                       />
                     </VCol>
@@ -521,10 +535,20 @@ const priorities = [
                       cols="12"
                       md="4"
                     >
-                      <AppTextField
+                      <AppSelect
+                        v-if="isEditMode"
                         v-model="leadData.city"
                         label="City"
-                        :readonly="!isEditMode"
+                        placeholder="Select City"
+                        :items="availableCities"
+                        :disabled="!leadData.state"
+                        clearable
+                      />
+                      <AppTextField
+                        v-else
+                        v-model="leadData.city"
+                        label="City"
+                        readonly
                       />
                     </VCol>
                   </VRow>

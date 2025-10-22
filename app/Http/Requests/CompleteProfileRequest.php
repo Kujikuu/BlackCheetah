@@ -26,7 +26,7 @@ class CompleteProfileRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:20'],
-            'country' => ['required', 'string', 'max:100'],
+            'nationality' => ['required', 'string', 'max:100'],
             'state' => ['required', 'string', 'max:100'],
             'city' => ['required', 'string', 'max:100'],
             'address' => ['required', 'string', 'max:500'],
@@ -41,7 +41,7 @@ class CompleteProfileRequest extends FormRequest
         return [
             'name.required' => 'Full name is required.',
             'phone.required' => 'Contact number is required.',
-            'country.required' => 'Country is required.',
+            'nationality.required' => 'Nationality is required.',
             'state.required' => 'State/Province is required.',
             'city.required' => 'City is required.',
             'address.required' => 'Address is required.',

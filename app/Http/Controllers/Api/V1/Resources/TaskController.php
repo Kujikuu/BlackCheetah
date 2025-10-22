@@ -347,13 +347,13 @@ class TaskController extends BaseResourceController
     }
 
     /**
-     * Get sales user's tasks with statistics
+     * Get broker user's tasks with statistics
      */
-    public function mySalesTasks(Request $request): JsonResponse
+    public function myBrokerTasks(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        // Get franchise for the sales user
+        // Get franchise for the broker user
         $franchise = Franchise::where('franchisor_id', $user->franchise_id)
             ->orWhere('id', $user->franchise_id)
             ->first();
@@ -362,7 +362,7 @@ class TaskController extends BaseResourceController
             return $this->notFoundResponse('No franchise found for current user');
         }
 
-        // Build query for tasks assigned to this sales user
+        // Build query for tasks assigned to this broker user
         $query = Task::where('assigned_to', $user->id)
             ->where('franchise_id', $franchise->id)
             ->with(['franchise', 'unit', 'assignedTo', 'createdBy', 'lead']);
@@ -408,7 +408,7 @@ class TaskController extends BaseResourceController
                 'id' => $task->id,
                 'title' => $task->title,
                 'description' => $task->description,
-                'category' => $task->getCategoryForSales(),
+                'category' => $task->getCategoryForBroker(),
                 'assignedTo' => $task->assignedTo ? $task->assignedTo->name : 'Unassigned',
                 'unitName' => $task->unit ? $task->unit->name : 'N/A',
                 'startDate' => $task->created_at->format('Y-m-d'),
@@ -432,13 +432,13 @@ class TaskController extends BaseResourceController
     }
 
     /**
-     * Get sales tasks statistics
+     * Get broker tasks statistics
      */
-    public function salesTasksStatistics(Request $request): JsonResponse
+    public function brokerTasksStatistics(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        // Get franchise for the sales user
+        // Get franchise for the broker user
         $franchise = Franchise::where('franchisor_id', $user->franchise_id)
             ->orWhere('id', $user->franchise_id)
             ->first();
@@ -447,7 +447,7 @@ class TaskController extends BaseResourceController
             return $this->notFoundResponse('No franchise found for current user');
         }
 
-        // Get tasks for this sales user
+        // Get tasks for this broker user
         $allTasks = Task::where('assigned_to', $user->id)
             ->where('franchise_id', $franchise->id)
             ->get();
@@ -473,9 +473,9 @@ class TaskController extends BaseResourceController
     }
 
     /**
-     * Update sales user's task status
+     * Update broker user's task status
      */
-    public function updateSalesTaskStatus(Request $request, Task $task): JsonResponse
+    public function updateBrokerTaskStatus(Request $request, Task $task): JsonResponse
     {
         $user = $request->user();
 

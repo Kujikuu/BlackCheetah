@@ -2,6 +2,7 @@
 import ConfirmDeleteDialog from '@/components/dialogs/common/ConfirmDeleteDialog.vue'
 import AddDocumentDialog from '@/components/dialogs/franchise/AddDocumentDialog.vue'
 import { franchiseApi } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // 👉 Router
 const router = useRouter()
@@ -984,59 +985,6 @@ const resolveStatusVariant = (status: string) => {
         <VCard>
           <VCardText>
             <VRow>
-              <!-- Personal Information -->
-              <!--
-                <VCol cols="12">
-                <h4 class="text-h6 mb-4">Personal Information</h4>
-                <VCard variant="outlined">
-                <VCardText>
-                <VRow>
-                <VCol cols="12" md="6">
-                <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Personal Contact Number</div>
-                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.contactNumber }}</div>
-                <AppTextField v-else v-model="franchiseData.personalInfo.contactNumber"
-                label="Personal Contact Number" placeholder="Enter your contact number" />
-                </div>
-                </VCol>
-                <VCol cols="12" md="6">
-                <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Personal Country</div>
-                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.country }}</div>
-                <AppSelect v-else v-model="franchiseData.personalInfo.country" label="Personal Country"
-                placeholder="Select country" :items="countries" />
-                </div>
-                </VCol>
-                <VCol cols="12" md="6">
-                <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Personal State</div>
-                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.state }}</div>
-                <AppTextField v-else v-model="franchiseData.personalInfo.state" label="Personal State"
-                placeholder="Enter state" />
-                </div>
-                </VCol>
-                <VCol cols="12" md="6">
-                <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Personal City</div>
-                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.city }}</div>
-                <AppTextField v-else v-model="franchiseData.personalInfo.city" label="Personal City"
-                placeholder="Enter city" />
-                </div>
-                </VCol>
-                <VCol cols="12">
-                <div class="mb-4">
-                <div class="text-sm text-disabled mb-1">Personal Address</div>
-                <div v-if="!isEditMode" class="text-body-1">{{ franchiseData.personalInfo.address }}</div>
-                <AppTextarea v-else v-model="franchiseData.personalInfo.address" label="Personal Address"
-                placeholder="Enter your full address" rows="2" />
-                </div>
-                </VCol>
-                </VRow>
-                </VCardText>
-                </VCard>
-                </VCol>
-              -->
-
               <!-- Franchise Details -->
               <VCol cols="12">
                 <h4 class="text-h6 mb-4">
@@ -1251,7 +1199,7 @@ const resolveStatusVariant = (status: string) => {
                             class="text-body-1 font-weight-medium text-success"
                           >
                             {{
-                              franchiseData.legalDetails.fundingAmount }}
+                              formatCurrency(Number(franchiseData.legalDetails.fundingAmount)) }}
                           </div>
                           <AppTextField
                             v-else
@@ -1614,7 +1562,7 @@ const resolveStatusVariant = (status: string) => {
               <!-- Unit Price -->
               <template #item.unit_price="{ item }">
                 <div class="text-body-1 text-high-emphasis">
-                  {{ Number(item.unit_price).toFixed(2) }} SAR
+                  {{ formatCurrency(Number(item.unit_price)) }}
                 </div>
               </template>
 

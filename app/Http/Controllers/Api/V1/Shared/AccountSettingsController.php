@@ -28,12 +28,11 @@ class AccountSettingsController extends Controller
             'status' => $user->status,
             'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
             'gender' => $user->gender,
-            'country' => $user->country,
+            'nationality' => $user->nationality,
             'state' => $user->state,
             'city' => $user->city,
             'address' => $user->address,
             'preferences' => $user->preferences ?? [
-                'timezone' => '(GMT+03:00) Riyadh',
                 'language' => 'en',
                 'notifications' => [],
             ],
@@ -48,17 +47,16 @@ class AccountSettingsController extends Controller
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
-            'name' => ['sometimes', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             // Email is excluded from updates - users cannot change their email
             'phone' => ['nullable', 'string', 'max:20'],
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', 'string', 'in:male,female,other'],
-            'country' => ['nullable', 'string', 'max:100'],
+            'nationality' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
             'city' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:500'],
             'preferences' => ['nullable', 'array'],
-            'preferences.timezone' => ['nullable', 'string'],
             'preferences.language' => ['nullable', 'string', 'in:en,ar'],
         ]);
 
@@ -76,7 +74,11 @@ class AccountSettingsController extends Controller
             $data['preferences'] = array_merge($user->preferences ?? [], $data['preferences']);
         }
 
+        // Update user with validated data
         $user->update($data);
+
+        // Refresh to get latest data
+        $user->refresh();
 
         return $this->successResponse([
             'id' => $user->id,
@@ -88,7 +90,7 @@ class AccountSettingsController extends Controller
             'status' => $user->status,
             'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
             'gender' => $user->gender,
-            'country' => $user->country,
+            'nationality' => $user->nationality,
             'state' => $user->state,
             'city' => $user->city,
             'address' => $user->address,

@@ -38,10 +38,10 @@ const logout = async () => {
 
 const userProfileList = [
   { type: 'divider' },
-  { type: 'navItem', icon: 'tabler-user', title: 'Profile', to: { name: 'account-settings-tab', params: { tab: 'account' } } },
-  { type: 'navItem', icon: 'tabler-settings', title: 'Settings', to: { name: 'account-settings-tab', params: { tab: 'security' } } },
+  { type: 'navItem', icon: 'tabler-user', title: 'Profile', to: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
+  { type: 'navItem', icon: 'tabler-settings', title: 'Settings', to: { name: 'pages-account-settings-tab', params: { tab: 'security' } } },
 
-  // { type: 'navItem', icon: 'tabler-file-dollar', title: 'Billing Plan', to: { name: 'account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' } },
+  // { type: 'navItem', icon: 'tabler-file-dollar', title: 'Billing Plan', to: { name: 'pages-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' } },
   { type: 'divider' },
 ]
 </script>

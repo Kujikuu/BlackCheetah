@@ -134,7 +134,7 @@ class AdminController extends BaseAdminController
     public function salesUsers(Request $request): JsonResponse
     {
         try {
-            $query = User::where('role', 'sales');
+            $query = User::where('role', 'broker');
 
             // Apply search filter
             if ($request->has('search') && $request->search) {
@@ -581,19 +581,19 @@ class AdminController extends BaseAdminController
             $lastMonth = Carbon::now()->subMonth();
 
             // Current counts
-            $totalSalesUsers = User::where('role', 'sales')->count();
-            $activeSales = User::where('role', 'sales')
+            $totalSalesUsers = User::where('role', 'broker')->count();
+            $activeSales = User::where('role', 'broker')
                 ->where('status', 'active')->count();
-            $pendingApproval = User::where('role', 'sales')
+            $pendingApproval = User::where('role', 'broker')
                 ->where('status', 'pending')->count();
 
             // Last month counts
-            $totalSalesUsersLastMonth = User::where('role', 'sales')
+            $totalSalesUsersLastMonth = User::where('role', 'broker')
                 ->where('created_at', '<=', $lastMonth)->count();
-            $activeSalesLastMonth = User::where('role', 'sales')
+            $activeSalesLastMonth = User::where('role', 'broker')
                 ->where('status', 'active')
                 ->where('created_at', '<=', $lastMonth)->count();
-            $pendingApprovalLastMonth = User::where('role', 'sales')
+            $pendingApprovalLastMonth = User::where('role', 'broker')
                 ->where('status', 'pending')
                 ->where('created_at', '<=', $lastMonth)->count();
 
@@ -658,7 +658,7 @@ class AdminController extends BaseAdminController
                 'city' => 'required|string|max:100',
                 'state_province' => 'required|string|max:100',
                 'postal_code' => 'required|string|max:20',
-                'country' => 'required|string|max:100',
+                'nationality' => 'required|string|max:100',
                 'size_sqft' => 'nullable|numeric|min:0',
                 'monthly_rent' => 'nullable|numeric|min:0',
                 'opening_date' => 'nullable|date',
@@ -718,7 +718,7 @@ class AdminController extends BaseAdminController
                 'city' => $request->city,
                 'state_province' => $request->state_province,
                 'postal_code' => $request->postal_code,
-                'country' => $request->country,
+                'nationality' => $request->nationality,
                 'phone' => $request->phone,
                 'email' => $request->email,
                 'size_sqft' => $request->size_sqft,

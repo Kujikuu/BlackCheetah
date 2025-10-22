@@ -27,6 +27,7 @@ import type {
   UnitTask,
 } from '@/services/api'
 import { franchiseeDashboardApi } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // 👉 Router
 const route = useRoute()
@@ -45,7 +46,7 @@ const unitId = computed<string>(() => {
 const currentUnitId = computed<number | null>(() => {
   if (unitId.value) {
     const parsed = Number.parseInt(unitId.value)
-    if (!Number.isNaN(parsed))
+    if (!Number.isNaN(parsed) && parsed > 0)
       return parsed
   }
 
@@ -61,15 +62,6 @@ const dialogUnitId = computed<number | null>(() => {
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-// Format currency
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
 
 // 👉 Unit data (fetched from API)
 const unitData = ref<UnitDetails | null>(null)
@@ -1569,7 +1561,7 @@ const reviewHeaders = [
               <!-- Unit Price -->
               <template #item.unitPrice="{ item }">
                 <div class="text-body-1 font-weight-medium">
-                  SAR {{ item.unitPrice.toFixed(2) }}
+                  {{ formatCurrency(item.unitPrice) }}
                 </div>
               </template>
 

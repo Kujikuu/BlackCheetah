@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { leadApi, usersApi } from '@/services/api'
 
-interface SalesAssociate {
+interface Broker {
   id: number
   name: string
   email: string
@@ -21,52 +21,55 @@ interface Emit {
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
-const selectedAssociateId = ref<number | null>(props.currentAssigneeId || null)
-const salesAssociates = ref<SalesAssociate[]>([])
+const selectedBrokerId = ref<number | null>(props.currentAssigneeId || null)
+const brokers = ref<Broker[]>([])
 const isLoading = ref(false)
-const isLoadingAssociates = ref(false)
+const isLoadingBrokers = ref(false)
 
 const updateModelValue = (val: boolean) => {
   emit('update:isDialogVisible', val)
   if (!val)
-    selectedAssociateId.value = props.currentAssigneeId || null
+    selectedBrokerId.value = props.currentAssigneeId || null
 }
 
-const fetchSalesAssociates = async () => {
-  isLoadingAssociates.value = true
+const fetchBrokers = async () => {
+  isLoadingBrokers.value = true
 
   try {
-    const response = await usersApi.getSalesAssociates()
+    const response = await usersApi.getBrokers()
 
     if (response.success) {
+      // API returns paginated data, handle both array and paginated response
+      const brokersArray = Array.isArray(response.data) ? response.data : (response.data as any).data || []
+      
       // Transform the data to match the expected format
-      salesAssociates.value = response.data.map((associate) => ({
-        id: associate.id,
-        name: associate.name,
-        email: associate.email,
+      brokers.value = brokersArray.map((broker: any) => ({
+        id: broker.id,
+        name: broker.name,
+        email: broker.email,
       }))
     }
     else {
-      salesAssociates.value = []
+      brokers.value = []
     }
   }
   catch (error) {
-    console.error('Error fetching sales associates:', error)
-    salesAssociates.value = []
+    console.error('Error fetching brokers:', error)
+    brokers.value = []
   }
   finally {
-    isLoadingAssociates.value = false
+    isLoadingBrokers.value = false
   }
 }
 
 const assignLead = async () => {
-  if (!props.leadId || selectedAssociateId.value === null)
+  if (!props.leadId || selectedBrokerId.value === null)
     return
 
   isLoading.value = true
 
   try {
-    await leadApi.assignLead(props.leadId, selectedAssociateId.value!)
+      await leadApi.assignLead(props.leadId, selectedBrokerId.value!)
 
     emit('leadAssigned')
     updateModelValue(false)
@@ -79,11 +82,11 @@ const assignLead = async () => {
   }
 }
 
-// Fetch sales associates when dialog opens
+  // Fetch brokers when dialog opens
 watch(() => props.isDialogVisible, newVal => {
   if (newVal) {
-    fetchSalesAssociates()
-    selectedAssociateId.value = props.currentAssigneeId || null
+    fetchBrokers()
+    selectedBrokerId.value = props.currentAssigneeId || null
   }
 })
 </script>
@@ -101,14 +104,14 @@ watch(() => props.isDialogVisible, newVal => {
 
       <VCardText>
         <VSelect
-          v-model="selectedAssociateId"
-          :items="salesAssociates"
+          v-model="selectedBrokerId"
+          :items="brokers"
           item-title="name"
           item-value="id"
-          label="Sales Associate"
-          placeholder="Select a sales associate"
+          label="Broker"
+          placeholder="Select a broker"
           variant="outlined"
-          :loading="isLoadingAssociates"
+          :loading="isLoadingBrokers"
           :disabled="isLoading"
         >
           <template #item="{ props: itemProps, item }">
@@ -134,7 +137,7 @@ watch(() => props.isDialogVisible, newVal => {
           color="primary"
           variant="elevated"
           :loading="isLoading"
-          :disabled="selectedAssociateId === null"
+          :disabled="selectedBrokerId === null"
           @click="assignLead"
         >
           Assign Lead

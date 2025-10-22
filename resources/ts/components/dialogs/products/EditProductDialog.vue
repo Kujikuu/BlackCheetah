@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { UnitProduct } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 interface Props {
   isDialogVisible: boolean
@@ -38,16 +39,6 @@ const handleSaveProduct = () => {
 
 const handleClose = () => {
   dialogValue.value = false
-}
-
-// Format currency helper
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'SAR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
 }
 </script>
 

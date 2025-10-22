@@ -36,12 +36,12 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::prefix('users')->group(function () {
         Route::get('franchisors', [AdminController::class, 'franchisors'])->name('api.v1.admin.users.franchisors');
         Route::get('franchisees', [AdminController::class, 'franchisees'])->name('api.v1.admin.users.franchisees');
-        Route::get('sales', [AdminController::class, 'salesUsers'])->name('api.v1.admin.users.sales');
+        Route::get('brokers', [AdminController::class, 'salesUsers'])->name('api.v1.admin.users.brokers');
 
         // User stats endpoints
         Route::get('franchisors/stats', [AdminController::class, 'franchisorStats'])->name('api.v1.admin.users.franchisors.stats');
         Route::get('franchisees/stats', [AdminController::class, 'franchiseeStats'])->name('api.v1.admin.users.franchisees.stats');
-        Route::get('sales/stats', [AdminController::class, 'salesStats'])->name('api.v1.admin.users.sales.stats');
+        Route::get('brokers/stats', [AdminController::class, 'salesStats'])->name('api.v1.admin.users.brokers.stats');
 
         // User CRUD operations
         Route::post('/', [AdminController::class, 'createUser'])->name('api.v1.admin.users.store');

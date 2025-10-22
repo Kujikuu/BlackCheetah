@@ -172,7 +172,7 @@ class LeadManagementController extends BaseResourceController
                     'avatar' => $franchisee->avatar,
                     'phone' => $franchisee->phone,
                     'city' => $franchisee->city,
-                    'country' => $franchisee->country,
+                    'nationality' => $franchisee->nationality,
                     'created_at' => $franchisee->created_at,
                 ];
             });

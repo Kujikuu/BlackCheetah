@@ -188,7 +188,7 @@ const chartOptions = computed(() => {
     tooltip: {
       theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
       y: {
-        formatter: (value: number) => `${value.toLocaleString()} SAR`,
+        formatter: (value: number) => formatCurrency(value),
       },
     },
   }
@@ -753,20 +753,20 @@ onMounted(() => {
         <!-- Sales specific templates -->
         <template v-if="activeTab === 'sales'" #item.unitPrice="{ item }">
           <span class="font-weight-medium">
-            {{ Number((item as SalesData).unitPrice).toFixed(2) }} SAR
+            {{ formatCurrency(Number((item as SalesData).unitPrice)) }}
           </span>
         </template>
 
         <template v-if="activeTab === 'sales'" #item.sale="{ item }">
           <span class="text-success font-weight-medium">
-            {{ Number((item as SalesData).sale).toFixed(2) }} SAR
+            {{ formatCurrency(Number((item as SalesData).sale)) }}
           </span>
         </template>
 
         <!-- Expenses specific templates -->
         <template v-if="activeTab === 'expense'" #item.amount="{ item }">
           <span class="text-error font-weight-medium">
-            {{ Number((item as ExpenseData).amount).toFixed(2) }} SAR
+            {{ formatCurrency(Number((item as ExpenseData).amount)) }}
           </span>
         </template>
 
@@ -779,19 +779,19 @@ onMounted(() => {
         <!-- Profit specific templates -->
         <template v-if="activeTab === 'profit'" #item.totalSales="{ item }">
           <span class="font-weight-medium">
-            {{ Number((item as ProfitData).totalSales).toFixed(2) }} SAR
+            {{ formatCurrency(Number((item as ProfitData).totalSales)) }}
           </span>
         </template>
 
         <template v-if="activeTab === 'profit'" #item.totalExpenses="{ item }">
           <span class="text-error">
-            {{ Number((item as ProfitData).totalExpenses).toFixed(2) }} SAR
+            {{ formatCurrency(Number((item as ProfitData).totalExpenses)) }}
           </span>
         </template>
 
         <template v-if="activeTab === 'profit'" #item.profit="{ item }">
           <span class="text-success font-weight-medium">
-            {{ Number((item as ProfitData).profit).toFixed(2) }} SAR
+            {{ formatCurrency(Number((item as ProfitData).profit)) }}
           </span>
         </template>
 
@@ -871,7 +871,7 @@ onMounted(() => {
                     : 'Daily' }} Revenue
                 </div>
                 <h4 class="text-h4 text-success">
-                  {{ (totalSales || 0).toLocaleString() }} SAR
+                  {{ formatCurrency(totalSales || 0, 'SAR', false) }}
                 </h4>
               </div>
               <VAvatar color="success" variant="tonal" size="56">
@@ -896,7 +896,7 @@ onMounted(() => {
                     : 'Daily' }} Costs
                 </div>
                 <h4 class="text-h4 text-error">
-                  {{ (totalExpenses || 0).toLocaleString() }} SAR
+                  {{ formatCurrency(totalExpenses || 0, 'SAR', false) }}
                 </h4>
               </div>
               <VAvatar color="error" variant="tonal" size="56">
@@ -921,7 +921,7 @@ onMounted(() => {
                     : 'Daily' }} Earnings
                 </div>
                 <h4 class="text-h4 text-primary">
-                  {{ (totalProfit || 0).toLocaleString() }} SAR
+                  {{ formatCurrency(totalProfit || 0, 'SAR', false) }}
                 </h4>
               </div>
               <VAvatar color="primary" variant="tonal" size="56">

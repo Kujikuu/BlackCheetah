@@ -15,10 +15,22 @@ const {
 // Load notifications on component mount
 onMounted(async () => {
   try {
+    // Check if user is authenticated before fetching
+    const accessToken = useCookie('accessToken').value
+    if (!accessToken) {
+      console.warn('No access token available, skipping notification fetch')
+      return
+    }
+
     await fetchNotifications()
     await fetchStats()
   }
-  catch (error) {
+  catch (error: any) {
+    // Handle 401 errors gracefully (user not authenticated)
+    if (error?.status === 401 || error?._statusCode === 401) {
+      console.warn('User not authenticated, skipping notification fetch')
+      return
+    }
     console.error('Failed to load notifications:', error)
   }
 })

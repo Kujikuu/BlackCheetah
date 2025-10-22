@@ -7,6 +7,7 @@ import ViewTaskDialog from '@/components/dialogs/tasks/ViewTaskDialog.vue'
 import EditTaskDialog from '@/components/dialogs/tasks/EditTaskDialog.vue'
 import DeleteTaskDialog from '@/components/dialogs/tasks/DeleteTaskDialog.vue'
 import { taskApi } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // 👉 Router
 const router = useRouter()
@@ -1690,7 +1691,7 @@ watch(() => unitData.value, () => {
                 <!-- Unit Price -->
                 <template #item.unitPrice="{ item }">
                   <div class="text-body-1 font-weight-medium">
-                    SAR {{ item.unitPrice.toFixed(2) }}
+                    {{ formatCurrency(item.unitPrice) }}
                   </div>
                 </template>
 

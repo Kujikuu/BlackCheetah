@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useTheme } from 'vuetify'
 import { $api } from '@/utils/api'
 import ExportPerformanceDialog from '@/components/dialogs/performance/ExportPerformanceDialog.vue'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 const vuetifyTheme = useTheme()
 
@@ -156,7 +157,7 @@ const chartOptions = computed(() => {
     tooltip: {
       theme: currentTheme.dark ? 'dark' : 'light',
       y: {
-        formatter: (value: number) => `${value.toLocaleString()} SAR`,
+        formatter: (value: number) => formatCurrency(value),
       },
     },
   }

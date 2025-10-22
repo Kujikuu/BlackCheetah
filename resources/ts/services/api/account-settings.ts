@@ -15,7 +15,7 @@ export interface UserProfile {
   status: string
   date_of_birth: string | null
   gender: string | null
-  country: string | null
+  nationality: string | null
   state: string | null
   city: string | null
   address: string | null
@@ -23,7 +23,6 @@ export interface UserProfile {
 }
 
 export interface UserPreferences {
-  timezone?: string
   language?: string
   notifications?: NotificationPreferences
 }
@@ -49,7 +48,7 @@ export interface UpdateProfilePayload {
   phone?: string | null
   date_of_birth?: string | null
   gender?: string | null
-  country?: string | null
+  nationality?: string | null
   state?: string | null
   city?: string | null
   address?: string | null

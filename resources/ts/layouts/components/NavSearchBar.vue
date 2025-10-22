@@ -41,7 +41,7 @@ const suggestionGroups: SuggestionGroup[] = [
   {
     title: 'Pages',
     content: [
-      { icon: 'tabler-settings', title: 'Account Settings', url: { name: 'account-settings-tab', params: { tab: 'account' } } },
+      { icon: 'tabler-settings', title: 'Account Settings', url: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
     ],
   },
   {

@@ -215,7 +215,7 @@ const fallbackFinanceStats: FinanceStat[] = [
     icon: SaudiRiyal,
     color: 'primary',
     title: 'Total Sales',
-    value: 'SAR 0',
+    value: formatCurrency(0, 'SAR', false),
     change: 0,
     isHover: false,
   },
@@ -223,7 +223,7 @@ const fallbackFinanceStats: FinanceStat[] = [
     icon: 'tabler-receipt',
     color: 'error',
     title: 'Total Expenses',
-    value: 'SAR 0',
+    value: formatCurrency(0, 'SAR', false),
     change: 0,
     isHover: false,
   },
@@ -231,7 +231,7 @@ const fallbackFinanceStats: FinanceStat[] = [
     icon: 'tabler-chart-line',
     color: 'success',
     title: 'Net Profit',
-    value: 'SAR 0',
+    value: formatCurrency(0, 'SAR', false),
     change: 0,
     isHover: false,
   },
@@ -328,7 +328,7 @@ const topStoresSalesConfig = computed(() => ({
     theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
     y: {
       formatter(val: number) {
-        return `${val.toLocaleString()} SAR`
+        return formatCurrency(val)
       },
     },
   },
@@ -412,7 +412,7 @@ const topStoresRoyaltyConfig = computed(() => ({
     theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
     y: {
       formatter(val: number) {
-        return `${val.toLocaleString()} SAR`
+        return formatCurrency(val)
       },
     },
   },
@@ -523,7 +523,7 @@ const summaryConfig = computed(() => ({
     theme: vuetifyTheme.current.value.dark ? 'dark' : 'light',
     y: {
       formatter(val: number) {
-        return `${val.toLocaleString()} SAR`
+        return formatCurrency(val)
       },
     },
   },

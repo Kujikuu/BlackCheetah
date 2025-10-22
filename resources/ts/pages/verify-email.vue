@@ -7,13 +7,6 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import { authApi } from '@/services/api'
 
-definePage({
-  meta: {
-    layout: 'blank',
-    public: true,
-  },
-})
-
 const { smAndUp } = useDisplay()
 
 const userEmail = ref<string | null>(null)

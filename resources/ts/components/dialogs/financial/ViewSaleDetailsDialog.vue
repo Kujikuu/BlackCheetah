@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 interface SaleData {
   id: string | number
@@ -27,10 +28,6 @@ const dialogValue = computed({
   get: () => props.isDialogVisible,
   set: val => emit('update:isDialogVisible', val),
 })
-
-const formatCurrency = (amount: number) => {
-  return Number(amount).toFixed(2) + ' SAR'
-}
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {

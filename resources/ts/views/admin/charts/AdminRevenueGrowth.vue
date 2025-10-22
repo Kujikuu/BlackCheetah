@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { adminApi } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // Reactive data
 const isLoading = ref(true)
@@ -198,7 +199,7 @@ const chartOptions = computed(() => {
         </div>
         <div v-else>
           <h5 class="text-h3 mb-2">
-            SAR {{ totalRevenue.toLocaleString() }}
+            {{ formatCurrency(totalRevenue, 'SAR', false) }}
           </h5>
           <VChip
             label

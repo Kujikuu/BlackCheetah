@@ -22,16 +22,17 @@ class StoreRoyaltyRequest extends FormRequest
         // Map frontend billing frequency to database fee type
         // Frontend sends 'type' with value 'monthly' or 'quarterly' (billing frequency)
         // Database expects 'type' with value 'royalty', 'marketing_fee', 'technology_fee', or 'other' (fee type)
-        // We'll store the billing frequency separately and set type to 'royalty'
-        if ($this->has('type') && in_array($this->input('type'), ['monthly', 'quarterly'])) {
+        $billingFrequency = $this->input('type');
+        
+        if (in_array($billingFrequency, ['monthly', 'quarterly'])) {
             $this->merge([
-                'billing_frequency' => $this->input('type'), // Store original for validation
+                'billing_frequency' => $billingFrequency,
                 'type' => 'royalty', // Override with correct database type
             ]);
-        } else {
-            // If type is not provided or is already a valid database type, use 'royalty' as default
+        } elseif (!$this->has('billing_frequency')) {
+            // If type is already a valid database type, set a default billing frequency
             $this->merge([
-                'type' => 'royalty',
+                'billing_frequency' => 'monthly',
             ]);
         }
 

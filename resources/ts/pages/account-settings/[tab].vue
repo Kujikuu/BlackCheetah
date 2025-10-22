@@ -3,13 +3,7 @@ import AccountSettingsAccount from '@/views/account-settings/AccountSettingsAcco
 import AccountSettingsNotification from '@/views/account-settings/AccountSettingsNotification.vue'
 import AccountSettingsSecurity from '@/views/account-settings/AccountSettingsSecurity.vue'
 
-definePage({
-  meta: {
-    action: 'manage',
-  },
-})
-
-const route = useRoute('account-settings-tab')
+const route = useRoute()
 
 const activeTab = computed({
   get: () => route.params.tab,
@@ -44,7 +38,7 @@ const tabs = [
         v-for="item in tabs"
         :key="item.icon"
         :value="item.tab"
-        :to="{ name: 'account-settings-tab', params: { tab: item.tab } }"
+        :to="{ name: 'pages-account-settings-tab', params: { tab: item.tab } }"
       >
         <VIcon
           size="20"

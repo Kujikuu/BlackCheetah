@@ -26,13 +26,13 @@ const taskToDelete = ref<number | null>(null)
 
 // 👉 Tasks data
 const franchiseeTasksData = ref<any[]>([])
-const salesTasksData = ref<any[]>([])
+const brokerTasksData = ref<any[]>([])
 
 // 👉 Loading and error states
 const franchiseeLoading = ref(false)
-const salesLoading = ref(false)
+const brokerLoading = ref(false)
 const franchiseeError = ref<string | null>(null)
-const salesError = ref<string | null>(null)
+const brokerError = ref<string | null>(null)
 
 // 👉 Modal states
 const isAddTaskModalVisible = ref(false)
@@ -82,28 +82,28 @@ const loadFranchiseeTasks = async () => {
   }
 }
 
-const loadSalesTasks = async () => {
-  salesLoading.value = true
-  salesError.value = null
+const loadBrokerTasks = async () => {
+  brokerLoading.value = true
+  brokerError.value = null
 
   try {
     // Load franchisor tasks and filter for sales-related categories
     const response = await taskApi.getFranchisorTasks()
 
     if (response.success && response.data?.data) {
-      // Filter tasks that are likely sales-related or assigned to sales team members
-      const salesTasks = response.data.data.filter((task: any) => {
-        // Check if task category is sales-related or assigned to sales team members
-        const salesCategories = ['Marketing', 'Customer Service']
+      // Filter tasks that are likely broker-related or assigned to broker team members
+      const brokerTasks = response.data.data.filter((task: any) => {
+        // Check if task category is broker-related or assigned to broker team members
+        const brokerCategories = ['Marketing', 'Customer Service']
 
-        return salesCategories.includes(task.type)
-          || task.assigned_to?.role === 'sales'
-          || task.title?.toLowerCase().includes('sales')
+        return brokerCategories.includes(task.type)
+          || task.assigned_to?.role === 'broker'
+          || task.title?.toLowerCase().includes('broker')
           || task.title?.toLowerCase().includes('lead')
           || task.title?.toLowerCase().includes('client')
       })
 
-      salesTasksData.value = salesTasks.map((task: any) => ({
+      brokerTasksData.value = brokerTasks.map((task: any) => ({
         id: task.id,
         title: task.title,
         description: task.description,
@@ -121,16 +121,16 @@ const loadSalesTasks = async () => {
       }))
     }
     else {
-      salesTasksData.value = []
+      brokerTasksData.value = []
     }
   }
   catch (err: any) {
-    console.error('Failed to load sales tasks:', err)
-    salesError.value = err?.data?.message || 'Failed to load sales tasks'
-    salesTasksData.value = []
+    console.error('Failed to load broker tasks:', err)
+    brokerError.value = err?.data?.message || 'Failed to load broker tasks'
+    brokerTasksData.value = []
   }
   finally {
-    salesLoading.value = false
+    brokerLoading.value = false
   }
 }
 
@@ -152,14 +152,14 @@ const franchiseeDueTasks = computed(() => {
 })
 
 // 👉 Computed stats for sales tasks
-const salesTotalTasks = computed(() => salesTasksData.value.length)
-const salesCompletedTasks = computed(() => salesTasksData.value.filter(task => task.status === 'completed').length)
-const salesInProgressTasks = computed(() => salesTasksData.value.filter(task => task.status === 'in_progress').length)
+const brokerTotalTasks = computed(() => brokerTasksData.value.length)
+const brokerCompletedTasks = computed(() => brokerTasksData.value.filter(task => task.status === 'completed').length)
+const brokerInProgressTasks = computed(() => brokerTasksData.value.filter(task => task.status === 'in_progress').length)
 
-const salesDueTasks = computed(() => {
+const brokerDueTasks = computed(() => {
   const today = new Date()
 
-  return salesTasksData.value.filter(task => {
+  return brokerTasksData.value.filter(task => {
     if (!task.dueDate)
       return false
     const dueDate = new Date(task.dueDate)
@@ -170,28 +170,28 @@ const salesDueTasks = computed(() => {
 
 // 👉 Current tab data
 const currentTasksData = computed(() => {
-  return currentTab.value === 'franchisee' ? franchiseeTasksData.value : salesTasksData.value
+  return currentTab.value === 'franchisee' ? franchiseeTasksData.value : brokerTasksData.value
 })
 
 const currentTotalTasks = computed(() => {
-  return currentTab.value === 'franchisee' ? franchiseeTotalTasks.value : salesTotalTasks.value
+  return currentTab.value === 'franchisee' ? franchiseeTotalTasks.value : brokerTotalTasks.value
 })
 
 const currentCompletedTasks = computed(() => {
-  return currentTab.value === 'franchisee' ? franchiseeCompletedTasks.value : salesCompletedTasks.value
+  return currentTab.value === 'franchisee' ? franchiseeCompletedTasks.value : brokerCompletedTasks.value
 })
 
 const currentInProgressTasks = computed(() => {
-  return currentTab.value === 'franchisee' ? franchiseeInProgressTasks.value : salesInProgressTasks.value
+  return currentTab.value === 'franchisee' ? franchiseeInProgressTasks.value : brokerInProgressTasks.value
 })
 
 const currentDueTasks = computed(() => {
-  return currentTab.value === 'franchisee' ? franchiseeDueTasks.value : salesDueTasks.value
+  return currentTab.value === 'franchisee' ? franchiseeDueTasks.value : brokerDueTasks.value
 })
 
 // 👉 Computed user options based on current tab
 const userOptions = computed(() => {
-  return getUsersForSelect(currentTab.value as 'franchisee' | 'sales')
+  return getUsersForSelect(currentTab.value as 'franchisee' | 'broker')
 })
 
 // 👉 Functions
@@ -254,7 +254,7 @@ const onTaskCreated = async (task: any) => {
       if (currentTab.value === 'franchisee')
         franchiseeTasksData.value.unshift(newTask)
       else
-        salesTasksData.value.unshift(newTask)
+        brokerTasksData.value.unshift(newTask)
     }
     else {
       console.error('Failed to create task:', response)
@@ -305,9 +305,9 @@ const deleteTask = async () => {
           franchiseeTasksData.value.splice(index, 1)
       }
       else {
-        const index = salesTasksData.value.findIndex(task => task.id === taskToDelete.value)
+        const index = brokerTasksData.value.findIndex(task => task.id === taskToDelete.value)
         if (index !== -1)
-          salesTasksData.value.splice(index, 1)
+          brokerTasksData.value.splice(index, 1)
       }
     }
     else {
@@ -370,9 +370,9 @@ const saveTask = async () => {
           franchiseeTasksData.value[index] = updatedTask
       }
       else {
-        const index = salesTasksData.value.findIndex(task => task.id === selectedTask.value.id)
+        const index = brokerTasksData.value.findIndex(task => task.id === selectedTask.value.id)
         if (index !== -1)
-          salesTasksData.value[index] = updatedTask
+          brokerTasksData.value[index] = updatedTask
       }
     }
     else {
@@ -400,9 +400,9 @@ const onTaskUpdated = (updatedTask: any) => {
       franchiseeTasksData.value[index] = updatedTask
   }
   else {
-    const index = salesTasksData.value.findIndex(task => task.id === updatedTask.id)
+    const index = brokerTasksData.value.findIndex(task => task.id === updatedTask.id)
     if (index !== -1)
-      salesTasksData.value[index] = updatedTask
+      brokerTasksData.value[index] = updatedTask
   }
   
   isEditTaskModalVisible.value = false
@@ -417,9 +417,9 @@ const onTaskDeleted = (taskId: number) => {
       franchiseeTasksData.value.splice(index, 1)
   }
   else {
-    const index = salesTasksData.value.findIndex(task => task.id === taskId)
+    const index = brokerTasksData.value.findIndex(task => task.id === taskId)
     if (index !== -1)
-      salesTasksData.value.splice(index, 1)
+      brokerTasksData.value.splice(index, 1)
   }
   
   isDeleteDialogVisible.value = false
@@ -428,22 +428,22 @@ const onTaskDeleted = (taskId: number) => {
 
 // 👉 Watch for tab changes to initialize users
 watch(currentTab, async newTab => {
-  await initializeUsers(newTab as 'franchisee' | 'sales')
+  await initializeUsers(newTab as 'franchisee' | 'broker')
 })
 
 // 👉 Watch for edit modal visibility to initialize users
 watch(isEditTaskModalVisible, async isVisible => {
   if (isVisible)
-    await initializeUsers(currentTab.value as 'franchisee' | 'sales')
+    await initializeUsers(currentTab.value as 'franchisee' | 'broker')
 })
 
 // 👉 Load data on component mount
 onMounted(async () => {
   loadFranchiseeTasks()
-  loadSalesTasks()
+  loadBrokerTasks()
 
   // Initialize users for the default tab
-  await initializeUsers(currentTab.value as 'franchisee' | 'sales')
+  await initializeUsers(currentTab.value as 'franchisee' | 'broker')
 })
 </script>
 
@@ -484,12 +484,12 @@ onMounted(async () => {
         />
         Franchisee Tasks
       </VTab>
-      <VTab value="sales">
+      <VTab value="broker">
         <VIcon
           icon="tabler-user-star"
           start
         />
-        Sales Tasks
+        Broker Tasks
       </VTab>
     </VTabs>
 
@@ -767,23 +767,23 @@ onMounted(async () => {
         </template>
       </VWindowItem>
 
-      <!-- Sales Tasks Tab -->
-      <VWindowItem value="sales">
+      <!-- Broker Tasks Tab -->
+      <VWindowItem value="broker">
         <!-- Error Alert -->
         <VAlert
-          v-if="salesError"
+          v-if="brokerError"
           type="error"
           variant="tonal"
           class="mb-4"
           closable
-          @click:close="salesError = null"
+          @click:close="brokerError = null"
         >
-          {{ salesError }}
+          {{ brokerError }}
         </VAlert>
 
         <!-- Loading State -->
         <div
-          v-if="salesLoading"
+          v-if="brokerLoading"
           class="text-center py-12"
         >
           <VProgressCircular
@@ -825,7 +825,7 @@ onMounted(async () => {
                       Total Tasks
                     </div>
                     <h4 class="text-h4">
-                      {{ salesTotalTasks }}
+                      {{ brokerTotalTasks }}
                     </h4>
                   </div>
                 </VCardText>
@@ -853,7 +853,7 @@ onMounted(async () => {
                       Completed
                     </div>
                     <h4 class="text-h4">
-                      {{ salesCompletedTasks }}
+                      {{ brokerCompletedTasks }}
                     </h4>
                   </div>
                 </VCardText>
@@ -881,7 +881,7 @@ onMounted(async () => {
                       In Progress
                     </div>
                     <h4 class="text-h4">
-                      {{ salesInProgressTasks }}
+                      {{ brokerInProgressTasks }}
                     </h4>
                   </div>
                 </VCardText>
@@ -909,7 +909,7 @@ onMounted(async () => {
                       Due
                     </div>
                     <h4 class="text-h4">
-                      {{ salesDueTasks }}
+                      {{ brokerDueTasks }}
                     </h4>
                   </div>
                 </VCardText>
@@ -929,8 +929,8 @@ onMounted(async () => {
             <VDivider />
 
             <VDataTable
-              v-if="salesTasksData.length > 0"
-              :items="salesTasksData"
+              v-if="brokerTasksData.length > 0"
+              :items="brokerTasksData"
               :headers="taskHeaders"
               class="text-no-wrap"
               item-value="id"

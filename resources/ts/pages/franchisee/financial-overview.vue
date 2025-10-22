@@ -8,6 +8,7 @@ import type {
 } from '@/services/api/franchisee-dashboard'
 import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
 import ImportDataDialog from '@/components/dialogs/common/ImportDataDialog.vue'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 interface AddDataForm {
 
@@ -473,7 +474,7 @@ const onImportData = (file: File | null) => {
             <div>
               <span class="text-sm text-medium-emphasis">Total Sales</span>
               <div class="text-h6 font-weight-medium">
-                {{ totalSales.toLocaleString() }} SAR
+                {{ formatCurrency(totalSales, 'SAR', false) }}
               </div>
             </div>
           </VCardText>
@@ -490,7 +491,7 @@ const onImportData = (file: File | null) => {
             <div>
               <span class="text-sm text-medium-emphasis">Total Expenses</span>
               <div class="text-h6 font-weight-medium">
-                {{ totalExpenses.toLocaleString() }} SAR
+                {{ formatCurrency(totalExpenses, 'SAR', false) }}
               </div>
             </div>
           </VCardText>
@@ -507,7 +508,7 @@ const onImportData = (file: File | null) => {
             <div>
               <span class="text-sm text-medium-emphasis">Total Profit</span>
               <div class="text-h6 font-weight-medium">
-                {{ totalProfit.toLocaleString() }} SAR
+                {{ formatCurrency(totalProfit, 'SAR', false) }}
               </div>
             </div>
           </VCardText>
@@ -560,12 +561,12 @@ const onImportData = (file: File | null) => {
                   :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.unitPrice="{ item }">
                     <span class="font-weight-medium">
-                      {{ Number(item.unitPrice).toFixed(2) }} SAR
+                      {{ formatCurrency(Number(item.unitPrice)) }}
                     </span>
                   </template>
                   <template #item.sale="{ item }">
                     <span class="text-success font-weight-medium">
-                      {{ Number(item.sale).toFixed(2) }} SAR
+                      {{ formatCurrency(Number(item.sale)) }}
                     </span>
                   </template>
                   <template #item.actions="{ item }">
@@ -581,7 +582,7 @@ const onImportData = (file: File | null) => {
                   :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.amount="{ item }">
                     <span class="text-error font-weight-medium">
-                      {{ Number(item.amount).toFixed(2) }} SAR
+                      {{ formatCurrency(Number(item.amount)) }}
                     </span>
                   </template>
                   <template #item.expenseCategory="{ item }">
@@ -602,17 +603,17 @@ const onImportData = (file: File | null) => {
                   :items-per-page="10" show-select class="text-no-wrap" item-value="id">
                   <template #item.totalSales="{ item }">
                     <span class="font-weight-medium">
-                      {{ Number(item.totalSales).toFixed(2) }} SAR
+                      {{ formatCurrency(Number(item.totalSales)) }}
                     </span>
                   </template>
                   <template #item.totalExpenses="{ item }">
                     <span class="text-error">
-                      {{ Number(item.totalExpenses).toFixed(2) }} SAR
+                      {{ formatCurrency(Number(item.totalExpenses)) }}
                     </span>
                   </template>
                   <template #item.profit="{ item }">
                     <span class="text-success font-weight-medium">
-                      {{ Number(item.profit).toFixed(2) }} SAR
+                      {{ formatCurrency(Number(item.profit)) }}
                     </span>
                   </template>
                 </VDataTable>

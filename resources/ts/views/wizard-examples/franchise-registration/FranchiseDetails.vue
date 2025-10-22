@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
+
 interface FranchiseDetailsData {
   franchiseDetails: {
     franchiseName: string
@@ -39,22 +42,19 @@ const localFormData = computed({
   set: val => emit('update:formData', val),
 })
 
-// 👉 Options
-const countries = [
-  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
-  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
-  { title: 'Qatar', value: 'Qatar' },
-  { title: 'Kuwait', value: 'Kuwait' },
-  { title: 'Oman', value: 'Oman' },
-  { title: 'Bahrain', value: 'Bahrain' },
-  { title: 'Jordan', value: 'Jordan' },
-  { title: 'Lebanon', value: 'Lebanon' },
-  { title: 'Egypt', value: 'Egypt' },
-  { title: 'Iraq', value: 'Iraq' },
-  { title: 'Syria', value: 'Syria' },
-  { title: 'Palestine', value: 'Palestine' },
-  { title: 'Yemen', value: 'Yemen' },
-]
+// Get countries from composable
+const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
+
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => getCitiesForProvince(localFormData.value.contactDetails.state || ''))
+
+// Watch province changes to clear city
+watch(() => localFormData.value.contactDetails.state, () => {
+  localFormData.value.contactDetails.city = ''
+})
 
 const businessStructures = [
   { title: 'Corporation', value: 'corporation' },
@@ -243,28 +243,36 @@ const fundingSources = [
           <AppSelect
             v-model="localFormData.contactDetails.country"
             label="Country"
-            :items="countries"
+            :items="nationalityOptions"
+            :loading="isLoadingCountries"
             placeholder="Select country"
+            clearable
           />
         </VCol>
         <VCol
           cols="12"
           md="4"
         >
-          <AppTextField
+          <AppSelect
             v-model="localFormData.contactDetails.state"
-            label="State/Province"
-            placeholder="Enter state"
+            label="Province"
+            placeholder="Select Province"
+            :items="provinces"
+            :loading="isLoadingProvinces"
+            clearable
           />
         </VCol>
         <VCol
           cols="12"
           md="4"
         >
-          <AppTextField
+          <AppSelect
             v-model="localFormData.contactDetails.city"
             label="City"
-            placeholder="Enter city"
+            placeholder="Select City"
+            :items="availableCities"
+            :disabled="!localFormData.contactDetails.state"
+            clearable
           />
         </VCol>
       </VRow>

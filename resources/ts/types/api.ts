@@ -93,7 +93,7 @@ export enum TechnicalRequestCategory {
 }
 
 // Period filter type
-export type PeriodFilter = 'daily' | 'monthly' | 'yearly'
+export type PeriodFilter = 'all' | 'daily' | 'monthly' | 'yearly'
 
 // Common chart data structure
 export interface ChartData {

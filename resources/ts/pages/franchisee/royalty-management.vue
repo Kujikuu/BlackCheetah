@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { SaudiRiyal } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
+import type { PeriodFilter } from '@/types/api'
 import { type PaymentData, type RoyaltyRecord, type RoyaltyStatistics, royaltyApi } from '@/services/api'
 import MarkCompletedRoyaltyDialog from '@/components/dialogs/royalty/MarkCompletedRoyaltyDialog.vue'
 import ViewRoyaltyDetailsDialog from '@/components/dialogs/royalty/ViewRoyaltyDetailsDialog.vue'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // Loading states
 const isLoading = ref(false)
 const isLoadingStats = ref(false)
 
 // Reactive data
-const selectedPeriod = ref('monthly')
+const selectedPeriod = ref<PeriodFilter>('all')
 const isExportDialogVisible = ref(false)
 const isMarkCompletedModalVisible = ref(false)
 const isViewRoyaltyDialogVisible = ref(false)
@@ -46,9 +48,10 @@ const upcomingRoyalties = computed(() => statistics.value.upcoming_royalties)
 
 // Period options
 const periodOptions = [
-  { title: 'Daily', value: 'daily' },
-  { title: 'Monthly', value: 'monthly' },
-  { title: 'Yearly', value: 'yearly' },
+  { title: 'All Time', value: 'all' },
+  { title: 'This Year', value: 'yearly' },
+  { title: 'This Month', value: 'monthly' },
+  { title: 'Today', value: 'daily' },
 ]
 
 // Export options
@@ -235,6 +238,12 @@ const formatDate = (dateString: string) => {
   })
 }
 
+// Watch for period changes
+watch(selectedPeriod, () => {
+  fetchRoyalties()
+  fetchStatistics()
+})
+
 // Lifecycle hooks
 onMounted(() => {
   fetchRoyalties()
@@ -288,11 +297,11 @@ onMounted(() => {
                   Total payments received
                 </div>
                 <h4 class="text-h4 text-success">
-                  {{ (royaltyCollectedTillDate || 0).toLocaleString() }} SAR
+                  {{ formatCurrency(royaltyCollectedTillDate || 0, 'SAR', false) }}
                 </h4>
               </div>
               <VAvatar color="success" variant="tonal" size="56">
-                <SaudiRiyal size="28" />
+                <SaudiRiyal :size="28" />
               </VAvatar>
             </div>
           </VCardText>
@@ -312,7 +321,7 @@ onMounted(() => {
                   Pending payments due
                 </div>
                 <h4 class="text-h4 text-warning">
-                  {{ (upcomingRoyalties || 0).toLocaleString() }} SAR
+                  {{ formatCurrency(upcomingRoyalties || 0, 'SAR', false) }}
                 </h4>
               </div>
               <VAvatar color="warning" variant="tonal" size="56">
@@ -357,7 +366,7 @@ onMounted(() => {
             <!-- Gross Sales Column -->
             <template #item.gross_sales="{ item }">
               <div class="font-weight-medium text-info">
-                {{ (item.gross_sales || 0).toLocaleString() }}
+                {{ formatCurrency(item.gross_sales || 0, 'SAR', false) }}
               </div>
             </template>
 
@@ -371,7 +380,7 @@ onMounted(() => {
             <!-- Amount Column -->
             <template #item.amount="{ item }">
               <div class="font-weight-medium text-success">
-                {{ (item.amount || 0).toLocaleString() }}
+                {{ formatCurrency(item.amount || 0, 'SAR', false) }}
               </div>
             </template>
 

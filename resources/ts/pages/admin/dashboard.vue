@@ -5,7 +5,7 @@ import AdminRevenueGrowth from '@/views/admin/charts/AdminRevenueGrowth.vue'
 import AdminUsersChart from '@/views/admin/charts/AdminUsersChart.vue'
 import AddEditFranchiseeDrawer from '@/views/admin/modals/AddEditFranchiseeDrawer.vue'
 import AddEditFranchisorDrawer from '@/views/admin/modals/AddEditFranchisorDrawer.vue'
-import AddEditSalesDrawer from '@/views/admin/modals/AddEditSalesDrawer.vue'
+import AddEditBrokerDrawer from '@/views/admin/modals/AddEditBrokerDrawer.vue'
 import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
 import { adminApi } from '@/services/api'
 
@@ -101,7 +101,7 @@ const resolveUserRoleVariant = (role: string) => {
     return { color: 'success', icon: 'tabler-building-store' }
   if (roleLowerCase === 'franchisee')
     return { color: 'info', icon: 'tabler-user-check' }
-  if (roleLowerCase === 'sales')
+  if (roleLowerCase === 'broker')
     return { color: 'warning', icon: 'tabler-chart-line' }
 
   return { color: 'primary', icon: 'tabler-user' }
@@ -123,7 +123,7 @@ const resolveUserStatusVariant = (stat: string) => {
 const isViewDialogVisible = ref(false)
 const isEditFranchisorDrawerVisible = ref(false)
 const isEditFranchiseeDrawerVisible = ref(false)
-const isEditSalesDrawerVisible = ref(false)
+const isEditBrokerDrawerVisible = ref(false)
 const selectedUser = ref<any>(null)
 
 // View user
@@ -143,8 +143,8 @@ const editUser = (user: any) => {
   else if (user.role === 'franchisee')
     isEditFranchiseeDrawerVisible.value = true
 
-  else if (user.role === 'sales')
-    isEditSalesDrawerVisible.value = true
+  else if (user.role === 'broker')
+      isEditBrokerDrawerVisible.value = true
 }
 
 // Handle edit from view dialog
@@ -168,8 +168,8 @@ const getUserTypeLabel = (role: string) => {
     return 'Franchisor'
   if (role === 'franchisee')
     return 'Franchisee'
-  if (role === 'sales')
-    return 'Sales User'
+  if (role === 'broker')
+    return 'Broker'
 
   return 'User'
 }
@@ -444,10 +444,10 @@ const avatarText = (name: string | null | undefined) => {
     />
 
     <!-- Edit Sales Drawer -->
-    <AddEditSalesDrawer
-      v-model:is-drawer-open="isEditSalesDrawerVisible"
-      :sales-user="selectedUser"
-      @sales-user-data="updateUser"
+    <AddEditBrokerDrawer
+      v-model:is-drawer-open="isEditBrokerDrawerVisible"
+      :broker-user="selectedUser"
+      @broker-user-data="updateUser"
     />
   </section>
 </template>

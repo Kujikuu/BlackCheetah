@@ -47,18 +47,11 @@ export default [
     ],
   },
   {
-    title: 'Sales Associates',
-    to: 'franchisor-sales-associates',
+    title: 'Brokers',
+    to: 'franchisor-brokers',
     icon: { icon: 'tabler-user-star' },
     action: 'manage',
     subject: 'User',
-  },
-  {
-    title: 'Lead Management',
-    to: 'franchisor-lead-management',
-    icon: { icon: 'tabler-user-search' },
-    action: 'manage',
-    subject: 'Lead',
   },
   {
     title: 'My Franchise',

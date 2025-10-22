@@ -1,10 +1,4 @@
 <script setup lang="ts">
-definePage({
-  meta: {
-    action: 'read',
-    subject: 'AdminDashboard',
-  },
-})
 </script>
 
 <template>

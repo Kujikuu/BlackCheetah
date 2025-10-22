@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('unit_id')->constrained('units')->onDelete('cascade');
             $table->date('assigned_date')->default(now());
             $table->date('end_date')->nullable();
-            $table->enum('role', ['manager', 'assistant_manager', 'supervisor', 'sales_associate', 'cashier', 'barista', 'cook', 'cleaner', 'security', 'maintenance'])->default('sales_associate');
+            $table->enum('role', ['manager', 'assistant_manager', 'supervisor', 'broker', 'cashier', 'barista', 'cook', 'cleaner', 'security', 'maintenance'])->default('broker');
             $table->boolean('is_primary')->default(false); // Primary assignment
             $table->timestamps();
 

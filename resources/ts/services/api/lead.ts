@@ -10,8 +10,9 @@ export interface Lead {
   email: string
   phone: string
   company: string
-  country: string
-  state: string
+  jobTitle?: string
+  nationality: string
+  state: string  // Province/state (stored in backend's address field)
   city: string
   source: string
   status: `${LeadStatus}`
@@ -36,13 +37,17 @@ export interface LeadStatistic {
   iconColor: string
 }
 
-export interface LeadsResponse extends ApiResponse<{
-  leads: Lead[]
-  total: number
-  currentPage: number
-  perPage: number
-  lastPage: number
-}> {}
+export interface LeadsResponse {
+  success: boolean
+  data: {
+    leads: Lead[]
+    total: number
+    currentPage: number
+    perPage: number
+    lastPage: number
+  }
+  message?: string
+}
 
 export interface StatisticsResponse extends ApiResponse<LeadStatistic[]> {}
 
@@ -114,8 +119,9 @@ export class LeadApi {
         email: response.data.email,
         phone: response.data.phone,
         company: response.data.company_name || response.data.company,
-        country: response.data.country,
-        state: response.data.state || response.data.address,
+        jobTitle: response.data.job_title,
+        nationality: response.data.nationality,
+        state: response.data.address, // Backend stores province in address field
         city: response.data.city,
         source: response.data.lead_source,
         status: response.data.status,
@@ -140,9 +146,47 @@ export class LeadApi {
    * Create new lead
    */
   async createLead(data: Partial<Lead>): Promise<ApiResponse<Lead>> {
+    // Transform camelCase to snake_case for backend
+    const backendData: any = {}
+
+    if (data.firstName !== undefined)
+      backendData.first_name = data.firstName
+    if (data.lastName !== undefined)
+      backendData.last_name = data.lastName
+    if (data.email !== undefined)
+      backendData.email = data.email
+    if (data.phone !== undefined)
+      backendData.phone = data.phone
+    if (data.company !== undefined)
+      backendData.company_name = data.company
+    if (data.jobTitle !== undefined)
+      backendData.job_title = data.jobTitle
+    if (data.nationality !== undefined)
+      backendData.nationality = data.nationality
+    if (data.state !== undefined)
+      backendData.address = data.state // Backend stores province/state in address field
+    if (data.city !== undefined)
+      backendData.city = data.city
+    if (data.source !== undefined)
+      backendData.lead_source = data.source
+    if (data.status !== undefined)
+      backendData.status = data.status
+    if (data.note !== undefined)
+      backendData.notes = data.note
+    if (data.priority !== undefined)
+      backendData.priority = data.priority
+    if (data.estimatedInvestment !== undefined)
+      backendData.estimated_investment = data.estimatedInvestment
+    if (data.franchiseFeeQuoted !== undefined)
+      backendData.franchise_fee_quoted = data.franchiseFeeQuoted
+    if (data.expectedDecisionDate !== undefined)
+      backendData.expected_decision_date = data.expectedDecisionDate
+    if (data.owner !== undefined && typeof data.owner === 'number')
+      backendData.assigned_to = data.owner
+
     return await $api<ApiResponse<Lead>>(this.getBaseUrl(), {
       method: 'POST',
-      body: data,
+      body: backendData,
     })
   }
 
@@ -162,15 +206,17 @@ export class LeadApi {
     if (data.phone !== undefined)
       backendData.phone = data.phone
     if (data.company !== undefined)
-      backendData.company = data.company
-    if (data.country !== undefined)
-      backendData.country = data.country
+      backendData.company_name = data.company
+    if (data.jobTitle !== undefined)
+      backendData.job_title = data.jobTitle
+    if (data.nationality !== undefined)
+      backendData.nationality = data.nationality
     if (data.state !== undefined)
-      backendData.state = data.state
+      backendData.address = data.state // Backend stores province/state in address field
     if (data.city !== undefined)
       backendData.city = data.city
     if (data.source !== undefined)
-      backendData.source = data.source
+      backendData.lead_source = data.source
     if (data.status !== undefined)
       backendData.status = data.status
     if (data.note !== undefined)
@@ -183,6 +229,8 @@ export class LeadApi {
       backendData.franchise_fee_quoted = data.franchiseFeeQuoted
     if (data.expectedDecisionDate !== undefined)
       backendData.expected_decision_date = data.expectedDecisionDate
+    if (data.owner !== undefined && typeof data.owner === 'number')
+      backendData.assigned_to = data.owner
 
     return await $api<ApiResponse<Lead>>(`${this.getBaseUrl()}/${id}`, {
       method: 'PUT',
@@ -289,7 +337,7 @@ export class LeadApi {
   }
 
   /**
-   * Assign lead to sales associate
+   * Assign lead to broker
    */
   async assignLead(leadId: number, assignedTo: number): Promise<ApiResponse> {
     return await $api<ApiResponse>(`/v1/franchisor/leads/${leadId}/assign`, {

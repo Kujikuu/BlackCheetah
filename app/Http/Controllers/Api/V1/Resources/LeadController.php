@@ -54,6 +54,11 @@ class LeadController extends BaseResourceController
             $query->where('franchise_id', $franchiseId);
         }
 
+        // Sales users should only see their assigned leads
+        if ($user->hasRole('sales')) {
+            $query->where('assigned_to', $user->id);
+        }
+
         // Apply filters
         if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);
@@ -111,7 +116,7 @@ class LeadController extends BaseResourceController
                 'email' => $lead->email,
                 'phone' => $lead->phone,
                 'company' => $lead->company_name ?? '',
-                'country' => $lead->country,
+                'nationality' => $lead->nationality,
                 'state' => $lead->address ?? '',
                 'city' => $lead->city,
                 'source' => $lead->lead_source, // Keep original value for consistency
@@ -260,12 +265,21 @@ class LeadController extends BaseResourceController
             $user = Auth::user();
             $franchiseId = $this->getUserFranchiseId($user);
 
-            if (! $franchiseId) {
+            if (! $franchiseId && !$user->hasRole('admin')) {
                 return $this->notFoundResponse('No franchise found for this user');
             }
 
-            $query = Lead::where('franchise_id', $franchiseId)
-                ->with(['assignedUser:id,name,email']);
+            $query = Lead::with(['assignedUser:id,name,email']);
+
+            // Filter by franchise
+            if ($franchiseId) {
+                $query->where('franchise_id', $franchiseId);
+            }
+
+            // Sales users should only see their assigned leads
+            if ($user->hasRole('sales')) {
+                $query->where('assigned_to', $user->id);
+            }
 
             // Apply search filter
             if ($request->has('search') && $request->search) {
@@ -295,12 +309,25 @@ class LeadController extends BaseResourceController
             }
 
             // Apply sorting
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortOrder = $request->get('sort_order', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sortBy = $request->get('sortBy', 'created_at');
+            $sortOrder = $request->get('orderBy', 'desc');
+            
+            // Map frontend field names to database columns
+            $sortMapping = [
+                'name' => 'first_name',
+                'company' => 'company_name',
+                'lastContacted' => 'last_contact_date',
+            ];
+
+            $sortColumn = $sortMapping[$sortBy] ?? $sortBy;
+            $query->orderBy($sortColumn, $sortOrder);
 
             // Pagination
-            $perPage = $request->get('per_page', 10);
+            $perPage = $request->get('itemsPerPage', 10);
+            if ($perPage == -1) {
+                $perPage = $query->count();
+            }
+            
             $leads = $query->paginate($perPage);
 
             // Transform the data to match frontend expectations
@@ -312,7 +339,7 @@ class LeadController extends BaseResourceController
                     'email' => $lead->email,
                     'phone' => $lead->phone,
                     'company' => $lead->company_name,
-                    'country' => $lead->country,
+                    'nationality' => $lead->nationality,
                     'state' => $lead->state ?? '',
                     'city' => $lead->city,
                     'source' => $lead->lead_source,
@@ -348,6 +375,11 @@ class LeadController extends BaseResourceController
         // Scope to user's franchise (unless admin)
         if ($franchiseId) {
             $query->where('franchise_id', $franchiseId);
+        }
+
+        // Sales users should only see their assigned leads statistics
+        if ($user->hasRole('sales')) {
+            $query->where('assigned_to', $user->id);
         }
 
         $totalLeads = (clone $query)->count();
@@ -481,7 +513,7 @@ class LeadController extends BaseResourceController
                     'email' => $data['Email'] ?? '',
                     'phone' => $data['Phone'] ?? '',
                     'company_name' => $data['Company'] ?? null,
-                    'country' => $data['Country'] ?? null,
+                    'nationality' => $data['Nationality'] ?? null,
                     'address' => $data['State'] ?? null,
                     'city' => $data['City'] ?? null,
                     'lead_source' => strtolower(str_replace(' ', '_', $data['Lead Source'] ?? 'other')),
@@ -541,6 +573,7 @@ class LeadController extends BaseResourceController
                 'Company',
                 'Email',
                 'Phone',
+                'Nationality',
                 'City',
                 'State',
                 'Source',
@@ -558,6 +591,7 @@ class LeadController extends BaseResourceController
                     $lead->email,
                     $lead->phone,
                     $lead->city,
+                    $lead->nationality,
                     $lead->address,
                     $lead->lead_source,
                     $lead->status,

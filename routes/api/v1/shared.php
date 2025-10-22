@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Shared\AccountSettingsController;
+use App\Http\Controllers\Api\V1\Shared\CountriesController;
+use App\Http\Controllers\Api\V1\Shared\ProvincesController;
 use App\Http\Controllers\Api\V1\Resources\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +17,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Countries list endpoint
+    Route::get('/countries', [CountriesController::class, 'index'])->name('api.v1.countries.index');
+    
+    // Provinces list endpoint
+    Route::get('/provinces', [ProvincesController::class, 'index'])->name('api.v1.provinces.index');
+
     // Account Settings routes (available for all authenticated users)
     Route::prefix('account')->group(function () {
         Route::get('/profile', [AccountSettingsController::class, 'getProfile'])->name('api.v1.account.profile');

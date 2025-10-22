@@ -1,10 +1,11 @@
 import { franchiseApi, leadApi, usersApi, type FranchisorDashboardStats, type ProfileCompletionStatus, type SalesAssociate as ApiSalesAssociate, type Lead } from '@/services/api'
+import { formatCurrency } from '@/@core/utils/formatters'
 
 // Use the imported types from API services
 type DashboardStats = FranchisorDashboardStats
 
 // Local interface for the composable's specific needs
-export interface SalesAssociate {
+export interface Broker {
   id: number
   name: string
   email: string
@@ -32,7 +33,7 @@ export const useFranchisorDashboard = () => {
 
   // Dashboard stats
   const dashboardStats = ref<DashboardStats | null>(null)
-  const salesAssociates = ref<SalesAssociate[]>([])
+  const salesAssociates = ref<Broker[]>([])
   const recentActivities = ref<RecentActivity[]>([])
   const leads = ref<Lead[]>([])
 
@@ -113,21 +114,24 @@ export const useFranchisorDashboard = () => {
   }
 
   /**
-   * Fetch sales associates
+   * Fetch brokers
    */
   const fetchSalesAssociates = async () => {
     try {
-      const response = await usersApi.getSalesAssociates()
+      const response = await usersApi.getBrokers()
 
       if (response.success && response.data) {
+        // API returns paginated data, so we need to access response.data.data
+        const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
+        
         // Map the API response to match the composable's expected interface
-        salesAssociates.value = response.data.map((associate: ApiSalesAssociate) => ({
+        salesAssociates.value = associatesArray.map((associate: any) => ({
           id: associate.id,
           name: associate.name,
           email: associate.email,
-          phone: '', // Default empty string since phone is not in API response
+          phone: associate.phone || '', // Use phone from API or default to empty string
           status: (associate.status as 'active' | 'inactive') || 'active',
-          leads_count: 0, // Default value since it's not in the API response
+          leads_count: associate.assignedLeads || 0, // Use assignedLeads from API
           created_at: associate.created_at,
         }))
       }
@@ -135,8 +139,8 @@ export const useFranchisorDashboard = () => {
         salesAssociates.value = []
     }
     catch (err: any) {
-      console.error('Sales associates error:', err)
-      salesAssociates.value = [] // Ensure salesAssociates is always an array
+      console.error('Brokers error:', err)
+      salesAssociates.value = [] // Ensure brokers is always an array
     }
   }
 
@@ -221,7 +225,7 @@ export const useFranchisorDashboard = () => {
       })
     }
 
-    // Add sales associate activities - ensure salesAssociates.value exists before calling slice
+    // Add broker activities - ensure salesAssociates.value exists before calling slice
     if (Array.isArray(salesAssociates.value) && salesAssociates.value.length > 0) {
       salesAssociates.value.slice(0, 2).forEach(associate => {
         if (associate.status === 'active') {
@@ -244,7 +248,7 @@ export const useFranchisorDashboard = () => {
       activities.push({
         id: Date.now(),
         type: 'revenue',
-        title: `Monthly revenue: $${dashboardStats.value.currentMonthRevenue.toLocaleString()}`,
+        title: `Monthly revenue: ${formatCurrency(dashboardStats.value.currentMonthRevenue, 'SAR', false)}`,
         time: 'This month',
         icon: 'tabler-currency-riyal',
         color: 'warning',
@@ -303,7 +307,7 @@ export const useFranchisorDashboard = () => {
     isLoading: readonly(isLoading),
     error: readonly(error),
     dashboardStats: readonly(dashboardStats),
-    salesAssociates: readonly(salesAssociates),
+    brokers: readonly(salesAssociates),
     recentActivities: readonly(recentActivities),
     leads: readonly(leads),
     profileCompletionStatus: readonly(profileCompletionStatus),
