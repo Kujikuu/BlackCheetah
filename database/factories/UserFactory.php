@@ -35,7 +35,7 @@ class UserFactory extends Factory
             'avatar' => fake()->imageUrl(),
             'date_of_birth' => fake()->dateTimeBetween('-50 years', '-18 years'),
             'gender' => fake()->randomElement(['male', 'female', 'other']),
-            'country' => fake()->countryCode(),
+            'nationality' => fake()->countryCode(),
             'city' => fake()->city(),
             'state' => fake()->state(),
             'address' => fake()->address(),

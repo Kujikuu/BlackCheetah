@@ -83,10 +83,11 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'fullName' => $user->name,
                     'username' => $user->email,
-                    'avatar' => $user->avatar,
+                    'avatar' => $user->avatar ? asset('uploads/'.$user->avatar) : null,
                     'email' => $user->email,
                     'role' => $user->role,
                     'status' => $user->status,
+                    'nationality' => $user->nationality,
                 ],
                 'userAbilityRules' => $userAbilityRules,
             ]);
@@ -166,10 +167,10 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'role' => $user->role,
                     'status' => $user->status,
-                    'avatar' => $user->avatar,
+                    'avatar' => $user->avatar ? asset('uploads/'.$user->avatar) : null,
                     'phone' => $user->phone,
                     'city' => $user->city,
-                    'country' => $user->country,
+                    'nationality' => $user->nationality,
                     'last_login_at' => $user->last_login_at,
                 ]
             ]);

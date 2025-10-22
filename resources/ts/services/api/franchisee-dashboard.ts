@@ -128,7 +128,7 @@ export interface UnitDetails {
   address: string
   city: string
   state: string
-  country: string
+  nationality: string
   royaltyPercentage: number
   contractStartDate: string
   renewalDate: string

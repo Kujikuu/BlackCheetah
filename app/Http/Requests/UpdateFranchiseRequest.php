@@ -22,7 +22,7 @@ class UpdateFranchiseRequest extends FormRequest
         return [
             // Personal Info
             'personalInfo.contactNumber' => 'sometimes|nullable|string|max:20',
-            'personalInfo.country' => 'sometimes|nullable|string|max:100',
+            'personalInfo.nationality' => 'sometimes|nullable|string|max:100',
             'personalInfo.state' => 'sometimes|nullable|string|max:100',
             'personalInfo.city' => 'sometimes|nullable|string|max:100',
             'personalInfo.address' => 'sometimes|nullable|string|max:500',
@@ -44,7 +44,7 @@ class UpdateFranchiseRequest extends FormRequest
             'franchiseDetails.contactDetails.contactNumber' => 'sometimes|nullable|string|max:20',
             'franchiseDetails.contactDetails.email' => 'sometimes|nullable|email|max:255',
             'franchiseDetails.contactDetails.address' => 'sometimes|nullable|string|max:500',
-            'franchiseDetails.contactDetails.country' => 'sometimes|nullable|string|max:100',
+            'franchiseDetails.contactDetails.nationality' => 'sometimes|nullable|string|max:100',
             'franchiseDetails.contactDetails.state' => 'sometimes|nullable|string|max:100',
             'franchiseDetails.contactDetails.city' => 'sometimes|nullable|string|max:100',
         ];
@@ -58,8 +58,8 @@ class UpdateFranchiseRequest extends FormRequest
         return [
             'personalInfo.contactNumber.string' => 'Contact number must be a string.',
             'personalInfo.contactNumber.max' => 'Contact number cannot exceed 20 characters.',
-            'personalInfo.country.string' => 'Country must be a string.',
-            'personalInfo.country.max' => 'Country cannot exceed 100 characters.',
+            'personalInfo.nationality.string' => 'Nationality must be a string.',
+            'personalInfo.nationality.max' => 'Nationality cannot exceed 100 characters.',
             'personalInfo.state.string' => 'State must be a string.',
             'personalInfo.state.max' => 'State cannot exceed 100 characters.',
             'personalInfo.city.string' => 'City must be a string.',

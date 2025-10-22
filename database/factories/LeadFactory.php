@@ -30,7 +30,7 @@ class LeadFactory extends Factory
             'phone' => $this->faker->phoneNumber(),
             'company_name' => $this->faker->company(),
             'job_title' => $this->faker->jobTitle(),
-            'country' => $this->faker->country(),
+            'nationality' => $this->faker->country(),
             'city' => $this->faker->city(),
             'address' => $this->faker->address(),
             'lead_source' => $this->faker->randomElement(['website', 'referral', 'social_media', 'advertisement', 'cold_call', 'event', 'other']),

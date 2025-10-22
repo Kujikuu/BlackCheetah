@@ -7,11 +7,13 @@ import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import { onboardingApi } from '@/services/api'
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
 
 const form = ref({
   name: '',
   phone: '',
-  country: '',
+  nationality: '',
   state: '',
   city: '',
   address: '',
@@ -24,21 +26,19 @@ const { smAndUp } = useDisplay()
 const userData = useCookie('userData')
 const { updateAbility } = useAbility()
 
-const countries = [
-  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
-  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
-  { title: 'Qatar', value: 'Qatar' },
-  { title: 'Kuwait', value: 'Kuwait' },
-  { title: 'Oman', value: 'Oman' },
-  { title: 'Bahrain', value: 'Bahrain' },
-  { title: 'Jordan', value: 'Jordan' },
-  { title: 'Lebanon', value: 'Lebanon' },
-  { title: 'Egypt', value: 'Egypt' },
-  { title: 'Iraq', value: 'Iraq' },
-  { title: 'Syria', value: 'Syria' },
-  { title: 'Palestine', value: 'Palestine' },
-  { title: 'Yemen', value: 'Yemen' },
-]
+// Get countries from composable
+const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
+
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => getCitiesForProvince(form.value.state || ''))
+
+// Watch province changes to clear city
+watch(() => form.value.state, () => {
+  form.value.city = ''
+})
 
 // Check onboarding status on mount
 onMounted(async () => {
@@ -50,7 +50,7 @@ onMounted(async () => {
         form.value = {
           name: response.data.user.name || '',
           phone: response.data.user.phone || '',
-          country: response.data.user.country || '',
+          nationality: response.data.user.nationality || '',
           state: response.data.user.state || '',
           city: response.data.user.city || '',
           address: response.data.user.address || '',
@@ -154,7 +154,7 @@ const completeProfile = async () => {
 const isFormValid = computed(() => {
   return form.value.name
     && form.value.phone
-    && form.value.country
+    && form.value.nationality
     && form.value.state
     && form.value.city
     && form.value.address
@@ -245,11 +245,13 @@ const isFormValid = computed(() => {
                 md="6"
               >
                 <AppSelect
-                  v-model="form.country"
-                  label="Country"
-                  placeholder="Select Country"
-                  :items="countries"
-                  :error-messages="errorMessages?.country"
+                  v-model="form.nationality"
+                  label="Nationality"
+                  placeholder="Select Nationality"
+                  :items="nationalityOptions"
+                  :loading="isLoadingCountries"
+                  :error-messages="errorMessages?.nationality"
+                  clearable
                   required
                 />
               </VCol>
@@ -258,22 +260,28 @@ const isFormValid = computed(() => {
                 cols="12"
                 md="6"
               >
-                <AppTextField
+                <AppSelect
                   v-model="form.state"
-                  label="State/Province"
-                  placeholder="Riyadh"
+                  label="Province"
+                  placeholder="Select Province"
+                  :items="provinces"
+                  :loading="isLoadingProvinces"
                   :error-messages="errorMessages?.state"
+                  clearable
                   required
                 />
               </VCol>
 
               <!-- City -->
               <VCol cols="12">
-                <AppTextField
+                <AppSelect
                   v-model="form.city"
                   label="City"
-                  placeholder="Riyadh"
+                  placeholder="Select City"
+                  :items="availableCities"
+                  :disabled="!form.state"
                   :error-messages="errorMessages?.city"
+                  clearable
                   required
                 />
               </VCol>

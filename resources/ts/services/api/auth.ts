@@ -24,6 +24,7 @@ export interface LoginResponse {
     email: string
     role: string
     avatar?: string
+    nationality?: string | null
   }
   access_token: string
   token_type: string
@@ -53,6 +54,7 @@ export interface UserProfile {
   email: string
   role: string
   avatar?: string
+  nationality?: string | null
   created_at: string
   updated_at: string
 }

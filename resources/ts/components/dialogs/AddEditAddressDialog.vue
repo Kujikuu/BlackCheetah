@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import home from '@images/svg/home.svg'
 import office from '@images/svg/office.svg'
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
+import { useDisplay } from 'vuetify'
 
 interface BillingAddress {
   firstName: string | undefined
   lastName: string | undefined
-  selectedCountry: string | null
+  nationality: string | null
   addressLine1: string
   addressLine2: string
   landmark: string
   contact: string
-  country: string | null
   city: string
   state: string
   zipCode: number | null
@@ -28,12 +30,11 @@ const props = withDefaults(defineProps<Props>(), {
   billingAddress: () => ({
     firstName: '',
     lastName: '',
-    selectedCountry: null,
+    nationality: null,
     addressLine1: '',
     addressLine2: '',
     landmark: '',
     contact: '',
-    country: null,
     city: '',
     state: '',
     zipCode: null,
@@ -70,21 +71,26 @@ const addressTypes = [
     value: 'Office',
   },
 ]
+
+// Get countries from composable
+const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
+
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => getCitiesForProvince(billingAddress.value.state || ''))
+
+const { smAndUp } = useDisplay()
 </script>
 
 <template>
-  <VDialog
-    :width="$vuetify.display.smAndDown ? 'auto' : 900 "
-    :model-value="props.isDialogVisible"
-    @update:model-value="val => $emit('update:isDialogVisible', val)"
-  >
+  <VDialog :width="smAndUp ? 'auto' : 900" :model-value="props.isDialogVisible"
+    @update:model-value="val => $emit('update:isDialogVisible', val)">
     <!-- 👉 Dialog close btn -->
     <DialogCloseBtn @click="$emit('update:isDialogVisible', false)" />
 
-    <VCard
-      v-if="props.billingAddress"
-      class="pa-sm-10 pa-2"
-    >
+    <VCard v-if="props.billingAddress" class="pa-sm-10 pa-2">
       <VCardText>
         <!-- 👉 Title -->
         <h4 class="text-h4 text-center mb-2">
@@ -95,115 +101,60 @@ const addressTypes = [
         </p>
 
         <div class="d-flex mb-6">
-          <CustomRadiosWithIcon
-            v-model:selected-radio="selectedAddress"
-            :radio-content="addressTypes"
-            :grid-column="{ sm: '6', cols: '12' }"
-          />
+          <CustomRadiosWithIcon v-model:selected-radio="selectedAddress" :radio-content="addressTypes"
+            :grid-column="{ sm: '6', cols: '12' }" />
         </div>
 
         <!-- 👉 Form -->
         <VForm @submit.prevent="onFormSubmit">
           <VRow>
             <!-- 👉 First Name -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                v-model="billingAddress.firstName"
-                label="First Name"
-                placeholder="John"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField v-model="billingAddress.firstName" label="First Name" placeholder="John" />
             </VCol>
 
             <!-- 👉 Last Name -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                v-model="billingAddress.lastName"
-                label="Last Name"
-                placeholder="Doe"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField v-model="billingAddress.lastName" label="Last Name" placeholder="Doe" />
             </VCol>
 
-            <!-- 👉 Select Country -->
+            <!-- 👉 Select Nationality -->
             <VCol cols="12">
-              <AppSelect
-                v-model="billingAddress.selectedCountry"
-                label="Select Country"
-                placeholder="Select Country"
-                :items="['USA', 'Aus', 'Canada', 'NZ']"
-              />
+              <AppSelect v-model="billingAddress.nationality" label="Select Nationality"
+                placeholder="Select Nationality" :items="nationalityOptions" :loading="isLoadingCountries" clearable />
             </VCol>
 
             <!-- 👉 Address Line 1 -->
             <VCol cols="12">
-              <AppTextField
-                v-model="billingAddress.addressLine1"
-                label="Address Line 1"
-                placeholder="12, Business Park"
-              />
+              <AppTextField v-model="billingAddress.addressLine1" label="Address Line 1"
+                placeholder="12, Business Park" />
             </VCol>
 
             <!-- 👉 Address Line 2 -->
             <VCol cols="12">
-              <AppTextField
-                v-model="billingAddress.addressLine2"
-                label="Address Line 2"
-                placeholder="Mall Road"
-              />
+              <AppTextField v-model="billingAddress.addressLine2" label="Address Line 2" placeholder="Mall Road" />
             </VCol>
 
             <!-- 👉 Landmark -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                v-model="billingAddress.landmark"
-                label="Landmark"
-                placeholder="Nr. Hard Rock Cafe"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField v-model="billingAddress.landmark" label="Landmark" placeholder="Nr. Hard Rock Cafe" />
             </VCol>
 
             <!-- 👉 City -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                v-model="billingAddress.city"
-                label="City"
-                placeholder="Los Angeles"
-              />
+            <VCol cols="12" md="6">
+              <AppSelect v-model="billingAddress.city" label="City" placeholder="Select City" :items="availableCities"
+                :disabled="!billingAddress.state" clearable required />
             </VCol>
 
             <!-- 👉 State -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                v-model="billingAddress.state"
-                label="State"
-                placeholder="California"
-              />
+            <VCol cols="12" md="6">
+              <AppSelect v-model="billingAddress.state" label="Province" placeholder="Select Province"
+                :items="provinces" :loading="isLoadingProvinces" clearable required />
             </VCol>
 
             <!-- 👉 Zip Code -->
-            <VCol
-              cols="12"
-              md="6"
-            >
-              <AppTextField
-                v-model="billingAddress.zipCode"
-                label="Zip Code"
-                placeholder="99950"
-                type="number"
-              />
+            <VCol cols="12" md="6">
+              <AppTextField v-model="billingAddress.zipCode" label="Zip Code" placeholder="99950" type="number" />
             </VCol>
 
             <VCol cols="12">
@@ -211,22 +162,12 @@ const addressTypes = [
             </VCol>
 
             <!-- 👉 Submit and Cancel button -->
-            <VCol
-              cols="12"
-              class="text-center"
-            >
-              <VBtn
-                type="submit"
-                class="me-3"
-              >
+            <VCol cols="12" class="text-center">
+              <VBtn type="submit" class="me-3">
                 submit
               </VBtn>
 
-              <VBtn
-                variant="tonal"
-                color="secondary"
-                @click="resetForm"
-              >
+              <VBtn variant="tonal" color="secondary" @click="resetForm">
                 Cancel
               </VBtn>
             </VCol>

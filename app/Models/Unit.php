@@ -17,7 +17,7 @@ class Unit extends Model
         'unit_name',
         'unit_code',
         'unit_type',
-        'country',
+        'nationality',
         'state_province',
         'city',
         'address',
@@ -117,7 +117,7 @@ class Unit extends Model
             $this->city,
             $this->state_province,
             $this->postal_code,
-            $this->country,
+            $this->nationality,
         ]);
 
         return implode(', ', $parts);
@@ -169,7 +169,7 @@ class Unit extends Model
 
     public function scopeByCountry($query, string $country)
     {
-        return $query->where('country', $country);
+        return $query->where('nationality', $country);
     }
 
     public function scopeByCity($query, string $city)

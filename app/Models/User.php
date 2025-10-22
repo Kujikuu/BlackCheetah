@@ -30,7 +30,7 @@ class User extends Authenticatable
         'avatar',
         'date_of_birth',
         'gender',
-        'country',
+        'nationality',
         'state',
         'city',
         'address',

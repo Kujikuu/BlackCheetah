@@ -184,7 +184,7 @@ class DashboardController extends BaseResourceController
                     return [
                         'id' => 'unit-'.$unit->id,
                         'title' => "New Unit: {$unit->unit_name}",
-                        'description' => "Unit opened in {$unit->city}, {$unit->country}",
+                        'description' => "Unit opened in {$unit->city}, {$unit->nationality}",
                         'week' => 'Week '.Carbon::parse($unit->created_at)->weekOfYear,
                         'date' => Carbon::parse($unit->created_at)->format('M d, Y'),
                         'status' => $status,

@@ -10,7 +10,7 @@ export interface Lead {
   email: string
   phone: string
   company: string
-  country: string
+  nationality: string
   state: string
   city: string
   source: string
@@ -118,7 +118,7 @@ export class LeadApi {
         email: response.data.email,
         phone: response.data.phone,
         company: response.data.company_name || response.data.company,
-        country: response.data.country,
+        nationality: response.data.nationality,
         state: response.data.state || response.data.address,
         city: response.data.city,
         source: response.data.lead_source,
@@ -167,8 +167,8 @@ export class LeadApi {
       backendData.phone = data.phone
     if (data.company !== undefined)
       backendData.company = data.company
-    if (data.country !== undefined)
-      backendData.country = data.country
+    if (data.nationality !== undefined)
+      backendData.nationality = data.nationality
     if (data.state !== undefined)
       backendData.state = data.state
     if (data.city !== undefined)

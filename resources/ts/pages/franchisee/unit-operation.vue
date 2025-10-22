@@ -45,7 +45,7 @@ const unitId = computed<string>(() => {
 const currentUnitId = computed<number | null>(() => {
   if (unitId.value) {
     const parsed = Number.parseInt(unitId.value)
-    if (!Number.isNaN(parsed))
+    if (!Number.isNaN(parsed) && parsed > 0)
       return parsed
   }
 

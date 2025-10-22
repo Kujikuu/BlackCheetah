@@ -3,8 +3,8 @@ export interface LeadBasicInfo {
   lastName: string
   email: string
   contactNumber: string
-  country: string | null
-  state: string | null
+  nationality: string
+  state: string
   city: string
   companyName: string
 }

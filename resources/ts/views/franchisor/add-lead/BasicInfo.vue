@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { LeadBasicInfo } from './types'
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
 
 interface Props {
   formData: LeadBasicInfo
@@ -18,36 +20,19 @@ watch(localFormData, () => {
   emit('update:formData', localFormData.value)
 }, { deep: true })
 
-const countries = [
-  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
-  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
-  { title: 'Qatar', value: 'Qatar' },
-  { title: 'Kuwait', value: 'Kuwait' },
-  { title: 'Oman', value: 'Oman' },
-  { title: 'Bahrain', value: 'Bahrain' },
-  { title: 'Jordan', value: 'Jordan' },
-  { title: 'Lebanon', value: 'Lebanon' },
-  { title: 'Egypt', value: 'Egypt' },
-  { title: 'Iraq', value: 'Iraq' },
-  { title: 'Syria', value: 'Syria' },
-  { title: 'Palestine', value: 'Palestine' },
-  { title: 'Yemen', value: 'Yemen' },
-]
+// Get countries from composable
+const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
 
-const states = [
-  { title: 'Riyadh', value: 'Riyadh' },
-  { title: 'Makkah', value: 'Makkah' },
-  { title: 'Medina', value: 'Medina' },
-  { title: 'Eastern Province', value: 'Eastern Province' },
-  { title: 'Asir', value: 'Asir' },
-  { title: 'Tabuk', value: 'Tabuk' },
-  { title: 'Hail', value: 'Hail' },
-  { title: 'Northern Borders', value: 'Northern Borders' },
-  { title: 'Jazan', value: 'Jazan' },
-  { title: 'Najran', value: 'Najran' },
-  { title: 'Al Bahah', value: 'Al Bahah' },
-  { title: 'Al Jawf', value: 'Al Jawf' },
-]
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => getCitiesForProvince(localFormData.value.state || ''))
+
+// Watch province changes to clear city
+watch(() => localFormData.value.state, () => {
+  localFormData.value.city = ''
+})
 </script>
 
 <template>
@@ -111,10 +96,12 @@ const states = [
       md="6"
     >
       <AppSelect
-        v-model="localFormData.country"
-        label="Country"
-        placeholder="Select Country"
-        :items="countries"
+        v-model="localFormData.nationality"
+        label="Nationality"
+        placeholder="Select Nationality"
+        :items="nationalityOptions"
+        :loading="isLoadingCountries"
+        clearable
       />
     </VCol>
 
@@ -124,9 +111,11 @@ const states = [
     >
       <AppSelect
         v-model="localFormData.state"
-        label="State"
-        placeholder="Select State"
-        :items="states"
+        label="Province"
+        placeholder="Select Province"
+        :items="provinces"
+        :loading="isLoadingProvinces"
+        clearable
       />
     </VCol>
 
@@ -134,10 +123,13 @@ const states = [
       cols="12"
       md="6"
     >
-      <AppTextField
+      <AppSelect
         v-model="localFormData.city"
         label="City"
-        placeholder="City"
+        placeholder="Select City"
+        :items="availableCities"
+        :disabled="!localFormData.state"
+        clearable
       />
     </VCol>
 

@@ -7,7 +7,7 @@ export interface FranchiseData {
   id: number
   personalInfo: {
     contactNumber: string
-    country: string
+    nationality: string
     state: string
     city: string
     address: string
@@ -65,7 +65,7 @@ export interface CreateFranchiseeWithUnitPayload {
   city: string
   state_province: string
   postal_code: string
-  country: string
+  nationality: string
   size_sqft?: string
   monthly_rent?: string
   opening_date?: string

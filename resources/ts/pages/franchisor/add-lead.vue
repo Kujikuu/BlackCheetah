@@ -29,7 +29,7 @@ const addLeadData = ref<AddLeadData>({
     lastName: '',
     email: '',
     contactNumber: '',
-    country: null,
+    nationality: null,
     state: null,
     city: '',
     companyName: '',

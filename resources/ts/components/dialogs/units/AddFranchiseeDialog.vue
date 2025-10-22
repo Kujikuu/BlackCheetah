@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { emailValidator, requiredValidator } from '@core/utils/validators'
 import { franchiseApi } from '@/services/api'
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
 
 interface Props {
   isDialogVisible: boolean
@@ -23,7 +25,7 @@ const formData = ref({
   name: '',
   email: '',
   phone: '',
-  country: '',
+  nationality: '',
   state: '',
   city: '',
   address: '',
@@ -35,19 +37,19 @@ const formData = ref({
   monthlyRent: '',
 })
 
-// Data
-const countries = [
-  { title: 'Saudi Arabia', value: 'SA' },
-  { title: 'United Arab Emirates', value: 'AE' },
-  { title: 'Qatar', value: 'QA' },
-  { title: 'Kuwait', value: 'KW' },
-  { title: 'Oman', value: 'OM' },
-  { title: 'Bahrain', value: 'BH' },
-  { title: 'Jordan', value: 'JO' },
-  { title: 'Lebanon', value: 'LB' },
-  { title: 'Egypt', value: 'EG' },
-  { title: 'Iraq', value: 'IQ' },
-]
+// Get countries from composable
+const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
+
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => getCitiesForProvince(formData.value.state || ''))
+
+// Watch province changes to clear city
+watch(() => formData.value.state, () => {
+  formData.value.city = ''
+})
 
 const unitTypes = [
   { title: 'Store', value: 'store' },
@@ -66,7 +68,7 @@ const resetForm = () => {
     name: '',
     email: '',
     phone: '',
-    country: '',
+    nationality: '',
     state: '',
     city: '',
     address: '',
@@ -133,7 +135,7 @@ const submitForm = async () => {
       city: formData.value.city,
       state_province: formData.value.state,
       postal_code: formData.value.postalCode,
-      country: formData.value.country,
+      nationality: formData.value.nationality,
       size_sqft: formData.value.sizeSqft,
       monthly_rent: formData.value.monthlyRent,
       opening_date: formData.value.openingDate,
@@ -157,7 +159,7 @@ const submitForm = async () => {
         monthlyRent: response.data.unit.monthly_rent,
         managerId: response.data.unit.franchisee_id,
         managerName: response.data.franchisee.name,
-        country: response.data.unit.country,
+        nationality: response.data.unit.nationality,
         state: response.data.unit.state_province,
         city: response.data.unit.city,
         address: response.data.unit.address,
@@ -270,11 +272,13 @@ const onDialogModelValueUpdate = (val: boolean) => {
                     md="4"
                   >
                     <AppSelect
-                      v-model="formData.country"
-                      :items="countries"
-                      label="Country"
-                      placeholder="Select country"
+                      v-model="formData.nationality"
+                      :items="nationalityOptions"
+                      :loading="isLoadingCountries"
+                      label="Nationality"
+                      placeholder="Select Nationality"
                       :rules="[requiredValidator]"
+                      clearable
                     />
                   </VCol>
 
@@ -282,11 +286,14 @@ const onDialogModelValueUpdate = (val: boolean) => {
                     cols="12"
                     md="4"
                   >
-                    <AppTextField
+                    <AppSelect
                       v-model="formData.state"
-                      label="State"
-                      placeholder="Enter state"
+                      label="Province"
+                      placeholder="Select Province"
+                      :items="provinces"
+                      :loading="isLoadingProvinces"
                       :rules="[requiredValidator]"
+                      clearable
                     />
                   </VCol>
 
@@ -294,11 +301,14 @@ const onDialogModelValueUpdate = (val: boolean) => {
                     cols="12"
                     md="4"
                   >
-                    <AppTextField
+                    <AppSelect
                       v-model="formData.city"
                       label="City"
-                      placeholder="Enter city"
+                      placeholder="Select City"
+                      :items="availableCities"
+                      :disabled="!formData.state"
                       :rules="[requiredValidator]"
+                      clearable
                     />
                   </VCol>
 

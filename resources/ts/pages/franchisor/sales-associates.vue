@@ -2,6 +2,8 @@
 import ConfirmDeleteDialog from '@/components/dialogs/common/ConfirmDeleteDialog.vue'
 import { usersApi } from '@/services/api'
 import { avatarText } from '@core/utils/formatters'
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
 
 // 👉 Interfaces
 interface Lead {
@@ -150,22 +152,23 @@ const statuses = [
   { title: 'Inactive', value: 'inactive' },
 ]
 
-const countries = [
-  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
-  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
-  { title: 'Qatar', value: 'Qatar' },
-  { title: 'Kuwait', value: 'Kuwait' },
-  { title: 'Oman', value: 'Oman' },
-  { title: 'Bahrain', value: 'Bahrain' },
-  { title: 'Jordan', value: 'Jordan' },
-  { title: 'Lebanon', value: 'Lebanon' },
-  { title: 'Egypt', value: 'Egypt' },
-  { title: 'Iraq', value: 'Iraq' },
-  { title: 'Palestine', value: 'Palestine' },
-  { title: 'Syria', value: 'Syria' },
-  { title: 'Yemen', value: 'Yemen' },
-  { title: 'Iran', value: 'Iran' },
-]
+// Get countries from composable
+const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
+
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => {
+  if (!selectedAssociate.value) return []
+  return getCitiesForProvince(selectedAssociate.value.state || '')
+})
+
+// Watch province changes to clear city
+watch(() => selectedAssociate.value?.state, () => {
+  if (selectedAssociate.value)
+    selectedAssociate.value.city = ''
+})
 
 const resolveStatusVariant = (stat: string) => {
   const statLowerCase = stat.toLowerCase()
@@ -936,34 +939,42 @@ watch([searchQuery, selectedStatus], () => {
                 <AppSelect
                   v-model="selectedAssociate.country"
                   label="Country"
-                  :items="countries"
+                  :items="nationalityOptions"
+                  :loading="isLoadingCountries"
                   placeholder="Select country"
+                  clearable
                 />
               </VCol>
               <VCol
                 cols="12"
                 md="6"
               >
-                <AppTextField
+                <AppSelect
                   v-model="selectedAssociate.state"
-                  label="State/Province"
-                  placeholder="Enter state or province"
+                  label="Province"
+                  placeholder="Select Province"
+                  :items="provinces"
+                  :loading="isLoadingProvinces"
                   :rules="[
-                    (v: string) => !v || v.length <= 100 || 'State must not exceed 100 characters',
+                    (v: string) => !v || v.length <= 100 || 'Province must not exceed 100 characters',
                   ]"
+                  clearable
                 />
               </VCol>
               <VCol
                 cols="12"
                 md="6"
               >
-                <AppTextField
+                <AppSelect
                   v-model="selectedAssociate.city"
                   label="City"
-                  placeholder="Enter city"
+                  placeholder="Select City"
+                  :items="availableCities"
+                  :disabled="!selectedAssociate.state"
                   :rules="[
                     (v: string) => !v || v.length <= 100 || 'City must not exceed 100 characters',
                   ]"
+                  clearable
                 />
               </VCol>
 

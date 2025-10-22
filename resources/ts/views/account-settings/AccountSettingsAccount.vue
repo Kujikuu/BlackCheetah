@@ -13,20 +13,37 @@ const accountDataLocal = ref({
   email: '',
   role: '',
   phone: '',
-  timezone: '(GMT+03:00) Riyadh',
+  dateOfBirth: '',
+  gender: '',
+  nationality: '',
+  state: '',
+  city: '',
+  address: '',
 })
 
 const uploadStatus = ref<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' })
 
-const timezones = [
-  '(GMT+03:00) Riyadh',
-  '(GMT+03:00) Kuwait',
-  '(GMT+03:00) Baghdad',
-  '(GMT+02:00) Cairo',
-  '(GMT+01:00) Amsterdam',
-  '(GMT+00:00) London',
-  '(GMT-05:00) Eastern Time (US & Canada)',
-  '(GMT-08:00) Pacific Time (US & Canada)',
+// removed timezones per requirements
+
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
+
+const { countries: countriesData, isLoading: isCountriesLoading } = useCountries()
+
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => getCitiesForProvince(accountDataLocal.value.state || ''))
+
+// Watch province changes to clear city
+watch(() => accountDataLocal.value.state, () => {
+  accountDataLocal.value.city = ''
+})
+
+const genders = [
+  'Male',
+  'Female',
 ]
 
 // Get role display name
@@ -57,7 +74,12 @@ const loadProfile = async () => {
         email: response.data.email,
         role: getRoleDisplayName(response.data.role),
         phone: response.data.phone || '',
-        timezone: response.data.preferences?.timezone || '(GMT+03:00) Riyadh',
+        dateOfBirth: response.data.date_of_birth || '',
+        gender: response.data.gender || '',
+        nationality: response.data.nationality || '',
+        state: response.data.state || '',
+        city: response.data.city || '',
+        address: response.data.address || '',
       }
     }
   }
@@ -77,7 +99,12 @@ const resetForm = () => {
       email: accountData.value.email,
       role: getRoleDisplayName(accountData.value.role),
       phone: accountData.value.phone || '',
-      timezone: accountData.value.preferences?.timezone || '(GMT+03:00) Riyadh',
+      dateOfBirth: accountData.value.date_of_birth || '',
+      gender: accountData.value.gender || '',
+      nationality: accountData.value.nationality || '',
+      state: accountData.value.state || '',
+      city: accountData.value.city || '',
+      address: accountData.value.address || '',
     }
   }
 }
@@ -201,9 +228,12 @@ const onFormSubmit = async () => {
     const response = await accountSettingsApi.updateProfile({
       name: accountDataLocal.value.name,
       phone: accountDataLocal.value.phone,
-      preferences: {
-        timezone: accountDataLocal.value.timezone,
-      },
+      date_of_birth: accountDataLocal.value.dateOfBirth || null,
+      gender: accountDataLocal.value.gender || null,
+      nationality: accountDataLocal.value.nationality || null,
+      state: accountDataLocal.value.state || null,
+      city: accountDataLocal.value.city || null,
+      address: accountDataLocal.value.address || null,
     })
 
     if (response.success) {
@@ -248,10 +278,13 @@ onMounted(() => {
               <VAvatar
                 rounded
                 size="100"
-                :image="accountDataLocal.avatarImg"
               >
+                <VImg
+                  v-if="accountDataLocal.avatarImg"
+                  :src="accountDataLocal.avatarImg"
+                />
                 <span
-                  v-if="!accountDataLocal.avatarImg"
+                  v-else
                   class="text-5xl font-weight-medium"
                 >
                   {{ accountDataLocal.name.charAt(0).toUpperCase() }}
@@ -384,16 +417,87 @@ onMounted(() => {
                 />
               </VCol>
 
-              <!-- Timezone -->
+              <!-- Date of Birth -->
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppTextField
+                  v-model="accountDataLocal.dateOfBirth"
+                  label="Date of Birth"
+                  type="date"
+                  placeholder="YYYY-MM-DD"
+                />
+              </VCol>
+
+              <!-- Gender -->
               <VCol
                 cols="12"
                 md="6"
               >
                 <AppSelect
-                  v-model="accountDataLocal.timezone"
-                  label="Timezone"
-                  :items="timezones"
-                  placeholder="Select Timezone"
+                  v-model="accountDataLocal.gender"
+                  label="Gender"
+                  :items="genders"
+                  placeholder="Select Gender"
+                  clearable
+                />
+              </VCol>
+
+              <!-- Nationality -->
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="accountDataLocal.nationality"
+                  label="Nationality"
+                  :items="countriesData"
+                  placeholder="Select Nationality"
+                  clearable
+                  :loading="isCountriesLoading"
+                />
+              </VCol>
+
+              <!-- Province -->
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="accountDataLocal.state"
+                  label="Province"
+                  placeholder="Select Province"
+                  :items="provinces"
+                  :loading="isLoadingProvinces"
+                  clearable
+                />
+              </VCol>
+
+              <!-- City -->
+              <VCol
+                cols="12"
+                md="6"
+              >
+                <AppSelect
+                  v-model="accountDataLocal.city"
+                  label="City"
+                  placeholder="Select City"
+                  :items="availableCities"
+                  :disabled="!accountDataLocal.state"
+                  clearable
+                />
+              </VCol>
+
+              <!-- Address -->
+              <VCol
+                cols="12"
+                md="12"
+              >
+                <AppTextField
+                  v-model="accountDataLocal.address"
+                  label="Address"
+                  placeholder="Enter Full Address"
                 />
               </VCol>
 

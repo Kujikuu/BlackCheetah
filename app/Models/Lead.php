@@ -20,7 +20,7 @@ class Lead extends Model
         'phone',
         'company_name',
         'job_title',
-        'country',
+        'nationality',
         'city',
         'address',
         'lead_source',

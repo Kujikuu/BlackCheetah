@@ -608,7 +608,7 @@ class FranchisorController extends BaseResourceController
                     'avatar' => $franchisee->avatar,
                     'phone' => $franchisee->phone,
                     'city' => $franchisee->city,
-                    'country' => $franchisee->country,
+                    'nationality' => $franchisee->nationality,
                     'created_at' => $franchisee->created_at,
                 ];
             });
@@ -716,7 +716,7 @@ class FranchisorController extends BaseResourceController
                     'email' => $associate->email,
                     'phone' => $associate->phone,
                     'status' => $associate->status ?? 'active',
-                    'country' => $associate->country,
+                    'nationality' => $associate->nationality,
                     'city' => $associate->city,
                     'assignedLeads' => $associate->leads_count,
                     'avatar' => $associate->avatar,
@@ -766,7 +766,7 @@ class FranchisorController extends BaseResourceController
                 'email' => $salesAssociate->email,
                 'phone' => $salesAssociate->phone,
                 'status' => $salesAssociate->status,
-                'country' => $salesAssociate->country,
+                'nationality' => $salesAssociate->nationality,
                 'state' => $salesAssociate->state,
                 'city' => $salesAssociate->city,
                 'assignedLeads' => $salesAssociate->leads_count,
@@ -810,7 +810,7 @@ class FranchisorController extends BaseResourceController
                 'email' => $salesAssociate->email,
                 'phone' => $salesAssociate->phone,
                 'status' => $salesAssociate->status,
-                'country' => $salesAssociate->country,
+                'nationality' => $salesAssociate->nationality,
                 'state' => $salesAssociate->state,
                 'city' => $salesAssociate->city,
                 'assignedLeads' => $salesAssociate->leads_count,
@@ -862,7 +862,7 @@ class FranchisorController extends BaseResourceController
                 'email' => $salesAssociate->email,
                 'phone' => $salesAssociate->phone,
                 'status' => $salesAssociate->status,
-                'country' => $salesAssociate->country,
+                'nationality' => $salesAssociate->nationality,
                 'state' => $salesAssociate->state,
                 'city' => $salesAssociate->city,
                 'assignedLeads' => $salesAssociate->leads_count,
@@ -1028,7 +1028,7 @@ class FranchisorController extends BaseResourceController
                 'address' => $validatedData['personalInfo']['address'],
                 'city' => $validatedData['personalInfo']['city'],
                 'state' => $validatedData['personalInfo']['state'],
-                'country' => $validatedData['personalInfo']['country'],
+                'nationality' => $validatedData['personalInfo']['nationality'],
             ]);
 
             return $this->successResponse([
@@ -1228,8 +1228,8 @@ class FranchisorController extends BaseResourceController
                 if (array_key_exists('state', $validatedData['personalInfo'])) {
                     $userUpdateData['state'] = $validatedData['personalInfo']['state'];
                 }
-                if (array_key_exists('country', $validatedData['personalInfo'])) {
-                    $userUpdateData['country'] = $validatedData['personalInfo']['country'];
+                if (array_key_exists('nationality', $validatedData['personalInfo'])) {
+                    $userUpdateData['nationality'] = $validatedData['personalInfo']['nationality'];
                 }
             }
 
@@ -1426,7 +1426,7 @@ class FranchisorController extends BaseResourceController
                 'city' => $validatedData['city'],
                 'state_province' => $validatedData['state_province'],
                 'postal_code' => $validatedData['postal_code'],
-                'country' => $validatedData['country'],
+                'nationality' => $validatedData['nationality'],
                 'phone' => $validatedData['phone'],
                 'email' => $validatedData['email'],
                 'size_sqft' => $validatedData['size_sqft'],

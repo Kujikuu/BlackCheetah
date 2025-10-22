@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useCountries } from '@/composables/useCountries'
+import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
+
 interface PersonalInfoData {
   contactNumber: string
-  country: string
+  nationality: string
   state: string
   city: string
   address: string
@@ -23,22 +26,19 @@ const localFormData = computed({
   set: val => emit('update:formData', val),
 })
 
-// 👉 Options
-const countries = [
-  { title: 'Saudi Arabia', value: 'Saudi Arabia' },
-  { title: 'United Arab Emirates', value: 'United Arab Emirates' },
-  { title: 'Qatar', value: 'Qatar' },
-  { title: 'Kuwait', value: 'Kuwait' },
-  { title: 'Oman', value: 'Oman' },
-  { title: 'Bahrain', value: 'Bahrain' },
-  { title: 'Jordan', value: 'Jordan' },
-  { title: 'Lebanon', value: 'Lebanon' },
-  { title: 'Egypt', value: 'Egypt' },
-  { title: 'Iraq', value: 'Iraq' },
-  { title: 'Syria', value: 'Syria' },
-  { title: 'Palestine', value: 'Palestine' },
-  { title: 'Yemen', value: 'Yemen' },
-]
+// Get countries from composable
+const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
+
+// Get Saudi provinces and cities
+const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSaudiProvinces()
+
+// Available cities based on selected province
+const availableCities = computed(() => getCitiesForProvince(localFormData.value.state || ''))
+
+// Watch province changes to clear city
+watch(() => localFormData.value.state, () => {
+  localFormData.value.city = ''
+})
 </script>
 
 <template>
@@ -68,10 +68,12 @@ const countries = [
           md="6"
         >
           <AppSelect
-            v-model="localFormData.country"
-            label="Country"
-            :items="countries"
-            placeholder="Select country"
+            v-model="localFormData.nationality"
+            label="Nationality"
+            :items="nationalityOptions"
+            :loading="isLoadingCountries"
+            placeholder="Select nationality"
+            clearable
             required
           />
         </VCol>
@@ -79,20 +81,26 @@ const countries = [
           cols="12"
           md="6"
         >
-          <AppTextField
+          <AppSelect
             v-model="localFormData.state"
-            label="State/Province"
-            placeholder="Enter state or province"
+            label="Province"
+            placeholder="Select Province"
+            :items="provinces"
+            :loading="isLoadingProvinces"
+            clearable
           />
         </VCol>
         <VCol
           cols="12"
           md="6"
         >
-          <AppTextField
+          <AppSelect
             v-model="localFormData.city"
             label="City"
-            placeholder="Enter city"
+            placeholder="Select City"
+            :items="availableCities"
+            :disabled="!localFormData.state"
+            clearable
             required
           />
         </VCol>
