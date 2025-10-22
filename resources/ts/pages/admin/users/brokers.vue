@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import AddEditSalesDrawer from '@/views/admin/modals/AddEditSalesDrawer.vue'
+import AddEditBrokerDrawer from '@/views/admin/modals/AddEditBrokerDrawer.vue'
 import ConfirmDeleteDialog from '@/views/admin/modals/ConfirmDeleteDialog.vue'
 import ResetPasswordDialog from '@/views/admin/modals/ResetPasswordDialog.vue'
 import ViewUserDialog from '@/views/admin/modals/ViewUserDialog.vue'
 import { adminApi } from '@/services/api'
 
-interface SalesUser {
+interface BrokerUser {
   id: number
   fullName: string
   email: string
@@ -47,23 +47,23 @@ const headers = [
 ]
 
 // API data
-const salesUsers = ref<SalesUser[]>([])
+const brokerUsers = ref<BrokerUser[]>([])
 const isLoading = ref(false)
 const error = ref('')
-const totalSalesUsers = ref(0)
+const totalBrokerUsers = ref(0)
 
-// Fetch sales users from API
-const fetchSalesUsers = async () => {
+// Fetch broker users from API
+const fetchBrokerUsers = async () => {
   isLoading.value = true
   error.value = ''
 
   try {
-    const response = await adminApi.getSalesUsers()
+    const response = await adminApi.getBrokers()
 
     if (response.success && response.data) {
       // Handle both direct array and paginated response structures
       let userData: any[] = []
-      
+
       if (Array.isArray(response.data)) {
         // Direct array response
         userData = response.data
@@ -71,10 +71,10 @@ const fetchSalesUsers = async () => {
         // Paginated response structure
         userData = (response.data as any).data
       }
-      
-      console.log('Sales Users API Response:', { response, userData }) // Debug log
-      
-      salesUsers.value = userData.map((user: any) => ({
+
+      console.log('Broker Users API Response:', { response, userData }) // Debug log
+
+      brokerUsers.value = userData.map((user: any) => ({
         id: user.id,
         fullName: user.fullName || user.name, // Try both possible field names
         email: user.email,
@@ -85,17 +85,17 @@ const fetchSalesUsers = async () => {
         avatar: user.avatar,
         joinedDate: user.joinedDate || user.createdAt || user.created_at,
       }))
-      totalSalesUsers.value = salesUsers.value.length
+      totalBrokerUsers.value = brokerUsers.value.length
     }
     else {
-      salesUsers.value = []
-      totalSalesUsers.value = 0
-      error.value = response.message || 'Failed to fetch sales users'
+      brokerUsers.value = []
+      totalBrokerUsers.value = 0
+      error.value = response.message || 'Failed to fetch broker users'
     }
   }
   catch (err) {
-    console.error('Error fetching sales users:', err)
-    error.value = 'Failed to fetch sales users'
+    console.error('Error fetching broker users:', err)
+    error.value = 'Failed to fetch broker users'
   }
   finally {
     isLoading.value = false
@@ -103,19 +103,19 @@ const fetchSalesUsers = async () => {
 }
 
 // Filtered data
-const filteredSalesUsers = computed(() => {
-  let filtered = salesUsers.value
+const filteredBrokerUsers = computed(() => {
+  let filtered = brokerUsers.value
 
   if (searchQuery.value) {
-    filtered = filtered.filter(user =>
-      user.fullName.toLowerCase().includes(searchQuery.value.toLowerCase())
-      || user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
-      || user.city.toLowerCase().includes(searchQuery.value.toLowerCase()),
+    filtered = filtered.filter(broker =>
+      broker.fullName.toLowerCase().includes(searchQuery.value.toLowerCase())
+      || broker.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+      || broker.city.toLowerCase().includes(searchQuery.value.toLowerCase()),
     )
   }
 
   if (selectedStatus.value)
-    filtered = filtered.filter(user => user.status === selectedStatus.value)
+    filtered = filtered.filter(broker => broker.status === selectedStatus.value)
 
   return filtered
 })
@@ -143,7 +143,7 @@ const isAddNewUserDrawerVisible = ref(false)
 const isDeleteDialogVisible = ref(false)
 const isResetPasswordDialogVisible = ref(false)
 const isViewDialogVisible = ref(false)
-const selectedSalesUser = ref<any>(null)
+const selectedBrokerUser = ref<any>(null)
 const userToDelete = ref<any>(null)
 
 // Utility functions
@@ -158,62 +158,62 @@ const avatarText = (name: string | null | undefined) => {
   return words.length > 1 ? `${words[0][0]}${words[1][0]}` : name.slice(0, 2)
 }
 
-// Add new sales user
-const addNewSalesUser = async (salesUserData: any) => {
+// Add new broker user
+const addNewBrokerUser = async (brokerUserData: any) => {
   try {
     const response = await adminApi.createUser({
-      ...salesUserData,
+      ...brokerUserData,
       role: 'broker',
     })
 
     if (response.success)
-      await fetchSalesUsers() // Refresh the list
+      await fetchBrokerUsers() // Refresh the list
     else
-      error.value = response.message || 'Failed to create sales user'
+      error.value = response.message || 'Failed to create broker user'
   }
   catch (err) {
-    console.error('Error creating sales user:', err)
-    error.value = 'Failed to create sales user'
+    console.error('Error creating broker user:', err)
+    error.value = 'Failed to create broker user'
   }
 }
 
-// Edit sales user
-const editSalesUser = (salesUser: SalesUser) => {
-  selectedSalesUser.value = { ...salesUser }
+// Edit broker user
+const editBrokerUser = (brokerUser: BrokerUser) => {
+  selectedBrokerUser.value = { ...brokerUser }
   isAddNewUserDrawerVisible.value = true
 }
 
-// Update sales user
-const updateSalesUser = async (salesUserData: any) => {
+// Update broker user
+const updateBrokerUser = async (brokerUserData: any) => {
   try {
-    const response = await adminApi.updateUser(salesUserData.id, salesUserData)
+    const response = await adminApi.updateUser(brokerUserData.id, brokerUserData)
 
     if (response.success) {
-      await fetchSalesUsers() // Refresh the list
-      selectedSalesUser.value = null
+      await fetchBrokerUsers() // Refresh the list
+      selectedBrokerUser.value = null
     }
     else {
-      error.value = response.message || 'Failed to update sales user'
+      error.value = response.message || 'Failed to update broker user'
     }
   }
   catch (err) {
-    console.error('Error updating sales user:', err)
-    error.value = 'Failed to update sales user'
+    console.error('Error updating broker user:', err)
+    error.value = 'Failed to update broker user'
   }
 }
 
 // Handle drawer data
-const handleSalesUserData = async (salesUserData: any) => {
-  if (salesUserData.id)
-    await updateSalesUser(salesUserData)
+const handleBrokerUserData = async (brokerUserData: any) => {
+  if (brokerUserData.id)
+    await updateBrokerUser(brokerUserData)
 
   else
-    await addNewSalesUser(salesUserData)
+    await addNewBrokerUser(brokerUserData)
 }
 
 // Open delete dialog
-const openDeleteDialog = (salesUser: any) => {
-  userToDelete.value = salesUser
+const openDeleteDialog = (brokerUser: any) => {
+  userToDelete.value = brokerUser
   isDeleteDialogVisible.value = true
 }
 
@@ -226,7 +226,7 @@ const deleteUser = async () => {
     const response = await adminApi.deleteUser(userToDelete.value.id)
 
     if (response.success) {
-      await fetchSalesUsers() // Refresh the list
+      await fetchBrokerUsers() // Refresh the list
 
       // Remove from selectedRows
       const selectedIndex = selectedRows.value.findIndex(row => row === userToDelete.value.id)
@@ -234,12 +234,12 @@ const deleteUser = async () => {
         selectedRows.value.splice(selectedIndex, 1)
     }
     else {
-      error.value = response.message || 'Failed to delete sales user'
+      error.value = response.message || 'Failed to delete broker user'
     }
   }
   catch (err) {
-    console.error('Error deleting sales user:', err)
-    error.value = 'Failed to delete sales user'
+    console.error('Error deleting broker user:', err)
+    error.value = 'Failed to delete broker user'
   }
 
   userToDelete.value = null
@@ -255,31 +255,31 @@ const bulkDelete = async () => {
       await adminApi.deleteUser(userId)
     }
 
-    await fetchSalesUsers() // Refresh the list
+    await fetchBrokerUsers() // Refresh the list
     selectedRows.value = [] // Clear selection
   }
   catch (err) {
-    console.error('Error bulk deleting sales users:', err)
-    error.value = 'Failed to delete selected sales users'
+    console.error('Error bulk deleting broker users:', err)
+    error.value = 'Failed to delete selected broker users'
   }
 }
 
 // Open reset password dialog
-const openResetPasswordDialog = (salesUser: SalesUser) => {
-  selectedSalesUser.value = salesUser
+const openResetPasswordDialog = (brokerUser: BrokerUser) => {
+  selectedBrokerUser.value = brokerUser
   isResetPasswordDialogVisible.value = true
 }
 
 // Reset password
 const resetPassword = async (password: string) => {
-  if (!selectedSalesUser.value)
+  if (!selectedBrokerUser.value)
     return
 
   try {
-    const response = await adminApi.resetUserPassword(selectedSalesUser.value.id, password)
+    const response = await adminApi.resetUserPassword(selectedBrokerUser.value.id, password)
 
     if (response.success)
-      console.log('Password reset successfully for:', selectedSalesUser.value.fullName)
+      console.log('Password reset successfully for:', selectedBrokerUser.value.fullName)
     else
       error.value = response.message || 'Failed to reset password'
   }
@@ -288,36 +288,36 @@ const resetPassword = async (password: string) => {
     error.value = 'Failed to reset password'
   }
 
-  selectedSalesUser.value = null
+  selectedBrokerUser.value = null
 }
 
 // Handle drawer close
 const handleDrawerClose = () => {
-  selectedSalesUser.value = null
+  selectedBrokerUser.value = null
 }
 
 // Widget data
 const widgetData = ref([
-  { title: 'Total Sales Users', value: '0', change: 0, desc: 'All sales team members', icon: 'tabler-chart-line', iconColor: 'primary' },
-  { title: 'Active Sales', value: '0', change: 0, desc: 'Currently active', icon: 'tabler-user-check', iconColor: 'success' },
+  { title: 'Total Broker Users', value: '0', change: 0, desc: 'All broker team members', icon: 'tabler-chart-line', iconColor: 'primary' },
+  { title: 'Active Broker', value: '0', change: 0, desc: 'Currently active', icon: 'tabler-user-check', iconColor: 'success' },
   { title: 'Pending Approval', value: '0', change: 0, desc: 'Awaiting verification', icon: 'tabler-clock', iconColor: 'warning' },
 ])
 
 // Fetch widget statistics
 const fetchWidgetStats = async () => {
   try {
-    const response = await adminApi.getSalesUsersStats()
+    const response = await adminApi.getBrokersStats()
     if (response.success)
       widgetData.value = response.data
   }
   catch (err) {
-    console.error('Error fetching sales stats:', err)
+    console.error('Error fetching broker stats:', err)
   }
 }
 
 // View user
-const viewUser = (salesUser: any) => {
-  selectedSalesUser.value = salesUser
+const viewUser = (brokerUser: any) => {
+  selectedBrokerUser.value = brokerUser
   isViewDialogVisible.value = true
 }
 
@@ -329,8 +329,8 @@ const handleEditFromView = () => {
 // Export functions
 const exportToCSV = () => {
   const dataToExport = selectedRows.value.length > 0
-    ? salesUsers.value.filter(user => selectedRows.value.includes(user.id))
-    : salesUsers.value
+    ? brokerUsers.value.filter(broker => selectedRows.value.includes(broker.id))
+    : brokerUsers.value
 
   console.log('Exporting to CSV:', dataToExport)
 
@@ -339,8 +339,8 @@ const exportToCSV = () => {
 
 const exportToPDF = () => {
   const dataToExport = selectedRows.value.length > 0
-    ? salesUsers.value.filter(user => selectedRows.value.includes(user.id))
-    : salesUsers.value
+    ? brokerUsers.value.filter(broker => selectedRows.value.includes(broker.id))
+    : brokerUsers.value
 
   console.log('Exporting to PDF:', dataToExport)
 
@@ -349,7 +349,7 @@ const exportToPDF = () => {
 
 // Fetch data on component mount
 onMounted(() => {
-  fetchSalesUsers()
+  fetchBrokerUsers()
   fetchWidgetStats()
 })
 </script>
@@ -374,15 +374,8 @@ onMounted(() => {
 
     <!-- Widgets -->
     <VRow class="mb-6">
-      <template
-        v-for="(data, id) in widgetData"
-        :key="id"
-      >
-        <VCol
-          cols="12"
-          md="4"
-          sm="6"
-        >
+      <template v-for="(data, id) in widgetData" :key="id">
+        <VCol cols="12" md="4" sm="6">
           <VCard>
             <VCardText>
               <div class="d-flex justify-space-between">
@@ -394,10 +387,7 @@ onMounted(() => {
                     <h4 class="text-h4">
                       {{ data.value }}
                     </h4>
-                    <div
-                      class="text-base"
-                      :class="data.change > 0 ? 'text-success' : 'text-error'"
-                    >
+                    <div class="text-base" :class="data.change > 0 ? 'text-success' : 'text-error'">
                       ({{ prefixWithPlus(data.change) }}%)
                     </div>
                   </div>
@@ -405,16 +395,8 @@ onMounted(() => {
                     {{ data.desc }}
                   </div>
                 </div>
-                <VAvatar
-                  :color="data.iconColor"
-                  variant="tonal"
-                  rounded
-                  size="42"
-                >
-                  <VIcon
-                    :icon="data.icon"
-                    size="26"
-                  />
+                <VAvatar :color="data.iconColor" variant="tonal" rounded size="42">
+                  <VIcon :icon="data.icon" size="26" />
                 </VAvatar>
               </div>
             </VCardText>
@@ -432,17 +414,9 @@ onMounted(() => {
       <VCardText>
         <VRow>
           <!-- Select Status -->
-          <VCol
-            cols="12"
-            sm="4"
-          >
-            <AppSelect
-              v-model="selectedStatus"
-              placeholder="Select Status"
-              :items="statusOptions"
-              clearable
-              clear-icon="tabler-x"
-            />
+          <VCol cols="12" sm="4">
+            <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="statusOptions" clearable
+              clear-icon="tabler-x" />
           </VCol>
         </VRow>
       </VCardText>
@@ -451,30 +425,17 @@ onMounted(() => {
 
       <VCardText class="d-flex flex-wrap gap-4">
         <div class="me-3 d-flex gap-3">
-          <AppSelect
-            :model-value="itemsPerPage"
-            :items="[
-              { value: 10, title: '10' },
-              { value: 25, title: '25' },
-              { value: 50, title: '50' },
-              { value: 100, title: '100' },
-              { value: -1, title: 'All' },
-            ]"
-            style="inline-size: 6.25rem;"
-            @update:model-value="itemsPerPage = parseInt($event, 10)"
-          />
+          <AppSelect :model-value="itemsPerPage" :items="[
+            { value: 10, title: '10' },
+            { value: 25, title: '25' },
+            { value: 50, title: '50' },
+            { value: 100, title: '100' },
+            { value: -1, title: 'All' },
+          ]" style="inline-size: 6.25rem;" @update:model-value="itemsPerPage = parseInt($event, 10)" />
 
           <!-- Bulk Actions -->
-          <VBtn
-            v-if="selectedRows.length > 0"
-            variant="tonal"
-            color="error"
-            @click="bulkDelete"
-          >
-            <VIcon
-              icon="tabler-trash"
-              class="me-2"
-            />
+          <VBtn v-if="selectedRows.length > 0" variant="tonal" color="error" @click="bulkDelete">
+            <VIcon icon="tabler-trash" class="me-2" />
             Delete Selected ({{ selectedRows.length }})
           </VBtn>
         </div>
@@ -483,21 +444,12 @@ onMounted(() => {
         <div class="app-user-search-filter d-flex align-center flex-wrap gap-4">
           <!-- Search -->
           <div style="inline-size: 15.625rem;">
-            <AppTextField
-              v-model="searchQuery"
-              placeholder="Search Sales User"
-            />
+            <AppTextField v-model="searchQuery" placeholder="Search Broker User" />
           </div>
 
           <!-- Export Menu -->
-          <VBtn
-            variant="tonal"
-            color="secondary"
-          >
-            <VIcon
-              icon="tabler-upload"
-              class="me-2"
-            />
+          <VBtn variant="tonal" color="secondary">
+            <VIcon icon="tabler-upload" class="me-2" />
             Export {{ selectedRows.length > 0 ? `(${selectedRows.length})` : 'All' }}
             <VMenu activator="parent">
               <VList>
@@ -518,11 +470,8 @@ onMounted(() => {
           </VBtn>
 
           <!-- Add user button -->
-          <VBtn
-            prepend-icon="tabler-plus"
-            @click="isAddNewUserDrawerVisible = true"
-          >
-            Add New Sales User
+          <VBtn prepend-icon="tabler-plus" @click="isAddNewUserDrawerVisible = true">
+            Add New Broker User
           </VBtn>
         </div>
       </VCardText>
@@ -530,48 +479,25 @@ onMounted(() => {
       <VDivider />
 
       <!-- Error Alert -->
-      <VAlert
-        v-if="error"
-        type="error"
-        class="ma-4"
-        closable
-        @click:close="error = ''"
-      >
+      <VAlert v-if="error" type="error" class="ma-4" closable @click:close="error = ''">
         {{ error }}
       </VAlert>
 
       <!-- Data Table -->
-      <VDataTableServer
-        v-model:items-per-page="itemsPerPage"
-        v-model:model-value="selectedRows"
-        v-model:page="page"
-        :items="filteredSalesUsers"
-        item-value="id"
-        :items-length="totalSalesUsers"
-        :headers="headers"
-        class="text-no-wrap"
-        show-select
-        :loading="isLoading"
-        @update:options="updateOptions"
-      >
+      <VDataTableServer v-model:items-per-page="itemsPerPage" v-model:model-value="selectedRows" v-model:page="page"
+        :items="filteredBrokerUsers" item-value="id" :items-length="totalBrokerUsers" :headers="headers"
+        class="text-no-wrap" show-select :loading="isLoading" @update:options="updateOptions">
         <!-- Empty State -->
         <template #no-data>
           <div class="text-center pa-8">
-            <VIcon
-              icon="tabler-users-off"
-              size="64"
-              class="mb-4 text-disabled"
-            />
+            <VIcon icon="tabler-users-off" size="64" class="mb-4 text-disabled" />
             <h3 class="text-h5 mb-2">
-              No Sales Users Found
+              No Broker Users Found
             </h3>
             <p class="text-body-1 text-medium-emphasis mb-4">
-              No sales users match your search criteria. Try adjusting your filters.
+              No broker users match your search criteria. Try adjusting your filters.
             </p>
-            <VBtn
-              color="primary"
-              @click="isAddNewUserDrawerVisible = true"
-            >
+            <VBtn color="primary" @click="isAddNewUserDrawerVisible = true">
               Add First Sales User
             </VBtn>
           </div>
@@ -580,15 +506,8 @@ onMounted(() => {
         <!-- User -->
         <template #item.user="{ item }">
           <div class="d-flex align-center gap-x-4">
-            <VAvatar
-              size="34"
-              :variant="!item.avatar ? 'tonal' : undefined"
-              color="warning"
-            >
-              <VImg
-                v-if="item.avatar"
-                :src="item.avatar"
-              />
+            <VAvatar size="34" :variant="!item.avatar ? 'tonal' : undefined" color="warning">
+              <VImg v-if="item.avatar" :src="item.avatar" />
               <span v-else>{{ avatarText(item.fullName) }}</span>
             </VAvatar>
             <div class="d-flex flex-column">
@@ -625,12 +544,7 @@ onMounted(() => {
 
         <!-- Status -->
         <template #item.status="{ item }">
-          <VChip
-            :color="resolveUserStatusVariant(item.status)"
-            size="small"
-            label
-            class="text-capitalize"
-          >
+          <VChip :color="resolveUserStatusVariant(item.status)" size="small" label class="text-capitalize">
             {{ item.status }}
           </VChip>
         </template>
@@ -638,16 +552,8 @@ onMounted(() => {
         <!-- Actions -->
         <template #item.actions="{ item }">
           <div class="d-flex gap-1">
-            <VBtn
-              icon
-              variant="text"
-              color="medium-emphasis"
-              size="small"
-            >
-              <VIcon
-                icon="tabler-dots-vertical"
-                size="22"
-              />
+            <VBtn icon variant="text" color="medium-emphasis" size="small">
+              <VIcon icon="tabler-dots-vertical" size="22" />
               <VMenu activator="parent">
                 <VList>
                   <VListItem @click="viewUser(item)">
@@ -657,7 +563,7 @@ onMounted(() => {
                     <VListItemTitle>View</VListItemTitle>
                   </VListItem>
 
-                  <VListItem @click="editSalesUser(item)">
+                  <VListItem @click="editBrokerUser(item)">
                     <template #prepend>
                       <VIcon icon="tabler-pencil" />
                     </template>
@@ -675,10 +581,7 @@ onMounted(() => {
 
                   <VListItem @click="openDeleteDialog(item)">
                     <template #prepend>
-                      <VIcon
-                        icon="tabler-trash"
-                        color="error"
-                      />
+                      <VIcon icon="tabler-trash" color="error" />
                     </template>
                     <VListItemTitle class="text-error">
                       Delete
@@ -692,44 +595,25 @@ onMounted(() => {
 
         <!-- Pagination -->
         <template #bottom>
-          <TablePagination
-            v-model:page="page"
-            :items-per-page="itemsPerPage"
-            :total-items="totalSalesUsers"
-          />
+          <TablePagination v-model:page="page" :items-per-page="itemsPerPage" :total-items="totalBrokerUsers" />
         </template>
       </VDataTableServer>
     </VCard>
 
-    <!-- Add/Edit Sales User Drawer -->
-    <AddEditSalesDrawer
-      v-model:is-drawer-open="isAddNewUserDrawerVisible"
-      :sales-user="selectedSalesUser"
-      @sales-user-data="handleSalesUserData"
-      @update:is-drawer-open="handleDrawerClose"
-    />
+    <!-- Add/Edit Broker User Drawer -->
+    <AddEditBrokerDrawer v-model:is-drawer-open="isAddNewUserDrawerVisible" :broker-user="selectedBrokerUser"
+      @broker-user-data="handleBrokerUserData" @update:is-drawer-open="handleDrawerClose" />
 
     <!-- Delete Confirmation Dialog -->
-    <ConfirmDeleteDialog
-      v-model:is-dialog-open="isDeleteDialogVisible"
-      :user-name="userToDelete?.fullName"
-      user-type="Sales User"
-      @confirm="deleteUser"
-    />
+    <ConfirmDeleteDialog v-model:is-dialog-open="isDeleteDialogVisible" :user-name="userToDelete?.fullName"
+      user-type="Broker User" @confirm="deleteUser" />
 
     <!-- Reset Password Dialog -->
-    <ResetPasswordDialog
-      v-model:is-dialog-open="isResetPasswordDialogVisible"
-      :user-name="selectedSalesUser?.fullName"
-      @confirm="resetPassword"
-    />
+    <ResetPasswordDialog v-model:is-dialog-open="isResetPasswordDialogVisible" :user-name="selectedBrokerUser?.fullName"
+      @confirm="resetPassword" />
 
     <!-- View User Dialog -->
-    <ViewUserDialog
-      v-model:is-dialog-open="isViewDialogVisible"
-      :user="selectedSalesUser"
-      user-type="Sales User"
-      @edit="handleEditFromView"
-    />
+    <ViewUserDialog v-model:is-dialog-open="isViewDialogVisible" :user="selectedBrokerUser" user-type="Broker User"
+      @edit="handleEditFromView" />
   </section>
 </template>

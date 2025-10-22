@@ -1,16 +1,16 @@
 <script setup lang="ts">
 interface Props {
   isDrawerOpen: boolean
-  salesUser?: any
+  brokerUser?: any
 }
 
 interface Emit {
   (e: 'update:isDrawerOpen', value: boolean): void
-  (e: 'salesUserData', value: any): void
+  (e: 'brokerUserData', value: any): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  salesUser: undefined,
+  brokerUser: undefined,
 })
 
 const emit = defineEmits<Emit>()
@@ -57,8 +57,8 @@ const resetForm = () => {
   refForm.value?.reset()
 }
 
-// Watch for salesUser prop changes
-watch(() => props.salesUser, newVal => {
+// Watch for brokerUser prop changes
+watch(() => props.brokerUser, newVal => {
   if (newVal) {
     formData.value = {
       id: newVal.id,
@@ -78,7 +78,7 @@ watch(() => props.salesUser, newVal => {
 const onSubmit = () => {
   refForm.value?.validate().then(({ valid }: any) => {
     if (valid) {
-      emit('salesUserData', { ...formData.value })
+      emit('brokerUserData', { ...formData.value })
       emit('update:isDrawerOpen', false)
       resetForm()
     }
@@ -102,7 +102,7 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
   >
     <!-- Header -->
     <AppDrawerHeaderSection
-      :title="props.salesUser ? 'Edit Sales User' : 'Add New Sales User'"
+      :title="props.brokerUser ? 'Edit Broker User' : 'Add New Broker User'"
       @cancel="handleDrawerModelValueUpdate(false)"
     />
 
@@ -121,8 +121,8 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
               <AppTextField
                 v-model="formData.fullName"
                 label="Full Name"
-                placeholder="Mike Johnson"
-                :rules="[requiredValidator]"
+                placeholder="Full Name"
+                :rules="['requiredValidator']"
               />
             </VCol>
 
@@ -132,8 +132,8 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
                 v-model="formData.email"
                 label="Email"
                 type="email"
-                placeholder="mike.j@example.com"
-                :rules="[requiredValidator, emailValidator]"
+                placeholder="Email"
+                :rules="['requiredValidator', 'emailValidator']"
               />
             </VCol>
 
@@ -142,8 +142,8 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
               <AppTextField
                 v-model="formData.phone"
                 label="Phone"
-                placeholder="+966 50 123 4567"
-                :rules="[requiredValidator]"
+                placeholder="Phone"
+                :rules="['requiredValidator']"
               />
             </VCol>
 
@@ -153,7 +153,7 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
                 v-model="formData.city"
                 label="City"
                 :items="cities"
-                :rules="[requiredValidator]"
+                :rules="['requiredValidator']"
               />
             </VCol>
 
@@ -163,7 +163,7 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
                 v-model="formData.status"
                 label="Status"
                 :items="statusOptions"
-                :rules="[requiredValidator]"
+                :rules="['requiredValidator']"
               />
             </VCol>
 
@@ -173,7 +173,7 @@ const handleDrawerModelValueUpdate = (val: boolean) => {
                 type="submit"
                 class="me-3"
               >
-                {{ props.salesUser ? 'Update' : 'Submit' }}
+                {{ props.brokerUser ? 'Update' : 'Submit' }}
               </VBtn>
               <VBtn
                 variant="outlined"

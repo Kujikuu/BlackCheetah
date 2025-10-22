@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import ctaDashborad from '@images/front-pages/landing-page/cta-dashboard.png'
+import { useTheme, useDisplay } from 'vuetify'
+
+const theme = useTheme()
+const display = useDisplay()
+
+// Using placeholder.co for temporary images
+const ctaDashborad = computed(() => 
+  theme.current.value.dark 
+    ? 'https://placehold.co/454x238/1e1e2d/6366f1?text=CTA+Dashboard+Dark'
+    : 'https://placehold.co/454x238/f8f9fa/6366f1?text=CTA+Dashboard+Light'
+)
 
 // Check if user is authenticated
 const userData = useCookie<Record<string, unknown> | null | undefined>('userData')
