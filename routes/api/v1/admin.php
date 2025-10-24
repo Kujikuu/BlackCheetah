@@ -36,7 +36,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(functi
     Route::prefix('users')->group(function () {
         Route::get('franchisors', [AdminController::class, 'franchisors'])->name('api.v1.admin.users.franchisors');
         Route::get('franchisees', [AdminController::class, 'franchisees'])->name('api.v1.admin.users.franchisees');
-        Route::get('brokers', [AdminController::class, 'salesUsers'])->name('api.v1.admin.users.brokers');
+        Route::get('brokers', [AdminController::class, 'brokersUsers'])->name('api.v1.admin.users.brokers');
 
         // User stats endpoints
         Route::get('franchisors/stats', [AdminController::class, 'franchisorStats'])->name('api.v1.admin.users.franchisors.stats');

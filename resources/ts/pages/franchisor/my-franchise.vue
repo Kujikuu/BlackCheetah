@@ -973,7 +973,7 @@ const resolveStatusVariant = (status: string) => {
           icon="tabler-package"
           start
         />
-        Products
+        Menu
       </VTab>
     </VTabs>
 
