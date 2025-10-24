@@ -1,6 +1,6 @@
 export default [
   {
-    title: 'Assigned Franchises',
+    title: 'Franchise Opportunities',
     to: 'broker-assigned-franchises',
     icon: { icon: 'tabler-building-store' },
     action: 'manage',
