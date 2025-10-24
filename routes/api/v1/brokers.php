@@ -14,7 +14,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth:sanctum', 'role:broker'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:broker'])->prefix('broker')->group(function () {
+    // Franchise marketplace management for brokers
+    Route::get('assigned-franchises', [BrokerController::class, 'getAssignedFranchises'])
+        ->name('api.v1.broker.assigned-franchises');
+    Route::patch('franchises/{franchise}/marketplace-toggle', [BrokerController::class, 'toggleMarketplaceListing'])
+        ->name('api.v1.broker.franchises.marketplace-toggle');
+
     // Employee routes (basic broker role functionality)
     Route::prefix('employee')->group(function () {
         // Employee can access assigned tasks and requests
@@ -65,11 +71,5 @@ Route::middleware(['auth:sanctum', 'role:broker'])->group(function () {
             Route::post('bulk-delete', [PropertyController::class, 'bulkDelete'])->name('api.v1.broker.properties.bulk-delete');
             Route::patch('{property}/mark-leased', [PropertyController::class, 'markLeased'])->name('api.v1.broker.properties.mark-leased');
         });
-
-        // Franchise marketplace management for brokers
-        Route::get('assigned-franchises', [BrokerController::class, 'getAssignedFranchises'])
-            ->name('api.v1.broker.assigned-franchises');
-        Route::patch('franchises/{franchise}/marketplace-toggle', [BrokerController::class, 'toggleMarketplaceListing'])
-            ->name('api.v1.broker.franchises.marketplace-toggle');
     });
 });

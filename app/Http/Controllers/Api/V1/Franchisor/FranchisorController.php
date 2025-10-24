@@ -672,15 +672,15 @@ class FranchisorController extends BaseResourceController
     {
         try {
             $user = Auth::user();
-            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+            // $franchise = Franchise::where('franchisor_id', $user->id)->first();
 
-            if (! $franchise) {
-                return $this->notFoundResponse('No franchise found for this user');
-            }
+            // if (! $franchise) {
+            //     return $this->notFoundResponse('No franchise found for this user');
+            // }
 
-            $query = User::where('role', 'broker')
-                ->where('franchise_id', $franchise->id)
-                ->withCount('leads'); // Get the count of assigned leads
+            $query = User::where('role', 'broker');
+            //     ->where('franchise_id', $franchise->id)
+            //     ->withCount('leads'); // Get the count of assigned leads
 
             // Apply search filter
             if ($request->has('search') && $request->search) {

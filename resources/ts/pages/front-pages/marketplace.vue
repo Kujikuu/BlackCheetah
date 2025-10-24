@@ -144,10 +144,10 @@ onMounted(() => {
     <section class="marketplace-hero">
       <VContainer>
         <div class="text-center py-16">
-          <h1 class="text-h2 text-white mb-4">
+          <h1 class="text-h2 mb-4">
             Explore Franchise Opportunities
           </h1>
-          <p class="text-h6 text-white mb-8">
+          <p class="text-h6 mb-8">
             Find the perfect franchise opportunity or commercial property for your business
           </p>
 
