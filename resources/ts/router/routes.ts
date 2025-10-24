@@ -416,6 +416,15 @@ const routes: RouteRecordRaw[] = [
 
   // Broker Routes
   {
+    path: '/brokers/assigned-franchises',
+    name: 'broker-assigned-franchises',
+    component: () => import('@/pages/broker/assigned-franchises.vue'),
+    meta: {
+      action: 'manage',
+      subject: 'Franchise',
+    },
+  },
+  {
     path: '/brokers/properties',
     name: 'broker-properties',
     component: () => import('@/pages/broker/properties.vue'),

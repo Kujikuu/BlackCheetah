@@ -6,6 +6,7 @@
 export { accountSettingsApi, type AccountSettingsApi } from './account-settings'
 export { adminApi, type AdminApi } from './admin'
 export { authApi, type AuthApi } from './auth'
+export { brokerApi, type BrokerApi } from './broker'
 export { financialApi, type FinancialApi } from './financial'
 export { franchiseApi, type FranchiseApi } from './franchise'
 export { franchiseStaffApi, type FranchiseStaffApi } from './franchise-staff'
@@ -128,6 +129,12 @@ export type {
   User,
   CreateUserPayload,
 } from './admin'
+
+export type {
+  // Broker API
+  AssignedFranchise,
+  AssignedFranchisesResponse,
+} from './broker'
 
 export type {
   // Auth API

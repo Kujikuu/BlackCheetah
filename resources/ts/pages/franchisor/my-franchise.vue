@@ -188,7 +188,6 @@ const isUploadingLogo = ref(false)
 const availableBrokers = ref<BrokerInfo[]>([])
 const selectedBrokerId = ref<number | null>(null)
 const isAssigningBroker = ref(false)
-const isTogglingMarketplace = ref(false)
 const isBrokerDialogVisible = ref(false)
 
 // 👉 Load franchise data
@@ -329,34 +328,6 @@ const assignBroker = async () => {
   }
   finally {
     isAssigningBroker.value = false
-  }
-}
-
-// 👉 Toggle marketplace listing
-const toggleMarketplaceListing = async () => {
-  if (!franchiseData.value?.id) {
-    showSnackbar('No franchise ID available', 'error')
-    return
-  }
-
-  try {
-    isTogglingMarketplace.value = true
-    const response = await franchiseApi.toggleMarketplaceListing(franchiseData.value.id)
-
-    if (response.success) {
-      showSnackbar(response.message || 'Marketplace listing updated', 'success')
-      await loadFranchiseData() // Reload to get updated status
-    }
-    else {
-      showSnackbar(response.message || 'Failed to update marketplace listing', 'error')
-    }
-  }
-  catch (error: any) {
-    console.error('Failed to toggle marketplace listing:', error)
-    showSnackbar('Failed to update marketplace listing', 'error')
-  }
-  finally {
-    isTogglingMarketplace.value = false
   }
 }
 
@@ -1019,13 +990,23 @@ const resolveStatusVariant = (status: string) => {
               Manage your franchise details, documents, and products
             </p>
           </div>
-          <VBtn
-            :color="isEditMode ? 'secondary' : 'primary'"
-            :prepend-icon="isEditMode ? 'tabler-x' : 'tabler-edit'"
-            @click="isEditMode = !isEditMode"
-          >
-            {{ isEditMode ? 'Cancel Edit' : 'Edit Franchise Details' }}
-          </VBtn>
+          <div class="d-flex gap-3">
+            <VBtn
+              color="secondary"
+              variant="tonal"
+              prepend-icon="tabler-user-plus"
+              @click="openBrokerDialog"
+            >
+              {{ franchiseData.broker ? 'Change Broker' : 'Assign Broker' }}
+            </VBtn>
+            <VBtn
+              :color="isEditMode ? 'secondary' : 'primary'"
+              :prepend-icon="isEditMode ? 'tabler-x' : 'tabler-edit'"
+              @click="isEditMode = !isEditMode"
+            >
+              {{ isEditMode ? 'Cancel Edit' : 'Edit Franchise Details' }}
+            </VBtn>
+          </div>
         </div>
       </VCol>
     </VRow>
@@ -1143,13 +1124,6 @@ const resolveStatusVariant = (status: string) => {
           start
         />
         Menu
-      </VTab>
-      <VTab value="marketplace">
-        <VIcon
-          icon="tabler-building-store"
-          start
-        />
-        Marketplace
       </VTab>
     </VTabs>
 
@@ -2005,274 +1979,6 @@ const resolveStatusVariant = (status: string) => {
                 </IconBtn>
               </template>
             </VDataTable>
-          </VCardText>
-        </VCard>
-      </VWindowItem>
-
-      <!-- Marketplace Tab -->
-      <VWindowItem value="marketplace">
-        <VCard>
-          <VCardItem class="pb-4">
-            <VCardTitle>Marketplace Settings</VCardTitle>
-            <VCardSubtitle>Manage your franchise visibility on the marketplace</VCardSubtitle>
-          </VCardItem>
-
-          <VCardText>
-            <!-- Marketplace Status -->
-            <VRow>
-              <VCol cols="12">
-                <VCard
-                  variant="outlined"
-                  :color="franchiseData.is_marketplace_listed ? 'success' : 'secondary'"
-                >
-                  <VCardText>
-                    <div class="d-flex align-center justify-space-between">
-                      <div class="d-flex align-center">
-                        <VAvatar
-                          :color="franchiseData.is_marketplace_listed ? 'success' : 'secondary'"
-                          variant="tonal"
-                          size="48"
-                          class="me-4"
-                        >
-                          <VIcon
-                            :icon="franchiseData.is_marketplace_listed ? 'tabler-building-store' : 'tabler-eye-off'"
-                            size="28"
-                          />
-                        </VAvatar>
-                        <div>
-                          <h4 class="text-h6 mb-1">
-                            {{ franchiseData.is_marketplace_listed ? 'Listed on Marketplace' : 'Not Listed on Marketplace' }}
-                          </h4>
-                          <p class="text-body-2 text-medium-emphasis mb-0">
-                            {{
-                              franchiseData.is_marketplace_listed
-                                ? 'Your franchise is visible to potential buyers on the marketplace'
-                                : 'Your franchise is not visible on the marketplace. List it to attract potential buyers.'
-                            }}
-                          </p>
-                        </div>
-                      </div>
-                      <VBtn
-                        :color="franchiseData.is_marketplace_listed ? 'error' : 'success'"
-                        :loading="isTogglingMarketplace"
-                        @click="toggleMarketplaceListing"
-                      >
-                        {{ franchiseData.is_marketplace_listed ? 'Remove from Marketplace' : 'List on Marketplace' }}
-                      </VBtn>
-                    </div>
-                  </VCardText>
-                </VCard>
-              </VCol>
-            </VRow>
-
-            <VDivider class="my-6" />
-
-            <!-- Broker Assignment -->
-            <VRow>
-              <VCol cols="12">
-                <h5 class="text-h6 mb-4">
-                  Assigned Broker
-                </h5>
-                <VAlert
-                  type="info"
-                  variant="tonal"
-                  class="mb-4"
-                >
-                  Assign a broker to help manage your franchise listing and inquiries from the marketplace.
-                </VAlert>
-
-                <VCard
-                  variant="outlined"
-                  :color="franchiseData.broker ? 'primary' : 'secondary'"
-                >
-                  <VCardText>
-                    <div
-                      v-if="franchiseData.broker"
-                      class="d-flex align-center justify-space-between"
-                    >
-                      <div class="d-flex align-center">
-                        <VAvatar
-                          color="primary"
-                          variant="tonal"
-                          size="48"
-                          class="me-4"
-                        >
-                          <VIcon
-                            icon="tabler-user-circle"
-                            size="28"
-                          />
-                        </VAvatar>
-                        <div>
-                          <h6 class="text-h6 mb-1">
-                            {{ franchiseData.broker.name }}
-                          </h6>
-                          <p class="text-body-2 text-medium-emphasis mb-1">
-                            <VIcon
-                              icon="tabler-mail"
-                              size="16"
-                              class="me-1"
-                            />
-                            {{ franchiseData.broker.email }}
-                          </p>
-                          <p
-                            v-if="franchiseData.broker.phone"
-                            class="text-body-2 text-medium-emphasis mb-0"
-                          >
-                            <VIcon
-                              icon="tabler-phone"
-                              size="16"
-                              class="me-1"
-                            />
-                            {{ franchiseData.broker.phone }}
-                          </p>
-                        </div>
-                      </div>
-                      <VBtn
-                        variant="outlined"
-                        color="primary"
-                        prepend-icon="tabler-edit"
-                        @click="openBrokerDialog"
-                      >
-                        Change Broker
-                      </VBtn>
-                    </div>
-                    <div
-                      v-else
-                      class="d-flex align-center justify-space-between"
-                    >
-                      <div class="d-flex align-center">
-                        <VAvatar
-                          color="secondary"
-                          variant="tonal"
-                          size="48"
-                          class="me-4"
-                        >
-                          <VIcon
-                            icon="tabler-user-off"
-                            size="28"
-                          />
-                        </VAvatar>
-                        <div>
-                          <h6 class="text-h6 mb-1">
-                            No Broker Assigned
-                          </h6>
-                          <p class="text-body-2 text-medium-emphasis mb-0">
-                            Assign a broker to help manage your marketplace listing
-                          </p>
-                        </div>
-                      </div>
-                      <VBtn
-                        color="primary"
-                        prepend-icon="tabler-plus"
-                        @click="openBrokerDialog"
-                      >
-                        Assign Broker
-                      </VBtn>
-                    </div>
-                  </VCardText>
-                </VCard>
-              </VCol>
-            </VRow>
-
-            <!-- Marketplace Benefits -->
-            <VDivider class="my-6" />
-
-            <VRow>
-              <VCol cols="12">
-                <h5 class="text-h6 mb-4">
-                  Marketplace Benefits
-                </h5>
-                <VRow>
-                  <VCol
-                    cols="12"
-                    md="4"
-                  >
-                    <VCard
-                      variant="outlined"
-                      class="h-100"
-                    >
-                      <VCardText class="text-center">
-                        <VAvatar
-                          color="success"
-                          variant="tonal"
-                          size="56"
-                          class="mb-4"
-                        >
-                          <VIcon
-                            icon="tabler-users"
-                            size="32"
-                          />
-                        </VAvatar>
-                        <h6 class="text-h6 mb-2">
-                          Reach More Buyers
-                        </h6>
-                        <p class="text-body-2 text-medium-emphasis">
-                          Connect with potential franchisees actively looking for opportunities
-                        </p>
-                      </VCardText>
-                    </VCard>
-                  </VCol>
-                  <VCol
-                    cols="12"
-                    md="4"
-                  >
-                    <VCard
-                      variant="outlined"
-                      class="h-100"
-                    >
-                      <VCardText class="text-center">
-                        <VAvatar
-                          color="info"
-                          variant="tonal"
-                          size="56"
-                          class="mb-4"
-                        >
-                          <VIcon
-                            icon="tabler-chart-line"
-                            size="32"
-                          />
-                        </VAvatar>
-                        <h6 class="text-h6 mb-2">
-                          Increase Visibility
-                        </h6>
-                        <p class="text-body-2 text-medium-emphasis">
-                          Showcase your franchise to a broader audience in the marketplace
-                        </p>
-                      </VCardText>
-                    </VCard>
-                  </VCol>
-                  <VCol
-                    cols="12"
-                    md="4"
-                  >
-                    <VCard
-                      variant="outlined"
-                      class="h-100"
-                    >
-                      <VCardText class="text-center">
-                        <VAvatar
-                          color="warning"
-                          variant="tonal"
-                          size="56"
-                          class="mb-4"
-                        >
-                          <VIcon
-                            icon="tabler-headset"
-                            size="32"
-                          />
-                        </VAvatar>
-                        <h6 class="text-h6 mb-2">
-                          Professional Support
-                        </h6>
-                        <p class="text-body-2 text-medium-emphasis">
-                          Get help from dedicated brokers to manage inquiries and close deals
-                        </p>
-                      </VCardText>
-                    </VCard>
-                  </VCol>
-                </VRow>
-              </VCol>
-            </VRow>
           </VCardText>
         </VCard>
       </VWindowItem>

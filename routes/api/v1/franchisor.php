@@ -39,8 +39,6 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('franchisor')->gr
     Route::prefix('franchises')->group(function () {
         Route::patch('{franchise}/assign-broker', [FranchisorController::class, 'assignBroker'])
             ->name('api.v1.franchisor.franchises.assign-broker');
-        Route::patch('{franchise}/marketplace-toggle', [FranchisorController::class, 'toggleMarketplaceListing'])
-            ->name('api.v1.franchisor.franchises.marketplace-toggle');
     });
 
     // Franchisor can access their franchise network data

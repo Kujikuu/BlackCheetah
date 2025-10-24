@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\V1\Broker\PropertyController;
+use App\Http\Controllers\Api\V1\Broker\{BrokerController, PropertyController};
 use App\Http\Controllers\Api\V1\Resources\{TaskController, TechnicalRequestController, LeadController};
 use Illuminate\Support\Facades\Route;
 
@@ -65,5 +65,11 @@ Route::middleware(['auth:sanctum', 'role:broker'])->group(function () {
             Route::post('bulk-delete', [PropertyController::class, 'bulkDelete'])->name('api.v1.broker.properties.bulk-delete');
             Route::patch('{property}/mark-leased', [PropertyController::class, 'markLeased'])->name('api.v1.broker.properties.mark-leased');
         });
+
+        // Franchise marketplace management for brokers
+        Route::get('assigned-franchises', [BrokerController::class, 'getAssignedFranchises'])
+            ->name('api.v1.broker.assigned-franchises');
+        Route::patch('franchises/{franchise}/marketplace-toggle', [BrokerController::class, 'toggleMarketplaceListing'])
+            ->name('api.v1.broker.franchises.marketplace-toggle');
     });
 });

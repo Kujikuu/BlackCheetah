@@ -612,15 +612,6 @@ export class FranchiseApi {
   }
 
   /**
-   * Toggle franchise marketplace listing status
-   */
-  async toggleMarketplaceListing(franchiseId: number): Promise<ApiResponse<any>> {
-    return await $api(`/v1/franchisor/franchises/${franchiseId}/marketplace-toggle`, {
-      method: 'PATCH',
-    })
-  }
-
-  /**
    * Get available brokers for marketplace
    */
   async getBrokers(): Promise<ApiResponse<{ data: any[] }>> {
