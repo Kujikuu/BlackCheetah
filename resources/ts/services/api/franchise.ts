@@ -600,6 +600,32 @@ export class FranchiseApi {
       body: { status },
     })
   }
+
+  /**
+   * Assign broker to franchise for marketplace listing
+   */
+  async assignBroker(franchiseId: number, brokerId: number): Promise<ApiResponse<any>> {
+    return await $api(`/v1/franchisor/franchises/${franchiseId}/assign-broker`, {
+      method: 'PATCH',
+      body: { broker_id: brokerId },
+    })
+  }
+
+  /**
+   * Toggle franchise marketplace listing status
+   */
+  async toggleMarketplaceListing(franchiseId: number): Promise<ApiResponse<any>> {
+    return await $api(`/v1/franchisor/franchises/${franchiseId}/marketplace-toggle`, {
+      method: 'PATCH',
+    })
+  }
+
+  /**
+   * Get available brokers for marketplace
+   */
+  async getBrokers(): Promise<ApiResponse<{ data: any[] }>> {
+    return await $api('/v1/franchisor/brokers')
+  }
 }
 
 export const franchiseApi = new FranchiseApi()

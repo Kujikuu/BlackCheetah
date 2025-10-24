@@ -114,6 +114,15 @@ interface FranchiseData {
   legalDetails: LegalDetails
   contactDetails: ContactDetails
   financialDetails: FinancialDetails
+  broker?: BrokerInfo | null
+  is_marketplace_listed?: boolean
+}
+
+interface BrokerInfo {
+  id: number
+  name: string
+  email: string
+  phone?: string
 }
 
 interface DocumentData {
@@ -175,6 +184,13 @@ const productsData = ref<ProductData[]>([])
 const logoFile = ref<File | null>(null)
 const isUploadingLogo = ref(false)
 
+// 👉 Marketplace and Broker Management
+const availableBrokers = ref<BrokerInfo[]>([])
+const selectedBrokerId = ref<number | null>(null)
+const isAssigningBroker = ref(false)
+const isTogglingMarketplace = ref(false)
+const isBrokerDialogVisible = ref(false)
+
 // 👉 Load franchise data
 const loadFranchiseData = async () => {
   try {
@@ -183,7 +199,7 @@ const loadFranchiseData = async () => {
     const response = await franchiseApi.getFranchiseData()
 
     if (response.success && response.data) {
-      const apiData = response.data.franchise
+      const apiData = (response.data as any).franchise
       if (apiData) {
         // Map the API response structure to the frontend structure
         franchiseData.value = {
@@ -221,6 +237,8 @@ const loadFranchiseData = async () => {
             royaltyPercentage: apiData.financialDetails?.royaltyPercentage || '',
             marketingFeePercentage: apiData.financialDetails?.marketingFeePercentage || '',
           },
+          broker: apiData.broker || null,
+          is_marketplace_listed: apiData.is_marketplace_listed || false,
         }
       }
     }
@@ -245,7 +263,7 @@ const loadDocuments = async () => {
 
     const response = await franchiseApi.getDocuments(franchiseData.value.id)
     if (response.success && response.data)
-      documentsData.value = response.data.data || []
+      documentsData.value = (response.data.data as any) || []
   }
   catch (error: any) {
     console.error('Failed to load documents:', error)
@@ -264,12 +282,88 @@ const loadProducts = async () => {
 
     const response = await franchiseApi.getProducts(franchiseData.value.id)
     if (response.success && response.data)
-      productsData.value = response.data.data || []
+      productsData.value = (response.data.data as any) || []
   }
   catch (error: any) {
     console.error('Failed to load products:', error)
     showSnackbar('Failed to load products', 'error')
   }
+}
+
+// 👉 Load available brokers
+const loadBrokers = async () => {
+  try {
+    const response = await franchiseApi.getBrokers()
+    if (response.success && response.data)
+      availableBrokers.value = response.data.data || []
+  }
+  catch (error: any) {
+    console.error('Failed to load brokers:', error)
+    showSnackbar('Failed to load brokers', 'error')
+  }
+}
+
+// 👉 Assign broker to franchise
+const assignBroker = async () => {
+  if (!selectedBrokerId.value || !franchiseData.value?.id) {
+    showSnackbar('Please select a broker', 'error')
+    return
+  }
+
+  try {
+    isAssigningBroker.value = true
+    const response = await franchiseApi.assignBroker(franchiseData.value.id, selectedBrokerId.value)
+
+    if (response.success) {
+      showSnackbar('Broker assigned successfully', 'success')
+      await loadFranchiseData() // Reload to get updated broker info
+      isBrokerDialogVisible.value = false
+    }
+    else {
+      showSnackbar(response.message || 'Failed to assign broker', 'error')
+    }
+  }
+  catch (error: any) {
+    console.error('Failed to assign broker:', error)
+    showSnackbar('Failed to assign broker', 'error')
+  }
+  finally {
+    isAssigningBroker.value = false
+  }
+}
+
+// 👉 Toggle marketplace listing
+const toggleMarketplaceListing = async () => {
+  if (!franchiseData.value?.id) {
+    showSnackbar('No franchise ID available', 'error')
+    return
+  }
+
+  try {
+    isTogglingMarketplace.value = true
+    const response = await franchiseApi.toggleMarketplaceListing(franchiseData.value.id)
+
+    if (response.success) {
+      showSnackbar(response.message || 'Marketplace listing updated', 'success')
+      await loadFranchiseData() // Reload to get updated status
+    }
+    else {
+      showSnackbar(response.message || 'Failed to update marketplace listing', 'error')
+    }
+  }
+  catch (error: any) {
+    console.error('Failed to toggle marketplace listing:', error)
+    showSnackbar('Failed to update marketplace listing', 'error')
+  }
+  finally {
+    isTogglingMarketplace.value = false
+  }
+}
+
+// 👉 Open broker selection dialog
+const openBrokerDialog = () => {
+  selectedBrokerId.value = franchiseData.value?.broker?.id || null
+  isBrokerDialogVisible.value = true
 }
 
 // 👉 Upload logo
@@ -322,40 +416,40 @@ const updateFranchiseData = async () => {
     }
 
     // Transform the data to match the backend's expected nested structure
-    const updatePayload = {
+    const updatePayload: any = {
       personalInfo: {
-        contactNumber: franchiseData.value.personalInfo.contactNumber || null,
-        address: franchiseData.value.personalInfo.address || null,
-        city: franchiseData.value.personalInfo.city || null,
-        state: franchiseData.value.personalInfo.state || null,
-        country: franchiseData.value.personalInfo.country || null,
+        contactNumber: franchiseData.value.personalInfo.contactNumber || undefined,
+        address: franchiseData.value.personalInfo.address || undefined,
+        city: franchiseData.value.personalInfo.city || undefined,
+        state: franchiseData.value.personalInfo.state || undefined,
+        country: franchiseData.value.personalInfo.country || undefined,
       },
       franchiseDetails: {
         franchiseDetails: {
-          franchiseName: franchiseData.value.franchiseDetails.franchiseName || null,
-          website: franchiseData.value.franchiseDetails.website || null,
-          logo: franchiseData.value.franchiseDetails.logo || null,
+          franchiseName: franchiseData.value.franchiseDetails.franchiseName || undefined,
+          website: franchiseData.value.franchiseDetails.website || undefined,
+          logo: franchiseData.value.franchiseDetails.logo || undefined,
         },
         legalDetails: {
-          legalEntityName: franchiseData.value.legalDetails.legalEntityName || null,
+          legalEntityName: franchiseData.value.legalDetails.legalEntityName || undefined,
           businessStructure: franchiseData.value.legalDetails.businessStructure, // Keep original case
-          taxId: franchiseData.value.legalDetails.taxId || null,
-          industry: franchiseData.value.legalDetails.industry || null,
-          fundingAmount: franchiseData.value.legalDetails.fundingAmount || null,
-          fundingSource: franchiseData.value.legalDetails.fundingSource || null,
+          taxId: franchiseData.value.legalDetails.taxId || undefined,
+          industry: franchiseData.value.legalDetails.industry || undefined,
+          fundingAmount: franchiseData.value.legalDetails.fundingAmount || undefined,
+          fundingSource: franchiseData.value.legalDetails.fundingSource || undefined,
         },
         contactDetails: {
-          contactNumber: franchiseData.value.contactDetails.contactNumber || null,
-          email: franchiseData.value.contactDetails.email || null,
-          address: franchiseData.value.contactDetails.address || null,
-          city: franchiseData.value.contactDetails.city || null,
-          state: franchiseData.value.contactDetails.state || null,
-          country: franchiseData.value.contactDetails.country || null,
+          contactNumber: franchiseData.value.contactDetails.contactNumber || undefined,
+          email: franchiseData.value.contactDetails.email || undefined,
+          address: franchiseData.value.contactDetails.address || undefined,
+          city: franchiseData.value.contactDetails.city || undefined,
+          state: franchiseData.value.contactDetails.state || undefined,
+          country: franchiseData.value.contactDetails.country || undefined,
         },
         financialDetails: {
-          franchiseFee: franchiseData.value.financialDetails.franchiseFee || null,
-          royaltyPercentage: franchiseData.value.financialDetails.royaltyPercentage || null,
-          marketingFeePercentage: franchiseData.value.financialDetails.marketingFeePercentage || null,
+          franchiseFee: franchiseData.value.financialDetails.franchiseFee || undefined,
+          royaltyPercentage: franchiseData.value.financialDetails.royaltyPercentage || undefined,
+          marketingFeePercentage: franchiseData.value.financialDetails.marketingFeePercentage || undefined,
         },
       },
     }
@@ -429,6 +523,7 @@ onMounted(async () => {
     await Promise.all([
       loadDocuments(),
       loadProducts(),
+      loadBrokers(),
     ])
   }
 })
@@ -1048,6 +1143,13 @@ const resolveStatusVariant = (status: string) => {
           start
         />
         Menu
+      </VTab>
+      <VTab value="marketplace">
+        <VIcon
+          icon="tabler-building-store"
+          start
+        />
+        Marketplace
       </VTab>
     </VTabs>
 
@@ -1906,7 +2008,354 @@ const resolveStatusVariant = (status: string) => {
           </VCardText>
         </VCard>
       </VWindowItem>
+
+      <!-- Marketplace Tab -->
+      <VWindowItem value="marketplace">
+        <VCard>
+          <VCardItem class="pb-4">
+            <VCardTitle>Marketplace Settings</VCardTitle>
+            <VCardSubtitle>Manage your franchise visibility on the marketplace</VCardSubtitle>
+          </VCardItem>
+
+          <VCardText>
+            <!-- Marketplace Status -->
+            <VRow>
+              <VCol cols="12">
+                <VCard
+                  variant="outlined"
+                  :color="franchiseData.is_marketplace_listed ? 'success' : 'secondary'"
+                >
+                  <VCardText>
+                    <div class="d-flex align-center justify-space-between">
+                      <div class="d-flex align-center">
+                        <VAvatar
+                          :color="franchiseData.is_marketplace_listed ? 'success' : 'secondary'"
+                          variant="tonal"
+                          size="48"
+                          class="me-4"
+                        >
+                          <VIcon
+                            :icon="franchiseData.is_marketplace_listed ? 'tabler-building-store' : 'tabler-eye-off'"
+                            size="28"
+                          />
+                        </VAvatar>
+                        <div>
+                          <h4 class="text-h6 mb-1">
+                            {{ franchiseData.is_marketplace_listed ? 'Listed on Marketplace' : 'Not Listed on Marketplace' }}
+                          </h4>
+                          <p class="text-body-2 text-medium-emphasis mb-0">
+                            {{
+                              franchiseData.is_marketplace_listed
+                                ? 'Your franchise is visible to potential buyers on the marketplace'
+                                : 'Your franchise is not visible on the marketplace. List it to attract potential buyers.'
+                            }}
+                          </p>
+                        </div>
+                      </div>
+                      <VBtn
+                        :color="franchiseData.is_marketplace_listed ? 'error' : 'success'"
+                        :loading="isTogglingMarketplace"
+                        @click="toggleMarketplaceListing"
+                      >
+                        {{ franchiseData.is_marketplace_listed ? 'Remove from Marketplace' : 'List on Marketplace' }}
+                      </VBtn>
+                    </div>
+                  </VCardText>
+                </VCard>
+              </VCol>
+            </VRow>
+
+            <VDivider class="my-6" />
+
+            <!-- Broker Assignment -->
+            <VRow>
+              <VCol cols="12">
+                <h5 class="text-h6 mb-4">
+                  Assigned Broker
+                </h5>
+                <VAlert
+                  type="info"
+                  variant="tonal"
+                  class="mb-4"
+                >
+                  Assign a broker to help manage your franchise listing and inquiries from the marketplace.
+                </VAlert>
+
+                <VCard
+                  variant="outlined"
+                  :color="franchiseData.broker ? 'primary' : 'secondary'"
+                >
+                  <VCardText>
+                    <div
+                      v-if="franchiseData.broker"
+                      class="d-flex align-center justify-space-between"
+                    >
+                      <div class="d-flex align-center">
+                        <VAvatar
+                          color="primary"
+                          variant="tonal"
+                          size="48"
+                          class="me-4"
+                        >
+                          <VIcon
+                            icon="tabler-user-circle"
+                            size="28"
+                          />
+                        </VAvatar>
+                        <div>
+                          <h6 class="text-h6 mb-1">
+                            {{ franchiseData.broker.name }}
+                          </h6>
+                          <p class="text-body-2 text-medium-emphasis mb-1">
+                            <VIcon
+                              icon="tabler-mail"
+                              size="16"
+                              class="me-1"
+                            />
+                            {{ franchiseData.broker.email }}
+                          </p>
+                          <p
+                            v-if="franchiseData.broker.phone"
+                            class="text-body-2 text-medium-emphasis mb-0"
+                          >
+                            <VIcon
+                              icon="tabler-phone"
+                              size="16"
+                              class="me-1"
+                            />
+                            {{ franchiseData.broker.phone }}
+                          </p>
+                        </div>
+                      </div>
+                      <VBtn
+                        variant="outlined"
+                        color="primary"
+                        prepend-icon="tabler-edit"
+                        @click="openBrokerDialog"
+                      >
+                        Change Broker
+                      </VBtn>
+                    </div>
+                    <div
+                      v-else
+                      class="d-flex align-center justify-space-between"
+                    >
+                      <div class="d-flex align-center">
+                        <VAvatar
+                          color="secondary"
+                          variant="tonal"
+                          size="48"
+                          class="me-4"
+                        >
+                          <VIcon
+                            icon="tabler-user-off"
+                            size="28"
+                          />
+                        </VAvatar>
+                        <div>
+                          <h6 class="text-h6 mb-1">
+                            No Broker Assigned
+                          </h6>
+                          <p class="text-body-2 text-medium-emphasis mb-0">
+                            Assign a broker to help manage your marketplace listing
+                          </p>
+                        </div>
+                      </div>
+                      <VBtn
+                        color="primary"
+                        prepend-icon="tabler-plus"
+                        @click="openBrokerDialog"
+                      >
+                        Assign Broker
+                      </VBtn>
+                    </div>
+                  </VCardText>
+                </VCard>
+              </VCol>
+            </VRow>
+
+            <!-- Marketplace Benefits -->
+            <VDivider class="my-6" />
+
+            <VRow>
+              <VCol cols="12">
+                <h5 class="text-h6 mb-4">
+                  Marketplace Benefits
+                </h5>
+                <VRow>
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <VCard
+                      variant="outlined"
+                      class="h-100"
+                    >
+                      <VCardText class="text-center">
+                        <VAvatar
+                          color="success"
+                          variant="tonal"
+                          size="56"
+                          class="mb-4"
+                        >
+                          <VIcon
+                            icon="tabler-users"
+                            size="32"
+                          />
+                        </VAvatar>
+                        <h6 class="text-h6 mb-2">
+                          Reach More Buyers
+                        </h6>
+                        <p class="text-body-2 text-medium-emphasis">
+                          Connect with potential franchisees actively looking for opportunities
+                        </p>
+                      </VCardText>
+                    </VCard>
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <VCard
+                      variant="outlined"
+                      class="h-100"
+                    >
+                      <VCardText class="text-center">
+                        <VAvatar
+                          color="info"
+                          variant="tonal"
+                          size="56"
+                          class="mb-4"
+                        >
+                          <VIcon
+                            icon="tabler-chart-line"
+                            size="32"
+                          />
+                        </VAvatar>
+                        <h6 class="text-h6 mb-2">
+                          Increase Visibility
+                        </h6>
+                        <p class="text-body-2 text-medium-emphasis">
+                          Showcase your franchise to a broader audience in the marketplace
+                        </p>
+                      </VCardText>
+                    </VCard>
+                  </VCol>
+                  <VCol
+                    cols="12"
+                    md="4"
+                  >
+                    <VCard
+                      variant="outlined"
+                      class="h-100"
+                    >
+                      <VCardText class="text-center">
+                        <VAvatar
+                          color="warning"
+                          variant="tonal"
+                          size="56"
+                          class="mb-4"
+                        >
+                          <VIcon
+                            icon="tabler-headset"
+                            size="32"
+                          />
+                        </VAvatar>
+                        <h6 class="text-h6 mb-2">
+                          Professional Support
+                        </h6>
+                        <p class="text-body-2 text-medium-emphasis">
+                          Get help from dedicated brokers to manage inquiries and close deals
+                        </p>
+                      </VCardText>
+                    </VCard>
+                  </VCol>
+                </VRow>
+              </VCol>
+            </VRow>
+          </VCardText>
+        </VCard>
+      </VWindowItem>
     </VWindow>
+
+    <!-- Broker Selection Dialog -->
+    <VDialog
+      v-model="isBrokerDialogVisible"
+      max-width="600"
+    >
+      <DialogCloseBtn @click="isBrokerDialogVisible = false" />
+      <VCard title="Assign Broker">
+        <VCardText>
+          <VAlert
+            type="info"
+            variant="tonal"
+            class="mb-4"
+          >
+            Select a broker to manage your marketplace listing and handle inquiries from potential buyers.
+          </VAlert>
+
+          <AppSelect
+            v-model="selectedBrokerId"
+            label="Select Broker"
+            placeholder="Choose a broker"
+            :items="availableBrokers.map(broker => ({
+              title: `${broker.name} (${broker.email})`,
+              value: broker.id,
+            }))"
+          />
+
+          <div
+            v-if="selectedBrokerId"
+            class="mt-4"
+          >
+            <VCard
+              variant="outlined"
+              color="primary"
+            >
+              <VCardText>
+                <div class="d-flex align-center">
+                  <VAvatar
+                    color="primary"
+                    variant="tonal"
+                    size="40"
+                    class="me-3"
+                  >
+                    <VIcon icon="tabler-user-circle" />
+                  </VAvatar>
+                  <div>
+                    <h6 class="text-body-1 font-weight-medium">
+                      {{ availableBrokers.find(b => b.id === selectedBrokerId)?.name }}
+                    </h6>
+                    <p class="text-body-2 text-medium-emphasis mb-0">
+                      {{ availableBrokers.find(b => b.id === selectedBrokerId)?.email }}
+                    </p>
+                  </div>
+                </div>
+              </VCardText>
+            </VCard>
+          </div>
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="secondary"
+            variant="outlined"
+            @click="isBrokerDialogVisible = false"
+          >
+            Cancel
+          </VBtn>
+          <VBtn
+            color="primary"
+            :loading="isAssigningBroker"
+            :disabled="!selectedBrokerId"
+            @click="assignBroker"
+          >
+            Assign Broker
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
 
     <!-- Add Document Modal -->
     <AddDocumentDialog

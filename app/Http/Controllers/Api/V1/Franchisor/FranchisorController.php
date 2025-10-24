@@ -1050,7 +1050,9 @@ class FranchisorController extends BaseResourceController
     {
         try {
             $user = Auth::user();
-            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+            $franchise = Franchise::where('franchisor_id', $user->id)
+                ->with(['broker:id,name,email,phone'])
+                ->first();
 
             if (! $franchise) {
                 return $this->notFoundResponse('No franchise found for this user');
@@ -1058,6 +1060,17 @@ class FranchisorController extends BaseResourceController
 
             // Get documents from the documents JSON field
             $documents = $franchise->documents ?? [];
+
+            // Format broker information
+            $brokerInfo = null;
+            if ($franchise->broker) {
+                $brokerInfo = [
+                    'id' => $franchise->broker->id,
+                    'name' => $franchise->broker->name,
+                    'email' => $franchise->broker->email,
+                    'phone' => $franchise->broker->phone,
+                ];
+            }
 
             // Format the response to match the frontend structure
             $franchiseData = [
@@ -1088,6 +1101,8 @@ class FranchisorController extends BaseResourceController
                     'royaltyPercentage' => $franchise->royalty_percentage ?? 0,
                     'marketingFeePercentage' => $franchise->marketing_fee_percentage ?? 0,
                 ],
+                'broker' => $brokerInfo,
+                'is_marketplace_listed' => $franchise->is_marketplace_listed ?? false,
             ];
 
             // Get documents data
