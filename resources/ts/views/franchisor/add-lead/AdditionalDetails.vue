@@ -38,12 +38,6 @@ const leadStatuses = [
   { title: 'Closed Lost', value: 'closed_lost' },
 ]
 
-const leadOwners = [
-  { title: 'Sarah Johnson', value: 'sarah_johnson' },
-  { title: 'John Smith', value: 'john_smith' },
-  { title: 'Michael Brown', value: 'michael_brown' },
-]
-
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files)
@@ -57,9 +51,17 @@ const handleFileUpload = (event: Event) => {
       <h5 class="text-h5 mb-1">
         Additional Details
       </h5>
-      <p class="text-body-1 mb-6">
+      <p class="text-body-1 mb-2">
         Provide lead management and tracking information
       </p>
+      <!-- <VAlert
+        type="info"
+        variant="tonal"
+        class="mb-4"
+      >
+        <VAlertTitle>Auto-Assignment</VAlertTitle>
+        This lead will be automatically assigned to you upon creation.
+      </VAlert> -->
     </VCol>
 
     <VCol
@@ -83,18 +85,6 @@ const handleFileUpload = (event: Event) => {
         label="Lead Status"
         placeholder="Select Status"
         :items="leadStatuses"
-      />
-    </VCol>
-
-    <VCol
-      cols="12"
-      md="6"
-    >
-      <AppSelect
-        v-model="localFormData.leadOwner"
-        label="Lead Owner"
-        placeholder="Select Owner"
-        :items="leadOwners"
       />
     </VCol>
 

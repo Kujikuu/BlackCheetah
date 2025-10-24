@@ -9,6 +9,7 @@ interface DocumentData {
   title?: string  // Support both name and title for different use cases
   description: string
   file: File | null
+  file_name?: string | null
   type: string
   status: string
   is_confidential?: boolean
@@ -40,6 +41,7 @@ const documentForm = ref<DocumentData>({
   title: '',
   description: '',
   file: null,
+  file_name: null,
   type: 'other',
   status: 'active',
   is_confidential: false,
@@ -51,19 +53,18 @@ const dialogValue = computed({
   set: val => emit('update:isDialogVisible', val),
 })
 
-// Document type options for franchisee mode
+// Document type options - matching backend validation types
 const documentTypeOptions = [
-  'FDD',
-  'Franchise Agreement',
-  'Operations Manual',
-  'Brand Guidelines',
-  'Legal Documents',
-  'Sales Report',
-  'Financial Statement',
-  'Marketing Materials',
-  'Training Materials',
-  'Quality Standards',
-  'Other',
+  { title: 'FDD', value: 'fdd' },
+  { title: 'Franchise Agreement', value: 'franchise_agreement' },
+  { title: 'Financial Study', value: 'financial_study' },
+  { title: 'Franchise Kit', value: 'franchise_kit' },
+  { title: 'Contract', value: 'contract' },
+  { title: 'Agreement', value: 'agreement' },
+  { title: 'Manual', value: 'manual' },
+  { title: 'Certificate', value: 'certificate' },
+  { title: 'Report', value: 'report' },
+  { title: 'Other', value: 'other' },
 ]
 
 // Initialize form data when dialog opens or when documentData changes
@@ -80,6 +81,7 @@ watch(() => [props.isDialogVisible, props.documentData], () => {
         title: '',
         description: '',
         file: null,
+        file_name: null,
         type: props.mode === 'unit' ? '' : 'other',
         status: 'active',
         is_confidential: false,
@@ -106,8 +108,14 @@ const saveDocument = async () => {
   }
 
   const nameValue = isUnitMode.value ? documentForm.value.title : documentForm.value.name
-  if (!nameValue || !documentForm.value.file) {
-    console.error('Document name/title and file are required')
+  if (!nameValue) {
+    console.error('Document name/title is required')
+    return
+  }
+
+  // File is required only for new documents (not when editing)
+  if (!documentForm.value.id && !documentForm.value.file) {
+    console.error('File is required for new documents')
     return
   }
 
@@ -154,14 +162,22 @@ const saveDocument = async () => {
         return
       }
 
-      const payload = {
+      const payload: any = {
         name: documentForm.value.name || '',
         description: documentForm.value.description || '',
         type: documentForm.value.type,
         status: documentForm.value.status,
         is_confidential: documentForm.value.is_confidential,
-        expiry_date: documentForm.value.expiry_date,
-        file: documentForm.value.file,
+      }
+
+      // Only add expiry_date if it's not null
+      if (documentForm.value.expiry_date) {
+        payload.expiry_date = documentForm.value.expiry_date
+      }
+
+      // Only add file if it exists
+      if (documentForm.value.file) {
+        payload.file = documentForm.value.file
       }
 
       let response
@@ -257,16 +273,35 @@ const dialogTitle = computed(() => {
               />
             </VCol>
             <VCol cols="12">
+              <!-- Show current file info when editing -->
+              <VAlert
+                v-if="documentForm.id && props.documentData"
+                type="info"
+                variant="tonal"
+                class="mb-4"
+              >
+                <div class="d-flex align-center">
+                  <VIcon icon="tabler-file" class="me-2" />
+                  <div>
+                    <div class="font-weight-medium">Current File</div>
+                    <div class="text-caption">{{ props.documentData.file_name || 'Document file' }}</div>
+                  </div>
+                </div>
+              </VAlert>
+              
               <VFileInput
                 v-model="documentForm.file"
-                label="Attach File"
+                :label="documentForm.id ? 'Replace File (Optional)' : 'Attach File'"
                 :accept="isUnitMode ? '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png' : '.pdf,.doc,.docx'"
                 prepend-icon="tabler-paperclip"
                 variant="outlined"
-                required
+                :required="!documentForm.id"
               />
               <div v-if="isUnitMode" class="text-caption text-disabled mt-2">
                 Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, JPEG, PNG
+              </div>
+              <div v-else-if="documentForm.id" class="text-caption text-disabled mt-2">
+                Leave empty to keep the current file, or upload a new file to replace it
               </div>
             </VCol>
           </VRow>

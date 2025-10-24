@@ -68,7 +68,7 @@ const isCompleting = ref(false)
 const franchiseRegistrationData = ref<FranchiseRegistrationData>({
   personalInfo: {
     contactNumber: '',
-    country: '',
+    nationality: '',
     state: '',
     city: '',
     address: '',
@@ -99,9 +99,9 @@ const franchiseRegistrationData = ref<FranchiseRegistrationData>({
   documents: {
     fdd: null,
     franchiseAgreement: null,
-    operationsManual: null,
-    brandGuidelines: null,
-    legalDocuments: null,
+    financialStudy: null,
+    franchiseKit: null,
+    additionalDocuments: null,
   },
   reviewComplete: {
     termsAccepted: false,
@@ -139,32 +139,32 @@ const onSubmit = async () => {
 
     if (documents.fdd) {
       documentUploadPromises.push(
-        uploadDocument(documents.fdd, 'Franchise Disclosure Document (FDD)', 'contract', franchiseId),
+        uploadDocument(documents.fdd, 'Franchise Disclosure Document (FDD)', 'fdd', franchiseId),
       )
     }
 
     if (documents.franchiseAgreement) {
       documentUploadPromises.push(
-        uploadDocument(documents.franchiseAgreement, 'Franchise Agreement', 'agreement', franchiseId),
+        uploadDocument(documents.franchiseAgreement, 'Franchise Agreement', 'franchise_agreement', franchiseId),
       )
     }
 
-    if (documents.operationsManual) {
+    if (documents.financialStudy) {
       documentUploadPromises.push(
-        uploadDocument(documents.operationsManual, 'Operations Manual', 'manual', franchiseId),
+        uploadDocument(documents.financialStudy, 'Financial Study', 'financial_study', franchiseId),
       )
     }
 
-    if (documents.brandGuidelines) {
+    if (documents.franchiseKit) {
       documentUploadPromises.push(
-        uploadDocument(documents.brandGuidelines, 'Brand Guidelines', 'other', franchiseId),
+        uploadDocument(documents.franchiseKit, 'Franchise Kit', 'franchise_kit', franchiseId),
       )
     }
 
-    if (documents.legalDocuments && documents.legalDocuments.length > 0) {
-      documents.legalDocuments.forEach((file, index) => {
+    if (documents.additionalDocuments && documents.additionalDocuments.length > 0) {
+      documents.additionalDocuments.forEach((file, index) => {
         documentUploadPromises.push(
-          uploadDocument(file, `Legal Document ${index + 1}`, 'other', franchiseId),
+          uploadDocument(file, `Additional Document ${index + 1}`, 'other', franchiseId),
         )
       })
     }

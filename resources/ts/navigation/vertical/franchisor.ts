@@ -12,22 +12,22 @@ export default [
     action: 'read',
     subject: 'FranchisorDashboard',
     children: [
-      {
-        title: 'Leads',
-        to: 'franchisor-dashboard-leads',
+      // {
+      //   title: 'Leads',
+      //   to: 'franchisor-dashboard-leads',
 
-        // icon: { icon: 'tabler-users' },
-        action: 'read',
-        subject: 'Lead',
-      },
-      {
-        title: 'Operations',
-        to: 'franchisor-dashboard-operations',
+      //   // icon: { icon: 'tabler-users' },
+      //   action: 'read',
+      //   subject: 'Lead',
+      // },
+      // {
+      //   title: 'Operations',
+      //   to: 'franchisor-dashboard-operations',
 
-        // icon: { icon: 'tabler-list-check' },
-        action: 'read',
-        subject: 'FranchisorDashboard',
-      },
+      //   // icon: { icon: 'tabler-list-check' },
+      //   action: 'read',
+      //   subject: 'FranchisorDashboard',
+      // },
       {
         title: 'Development Timeline',
         to: 'franchisor-dashboard-timeline',
@@ -46,13 +46,13 @@ export default [
       },
     ],
   },
-  {
-    title: 'Brokers',
-    to: 'franchisor-brokers',
-    icon: { icon: 'tabler-user-star' },
-    action: 'manage',
-    subject: 'User',
-  },
+  // {
+  //   title: 'Brokers',
+  //   to: 'franchisor-brokers',
+  //   icon: { icon: 'tabler-user-star' },
+  //   action: 'manage',
+  //   subject: 'User',
+  // },
   {
     title: 'My Franchise',
     to: 'franchisor-my-franchise',
@@ -68,11 +68,25 @@ export default [
     subject: 'Unit',
   },
   {
-    title: 'Tasks Management',
+    title: 'My Tasks',
     to: 'franchisor-tasks-management',
     icon: { icon: 'tabler-clipboard-list' },
     action: 'manage',
     subject: 'Task',
+  },
+  {
+    title: 'My Team',
+    to: 'franchisor-franchise-staff',
+    icon: { icon: 'tabler-users-group' },
+    action: 'read',
+    subject: 'Franchise',
+  },
+  {
+    title: 'Wallet Management',
+    to: 'franchisor-royalty-management',
+    icon: { icon: 'tabler-coins' },
+    action: 'manage',
+    subject: 'Royalty',
   },
   {
     title: 'Performance Management',
@@ -87,13 +101,6 @@ export default [
     icon: { icon: 'tabler-chart-pie' },
     action: 'read',
     subject: 'Revenue',
-  },
-  {
-    title: 'Royalty Management',
-    to: 'franchisor-royalty-management',
-    icon: { icon: 'tabler-coins' },
-    action: 'manage',
-    subject: 'Royalty',
   },
   {
     title: 'Technical Requests',

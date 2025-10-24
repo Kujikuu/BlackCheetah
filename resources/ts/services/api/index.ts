@@ -6,13 +6,17 @@
 export { accountSettingsApi, type AccountSettingsApi } from './account-settings'
 export { adminApi, type AdminApi } from './admin'
 export { authApi, type AuthApi } from './auth'
+export { brokerApi, type BrokerApi } from './broker'
 export { financialApi, type FinancialApi } from './financial'
 export { franchiseApi, type FranchiseApi } from './franchise'
+export { franchiseStaffApi, type FranchiseStaffApi } from './franchise-staff'
 export { franchiseeDashboardApi, type FranchiseeDashboardApi } from './franchisee-dashboard'
 export { leadApi, type LeadApi } from './lead'
+export { marketplaceApi, type MarketplaceApi } from './marketplace'
 export { notesApi, type NotesApi } from './notes'
 export { notificationsApi, type NotificationsApi } from './notifications'
 export { onboardingApi, type OnboardingApi } from './onboarding'
+export { propertyApi, type PropertyApi } from './property'
 export { royaltyApi, type RoyaltyApi } from './royalty'
 export { taskApi, type TaskApi } from './task'
 export { technicalRequestApi, type TechnicalRequestApi } from './technical-request'
@@ -127,6 +131,12 @@ export type {
 } from './admin'
 
 export type {
+  // Broker API
+  AssignedFranchise,
+  AssignedFranchisesResponse,
+} from './broker'
+
+export type {
   // Auth API
   LoginPayload,
   LoginResponse,
@@ -156,6 +166,16 @@ export type {
   CreateProductPayload,
   UpdateProductPayload,
 } from './franchise'
+
+export type {
+  // Franchise Staff API
+  FranchiseStaff,
+  StaffFilters,
+  CreateStaffPayload,
+  UpdateStaffPayload,
+  StaffStatistics,
+  PaginatedStaffResponse,
+} from './franchise-staff'
 
 export type {
   // Notes API
@@ -189,3 +209,19 @@ export type {
   Broker,
   UpdateUserPayload,
 } from './users'
+
+export type {
+  // Property API
+  Property,
+  PropertyFilters,
+  CreatePropertyPayload,
+  UpdatePropertyPayload,
+} from './property'
+
+export type {
+  // Marketplace API
+  Franchise,
+  MarketplaceFilters,
+  MarketplaceInquiry,
+  InquiryPayload,
+} from './marketplace'

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Staff extends Model
@@ -13,6 +14,7 @@ class Staff extends Model
     protected $table = 'staff';
 
     protected $fillable = [
+        'franchise_id',
         'name',
         'email',
         'phone',
@@ -28,13 +30,18 @@ class Staff extends Model
     ];
 
     protected $casts = [
-        'salary' => 'decimal:2',
+        'salary' => 'float',
         'hire_date' => 'date',
         'shift_start' => 'datetime',
         'shift_end' => 'datetime',
     ];
 
     // Relationships
+    public function franchise(): BelongsTo
+    {
+        return $this->belongsTo(Franchise::class);
+    }
+
     public function units(): BelongsToMany
     {
         return $this->belongsToMany(Unit::class, 'staff_unit')
@@ -86,6 +93,16 @@ class Staff extends Model
     public function scopePartTime($query)
     {
         return $query->where('employment_type', 'part_time');
+    }
+
+    public function scopeFranchiseLevel($query)
+    {
+        return $query->whereNotNull('franchise_id');
+    }
+
+    public function scopeByFranchise($query, int $franchiseId)
+    {
+        return $query->where('franchise_id', $franchiseId);
     }
 
     // Methods

@@ -72,6 +72,35 @@ const routes: RouteRecordRaw[] = [
     },
   },
 
+  // Marketplace - Public
+  {
+    path: '/marketplace',
+    name: 'marketplace',
+    component: () => import('@/pages/front-pages/marketplace.vue'),
+    meta: {
+      layout: 'blank',
+      public: true,
+    },
+  },
+  {
+    path: '/marketplace/franchise/:id',
+    name: 'marketplace-franchise-details',
+    component: () => import('@/pages/front-pages/marketplace-franchise-details.vue'),
+    meta: {
+      layout: 'blank',
+      public: true,
+    },
+  },
+  {
+    path: '/marketplace/property/:id',
+    name: 'marketplace-property-details',
+    component: () => import('@/pages/front-pages/marketplace-property-details.vue'),
+    meta: {
+      layout: 'blank',
+      public: true,
+    },
+  },
+
   // Onboarding
   {
     path: '/onboarding',
@@ -179,6 +208,15 @@ const routes: RouteRecordRaw[] = [
     path: '/franchisor/my-franchise',
     name: 'franchisor-my-franchise',
     component: () => import('@/pages/franchisor/my-franchise.vue'),
+    meta: {
+      action: 'read',
+      subject: 'Franchise',
+    },
+  },
+  {
+    path: '/franchisor/franchise-staff',
+    name: 'franchisor-franchise-staff',
+    component: () => import('@/pages/franchisor/franchise-staff.vue'),
     meta: {
       action: 'read',
       subject: 'Franchise',
@@ -377,6 +415,24 @@ const routes: RouteRecordRaw[] = [
   },
 
   // Broker Routes
+  {
+    path: '/brokers/assigned-franchises',
+    name: 'broker-assigned-franchises',
+    component: () => import('@/pages/broker/assigned-franchises.vue'),
+    meta: {
+      action: 'manage',
+      subject: 'Franchise',
+    },
+  },
+  {
+    path: '/brokers/properties',
+    name: 'broker-properties',
+    component: () => import('@/pages/broker/properties.vue'),
+    meta: {
+      action: 'manage',
+      subject: 'Property',
+    },
+  },
   {
     path: '/brokers/lead-management',
     name: 'broker-lead-management',

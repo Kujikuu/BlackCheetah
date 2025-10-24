@@ -44,8 +44,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // Lead Management Routes
+    // Note: Lead creation is restricted to brokers only (see brokers.php routes)
     Route::prefix('leads')->group(function () {
+        Route::get('/', [LeadController::class, 'index'])->name('api.v1.leads.index');
         Route::get('statistics', [LeadController::class, 'statistics'])->name('api.v1.leads.statistics');
+        Route::get('{lead}', [LeadController::class, 'show'])->name('api.v1.leads.show');
+        Route::put('{lead}', [LeadController::class, 'update'])->name('api.v1.leads.update');
+        Route::delete('{lead}', [LeadController::class, 'destroy'])->name('api.v1.leads.destroy');
         Route::post('bulk-delete', [LeadController::class, 'bulkDelete'])->name('api.v1.leads.bulk-delete');
         Route::post('import-csv', [LeadController::class, 'importCsv'])->name('api.v1.leads.import-csv');
         Route::get('export-csv', [LeadController::class, 'exportCsv'])->name('api.v1.leads.export-csv');
@@ -54,7 +59,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::patch('{lead}/assign', [LeadController::class, 'assign'])->name('api.v1.leads.assign');
         Route::post('{lead}/notes', [LeadController::class, 'addNote'])->name('api.v1.leads.add-note');
     });
-    Route::apiResource('leads', LeadController::class);
 
     // Note Management Routes
     Route::prefix('notes')->group(function () {

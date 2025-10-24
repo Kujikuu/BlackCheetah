@@ -247,6 +247,13 @@ const isPageActive = computed(() => menuItems.some(item => item.navItems.some(li
               {{ item }}
             </RouterLink>
 
+            <RouterLink
+              :to="{ name: 'marketplace' }"
+              class="nav-link font-weight-medium py-2 px-2 px-lg-4"
+            >
+              Marketplace
+            </RouterLink>
+
             <!-- Pages Menu -->
             <!-- <span
               class="font-weight-medium cursor-pointer px-2 px-lg-4 py-2"

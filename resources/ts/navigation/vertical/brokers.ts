@@ -1,5 +1,12 @@
 export default [
   {
+    title: 'Assigned Franchises',
+    to: 'broker-assigned-franchises',
+    icon: { icon: 'tabler-building-store' },
+    action: 'manage',
+    subject: 'Franchise',
+  },
+  {
     title: 'Lead Management',
     to: 'broker-lead-management',
     icon: { icon: 'tabler-user-search' },
@@ -20,4 +27,11 @@ export default [
     action: 'create',
     subject: 'TechnicalRequest',
   },
+  {
+    title: 'Properties',
+    to: 'broker-properties',
+    icon: { icon: 'tabler-map-pin' },
+    action: 'manage',
+    subject: 'Property',
+  }
 ]

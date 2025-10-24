@@ -2,9 +2,9 @@
 interface DocumentUploadData {
   fdd: File | null
   franchiseAgreement: File | null
-  operationsManual: File | null
-  brandGuidelines: File | null
-  legalDocuments: File[] | null
+  financialStudy: File | null
+  franchiseKit: File | null
+  additionalDocuments: File[] | null
 }
 
 interface Props {
@@ -59,28 +59,30 @@ const localFormData = computed({
         </VCol>
         <VCol cols="12">
           <VFileInput
-            v-model="localFormData.operationsManual"
-            label="Operations Manual"
+            v-model="localFormData.financialStudy"
+            label="Financial Study"
             accept=".pdf,.doc,.docx"
-            prepend-icon="tabler-book"
-            hint="Optional - PDF, DOC, or DOCX format"
+            prepend-icon="tabler-report-money"
+            required
+            hint="Required document - PDF, DOC, or DOCX format"
             persistent-hint
           />
         </VCol>
         <VCol cols="12">
           <VFileInput
-            v-model="localFormData.brandGuidelines"
-            label="Brand Guidelines"
+            v-model="localFormData.franchiseKit"
+            label="Franchise Kit"
             accept=".pdf,.doc,.docx"
-            prepend-icon="tabler-palette"
-            hint="Optional - PDF, DOC, or DOCX format"
+            prepend-icon="tabler-briefcase"
+            required
+            hint="Required document - PDF, DOC, or DOCX format"
             persistent-hint
           />
         </VCol>
         <VCol cols="12">
           <VFileInput
-            v-model="localFormData.legalDocuments"
-            label="Additional Legal Documents"
+            v-model="localFormData.additionalDocuments"
+            label="Additional Documents"
             accept=".pdf,.doc,.docx"
             prepend-icon="tabler-files"
             multiple
@@ -99,8 +101,8 @@ const localFormData = computed({
         <ul class="mt-2">
           <li>All documents must be in PDF, DOC, or DOCX format</li>
           <li>Maximum file size: 10MB per document</li>
-          <li>FDD and Franchise Agreement are required documents</li>
-          <li>Additional documents help expedite the review process</li>
+          <li>All 4 static documents (FDD, Franchise Agreement, Financial Study, Franchise Kit) are required</li>
+          <li>Additional documents are optional and help expedite the review process</li>
         </ul>
       </VAlert>
     </VForm>

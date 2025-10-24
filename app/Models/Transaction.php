@@ -38,7 +38,7 @@ class Transaction extends Model
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'amount' => 'float',
         'transaction_date' => 'date',
         'recurrence_end_date' => 'date',
         'is_recurring' => 'boolean',

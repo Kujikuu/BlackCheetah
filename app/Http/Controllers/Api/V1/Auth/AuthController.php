@@ -83,6 +83,7 @@ class AuthController extends Controller
                     ['action' => 'update', 'subject' => 'TechnicalRequest'],
                     ['action' => 'read', 'subject' => 'Statistics'],
                     ['action' => 'manage', 'subject' => 'Note'],
+                    ['action' => 'manage', 'subject' => 'Property'],
                 ];
             }
 

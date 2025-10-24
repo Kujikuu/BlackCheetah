@@ -61,6 +61,11 @@ const franchiseData = ref<FranchiseData>({
     state: '',
     city: '',
   },
+  financialDetails: {
+    franchiseFee: '',
+    royaltyPercentage: '',
+    marketingFeePercentage: '',
+  },
 })
 
 // 👉 Type definitions
@@ -96,12 +101,28 @@ interface ContactDetails {
   city: string
 }
 
+interface FinancialDetails {
+  franchiseFee: string
+  royaltyPercentage: string
+  marketingFeePercentage: string
+}
+
 interface FranchiseData {
   id: number
   personalInfo: PersonalInfo
   franchiseDetails: FranchiseDetails
   legalDetails: LegalDetails
   contactDetails: ContactDetails
+  financialDetails: FinancialDetails
+  broker?: BrokerInfo | null
+  is_marketplace_listed?: boolean
+}
+
+interface BrokerInfo {
+  id: number
+  name: string
+  email: string
+  phone?: string
 }
 
 interface DocumentData {
@@ -141,12 +162,33 @@ interface ProductData {
 // 👉 Documents data (will be populated from API)
 const documentsData = ref<DocumentData[]>([])
 
+// 👉 Separate static documents from additional documents
+const staticDocuments = computed(() => {
+  return {
+    fdd: documentsData.value.find(doc => doc.type === 'fdd'),
+    franchiseAgreement: documentsData.value.find(doc => doc.type === 'franchise_agreement'),
+    financialStudy: documentsData.value.find(doc => doc.type === 'financial_study'),
+    franchiseKit: documentsData.value.find(doc => doc.type === 'franchise_kit'),
+  }
+})
+
+const additionalDocuments = computed(() => {
+  const staticTypes = ['fdd', 'franchise_agreement', 'financial_study', 'franchise_kit']
+  return documentsData.value.filter(doc => !staticTypes.includes(doc.type))
+})
+
 // // 👉 Products data (will be populated from API)
 const productsData = ref<ProductData[]>([])
 
 // 👉 Logo upload handling
 const logoFile = ref<File | null>(null)
 const isUploadingLogo = ref(false)
+
+// 👉 Marketplace and Broker Management
+const availableBrokers = ref<BrokerInfo[]>([])
+const selectedBrokerId = ref<number | null>(null)
+const isAssigningBroker = ref(false)
+const isBrokerDialogVisible = ref(false)
 
 // 👉 Load franchise data
 const loadFranchiseData = async () => {
@@ -156,7 +198,7 @@ const loadFranchiseData = async () => {
     const response = await franchiseApi.getFranchiseData()
 
     if (response.success && response.data) {
-      const apiData = response.data.franchise
+      const apiData = (response.data as any).franchise
       if (apiData) {
         // Map the API response structure to the frontend structure
         franchiseData.value = {
@@ -189,6 +231,13 @@ const loadFranchiseData = async () => {
             state: apiData.contactDetails?.state || '',
             country: apiData.contactDetails?.country || '',
           },
+          financialDetails: {
+            franchiseFee: apiData.financialDetails?.franchiseFee || '',
+            royaltyPercentage: apiData.financialDetails?.royaltyPercentage || '',
+            marketingFeePercentage: apiData.financialDetails?.marketingFeePercentage || '',
+          },
+          broker: apiData.broker || null,
+          is_marketplace_listed: apiData.is_marketplace_listed || false,
         }
       }
     }
@@ -213,7 +262,7 @@ const loadDocuments = async () => {
 
     const response = await franchiseApi.getDocuments(franchiseData.value.id)
     if (response.success && response.data)
-      documentsData.value = response.data.data || []
+      documentsData.value = (response.data.data as any) || []
   }
   catch (error: any) {
     console.error('Failed to load documents:', error)
@@ -232,12 +281,60 @@ const loadProducts = async () => {
 
     const response = await franchiseApi.getProducts(franchiseData.value.id)
     if (response.success && response.data)
-      productsData.value = response.data.data || []
+      productsData.value = (response.data.data as any) || []
   }
   catch (error: any) {
     console.error('Failed to load products:', error)
     showSnackbar('Failed to load products', 'error')
   }
+}
+
+// 👉 Load available brokers
+const loadBrokers = async () => {
+  try {
+    const response = await franchiseApi.getBrokers()
+    if (response.success && response.data)
+      availableBrokers.value = response.data.data || []
+  }
+  catch (error: any) {
+    console.error('Failed to load brokers:', error)
+    showSnackbar('Failed to load brokers', 'error')
+  }
+}
+
+// 👉 Assign broker to franchise
+const assignBroker = async () => {
+  if (!selectedBrokerId.value || !franchiseData.value?.id) {
+    showSnackbar('Please select a broker', 'error')
+    return
+  }
+
+  try {
+    isAssigningBroker.value = true
+    const response = await franchiseApi.assignBroker(franchiseData.value.id, selectedBrokerId.value)
+
+    if (response.success) {
+      showSnackbar('Broker assigned successfully', 'success')
+      await loadFranchiseData() // Reload to get updated broker info
+      isBrokerDialogVisible.value = false
+    }
+    else {
+      showSnackbar(response.message || 'Failed to assign broker', 'error')
+    }
+  }
+  catch (error: any) {
+    console.error('Failed to assign broker:', error)
+    showSnackbar('Failed to assign broker', 'error')
+  }
+  finally {
+    isAssigningBroker.value = false
+  }
+}
+
+// 👉 Open broker selection dialog
+const openBrokerDialog = () => {
+  selectedBrokerId.value = franchiseData.value?.broker?.id || null
+  isBrokerDialogVisible.value = true
 }
 
 // 👉 Upload logo
@@ -290,35 +387,40 @@ const updateFranchiseData = async () => {
     }
 
     // Transform the data to match the backend's expected nested structure
-    const updatePayload = {
+    const updatePayload: any = {
       personalInfo: {
-        contactNumber: franchiseData.value.personalInfo.contactNumber || null,
-        address: franchiseData.value.personalInfo.address || null,
-        city: franchiseData.value.personalInfo.city || null,
-        state: franchiseData.value.personalInfo.state || null,
-        country: franchiseData.value.personalInfo.country || null,
+        contactNumber: franchiseData.value.personalInfo.contactNumber || undefined,
+        address: franchiseData.value.personalInfo.address || undefined,
+        city: franchiseData.value.personalInfo.city || undefined,
+        state: franchiseData.value.personalInfo.state || undefined,
+        country: franchiseData.value.personalInfo.country || undefined,
       },
       franchiseDetails: {
         franchiseDetails: {
-          franchiseName: franchiseData.value.franchiseDetails.franchiseName || null,
-          website: franchiseData.value.franchiseDetails.website || null,
-          logo: franchiseData.value.franchiseDetails.logo || null,
+          franchiseName: franchiseData.value.franchiseDetails.franchiseName || undefined,
+          website: franchiseData.value.franchiseDetails.website || undefined,
+          logo: franchiseData.value.franchiseDetails.logo || undefined,
         },
         legalDetails: {
-          legalEntityName: franchiseData.value.legalDetails.legalEntityName || null,
+          legalEntityName: franchiseData.value.legalDetails.legalEntityName || undefined,
           businessStructure: franchiseData.value.legalDetails.businessStructure, // Keep original case
-          taxId: franchiseData.value.legalDetails.taxId || null,
-          industry: franchiseData.value.legalDetails.industry || null,
-          fundingAmount: franchiseData.value.legalDetails.fundingAmount || null,
-          fundingSource: franchiseData.value.legalDetails.fundingSource || null,
+          taxId: franchiseData.value.legalDetails.taxId || undefined,
+          industry: franchiseData.value.legalDetails.industry || undefined,
+          fundingAmount: franchiseData.value.legalDetails.fundingAmount || undefined,
+          fundingSource: franchiseData.value.legalDetails.fundingSource || undefined,
         },
         contactDetails: {
-          contactNumber: franchiseData.value.contactDetails.contactNumber || null,
-          email: franchiseData.value.contactDetails.email || null,
-          address: franchiseData.value.contactDetails.address || null,
-          city: franchiseData.value.contactDetails.city || null,
-          state: franchiseData.value.contactDetails.state || null,
-          country: franchiseData.value.contactDetails.country || null,
+          contactNumber: franchiseData.value.contactDetails.contactNumber || undefined,
+          email: franchiseData.value.contactDetails.email || undefined,
+          address: franchiseData.value.contactDetails.address || undefined,
+          city: franchiseData.value.contactDetails.city || undefined,
+          state: franchiseData.value.contactDetails.state || undefined,
+          country: franchiseData.value.contactDetails.country || undefined,
+        },
+        financialDetails: {
+          franchiseFee: franchiseData.value.financialDetails.franchiseFee || undefined,
+          royaltyPercentage: franchiseData.value.financialDetails.royaltyPercentage || undefined,
+          marketingFeePercentage: franchiseData.value.financialDetails.marketingFeePercentage || undefined,
         },
       },
     }
@@ -392,6 +494,7 @@ onMounted(async () => {
     await Promise.all([
       loadDocuments(),
       loadProducts(),
+      loadBrokers(),
     ])
   }
 })
@@ -432,6 +535,7 @@ const selectedDocument = ref<{
   name: string
   description: string
   file: File | null
+  file_name?: string | null
   type: string
   status: string
   is_confidential: boolean
@@ -441,6 +545,7 @@ const selectedDocument = ref<{
   name: '',
   description: '',
   file: null,
+  file_name: null,
   type: 'other',
   status: 'active',
   is_confidential: false,
@@ -544,6 +649,37 @@ const editDocument = (document: any) => {
   isEditDocumentModalVisible.value = true
 }
 
+const editStaticDocument = (documentType: string) => {
+  // Find the existing document of this type
+  const existingDoc = documentsData.value.find(doc => doc.type === documentType)
+  
+  // Get the display name for the document type
+  const documentNames: Record<string, string> = {
+    'fdd': 'Franchise Disclosure Document (FDD)',
+    'franchise_agreement': 'Franchise Agreement',
+    'financial_study': 'Financial Study',
+    'franchise_kit': 'Franchise Kit',
+  }
+  
+  selectedDocument.value = {
+    id: existingDoc?.id || null,
+    name: existingDoc?.name || documentNames[documentType] || documentType,
+    description: existingDoc?.description || `${documentNames[documentType]} for franchise`,
+    type: documentType,
+    file: null,
+    file_name: existingDoc?.file_name || null,
+    expiry_date: existingDoc?.expiry_date || null,
+    is_confidential: existingDoc?.is_confidential || false,
+    status: existingDoc?.status || 'active',
+  }
+  
+  if (existingDoc) {
+    isEditDocumentModalVisible.value = true
+  } else {
+    isAddDocumentModalVisible.value = true
+  }
+}
+
 const saveDocument = async () => {
   try {
     if (!franchiseData.value?.id) {
@@ -552,14 +688,18 @@ const saveDocument = async () => {
       return
     }
 
-    const payload = {
+    const payload: any = {
       name: selectedDocument.value.name,
       description: selectedDocument.value.description || '',
       type: selectedDocument.value.type,
       status: selectedDocument.value.status,
       is_confidential: selectedDocument.value.is_confidential,
       expiry_date: selectedDocument.value.expiry_date,
-      file: selectedDocument.value.file,
+    }
+
+    // Only add file if it's not null
+    if (selectedDocument.value.file) {
+      payload.file = selectedDocument.value.file
     }
 
     let response
@@ -608,7 +748,7 @@ const downloadDocument = async (document: any) => {
     const response = await franchiseApi.downloadDocument(franchiseData.value.id, document.id)
 
     // Create a blob from the response and trigger download
-    const blob = new Blob([response], { type: 'application/octet-stream' })
+    const blob = new Blob([response as any], { type: 'application/octet-stream' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
 
@@ -850,13 +990,23 @@ const resolveStatusVariant = (status: string) => {
               Manage your franchise details, documents, and products
             </p>
           </div>
-          <VBtn
-            :color="isEditMode ? 'secondary' : 'primary'"
-            :prepend-icon="isEditMode ? 'tabler-x' : 'tabler-edit'"
-            @click="isEditMode = !isEditMode"
-          >
-            {{ isEditMode ? 'Cancel Edit' : 'Edit Franchise Details' }}
-          </VBtn>
+          <div class="d-flex gap-3">
+            <VBtn
+              color="secondary"
+              variant="tonal"
+              prepend-icon="tabler-user-plus"
+              @click="openBrokerDialog"
+            >
+              {{ franchiseData.broker ? 'Change Broker' : 'Assign Broker' }}
+            </VBtn>
+            <VBtn
+              :color="isEditMode ? 'secondary' : 'primary'"
+              :prepend-icon="isEditMode ? 'tabler-x' : 'tabler-edit'"
+              @click="isEditMode = !isEditMode"
+            >
+              {{ isEditMode ? 'Cancel Edit' : 'Edit Franchise Details' }}
+            </VBtn>
+          </div>
         </div>
       </VCol>
     </VRow>
@@ -973,7 +1123,7 @@ const resolveStatusVariant = (status: string) => {
           icon="tabler-package"
           start
         />
-        Products
+        Menu
       </VTab>
     </VTabs>
 
@@ -1387,6 +1537,94 @@ const resolveStatusVariant = (status: string) => {
                   </VCardText>
                 </VCard>
               </VCol>
+
+              <!-- Financial Details -->
+              <VCol cols="12">
+                <h4 class="text-h6 mb-4">
+                  Financial Details
+                </h4>
+                <VCard variant="outlined">
+                  <VCardText>
+                    <VRow>
+                      <VCol
+                        cols="12"
+                        md="4"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Franchise Fee
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1 font-weight-medium text-success"
+                          >
+                            {{ formatCurrency(Number(franchiseData.financialDetails.franchiseFee)) }}
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.financialDetails.franchiseFee"
+                            label="Franchise Fee"
+                            placeholder="Enter franchise fee"
+                            type="number"
+                            prefix="SAR"
+                            step="0.01"
+                          />
+                        </div>
+                      </VCol>
+                      <VCol
+                        cols="12"
+                        md="4"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Royalty Percentage
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1 font-weight-medium"
+                          >
+                            {{ franchiseData.financialDetails.royaltyPercentage }}%
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.financialDetails.royaltyPercentage"
+                            label="Royalty Percentage"
+                            placeholder="Enter royalty percentage"
+                            type="number"
+                            suffix="%"
+                            step="0.01"
+                          />
+                        </div>
+                      </VCol>
+                      <VCol
+                        cols="12"
+                        md="4"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Marketing Fee Percentage
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1 font-weight-medium"
+                          >
+                            {{ franchiseData.financialDetails.marketingFeePercentage }}%
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.financialDetails.marketingFeePercentage"
+                            label="Marketing Fee Percentage"
+                            placeholder="Enter marketing fee percentage"
+                            type="number"
+                            suffix="%"
+                            step="0.01"
+                          />
+                        </div>
+                      </VCol>
+                    </VRow>
+                  </VCardText>
+                </VCard>
+              </VCol>
             </VRow>
           </VCardText>
 
@@ -1416,11 +1654,149 @@ const resolveStatusVariant = (status: string) => {
 
       <!-- Documents Tab -->
       <VWindowItem value="documents">
+        <!-- Static Required Documents -->
+        <VCard class="mb-6">
+          <VCardItem class="pb-4">
+            <VCardTitle>Required Documents</VCardTitle>
+          </VCardItem>
+          
+          <VCardText>
+            <VAlert
+              type="info"
+              variant="tonal"
+              class="mb-4"
+            >
+              You can add more documents once your onboarding process is completed
+            </VAlert>
+
+            <VList
+              lines="two"
+              border
+              rounded
+            >
+              <!-- FDD -->
+              <VListItem>
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-file-text"
+                    color="primary"
+                    size="24"
+                  />
+                </template>
+
+                <VListItemTitle class="font-weight-medium">
+                  FDD
+                </VListItemTitle>
+                <VListItemSubtitle>
+                  {{ staticDocuments.fdd?.file_name || 'No file uploaded' }}
+                </VListItemSubtitle>
+
+                <template #append>
+                  <VBtn
+                    variant="text"
+                    icon="tabler-pencil"
+                    size="small"
+                    @click="editStaticDocument('fdd')"
+                  />
+                </template>
+              </VListItem>
+
+              <VDivider />
+
+              <!-- Franchise Agreement -->
+              <VListItem>
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-file-text"
+                    color="primary"
+                    size="24"
+                  />
+                </template>
+
+                <VListItemTitle class="font-weight-medium">
+                  Franchise Agreement
+                </VListItemTitle>
+                <VListItemSubtitle>
+                  {{ staticDocuments.franchiseAgreement?.file_name || 'No file uploaded' }}
+                </VListItemSubtitle>
+
+                <template #append>
+                  <VBtn
+                    variant="text"
+                    icon="tabler-pencil"
+                    size="small"
+                    @click="editStaticDocument('franchise_agreement')"
+                  />
+                </template>
+              </VListItem>
+
+              <VDivider />
+
+              <!-- Financial Study -->
+              <VListItem>
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-report-money"
+                    color="primary"
+                    size="24"
+                  />
+                </template>
+
+                <VListItemTitle class="font-weight-medium">
+                  Financial Study
+                </VListItemTitle>
+                <VListItemSubtitle>
+                  {{ staticDocuments.financialStudy?.file_name || 'No file uploaded' }}
+                </VListItemSubtitle>
+
+                <template #append>
+                  <VBtn
+                    variant="text"
+                    icon="tabler-pencil"
+                    size="small"
+                    @click="editStaticDocument('financial_study')"
+                  />
+                </template>
+              </VListItem>
+
+              <VDivider />
+
+              <!-- Franchise Kit -->
+              <VListItem>
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-briefcase"
+                    color="primary"
+                    size="24"
+                  />
+                </template>
+
+                <VListItemTitle class="font-weight-medium">
+                  Franchise Kit
+                </VListItemTitle>
+                <VListItemSubtitle>
+                  {{ staticDocuments.franchiseKit?.file_name || 'No file uploaded' }}
+                </VListItemSubtitle>
+
+                <template #append>
+                  <VBtn
+                    variant="text"
+                    icon="tabler-pencil"
+                    size="small"
+                    @click="editStaticDocument('franchise_kit')"
+                  />
+                </template>
+              </VListItem>
+            </VList>
+          </VCardText>
+        </VCard>
+
+        <!-- Additional Documents -->
         <VCard>
           <VCardText>
             <div class="d-flex justify-space-between align-center mb-4">
               <h4 class="text-h6">
-                Franchise Documents
+                Additional Documents
               </h4>
               <VBtn
                 color="primary"
@@ -1431,9 +1807,9 @@ const resolveStatusVariant = (status: string) => {
               </VBtn>
             </div>
 
-            <VRow>
+            <VRow v-if="additionalDocuments.length > 0">
               <template
-                v-for="document in documentsData"
+                v-for="document in additionalDocuments"
                 :key="document.id"
               >
                 <VCol
@@ -1502,6 +1878,13 @@ const resolveStatusVariant = (status: string) => {
                 </VCol>
               </template>
             </VRow>
+            <VAlert
+              v-else
+              type="info"
+              variant="tonal"
+            >
+              No additional documents uploaded yet
+            </VAlert>
           </VCardText>
         </VCard>
       </VWindowItem>
@@ -1601,12 +1984,100 @@ const resolveStatusVariant = (status: string) => {
       </VWindowItem>
     </VWindow>
 
+    <!-- Broker Selection Dialog -->
+    <VDialog
+      v-model="isBrokerDialogVisible"
+      max-width="600"
+    >
+      <DialogCloseBtn @click="isBrokerDialogVisible = false" />
+      <VCard title="Assign Broker">
+        <VCardText>
+          <VAlert
+            type="info"
+            variant="tonal"
+            class="mb-4"
+          >
+            Select a broker to manage your marketplace listing and handle inquiries from potential buyers.
+          </VAlert>
+
+          <AppSelect
+            v-model="selectedBrokerId"
+            label="Select Broker"
+            placeholder="Choose a broker"
+            :items="availableBrokers.map(broker => ({
+              title: `${broker.name} (${broker.email})`,
+              value: broker.id,
+            }))"
+          />
+
+          <div
+            v-if="selectedBrokerId"
+            class="mt-4"
+          >
+            <VCard
+              variant="outlined"
+              color="primary"
+            >
+              <VCardText>
+                <div class="d-flex align-center">
+                  <VAvatar
+                    color="primary"
+                    variant="tonal"
+                    size="40"
+                    class="me-3"
+                  >
+                    <VIcon icon="tabler-user-circle" />
+                  </VAvatar>
+                  <div>
+                    <h6 class="text-body-1 font-weight-medium">
+                      {{ availableBrokers.find(b => b.id === selectedBrokerId)?.name }}
+                    </h6>
+                    <p class="text-body-2 text-medium-emphasis mb-0">
+                      {{ availableBrokers.find(b => b.id === selectedBrokerId)?.email }}
+                    </p>
+                  </div>
+                </div>
+              </VCardText>
+            </VCard>
+          </div>
+        </VCardText>
+
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="secondary"
+            variant="outlined"
+            @click="isBrokerDialogVisible = false"
+          >
+            Cancel
+          </VBtn>
+          <VBtn
+            color="primary"
+            :loading="isAssigningBroker"
+            :disabled="!selectedBrokerId"
+            @click="assignBroker"
+          >
+            Assign Broker
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
     <!-- Add Document Modal -->
     <AddDocumentDialog
       v-model:is-dialog-visible="isAddDocumentModalVisible"
       :franchise-id="franchiseData?.id"
       :document-data="selectedDocument"
-      mode='unit'
+      mode="franchise"
+      @document-saved="onDocumentSaved"
+    />
+
+    <!-- Edit Document Modal -->
+    <AddDocumentDialog
+      v-model:is-dialog-visible="isEditDocumentModalVisible"
+      :franchise-id="franchiseData?.id"
+      :document-data="selectedDocument"
+      mode="franchise"
       @document-saved="onDocumentSaved"
     />
 

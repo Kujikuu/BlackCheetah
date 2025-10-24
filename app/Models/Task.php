@@ -163,6 +163,47 @@ class Task extends Model
         return $this->getIsOverdueAttribute();
     }
 
+    /**
+     * Check if the task was created by a franchisor
+     */
+    public function isCreatedByFranchisor(): bool
+    {
+        return $this->createdBy && $this->createdBy->role === 'franchisor';
+    }
+
+    /**
+     * Check if the task was created by a franchisee
+     */
+    public function isCreatedByFranchisee(): bool
+    {
+        return $this->createdBy && $this->createdBy->role === 'franchisee';
+    }
+
+    /**
+     * Check if the task is assigned to a franchisor
+     */
+    public function isAssignedToFranchisor(): bool
+    {
+        return $this->assignedTo && $this->assignedTo->role === 'franchisor';
+    }
+
+    /**
+     * Check if the task is assigned to a franchisee
+     */
+    public function isAssignedToFranchisee(): bool
+    {
+        return $this->assignedTo && $this->assignedTo->role === 'franchisee';
+    }
+
+    /**
+     * Check if a user can modify this task
+     */
+    public function canBeModifiedBy($userId): bool
+    {
+        // Creator or assignee can modify
+        return $this->created_by === $userId || $this->assigned_to === $userId;
+    }
+
     public function start(): void
     {
         $this->update([

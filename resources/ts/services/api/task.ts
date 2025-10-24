@@ -42,6 +42,7 @@ export interface TaskFilters {
   status?: string
   priority?: string
   category?: string
+  filter?: 'created' | 'assigned' | 'all'
   page?: number
   perPage?: number
 }
@@ -79,10 +80,28 @@ export class TaskApi {
   }
 
   /**
-   * Get franchisor tasks
+   * Get franchisor tasks with filters (supports bidirectional task management)
    */
-  async getFranchisorTasks(): Promise<ApiResponse<{ data: any[] }>> {
-    return await $api('/v1/franchisor/tasks')
+  async getFranchisorTasks(filters?: TaskFilters): Promise<ApiResponse<{ data: any[] }>> {
+    const params = new URLSearchParams()
+
+    if (filters?.filter)
+      params.append('filter', filters.filter)
+    if (filters?.status)
+      params.append('status', filters.status)
+    if (filters?.priority)
+      params.append('priority', filters.priority)
+    if (filters?.category)
+      params.append('category', filters.category)
+    if (filters?.page)
+      params.append('page', filters.page.toString())
+    if (filters?.perPage)
+      params.append('per_page', filters.perPage.toString())
+
+    const queryString = params.toString()
+    const url = queryString ? `/v1/franchisor/tasks?${queryString}` : '/v1/franchisor/tasks'
+
+    return await $api(url)
   }
 
   /**
@@ -162,6 +181,60 @@ export class TaskApi {
     const baseUrl = this.getBaseUrl()
 
     return await $api<ApiResponse<null>>(`${baseUrl}/${taskId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  /**
+   * Get franchisee tasks with filters (supports bidirectional task management)
+   */
+  async getFranchiseeTasks(filters?: TaskFilters): Promise<ApiResponse<{ data: any[] }>> {
+    const params = new URLSearchParams()
+
+    if (filters?.filter)
+      params.append('filter', filters.filter)
+    if (filters?.status)
+      params.append('status', filters.status)
+    if (filters?.priority)
+      params.append('priority', filters.priority)
+    if (filters?.category)
+      params.append('category', filters.category)
+    if (filters?.page)
+      params.append('page', filters.page.toString())
+    if (filters?.perPage)
+      params.append('per_page', filters.perPage.toString())
+
+    const queryString = params.toString()
+    const url = queryString ? `/v1/unit-manager/my-tasks?${queryString}` : '/v1/unit-manager/my-tasks'
+
+    return await $api(url)
+  }
+
+  /**
+   * Create franchisee task (can be assigned to franchisor)
+   */
+  async createFranchiseeTask(taskData: any): Promise<ApiResponse<any>> {
+    return await $api('/v1/unit-manager/tasks', {
+      method: 'POST',
+      body: taskData,
+    })
+  }
+
+  /**
+   * Update franchisee task
+   */
+  async updateFranchiseeTask(taskId: number, taskData: any): Promise<ApiResponse<any>> {
+    return await $api(`/v1/unit-manager/tasks/${taskId}`, {
+      method: 'PUT',
+      body: taskData,
+    })
+  }
+
+  /**
+   * Delete franchisee task
+   */
+  async deleteFranchiseeTask(taskId: number): Promise<ApiResponse<void>> {
+    return await $api(`/v1/unit-manager/tasks/${taskId}`, {
       method: 'DELETE',
     })
   }

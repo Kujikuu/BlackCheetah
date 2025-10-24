@@ -12,6 +12,7 @@ use App\Models\Franchise;
 use App\Models\Lead;
 use App\Models\Revenue;
 use App\Models\Royalty;
+use App\Models\Staff;
 use App\Models\Task;
 use App\Models\TechnicalRequest;
 use App\Models\Transaction;
@@ -1049,7 +1050,9 @@ class FranchisorController extends BaseResourceController
     {
         try {
             $user = Auth::user();
-            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+            $franchise = Franchise::where('franchisor_id', $user->id)
+                ->with(['broker:id,name,email,phone'])
+                ->first();
 
             if (! $franchise) {
                 return $this->notFoundResponse('No franchise found for this user');
@@ -1057,6 +1060,17 @@ class FranchisorController extends BaseResourceController
 
             // Get documents from the documents JSON field
             $documents = $franchise->documents ?? [];
+
+            // Format broker information
+            $brokerInfo = null;
+            if ($franchise->broker) {
+                $brokerInfo = [
+                    'id' => $franchise->broker->id,
+                    'name' => $franchise->broker->name,
+                    'email' => $franchise->broker->email,
+                    'phone' => $franchise->broker->phone,
+                ];
+            }
 
             // Format the response to match the frontend structure
             $franchiseData = [
@@ -1082,6 +1096,13 @@ class FranchisorController extends BaseResourceController
                     'state' => $user->state,
                     'city' => $franchise->headquarters_city,
                 ],
+                'financialDetails' => [
+                    'franchiseFee' => $franchise->franchise_fee ?? 0,
+                    'royaltyPercentage' => $franchise->royalty_percentage ?? 0,
+                    'marketingFeePercentage' => $franchise->marketing_fee_percentage ?? 0,
+                ],
+                'broker' => $brokerInfo,
+                'is_marketplace_listed' => $franchise->is_marketplace_listed ?? false,
             ];
 
             // Get documents data
@@ -1191,6 +1212,18 @@ class FranchisorController extends BaseResourceController
                     }
                     if (array_key_exists('city', $validatedData['franchiseDetails']['contactDetails'])) {
                         $updateData['headquarters_city'] = $validatedData['franchiseDetails']['contactDetails']['city'];
+                    }
+                }
+
+                if (array_key_exists('financialDetails', $validatedData['franchiseDetails'])) {
+                    if (array_key_exists('franchiseFee', $validatedData['franchiseDetails']['financialDetails'])) {
+                        $updateData['franchise_fee'] = $validatedData['franchiseDetails']['financialDetails']['franchiseFee'];
+                    }
+                    if (array_key_exists('royaltyPercentage', $validatedData['franchiseDetails']['financialDetails'])) {
+                        $updateData['royalty_percentage'] = $validatedData['franchiseDetails']['financialDetails']['royaltyPercentage'];
+                    }
+                    if (array_key_exists('marketingFeePercentage', $validatedData['franchiseDetails']['financialDetails'])) {
+                        $updateData['marketing_fee_percentage'] = $validatedData['franchiseDetails']['financialDetails']['marketingFeePercentage'];
                     }
                 }
             }
@@ -1510,5 +1543,306 @@ class FranchisorController extends BaseResourceController
             });
 
         return $this->successResponse($staffMembers, 'Unit staff retrieved successfully');
+    }
+
+    /**
+     * Assign a broker to a franchise
+     */
+    public function assignBroker(Request $request, Franchise $franchise): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+
+            // Verify that the franchise belongs to the authenticated franchisor
+            if ($franchise->franchisor_id !== $user->id) {
+                return $this->forbiddenResponse('You do not have permission to modify this franchise');
+            }
+
+            $validated = $request->validate([
+                'broker_id' => 'required|exists:users,id',
+            ]);
+
+            // Verify that the broker is indeed a broker role
+            $broker = User::where('id', $validated['broker_id'])
+                ->where('role', 'broker')
+                ->first();
+
+            if (!$broker) {
+                return $this->validationErrorResponse(
+                    ['broker_id' => ['Selected user is not a broker']],
+                    'Invalid broker selected'
+                );
+            }
+
+            $franchise->update(['broker_id' => $validated['broker_id']]);
+
+            return $this->successResponse(
+                $franchise->load(['broker:id,name,email,phone']),
+                'Broker assigned successfully'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to assign broker', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Toggle franchise marketplace listing status
+     */
+    public function toggleMarketplaceListing(Franchise $franchise): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+
+            // Verify that the franchise belongs to the authenticated franchisor
+            if ($franchise->franchisor_id !== $user->id) {
+                return $this->forbiddenResponse('You do not have permission to modify this franchise');
+            }
+
+            $franchise->update([
+                'is_marketplace_listed' => !$franchise->is_marketplace_listed
+            ]);
+
+            return $this->successResponse(
+                [
+                    'franchise_id' => $franchise->id,
+                    'is_marketplace_listed' => $franchise->is_marketplace_listed,
+                ],
+                $franchise->is_marketplace_listed
+                    ? 'Franchise is now listed in marketplace'
+                    : 'Franchise removed from marketplace'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to update marketplace listing', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get franchise-level staff
+     */
+    public function getFranchiseStaff(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (!$franchise) {
+                return $this->notFoundResponse('No franchise found for this user');
+            }
+
+            $query = Staff::byFranchise($franchise->id);
+
+            // Apply filters
+            if ($request->has('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->has('department')) {
+                $query->where('department', $request->department);
+            }
+
+            if ($request->has('employment_type')) {
+                $query->where('employment_type', $request->employment_type);
+            }
+
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('job_title', 'like', "%{$search}%");
+                });
+            }
+
+            // Apply sorting
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortOrder = $request->get('sort_order', 'desc');
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Pagination
+            $perPage = $request->get('per_page', 15);
+            $staff = $query->paginate($perPage);
+
+            // Transform staff data
+            $transformedStaff = $staff->map(function ($staffMember) {
+                return [
+                    'id' => $staffMember->id,
+                    'name' => $staffMember->name,
+                    'email' => $staffMember->email,
+                    'phone' => $staffMember->phone,
+                    'jobTitle' => $staffMember->job_title,
+                    'department' => $staffMember->department,
+                    'salary' => $staffMember->salary,
+                    'hireDate' => $staffMember->hire_date?->format('Y-m-d'),
+                    'shiftStart' => $staffMember->shift_start?->format('H:i'),
+                    'shiftEnd' => $staffMember->shift_end?->format('H:i'),
+                    'status' => $staffMember->status,
+                    'employmentType' => $staffMember->employment_type,
+                    'notes' => $staffMember->notes,
+                    'createdAt' => $staffMember->created_at->format('Y-m-d H:i:s'),
+                ];
+            });
+
+            return $this->successResponse([
+                'data' => $transformedStaff,
+                'current_page' => $staff->currentPage(),
+                'last_page' => $staff->lastPage(),
+                'per_page' => $staff->perPage(),
+                'total' => $staff->total(),
+            ], 'Staff retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to fetch franchise staff', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Create franchise-level staff
+     */
+    public function createFranchiseStaff(\App\Http\Requests\StoreFranchiseStaffRequest $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (!$franchise) {
+                return $this->notFoundResponse('No franchise found for this user');
+            }
+
+            $validated = $request->validated();
+            $validated['franchise_id'] = $franchise->id;
+
+            $staff = Staff::create($validated);
+
+            return $this->successResponse([
+                'id' => $staff->id,
+                'name' => $staff->name,
+                'email' => $staff->email,
+                'phone' => $staff->phone,
+                'jobTitle' => $staff->job_title,
+                'department' => $staff->department,
+                'salary' => $staff->salary,
+                'hireDate' => $staff->hire_date?->format('Y-m-d'),
+                'shiftStart' => $staff->shift_start?->format('H:i'),
+                'shiftEnd' => $staff->shift_end?->format('H:i'),
+                'status' => $staff->status,
+                'employmentType' => $staff->employment_type,
+                'notes' => $staff->notes,
+            ], 'Staff member created successfully', 201);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to create staff member', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Update franchise-level staff
+     */
+    public function updateFranchiseStaff(\App\Http\Requests\UpdateFranchiseStaffRequest $request, $staffId): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (!$franchise) {
+                return $this->notFoundResponse('No franchise found for this user');
+            }
+
+            $staff = Staff::where('id', $staffId)
+                ->where('franchise_id', $franchise->id)
+                ->first();
+
+            if (!$staff) {
+                return $this->notFoundResponse('Staff member not found or does not belong to your franchise');
+            }
+
+            $validated = $request->validated();
+            $staff->update($validated);
+
+            return $this->successResponse([
+                'id' => $staff->id,
+                'name' => $staff->name,
+                'email' => $staff->email,
+                'phone' => $staff->phone,
+                'jobTitle' => $staff->job_title,
+                'department' => $staff->department,
+                'salary' => $staff->salary,
+                'hireDate' => $staff->hire_date?->format('Y-m-d'),
+                'shiftStart' => $staff->shift_start?->format('H:i'),
+                'shiftEnd' => $staff->shift_end?->format('H:i'),
+                'status' => $staff->status,
+                'employmentType' => $staff->employment_type,
+                'notes' => $staff->notes,
+            ], 'Staff member updated successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to update staff member', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Delete franchise-level staff
+     */
+    public function deleteFranchiseStaff(Request $request, $staffId): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (!$franchise) {
+                return $this->notFoundResponse('No franchise found for this user');
+            }
+
+            $staff = Staff::where('id', $staffId)
+                ->where('franchise_id', $franchise->id)
+                ->first();
+
+            if (!$staff) {
+                return $this->notFoundResponse('Staff member not found or does not belong to your franchise');
+            }
+
+            $staff->delete();
+
+            return $this->successResponse(null, 'Staff member deleted successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to delete staff member', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Get franchise staff statistics
+     */
+    public function getFranchiseStaffStatistics(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $franchise = Franchise::where('franchisor_id', $user->id)->first();
+
+            if (!$franchise) {
+                return $this->notFoundResponse('No franchise found for this user');
+            }
+
+            $totalStaff = Staff::byFranchise($franchise->id)->count();
+            $activeStaff = Staff::byFranchise($franchise->id)->where('status', 'active')->count();
+            $onLeaveStaff = Staff::byFranchise($franchise->id)->where('status', 'on_leave')->count();
+
+            // Group by department
+            $byDepartment = Staff::byFranchise($franchise->id)
+                ->whereNotNull('department')
+                ->select('department', DB::raw('count(*) as count'))
+                ->groupBy('department')
+                ->get()
+                ->mapWithKeys(function ($item) {
+                    return [$item->department => $item->count];
+                });
+
+            return $this->successResponse([
+                'totalStaff' => $totalStaff,
+                'activeStaff' => $activeStaff,
+                'onLeaveStaff' => $onLeaveStaff,
+                'terminatedStaff' => Staff::byFranchise($franchise->id)->where('status', 'terminated')->count(),
+                'fullTimeStaff' => Staff::byFranchise($franchise->id)->where('employment_type', 'full_time')->count(),
+                'partTimeStaff' => Staff::byFranchise($franchise->id)->where('employment_type', 'part_time')->count(),
+                'byDepartment' => $byDepartment,
+            ], 'Staff statistics retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to fetch staff statistics', $e->getMessage(), 500);
+        }
     }
 }

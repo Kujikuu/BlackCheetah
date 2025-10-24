@@ -28,4 +28,5 @@ Route::prefix('v1')->group(function () {
     require __DIR__ . '/api/v1/franchisor.php';
     require __DIR__ . '/api/v1/franchisee.php';
     require __DIR__ . '/api/v1/brokers.php';
+    require __DIR__ . '/api/v1/marketplace.php';
 });

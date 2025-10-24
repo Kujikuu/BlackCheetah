@@ -56,10 +56,10 @@ class Revenue extends Model
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
-        'tax_amount' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
-        'net_amount' => 'decimal:2',
+        'amount' => 'float',
+        'tax_amount' => 'float',
+        'discount_amount' => 'float',
+        'net_amount' => 'float',
         'revenue_date' => 'date',
         'period_start_date' => 'date',
         'period_end_date' => 'date',

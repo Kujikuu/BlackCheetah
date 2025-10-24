@@ -362,10 +362,10 @@ onMounted(() => {
         <div class="d-flex align-center justify-space-between">
           <div>
             <h2 class="text-h2 mb-1">
-              Sales Team Management
+              Brokers Management
             </h2>
             <p class="text-body-1 text-medium-emphasis">
-              Manage and monitor all sales team members
+              Manage and monitor all brokers
             </p>
           </div>
         </div>
@@ -498,7 +498,7 @@ onMounted(() => {
               No broker users match your search criteria. Try adjusting your filters.
             </p>
             <VBtn color="primary" @click="isAddNewUserDrawerVisible = true">
-              Add First Sales User
+              Add First Broker User
             </VBtn>
           </div>
         </template>

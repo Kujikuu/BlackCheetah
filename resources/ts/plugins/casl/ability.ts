@@ -37,7 +37,7 @@ export type Subjects =
   | 'TechnicalSupport'
   | 'FinancialReports'
   | 'RoyaltyManagement'
-
+  | 'Property'
   // Special subjects
   | 'all'
 
@@ -108,6 +108,7 @@ export function defineAbilitiesFor(role: string): Rule[] {
         { action: 'update', subject: 'TechnicalRequest' },
         { action: 'read', subject: 'Statistics' },
         { action: 'manage', subject: 'Note' },
+        { action: 'manage', subject: 'Property' },
     ]
 
     default:

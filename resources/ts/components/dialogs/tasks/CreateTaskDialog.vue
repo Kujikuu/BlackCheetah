@@ -8,6 +8,7 @@ interface Props {
   defaultAssignedTo?: string
   unitId?: string
   disableAssignedTo?: boolean
+  isFranchisee?: boolean
 }
 
 interface Emit {
@@ -188,17 +189,29 @@ watch(() => props.currentTab, async newTab => {
               cols="12"
               md="6"
             >
+              <!-- For franchisee - show that it will be assigned to franchisor -->
+              <VTextField
+                v-if="props.isFranchisee"
+                label="Assigned To"
+                model-value="Your Franchisor (Automatic)"
+                readonly
+                disabled
+                persistent-hint
+                hint="Tasks are automatically assigned to your franchisor"
+              />
+              <!-- For franchisor - show dropdown to select franchisee -->
               <VSelect
+                v-else
                 v-model="taskForm.assignedTo"
                 label="Assigned To"
                 placeholder="Select user"
                 :items="userOptions"
                 :loading="usersLoading"
-                :rules="[requiredRule]"
+                :rules="props.isFranchisee ? [] : [requiredRule]"
                 item-title="title"
                 item-value="value"
                 :disabled="props.disableAssignedTo"
-                required
+                :required="!props.isFranchisee"
               />
             </VCol>
 

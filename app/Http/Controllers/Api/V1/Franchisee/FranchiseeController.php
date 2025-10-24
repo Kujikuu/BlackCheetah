@@ -1574,7 +1574,7 @@ class FranchiseeController extends Controller
     }
 
     /**
-     * Get all tasks for the current franchisee (unit tasks + assigned tasks)
+     * Get all tasks for the current franchisee (unit tasks + assigned tasks) - bidirectional
      */
     public function myTasks(Request $request): JsonResponse
     {
@@ -1585,13 +1585,33 @@ class FranchiseeController extends Controller
             return $this->notFoundResponse('No unit found for current user');
         }
 
-        // Get all tasks related to this unit or assigned to the user
-        $tasks = \App\Models\Task::with(['assignedTo', 'createdBy', 'unit', 'franchise'])
-            ->where(function ($query) use ($unit, $user) {
-                $query->where('unit_id', $unit->id)
+        // Base query - get all tasks related to this unit or user
+        $query = \App\Models\Task::with(['assignedTo', 'createdBy', 'unit', 'franchise'])
+            ->where(function ($q) use ($unit, $user) {
+                $q->where('unit_id', $unit->id)
                     ->orWhere('assigned_to', $user->id)
                     ->orWhere('created_by', $user->id);
-            })
+            });
+
+        // Apply filter parameter for bidirectional management
+        if ($request->has('filter')) {
+            $filter = $request->filter;
+            if ($filter === 'assigned') {
+                // Only tasks assigned TO the franchisee
+                $query->where('assigned_to', $user->id);
+            } elseif ($filter === 'created') {
+                // Only tasks created BY the franchisee (potentially for franchisor)
+                $query->where('created_by', $user->id);
+            }
+            // 'all' or no filter shows all tasks
+        }
+
+        // Apply status filter
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $tasks = $query
             ->orderBy('due_date', 'asc')
             ->orderBy('priority', 'desc')
             ->get()
@@ -1600,17 +1620,34 @@ class FranchiseeController extends Controller
                     'id' => $task->id,
                     'title' => $task->title,
                     'description' => $task->description,
-                    'category' => $task->category, // This uses the accessor that maps type to category
-                    'assignedTo' => $task->assignedTo ? $task->assignedTo->name : 'Unassigned',
-                    'unitName' => $task->unit ? $task->unit->branch_name : 'N/A',
-                    'startDate' => $task->started_at ? $task->started_at->format('Y-m-d') : $task->created_at->format('Y-m-d'),
-                    'dueDate' => $task->due_date ? $task->due_date->format('Y-m-d') : null,
+                    'type' => $task->type,
+                    'category' => $task->category,
+                    'assigned_to' => $task->assignedTo ? [
+                        'id' => $task->assignedTo->id,
+                        'name' => $task->assignedTo->name,
+                        'role' => $task->assignedTo->role,
+                    ] : null,
+                    'created_by' => $task->createdBy ? [
+                        'id' => $task->createdBy->id,
+                        'name' => $task->createdBy->name,
+                        'role' => $task->createdBy->role,
+                    ] : null,
+                    'unit' => $task->unit ? [
+                        'id' => $task->unit->id,
+                        'unit_name' => $task->unit->unit_name,
+                    ] : null,
+                    'started_at' => $task->started_at?->toISOString(),
+                    'due_date' => $task->due_date?->toISOString(),
                     'priority' => $task->priority,
                     'status' => $task->status,
+                    'estimated_hours' => $task->estimated_hours,
+                    'actual_hours' => $task->actual_hours,
+                    'created_at' => $task->created_at->toISOString(),
+                    'updated_at' => $task->updated_at->toISOString(),
                 ];
             });
 
-        return $this->successResponse($tasks, 'Tasks retrieved successfully');
+        return $this->successResponse(['data' => $tasks], 'Tasks retrieved successfully');
     }
 
     /**

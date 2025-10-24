@@ -43,7 +43,7 @@ class LeadController extends BaseResourceController
         $franchiseId = $this->getUserFranchiseId($user);
 
         // If not admin and no franchise found, return error
-        if (! $user->hasRole('admin') && ! $franchiseId) {
+        if (!$user->hasRole('admin') && !$franchiseId) {
             return $this->notFoundResponse('No franchise found for this user');
         }
 
@@ -55,7 +55,7 @@ class LeadController extends BaseResourceController
         }
 
         // Sales users should only see their assigned leads
-        if ($user->hasRole('sales')) {
+        if ($user->hasRole('broker')) {
             $query->where('assigned_to', $user->id);
         }
 
@@ -70,7 +70,7 @@ class LeadController extends BaseResourceController
 
         if ($request->has('owner') && $request->owner) {
             $query->whereHas('assignedUser', function ($q) use ($request) {
-                $q->where('name', 'like', '%'.str_replace('_', ' ', $request->owner).'%');
+                $q->where('name', 'like', '%' . str_replace('_', ' ', $request->owner) . '%');
             });
         }
 
@@ -143,20 +143,23 @@ class LeadController extends BaseResourceController
     {
         $validated = $request->validated();
 
-        // Get the current user's franchise
+        // Get the current user (broker)
         $user = Auth::user();
         $franchiseId = $this->getUserFranchiseId($user);
 
-        if (! $franchiseId) {
+        if (!$franchiseId) {
             return $this->notFoundResponse('No franchise found for this user');
         }
 
+        // Automatically assign the lead to the broker who created it
         $validated['franchise_id'] = $franchiseId;
+        $validated['assigned_to'] = $user->id;
+        
         $lead = Lead::create($validated);
 
         return $this->successResponse(
             $lead->load(['franchise', 'assignedUser']),
-            'Lead created successfully',
+            'Lead created successfully and assigned to you',
             201
         );
     }
@@ -248,8 +251,8 @@ class LeadController extends BaseResourceController
         $validated = $request->validated();
 
         $currentNotes = $lead->notes ?? '';
-        $newNote = '['.now()->format('Y-m-d H:i:s').'] '.$validated['note'];
-        $updatedNotes = $currentNotes ? $currentNotes."\n\n".$newNote : $newNote;
+        $newNote = '[' . now()->format('Y-m-d H:i:s') . '] ' . $validated['note'];
+        $updatedNotes = $currentNotes ? $currentNotes . "\n\n" . $newNote : $newNote;
 
         $lead->update(['notes' => $updatedNotes]);
 
@@ -263,21 +266,21 @@ class LeadController extends BaseResourceController
     {
         try {
             $user = Auth::user();
-            $franchiseId = $this->getUserFranchiseId($user);
+            // $franchiseId = $this->getUserFranchiseId($user);
 
-            if (! $franchiseId && !$user->hasRole('admin')) {
-                return $this->notFoundResponse('No franchise found for this user');
+            if (!$user->hasRole('broker')) {
+                return $this->notFoundResponse('You are not authorized to access this resource');
             }
 
             $query = Lead::with(['assignedUser:id,name,email']);
 
             // Filter by franchise
-            if ($franchiseId) {
-                $query->where('franchise_id', $franchiseId);
-            }
+            // if ($franchiseId) {
+            //     $query->where('franchise_id', $franchiseId);
+            // }
 
             // Sales users should only see their assigned leads
-            if ($user->hasRole('sales')) {
+            if ($user->hasRole('broker')) {
                 $query->where('assigned_to', $user->id);
             }
 
@@ -311,7 +314,7 @@ class LeadController extends BaseResourceController
             // Apply sorting
             $sortBy = $request->get('sortBy', 'created_at');
             $sortOrder = $request->get('orderBy', 'desc');
-            
+
             // Map frontend field names to database columns
             $sortMapping = [
                 'name' => 'first_name',
@@ -327,7 +330,7 @@ class LeadController extends BaseResourceController
             if ($perPage == -1) {
                 $perPage = $query->count();
             }
-            
+
             $leads = $query->paginate($perPage);
 
             // Transform the data to match frontend expectations
@@ -378,7 +381,7 @@ class LeadController extends BaseResourceController
         }
 
         // Sales users should only see their assigned leads statistics
-        if ($user->hasRole('sales')) {
+        if ($user->hasRole('broker')) {
             $query->where('assigned_to', $user->id);
         }
 
@@ -489,7 +492,7 @@ class LeadController extends BaseResourceController
         $user = Auth::user();
         $franchiseId = $this->getUserFranchiseId($user);
 
-        if (! $franchiseId) {
+        if (!$franchiseId) {
             return $this->notFoundResponse('No franchise found for this user');
         }
 
@@ -523,7 +526,7 @@ class LeadController extends BaseResourceController
 
                 $imported++;
             } catch (\Exception $e) {
-                $errors[] = "Row {$imported}: ".$e->getMessage();
+                $errors[] = "Row {$imported}: " . $e->getMessage();
             }
         }
 
@@ -546,7 +549,7 @@ class LeadController extends BaseResourceController
         $query = Lead::with(['assignedUser']);
 
         // Scope to user's franchise (unless admin)
-        if (! $franchiseId && ! $user->hasRole('admin')) {
+        if (!$franchiseId && !$user->hasRole('admin')) {
             abort(404, 'No franchise found for this user');
         }
 
@@ -561,7 +564,7 @@ class LeadController extends BaseResourceController
 
         $leads = $query->get();
 
-        $fileName = 'leads_'.now()->format('Y-m-d_His').'.csv';
+        $fileName = 'leads_' . now()->format('Y-m-d_His') . '.csv';
 
         return response()->streamDownload(function () use ($leads) {
             $handle = fopen('php://output', 'w');
@@ -612,7 +615,7 @@ class LeadController extends BaseResourceController
      */
     private function findUserByName(?string $name): ?int
     {
-        if (! $name) {
+        if (!$name) {
             return null;
         }
 
