@@ -230,30 +230,38 @@ All errors are displayed to the user via toast notifications (snackbar).
 
 ## UI Components
 
-### Marketplace Tab Components
+### Franchisor Components (My Franchise Page)
 
-- `VCard` - Main container for marketplace settings
-- `VAlert` - Informational messages
-- `VBtn` - Action buttons (assign broker, toggle listing)
+- `VBtn` - Assign/Change Broker button in page header
 - `VDialog` - Broker selection modal
 - `VSelect` - Broker dropdown list
-- `VAvatar` - User/status icons
-- `VIcon` - Tabler icons for visual indicators
+- `VAvatar` - Broker avatar icons
+- `VIcon` - Visual indicators
+
+### Broker Components (Assigned Franchises Page)
+
+- `VCard` - Franchise cards and stats cards
+- `VSwitch` - Marketplace toggle switch
+- `VAvatar` - Franchise logos and icons
+- `VChip` - Status badges
+- `VSnackbar` - Success/error notifications
 
 ### Styling
 
-- Color-coded status indicators (success = green, secondary = gray)
-- Responsive layout (works on mobile, tablet, desktop)
+- Color-coded status indicators (success = green, secondary = gray, info = blue)
+- Card-based grid layout (responsive: 1 col mobile, 2 cols tablet, 3 cols desktop)
 - Consistent spacing and typography with the rest of the application
 - Tonal variants for subtle backgrounds
+- Toggle switches for intuitive on/off control
 
 ## Benefits of the Implementation
 
-1. **User-Friendly Interface**: Intuitive UI with clear visual indicators
-2. **Secure**: Proper authorization and validation at every level
-3. **Flexible**: Easy to assign, change, or remove brokers
-4. **Informative**: Shows broker contact information and marketplace status
-5. **Professional**: Clean, modern design consistent with the application theme
+1. **Role Separation**: Clear separation of responsibilities - franchisors assign brokers, brokers control marketplace
+2. **Professional Management**: Dedicated broker specialists manage marketplace listings
+3. **Secure**: Proper authorization ensures brokers can only manage their assigned franchises
+4. **User-Friendly**: Intuitive interfaces for both franchisors and brokers
+5. **Flexible**: Easy broker assignment and marketplace control
+6. **Scalable**: Brokers can manage multiple franchises from a single dashboard
 
 ## Future Enhancements
 
@@ -270,19 +278,26 @@ Potential improvements for future versions:
 
 ### Common Issues
 
-1. **No Brokers Available**
+1. **No Brokers Available** (Franchisor)
    - Ensure brokers have been created in the system
    - Check that users have the "broker" role assigned
+   - Contact administrator to create broker accounts
 
-2. **Cannot Assign Broker**
+2. **Cannot Assign Broker** (Franchisor)
    - Verify the franchise belongs to the logged-in franchisor
    - Ensure the broker ID is valid
    - Check that the migration has been run
 
-3. **Marketplace Toggle Not Working**
+3. **No Franchises Showing** (Broker)
+   - Verify that franchises have been assigned to you
+   - Contact the franchisor to request franchise assignment
+   - Check with administrator for role permissions
+
+4. **Marketplace Toggle Not Working** (Broker)
+   - Ensure the franchise is assigned to you
    - Verify API endpoint is accessible
-   - Check network tab for API errors
-   - Ensure franchise ID is valid
+   - Check browser console for errors
+   - Confirm you have broker role permissions
 
 ### Debug Commands
 
