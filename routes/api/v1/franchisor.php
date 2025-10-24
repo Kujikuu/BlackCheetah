@@ -74,6 +74,15 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('franchisor')->gr
     // Franchisee with unit creation for franchisor
     Route::post('franchisees-with-unit', [FranchisorController::class, 'createFranchiseeWithUnit'])->name('api.v1.franchisor.franchisees-with-unit.create');
 
+    // Franchise staff management
+    Route::prefix('franchise/staff')->group(function () {
+        Route::get('/', [FranchisorController::class, 'getFranchiseStaff'])->name('api.v1.franchisor.franchise.staff.index');
+        Route::post('/', [FranchisorController::class, 'createFranchiseStaff'])->name('api.v1.franchisor.franchise.staff.store');
+        Route::put('{staff}', [FranchisorController::class, 'updateFranchiseStaff'])->name('api.v1.franchisor.franchise.staff.update');
+        Route::delete('{staff}', [FranchisorController::class, 'deleteFranchiseStaff'])->name('api.v1.franchisor.franchise.staff.destroy');
+        Route::get('statistics', [FranchisorController::class, 'getFranchiseStaffStatistics'])->name('api.v1.franchisor.franchise.staff.statistics');
+    });
+
     // Brokers management for franchisor
     Route::prefix('brokers')->group(function () {
         Route::get('/', [FranchisorController::class, 'brokersIndex'])->name('api.v1.franchisor.brokers.index');

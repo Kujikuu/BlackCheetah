@@ -1,61 +1,249 @@
 <script setup lang="ts">
-import type { UnitTask } from '@/services/api/franchisee-dashboard'
-import { franchiseeDashboardApi } from '@/services/api/franchisee-dashboard'
+// 👉 Imports
+import CreateTaskDialog from '@/components/dialogs/tasks/CreateTaskDialog.vue'
 import ViewTaskDialog from '@/components/dialogs/tasks/ViewTaskDialog.vue'
-import StatusChangeTaskDialog from '@/components/dialogs/tasks/StatusChangeTaskDialog.vue'
+import EditTaskDialog from '@/components/dialogs/tasks/EditTaskDialog.vue'
+import DeleteTaskDialog from '@/components/dialogs/tasks/DeleteTaskDialog.vue'
+import { useTaskUsers } from '@/composables/useTaskUsers'
+import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES, TASK_HEADERS } from '@/constants/taskConstants'
+import { taskApi } from '@/services/api'
+
+// 👉 Router
+const router = useRouter()
+
+// 👉 Task users composable
+const { getUsersForSelect, initializeUsers, loading: usersLoading } = useTaskUsers()
+
+// 👉 Current tab
+const currentTab = ref('my-tasks')
 
 // 👉 Modal states
 const isViewTaskModalVisible = ref(false)
-const isStatusChangeModalVisible = ref(false)
+const isEditTaskModalVisible = ref(false)
+const isDeleteDialogVisible = ref(false)
 const selectedTask = ref<any>(null)
+const taskToDelete = ref<number | null>(null)
 
-// 👉 Data
-const allTasksData = ref<UnitTask[]>([])
-const isLoading = ref(false)
+// 👉 Tasks data
+const myTasksData = ref<any[]>([])
+const franchiseeTasksData = ref<any[]>([])
+const allTasksData = ref<any[]>([])
 
-// 👉 Load tasks function
-const loadTasks = async () => {
+// 👉 Loading and error states
+const myTasksLoading = ref(false)
+const franchiseeLoading = ref(false)
+const allTasksLoading = ref(false)
+const myTasksError = ref<string | null>(null)
+const franchiseeError = ref<string | null>(null)
+const allTasksError = ref<string | null>(null)
+
+// 👉 Modal states
+const isAddTaskModalVisible = ref(false)
+
+// 👉 API functions
+const transformTask = (task: any) => ({
+  id: task.id,
+  title: task.title,
+  description: task.description,
+  category: task.type || 'other',
+  assignedTo: task.assigned_to?.name || 'Unassigned',
+  assignedToRole: task.assigned_to?.role || null,
+  createdBy: task.created_by?.name || 'Unknown',
+  createdByRole: task.created_by?.role || null,
+  unitName: task.unit?.unit_name || 'N/A',
+  startDate: task.started_at ? new Date(task.started_at).toISOString().split('T')[0] : null,
+  dueDate: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : null,
+  priority: task.priority || 'medium',
+  status: task.status || 'pending',
+  estimatedHours: task.estimated_hours || 0,
+  actualHours: task.actual_hours || 0,
+  createdAt: task.created_at,
+  updatedAt: task.updated_at,
+})
+
+const loadMyTasks = async () => {
+  myTasksLoading.value = true
+  myTasksError.value = null
+
   try {
-    isLoading.value = true
+    const response = await taskApi.getFranchiseeTasks({ filter: 'assigned' })
 
-    const response = await franchiseeDashboardApi.getMyTasks()
-    if (response.success && response.data) {
-      // Handle both array and paginated response
-      allTasksData.value = Array.isArray(response.data) 
-        ? response.data 
-        : response.data.data || []
+    if (response.success && response.data?.data) {
+      myTasksData.value = response.data.data.map(transformTask)
+    }
+    else {
+      myTasksData.value = []
+    }
+  }
+  catch (err: any) {
+    console.error('Failed to load my tasks:', err)
+    myTasksError.value = err?.data?.message || 'Failed to load my tasks'
+    myTasksData.value = []
+  }
+  finally {
+    myTasksLoading.value = false
+  }
+}
+
+const loadFranchisorTasks = async () => {
+  franchiseeLoading.value = true
+  franchiseeError.value = null
+
+  try {
+    const response = await taskApi.getFranchiseeTasks({ filter: 'created' })
+
+    if (response.success && response.data?.data) {
+      // Filter to show only tasks assigned to franchisor
+      const franchisorTasks = response.data.data.filter((task: any) => {
+        return task.assigned_to?.role === 'franchisor'
+      })
+
+      franchiseeTasksData.value = franchisorTasks.map(transformTask)
+    }
+    else {
+      franchiseeTasksData.value = []
+    }
+  }
+  catch (err: any) {
+    console.error('Failed to load franchisor tasks:', err)
+    franchiseeError.value = err?.data?.message || 'Failed to load franchisor tasks'
+    franchiseeTasksData.value = []
+  }
+  finally {
+    franchiseeLoading.value = false
+  }
+}
+
+const loadAllTasks = async () => {
+  allTasksLoading.value = true
+  allTasksError.value = null
+
+  try {
+    const response = await taskApi.getFranchiseeTasks() // No filter = all tasks
+
+    if (response.success && response.data?.data) {
+      allTasksData.value = response.data.data.map(transformTask)
     }
     else {
       allTasksData.value = []
     }
   }
-  catch (error) {
-    console.error('Error loading tasks:', error)
+  catch (err: any) {
+    console.error('Failed to load all tasks:', err)
+    allTasksError.value = err?.data?.message || 'Failed to load all tasks'
     allTasksData.value = []
   }
   finally {
-    isLoading.value = false
+    allTasksLoading.value = false
   }
 }
 
-// 👉 Load tasks on mount
-onMounted(async () => {
-  await loadTasks()
+// 👉 Computed stats - My Tasks
+const myTotalTasks = computed(() => myTasksData.value.length)
+const myCompletedTasks = computed(() => myTasksData.value.filter(task => task.status === 'completed').length)
+const myInProgressTasks = computed(() => myTasksData.value.filter(task => task.status === 'in_progress').length)
+const myDueTasks = computed(() => {
+  const today = new Date()
+  return myTasksData.value.filter(task => {
+    if (!task.dueDate)
+      return false
+    const dueDate = new Date(task.dueDate)
+    return dueDate <= today && task.status !== 'completed'
+  }).length
 })
 
-// 👉 Computed stats for all tasks
-const totalTasks = computed(() => allTasksData.value.length)
-const completedTasks = computed(() => allTasksData.value.filter(task => task.status === 'completed').length)
-const inProgressTasks = computed(() => allTasksData.value.filter(task => task.status === 'in_progress').length)
-
-const dueTasks = computed(() => {
+// 👉 Computed stats - Franchisor Tasks (tasks created by franchisee for franchisor)
+const franchisorTotalTasks = computed(() => franchiseeTasksData.value.length)
+const franchisorCompletedTasks = computed(() => franchiseeTasksData.value.filter(task => task.status === 'completed').length)
+const franchisorInProgressTasks = computed(() => franchiseeTasksData.value.filter(task => task.status === 'in_progress').length)
+const franchisorDueTasks = computed(() => {
   const today = new Date()
-
-  return allTasksData.value.filter(task => {
+  return franchiseeTasksData.value.filter(task => {
+    if (!task.dueDate)
+      return false
     const dueDate = new Date(task.dueDate)
-
-    return dueDate <= today && !['completed', 'cancelled'].includes(task.status)
+    return dueDate <= today && task.status !== 'completed'
   }).length
+})
+
+// 👉 Computed stats - All Tasks
+const allTotalTasks = computed(() => allTasksData.value.length)
+const allCompletedTasks = computed(() => allTasksData.value.filter(task => task.status === 'completed').length)
+const allInProgressTasks = computed(() => allTasksData.value.filter(task => task.status === 'in_progress').length)
+const allDueTasks = computed(() => {
+  const today = new Date()
+  return allTasksData.value.filter(task => {
+    if (!task.dueDate)
+      return false
+    const dueDate = new Date(task.dueDate)
+    return dueDate <= today && task.status !== 'completed'
+  }).length
+})
+
+// 👉 Current tab data
+const currentTasksData = computed(() => {
+  if (currentTab.value === 'my-tasks')
+    return myTasksData.value
+  if (currentTab.value === 'franchisor')
+    return franchiseeTasksData.value
+  return allTasksData.value
+})
+
+const currentTotalTasks = computed(() => {
+  if (currentTab.value === 'my-tasks')
+    return myTotalTasks.value
+  if (currentTab.value === 'franchisor')
+    return franchisorTotalTasks.value
+  return allTotalTasks.value
+})
+
+const currentCompletedTasks = computed(() => {
+  if (currentTab.value === 'my-tasks')
+    return myCompletedTasks.value
+  if (currentTab.value === 'franchisor')
+    return franchisorCompletedTasks.value
+  return allCompletedTasks.value
+})
+
+const currentInProgressTasks = computed(() => {
+  if (currentTab.value === 'my-tasks')
+    return myInProgressTasks.value
+  if (currentTab.value === 'franchisor')
+    return franchisorInProgressTasks.value
+  return allInProgressTasks.value
+})
+
+const currentDueTasks = computed(() => {
+  if (currentTab.value === 'my-tasks')
+    return myDueTasks.value
+  if (currentTab.value === 'franchisor')
+    return franchisorDueTasks.value
+  return allDueTasks.value
+})
+
+const currentLoading = computed(() => {
+  if (currentTab.value === 'my-tasks')
+    return myTasksLoading.value
+  if (currentTab.value === 'franchisor')
+    return franchiseeLoading.value
+  return allTasksLoading.value
+})
+
+const currentError = computed(() => {
+  if (currentTab.value === 'my-tasks')
+    return myTasksError.value
+  if (currentTab.value === 'franchisor')
+    return franchiseeError.value
+  return allTasksError.value
+})
+
+// 👉 Computed user options for dialogs (always use fr list for now)
+const userOptions = computed(() => {
+  // For franchisee, we use franchisee list for internal task assignment
+  return getUsersForSelect('franchisee').map(user => ({
+    title: user.title,
+    value: String(user.value),
+  }))
 })
 
 // 👉 Functions
@@ -66,10 +254,6 @@ const resolveStatusVariant = (status: string) => {
     return 'warning'
   if (status === 'pending')
     return 'info'
-  if (status === 'cancelled')
-    return 'error'
-  if (status === 'on_hold')
-    return 'secondary'
 
   return 'secondary'
 }
@@ -85,16 +269,37 @@ const resolvePriorityVariant = (priority: string) => {
   return 'secondary'
 }
 
-// 👉 Headers
-const taskHeaders = [
-  { title: 'Task Info', key: 'taskInfo' },
-  { title: 'Category', key: 'category' },
-  { title: 'Start Date', key: 'startDate' },
-  { title: 'Due Date', key: 'dueDate' },
-  { title: 'Priority', key: 'priority' },
-  { title: 'Status', key: 'status' },
-  { title: 'Actions', key: 'actions', sortable: false },
-]
+const onTaskCreated = async (task: any) => {
+  try {
+    const response = await taskApi.createFranchiseeTask({
+      title: task.title,
+      description: task.description,
+      category: task.category,
+      priority: task.priority,
+      status: task.status || 'pending',
+      due_date: task.dueDate,
+      estimated_hours: task.estimatedHours,
+    })
+
+    if (response.success) {
+      // Reload all tabs to ensure consistency
+      await Promise.all([
+        loadMyTasks(),
+        loadFranchisorTasks(),
+        loadAllTasks(),
+      ])
+    }
+    else {
+      console.error('Failed to create task:', response)
+    }
+  }
+  catch (error) {
+    console.error('Error creating task:', error)
+  }
+}
+
+// 👉 Headers (using imported constants)
+const taskHeaders = [...TASK_HEADERS]
 
 // 👉 Action handlers
 const viewTask = (task: any) => {
@@ -102,41 +307,135 @@ const viewTask = (task: any) => {
   isViewTaskModalVisible.value = true
 }
 
-const changeTaskStatus = (task: any) => {
+const editTask = (task: any) => {
   selectedTask.value = { ...task }
-  isStatusChangeModalVisible.value = true
+  isEditTaskModalVisible.value = true
 }
 
-const updateTaskStatus = async (newStatus: string) => {
+const confirmDelete = (id: number) => {
+  taskToDelete.value = id
+  isDeleteDialogVisible.value = true
+}
+
+const deleteTask = async () => {
+  if (taskToDelete.value === null)
+    return
+
+  try {
+    const response = await taskApi.deleteFranchiseeTask(taskToDelete.value)
+
+    if (response.success) {
+      // Reload all tabs to ensure consistency
+      await Promise.all([
+        loadMyTasks(),
+        loadFranchisorTasks(),
+        loadAllTasks(),
+      ])
+    }
+    else {
+      console.error('Failed to delete task:', response)
+    }
+  }
+  catch (error) {
+    console.error('Error deleting task:', error)
+  }
+
+  isDeleteDialogVisible.value = false
+  taskToDelete.value = null
+}
+
+const saveTask = async () => {
   if (!selectedTask.value)
     return
 
   try {
-    const response = await franchiseeDashboardApi.updateMyTaskStatus(selectedTask.value.id, newStatus)
-    if (response.success) {
-      // Update task status in local data array
-      const index = allTasksData.value.findIndex(task => task.id === selectedTask.value.id)
-      if (index !== -1)
-        allTasksData.value[index].status = newStatus
+    const response = await taskApi.updateFranchiseeTask(selectedTask.value.id, {
+      title: selectedTask.value.title,
+      description: selectedTask.value.description,
+      category: selectedTask.value.category,
+      priority: selectedTask.value.priority,
+      status: selectedTask.value.status,
+      due_date: selectedTask.value.dueDate,
+      estimated_hours: selectedTask.value.estimatedHours,
+      actual_hours: selectedTask.value.actualHours,
+    })
 
-      isStatusChangeModalVisible.value = false
-      selectedTask.value = null
+    if (response.success) {
+      // Reload all tabs to ensure consistency
+      await Promise.all([
+        loadMyTasks(),
+        loadFranchisorTasks(),
+        loadAllTasks(),
+      ])
+    }
+    else {
+      console.error('Failed to update task:', response)
     }
   }
   catch (error) {
-    console.error('Error updating task status:', error)
+    console.error('Error updating task:', error)
   }
-}
 
-// Event handler for dialog components
-const onStatusUpdated = (updatedTask: any) => {
-  const index = allTasksData.value.findIndex(task => task.id === updatedTask.id)
-  if (index !== -1)
-    allTasksData.value[index] = updatedTask
-
-  isStatusChangeModalVisible.value = false
+  isEditTaskModalVisible.value = false
   selectedTask.value = null
 }
+
+// 👉 Dialog event handlers
+const onTaskUpdated = async (updatedTask: any) => {
+  // Reload all tabs to ensure consistency
+  await Promise.all([
+    loadMyTasks(),
+    loadFranchisorTasks(),
+    loadAllTasks(),
+  ])
+  
+  isEditTaskModalVisible.value = false
+  selectedTask.value = null
+}
+
+const onTaskDeleted = async (taskId: number) => {
+  // Reload all tabs to ensure consistency
+  await Promise.all([
+    loadMyTasks(),
+    loadFranchisorTasks(),
+    loadAllTasks(),
+  ])
+  
+  isDeleteDialogVisible.value = false
+  taskToDelete.value = null
+}
+
+// 👉 Watch for tab changes to load data
+watch(currentTab, async newTab => {
+  // Load tab data if not already loaded
+  if (newTab === 'my-tasks' && myTasksData.value.length === 0)
+    await loadMyTasks()
+  else if (newTab === 'franchisor' && franchiseeTasksData.value.length === 0)
+    await loadFranchisorTasks()
+  else if (newTab === 'all-tasks' && allTasksData.value.length === 0)
+    await loadAllTasks()
+    
+  await initializeUsers('franchisee')
+})
+
+// 👉 Watch for edit modal visibility to initialize users
+watch(isEditTaskModalVisible, async isVisible => {
+  if (isVisible)
+    await initializeUsers('franchisee')
+})
+
+// 👉 Load data on component mount
+onMounted(async () => {
+  // Load all tabs data initially
+  await Promise.all([
+    loadMyTasks(),
+    loadFranchisorTasks(),
+    loadAllTasks(),
+  ])
+
+  // Initialize users
+  await initializeUsers('franchisee')
+})
 </script>
 
 <template>
@@ -144,160 +443,257 @@ const onStatusUpdated = (updatedTask: any) => {
     <!-- Page Header -->
     <VRow class="mb-6">
       <VCol cols="12">
-        <div>
-          <h2 class="text-h2 mb-1">
-            My Tasks
-          </h2>
-          <p class="text-body-1 text-medium-emphasis">
-            Track and manage tasks assigned to you
-          </p>
+        <div class="d-flex align-center justify-space-between">
+          <div>
+            <h2 class="text-h2 mb-1">
+              My Tasks
+            </h2>
+            <p class="text-body-1 text-medium-emphasis">
+              Manage and track tasks - bidirectional between you and your franchisor
+            </p>
+          </div>
+          <VBtn color="primary" prepend-icon="tabler-plus" @click="isAddTaskModalVisible = true">
+            Create Task
+          </VBtn>
         </div>
       </VCol>
     </VRow>
 
-    <!-- Stats Cards -->
-    <VRow class="mb-6">
-      <VCol cols="12" md="3">
-        <VCard>
-          <VCardText class="d-flex align-center">
-            <VAvatar size="44" rounded color="primary" variant="tonal">
-              <VIcon icon="tabler-checklist" size="26" />
-            </VAvatar>
-            <div class="ms-4">
-              <div class="text-body-2 text-disabled">
-                Total Tasks
-              </div>
-              <h4 class="text-h4">
-                {{ totalTasks }}
-              </h4>
-            </div>
-          </VCardText>
-        </VCard>
-      </VCol>
-      <VCol cols="12" md="3">
-        <VCard>
-          <VCardText class="d-flex align-center">
-            <VAvatar size="44" rounded color="success" variant="tonal">
-              <VIcon icon="tabler-check" size="26" />
-            </VAvatar>
-            <div class="ms-4">
-              <div class="text-body-2 text-disabled">
-                Completed
-              </div>
-              <h4 class="text-h4">
-                {{ completedTasks }}
-              </h4>
-            </div>
-          </VCardText>
-        </VCard>
-      </VCol>
-      <VCol cols="12" md="3">
-        <VCard>
-          <VCardText class="d-flex align-center">
-            <VAvatar size="44" rounded color="warning" variant="tonal">
-              <VIcon icon="tabler-clock" size="26" />
-            </VAvatar>
-            <div class="ms-4">
-              <div class="text-body-2 text-disabled">
-                In Progress
-              </div>
-              <h4 class="text-h4">
-                {{ inProgressTasks }}
-              </h4>
-            </div>
-          </VCardText>
-        </VCard>
-      </VCol>
-      <VCol cols="12" md="3">
-        <VCard>
-          <VCardText class="d-flex align-center">
-            <VAvatar size="44" rounded color="error" variant="tonal">
-              <VIcon icon="tabler-alert-circle" size="26" />
-            </VAvatar>
-            <div class="ms-4">
-              <div class="text-body-2 text-disabled">
-                Due
-              </div>
-              <h4 class="text-h4">
-                {{ dueTasks }}
-              </h4>
-            </div>
-          </VCardText>
-        </VCard>
-      </VCol>
-    </VRow>
+    <!-- Tabs -->
+    <VTabs v-model="currentTab" class="mb-6">
+      <VTab value="my-tasks">
+        <VIcon icon="tabler-user" start />
+        My Tasks
+      </VTab>
+      <VTab value="franchisor">
+        <VIcon icon="tabler-building-community" start />
+        Franchisor Tasks
+      </VTab>
+      <VTab value="all-tasks">
+        <VIcon icon="tabler-list" start />
+        All Tasks
+      </VTab>
+    </VTabs>
 
-    <!-- Tasks Table -->
-    <VCard>
-      <VCardItem class="pb-4">
-        <VCardTitle>My Tasks</VCardTitle>
-      </VCardItem>
+    <!-- Error Alert -->
+    <VAlert v-if="currentError" type="error" variant="tonal" class="mb-4" closable @click:close="currentError = null">
+      {{ currentError }}
+    </VAlert>
 
-      <VDivider />
+    <!-- Loading State -->
+    <div v-if="currentLoading" class="text-center py-12">
+      <VProgressCircular indeterminate size="64" class="mb-4" />
+      <h3 class="text-h3 mb-2">
+        Loading Tasks...
+      </h3>
+      <p class="text-body-1 text-medium-emphasis">
+        Please wait while we fetch the task information.
+      </p>
+    </div>
 
-      <VDataTable :items="allTasksData" :headers="taskHeaders" class="text-no-wrap" item-value="id">
-        <!-- Task Info -->
-        <template #item.taskInfo="{ item }">
-          <div>
-            <h6 class="text-base font-weight-medium">
-              {{ item.title }}
-            </h6>
-            <div class="text-body-2 text-disabled">
-              {{ item.description }}
+    <!-- Tasks Content -->
+    <template v-else>
+      <!-- Stats Cards -->
+      <VRow class="mb-6">
+        <VCol cols="12" md="3">
+          <VCard>
+            <VCardText class="d-flex align-center">
+              <VAvatar size="44" rounded color="primary" variant="tonal">
+                <VIcon icon="tabler-checklist" size="26" />
+              </VAvatar>
+              <div class="ms-4">
+                <div class="text-body-2 text-disabled">
+                  Total Tasks
+                </div>
+                <h4 class="text-h4">
+                  {{ currentTotalTasks }}
+                </h4>
+              </div>
+            </VCardText>
+          </VCard>
+        </VCol>
+        <VCol cols="12" md="3">
+          <VCard>
+            <VCardText class="d-flex align-center">
+              <VAvatar size="44" rounded color="success" variant="tonal">
+                <VIcon icon="tabler-check" size="26" />
+              </VAvatar>
+              <div class="ms-4">
+                <div class="text-body-2 text-disabled">
+                  Completed
+                </div>
+                <h4 class="text-h4">
+                  {{ currentCompletedTasks }}
+                </h4>
+              </div>
+            </VCardText>
+          </VCard>
+        </VCol>
+        <VCol cols="12" md="3">
+          <VCard>
+            <VCardText class="d-flex align-center">
+              <VAvatar size="44" rounded color="warning" variant="tonal">
+                <VIcon icon="tabler-clock" size="26" />
+              </VAvatar>
+              <div class="ms-4">
+                <div class="text-body-2 text-disabled">
+                  In Progress
+                </div>
+                <h4 class="text-h4">
+                  {{ currentInProgressTasks }}
+                </h4>
+              </div>
+            </VCardText>
+          </VCard>
+        </VCol>
+        <VCol cols="12" md="3">
+          <VCard>
+            <VCardText class="d-flex align-center">
+              <VAvatar size="44" rounded color="error" variant="tonal">
+                <VIcon icon="tabler-alert-circle" size="26" />
+              </VAvatar>
+              <div class="ms-4">
+                <div class="text-body-2 text-disabled">
+                  Due
+                </div>
+                <h4 class="text-h4">
+                  {{ currentDueTasks }}
+                </h4>
+              </div>
+            </VCardText>
+          </VCard>
+        </VCol>
+      </VRow>
+
+      <!-- Tasks Table -->
+      <VCard>
+        <VCardItem class="pb-4">
+          <VCardTitle>
+            {{ currentTab === 'my-tasks' ? 'My Tasks' : currentTab === 'franchisor' ? 'Franchisor Tasks' : 'All Tasks'
+            }}
+          </VCardTitle>
+          <VCardSubtitle class="text-body-2 text-disabled">
+            {{
+              currentTab === 'my-tasks'
+                ? 'Tasks assigned to you (including from your franchisor)'
+                : currentTab === 'franchisor'
+                  ? 'Tasks you created for your franchisor'
+                  : 'All tasks related to your unit and franchise'
+            }}
+          </VCardSubtitle>
+        </VCardItem>
+
+        <VDivider />
+
+        <VDataTable v-if="currentTasksData.length > 0" :items="currentTasksData" :headers="taskHeaders"
+          class="text-no-wrap" item-value="id">
+          <!-- Task Info -->
+          <template #item.taskInfo="{ item }">
+            <div>
+              <h6 class="text-base font-weight-medium">
+                {{ item.title }}
+              </h6>
+              <div class="text-body-2 text-disabled">
+                {{ item.description }}
+              </div>
+              <div v-if="currentTab === 'my-tasks' && item.createdByRole === 'franchisor'"
+                class="text-caption text-primary mt-1">
+                <VIcon icon="tabler-arrow-down" size="12" />
+                Created by franchisor
+              </div>
             </div>
+          </template>
+
+          <!-- Unit -->
+          <template #item.unitName="{ item }">
+            <div class="text-body-1">
+              {{ item.unitName }}
+            </div>
+          </template>
+
+          <!-- Priority -->
+          <template #item.priority="{ item }">
+            <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
+              {{ item.priority }}
+            </VChip>
+          </template>
+
+          <!-- Status -->
+          <template #item.status="{ item }">
+            <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
+              {{ item.status }}
+            </VChip>
+          </template>
+
+          <!-- Actions -->
+          <template #item.actions="{ item }">
+            <VBtn icon variant="text" color="medium-emphasis" size="small">
+              <VIcon icon="tabler-dots-vertical" />
+              <VMenu activator="parent">
+                <VList>
+                  <VListItem @click="viewTask(item)">
+                    <template #prepend>
+                      <VIcon icon="tabler-eye" />
+                    </template>
+                    <VListItemTitle>View</VListItemTitle>
+                  </VListItem>
+                  <VListItem @click="editTask(item)">
+                    <template #prepend>
+                      <VIcon icon="tabler-edit" />
+                    </template>
+                    <VListItemTitle>Edit</VListItemTitle>
+                  </VListItem>
+                  <VListItem @click="confirmDelete(item.id)">
+                    <template #prepend>
+                      <VIcon icon="tabler-trash" />
+                    </template>
+                    <VListItemTitle>Delete</VListItemTitle>
+                  </VListItem>
+                </VList>
+              </VMenu>
+            </VBtn>
+          </template>
+        </VDataTable>
+
+        <!-- Empty State -->
+        <VCardText v-else class="py-8">
+          <div class="text-center">
+            <VIcon icon="tabler-checklist" size="64" class="text-disabled mb-4" />
+            <h4 class="text-h4 mb-2">
+              No Tasks Found
+            </h4>
+            <p class="text-body-1 text-medium-emphasis">
+              {{
+                currentTab === 'my-tasks'
+                  ? 'You have no tasks assigned to you yet.'
+                  : currentTab === 'franchisor'
+                    ? 'You have not created any tasks for your franchisor yet. Create tasks to communicate needs or requests.'
+              : 'There are no tasks related to your unit yet.'
+              }}
+            </p>
           </div>
-        </template>
+        </VCardText>
+      </VCard>
+    </template>
 
-        <!-- Priority -->
-        <template #item.priority="{ item }">
-          <VChip :color="resolvePriorityVariant(item.priority)" size="small" label class="text-capitalize">
-            {{ item.priority }}
-          </VChip>
-        </template>
+    <!-- Create Task Dialog -->
+    <CreateTaskDialog 
+      v-model:is-dialog-visible="isAddTaskModalVisible" 
+      current-tab="franchisee"
+      :is-franchisee="true"
+      @task-created="onTaskCreated" 
+    />
 
-        <!-- Status -->
-        <template #item.status="{ item }">
-          <VChip :color="resolveStatusVariant(item.status)" size="small" label class="text-capitalize">
-            {{ item.status }}
-          </VChip>
-        </template>
+    <!-- Edit Task Dialog -->
+    <EditTaskDialog v-model:is-dialog-visible="isEditTaskModalVisible" :task="selectedTask" :user-options="userOptions"
+      :users-loading="usersLoading" @task-updated="onTaskUpdated" />
 
-        <!-- Actions -->
-        <template #item.actions="{ item }">
-          <VBtn icon variant="text" color="medium-emphasis" size="small">
-            <VIcon icon="tabler-dots-vertical" />
-            <VMenu activator="parent">
-              <VList>
-                <VListItem @click="viewTask(item)">
-                  <template #prepend>
-                    <VIcon icon="tabler-eye" />
-                  </template>
-                  <VListItemTitle>View</VListItemTitle>
-                </VListItem>
-                <VListItem @click="changeTaskStatus(item)">
-                  <template #prepend>
-                    <VIcon icon="tabler-refresh" />
-                  </template>
-                  <VListItemTitle>Change Status</VListItemTitle>
-                </VListItem>
-              </VList>
-            </VMenu>
-          </VBtn>
-        </template>
-      </VDataTable>
-    </VCard>
+    <!-- Delete Task Dialog -->
+    <DeleteTaskDialog v-model:is-dialog-visible="isDeleteDialogVisible" :task-id="taskToDelete"
+      @task-deleted="onTaskDeleted" />
 
     <!-- View Task Dialog -->
-    <ViewTaskDialog
-      v-model:is-dialog-visible="isViewTaskModalVisible"
-      :task="selectedTask"
-    />
+    <ViewTaskDialog v-model:is-dialog-visible="isViewTaskModalVisible" :task="selectedTask" />
 
-    <!-- Status Change Dialog -->
-    <StatusChangeTaskDialog
-      v-model:is-dialog-visible="isStatusChangeModalVisible"
-      :task="selectedTask"
-      @status-updated="onStatusUpdated"
-    />
   </section>
 </template>

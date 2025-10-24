@@ -61,6 +61,11 @@ const franchiseData = ref<FranchiseData>({
     state: '',
     city: '',
   },
+  financialDetails: {
+    franchiseFee: '',
+    royaltyPercentage: '',
+    marketingFeePercentage: '',
+  },
 })
 
 // 👉 Type definitions
@@ -96,12 +101,19 @@ interface ContactDetails {
   city: string
 }
 
+interface FinancialDetails {
+  franchiseFee: string
+  royaltyPercentage: string
+  marketingFeePercentage: string
+}
+
 interface FranchiseData {
   id: number
   personalInfo: PersonalInfo
   franchiseDetails: FranchiseDetails
   legalDetails: LegalDetails
   contactDetails: ContactDetails
+  financialDetails: FinancialDetails
 }
 
 interface DocumentData {
@@ -188,6 +200,11 @@ const loadFranchiseData = async () => {
             city: apiData.contactDetails?.city || '',
             state: apiData.contactDetails?.state || '',
             country: apiData.contactDetails?.country || '',
+          },
+          financialDetails: {
+            franchiseFee: apiData.financialDetails?.franchiseFee || '',
+            royaltyPercentage: apiData.financialDetails?.royaltyPercentage || '',
+            marketingFeePercentage: apiData.financialDetails?.marketingFeePercentage || '',
           },
         }
       }
@@ -319,6 +336,11 @@ const updateFranchiseData = async () => {
           city: franchiseData.value.contactDetails.city || null,
           state: franchiseData.value.contactDetails.state || null,
           country: franchiseData.value.contactDetails.country || null,
+        },
+        financialDetails: {
+          franchiseFee: franchiseData.value.financialDetails.franchiseFee || null,
+          royaltyPercentage: franchiseData.value.financialDetails.royaltyPercentage || null,
+          marketingFeePercentage: franchiseData.value.financialDetails.marketingFeePercentage || null,
         },
       },
     }
@@ -1380,6 +1402,94 @@ const resolveStatusVariant = (status: string) => {
                             v-model="franchiseData.contactDetails.city"
                             label="City"
                             placeholder="Enter city"
+                          />
+                        </div>
+                      </VCol>
+                    </VRow>
+                  </VCardText>
+                </VCard>
+              </VCol>
+
+              <!-- Financial Details -->
+              <VCol cols="12">
+                <h4 class="text-h6 mb-4">
+                  Financial Details
+                </h4>
+                <VCard variant="outlined">
+                  <VCardText>
+                    <VRow>
+                      <VCol
+                        cols="12"
+                        md="4"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Franchise Fee
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1 font-weight-medium text-success"
+                          >
+                            {{ formatCurrency(Number(franchiseData.financialDetails.franchiseFee)) }}
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.financialDetails.franchiseFee"
+                            label="Franchise Fee"
+                            placeholder="Enter franchise fee"
+                            type="number"
+                            prefix="SAR"
+                            step="0.01"
+                          />
+                        </div>
+                      </VCol>
+                      <VCol
+                        cols="12"
+                        md="4"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Royalty Percentage
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1 font-weight-medium"
+                          >
+                            {{ franchiseData.financialDetails.royaltyPercentage }}%
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.financialDetails.royaltyPercentage"
+                            label="Royalty Percentage"
+                            placeholder="Enter royalty percentage"
+                            type="number"
+                            suffix="%"
+                            step="0.01"
+                          />
+                        </div>
+                      </VCol>
+                      <VCol
+                        cols="12"
+                        md="4"
+                      >
+                        <div class="mb-4">
+                          <div class="text-sm text-disabled mb-1">
+                            Marketing Fee Percentage
+                          </div>
+                          <div
+                            v-if="!isEditMode"
+                            class="text-body-1 font-weight-medium"
+                          >
+                            {{ franchiseData.financialDetails.marketingFeePercentage }}%
+                          </div>
+                          <AppTextField
+                            v-else
+                            v-model="franchiseData.financialDetails.marketingFeePercentage"
+                            label="Marketing Fee Percentage"
+                            placeholder="Enter marketing fee percentage"
+                            type="number"
+                            suffix="%"
+                            step="0.01"
                           />
                         </div>
                       </VCol>

@@ -20,14 +20,14 @@ export default [
         action: 'read',
         subject: 'Lead',
       },
-      {
-        title: 'Operations',
-        to: 'franchisor-dashboard-operations',
+      // {
+      //   title: 'Operations',
+      //   to: 'franchisor-dashboard-operations',
 
-        // icon: { icon: 'tabler-list-check' },
-        action: 'read',
-        subject: 'FranchisorDashboard',
-      },
+      //   // icon: { icon: 'tabler-list-check' },
+      //   action: 'read',
+      //   subject: 'FranchisorDashboard',
+      // },
       {
         title: 'Development Timeline',
         to: 'franchisor-dashboard-timeline',
@@ -73,6 +73,13 @@ export default [
     icon: { icon: 'tabler-clipboard-list' },
     action: 'manage',
     subject: 'Task',
+  },
+  {
+    title: 'My Team',
+    to: 'franchisor-franchise-staff',
+    icon: { icon: 'tabler-users-group' },
+    action: 'read',
+    subject: 'Franchise',
   },
   {
     title: 'Wallet Management',

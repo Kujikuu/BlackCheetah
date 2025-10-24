@@ -87,19 +87,34 @@ class TaskController extends BaseResourceController
     public function store(StoreTaskRequest $request): JsonResponse
     {
         $validated = $request->validated();
+        $user = $request->user();
 
         // Set the created_by field to the authenticated user
-        $validated['created_by'] = $request->user()->id;
+        $validated['created_by'] = $user->id;
 
         // If franchise_id is not provided, try to set it based on the authenticated user
         if (! isset($validated['franchise_id'])) {
-            $user = $request->user();
-
             // If user is a franchisor, set franchise_id to their franchise
             if ($user->role === 'franchisor') {
                 $franchise = Franchise::where('franchisor_id', $user->id)->first();
                 if ($franchise) {
                     $validated['franchise_id'] = $franchise->id;
+                }
+            }
+            // If user is a franchisee, set franchise_id to their unit's franchise
+            elseif ($user->role === 'franchisee') {
+                $unit = Unit::where('franchisee_id', $user->id)->first();
+                if ($unit) {
+                    $validated['franchise_id'] = $unit->franchise_id;
+                    $validated['unit_id'] = $unit->id;
+                    
+                    // Auto-assign to franchisor if not explicitly assigned
+                    if (!isset($validated['assigned_to'])) {
+                        $franchise = Franchise::find($unit->franchise_id);
+                        if ($franchise) {
+                            $validated['assigned_to'] = $franchise->franchisor_id;
+                        }
+                    }
                 }
             }
         }
@@ -296,7 +311,7 @@ class TaskController extends BaseResourceController
     }
 
     /**
-     * Get current user's tasks (for franchise owners)
+     * Get current user's tasks (for franchise owners - bidirectional)
      */
     public function myTasks(Request $request): JsonResponse
     {
@@ -307,9 +322,30 @@ class TaskController extends BaseResourceController
             return $this->notFoundResponse('No franchise found for current user');
         }
 
-        $tasks = Task::where('franchise_id', $franchise->id)
-            ->with(['franchise', 'unit', 'assignedTo', 'createdBy'])
-            ->paginate(15);
+        // Get tasks where user is creator OR assignee (bidirectional)
+        $query = Task::where('franchise_id', $franchise->id)
+            ->where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id);
+            })
+            ->with(['franchise', 'unit', 'assignedTo', 'createdBy']);
+
+        // Apply filters
+        if ($request->has('filter')) {
+            $filter = $request->filter;
+            if ($filter === 'created') {
+                $query->where('created_by', $user->id);
+            } elseif ($filter === 'assigned') {
+                $query->where('assigned_to', $user->id);
+            }
+            // 'all' or no filter shows both
+        }
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $tasks = $query->paginate($request->get('per_page', 15));
 
         return $this->successResponse($tasks, 'Tasks retrieved successfully');
     }

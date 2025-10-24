@@ -8,6 +8,7 @@ export { adminApi, type AdminApi } from './admin'
 export { authApi, type AuthApi } from './auth'
 export { financialApi, type FinancialApi } from './financial'
 export { franchiseApi, type FranchiseApi } from './franchise'
+export { franchiseStaffApi, type FranchiseStaffApi } from './franchise-staff'
 export { franchiseeDashboardApi, type FranchiseeDashboardApi } from './franchisee-dashboard'
 export { leadApi, type LeadApi } from './lead'
 export { marketplaceApi, type MarketplaceApi } from './marketplace'
@@ -158,6 +159,16 @@ export type {
   CreateProductPayload,
   UpdateProductPayload,
 } from './franchise'
+
+export type {
+  // Franchise Staff API
+  FranchiseStaff,
+  StaffFilters,
+  CreateStaffPayload,
+  UpdateStaffPayload,
+  StaffStatistics,
+  PaginatedStaffResponse,
+} from './franchise-staff'
 
 export type {
   // Notes API

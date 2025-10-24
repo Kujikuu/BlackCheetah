@@ -214,6 +214,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/franchisor/franchise-staff',
+    name: 'franchisor-franchise-staff',
+    component: () => import('@/pages/franchisor/franchise-staff.vue'),
+    meta: {
+      action: 'read',
+      subject: 'Franchise',
+    },
+  },
+  {
     path: '/franchisor/my-units',
     name: 'franchisor-my-units',
     component: () => import('@/pages/franchisor/my-units.vue'),

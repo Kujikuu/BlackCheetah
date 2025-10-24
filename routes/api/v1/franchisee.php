@@ -20,6 +20,14 @@ Route::middleware(['auth:sanctum', 'role:franchisee'])->prefix('unit-manager')->
     Route::get('tasks', [TaskController::class, 'myUnitTasks'])->name('api.v1.franchisee.tasks');
     Route::get('my-tasks', [FranchiseeController::class, 'myTasks'])->name('api.v1.franchisee.my-tasks');
     Route::patch('my-tasks/{taskId}/status', [FranchiseeController::class, 'updateMyTaskStatus'])->name('api.v1.franchisee.my-tasks.update-status');
+    
+    // Task management - franchisee can create tasks for franchisor
+    Route::prefix('tasks')->group(function () {
+        Route::post('/', [TaskController::class, 'store'])->name('api.v1.franchisee.tasks.store');
+        Route::put('{task}', [TaskController::class, 'update'])->name('api.v1.franchisee.tasks.update');
+        Route::delete('{task}', [TaskController::class, 'destroy'])->name('api.v1.franchisee.tasks.destroy');
+    });
+    
     Route::get('transactions', [TransactionController::class, 'myUnitTransactions'])->name('api.v1.franchisee.transactions');
     Route::get('revenues', [RevenueController::class, 'myUnitRevenues'])->name('api.v1.franchisee.revenues');
     Route::get('technical-requests', [TechnicalRequestController::class, 'myUnitRequests'])->name('api.v1.franchisee.technical-requests');

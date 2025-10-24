@@ -102,6 +102,14 @@ class Franchise extends Model
     }
 
     /**
+     * Get all franchise-level staff for this franchise
+     */
+    public function staff(): HasMany
+    {
+        return $this->hasMany(Staff::class);
+    }
+
+    /**
      * Check if franchise is active
      */
     public function isActive(): bool
