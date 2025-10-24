@@ -22,9 +22,10 @@ class UpdateDocumentRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'file' => ['sometimes', 'file', 'max:10240'], // 10MB max
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string', 'max:1000'],
-            'type' => ['sometimes', 'required', 'string', 'in:contract,invoice,receipt,certificate,license,manual,policy,report,other'],
+            'type' => ['sometimes', 'required', 'string', 'in:fdd,franchise_agreement,financial_study,franchise_kit,contract,invoice,receipt,certificate,license,manual,policy,report,other'],
             'expiry_date' => ['sometimes', 'nullable', 'date', 'after:today'],
             'is_confidential' => ['sometimes', 'boolean'],
             'metadata' => ['sometimes', 'nullable', 'array'],
@@ -40,6 +41,8 @@ class UpdateDocumentRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'file.file' => 'The uploaded file must be a valid file.',
+            'file.max' => 'The document file must not exceed 10MB.',
             'name.required' => 'Document name is required.',
             'name.max' => 'Document name cannot exceed 255 characters.',
             'description.max' => 'Description cannot exceed 1000 characters.',

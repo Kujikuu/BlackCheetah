@@ -32,19 +32,18 @@ const isFormValid = ref(false)
 // 👉 File input ref
 const fileInput = ref<HTMLInputElement>()
 
-// 👉 Document type options
+// 👉 Document type options - matching backend validation types
 const documentTypeOptions = [
-  'FDD',
-  'Franchise Agreement',
-  'Operations Manual',
-  'Brand Guidelines',
-  'Legal Documents',
-  'Sales Report',
-  'Financial Statement',
-  'Marketing Materials',
-  'Training Materials',
-  'Quality Standards',
-  'Other',
+  { title: 'FDD', value: 'fdd' },
+  { title: 'Franchise Agreement', value: 'franchise_agreement' },
+  { title: 'Financial Study', value: 'financial_study' },
+  { title: 'Franchise Kit', value: 'franchise_kit' },
+  { title: 'Contract', value: 'contract' },
+  { title: 'Agreement', value: 'agreement' },
+  { title: 'Manual', value: 'manual' },
+  { title: 'Certificate', value: 'certificate' },
+  { title: 'Report', value: 'report' },
+  { title: 'Other', value: 'other' },
 ]
 
 // 👉 Form rules

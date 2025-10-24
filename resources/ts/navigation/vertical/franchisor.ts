@@ -12,14 +12,14 @@ export default [
     action: 'read',
     subject: 'FranchisorDashboard',
     children: [
-      {
-        title: 'Leads',
-        to: 'franchisor-dashboard-leads',
+      // {
+      //   title: 'Leads',
+      //   to: 'franchisor-dashboard-leads',
 
-        // icon: { icon: 'tabler-users' },
-        action: 'read',
-        subject: 'Lead',
-      },
+      //   // icon: { icon: 'tabler-users' },
+      //   action: 'read',
+      //   subject: 'Lead',
+      // },
       // {
       //   title: 'Operations',
       //   to: 'franchisor-dashboard-operations',

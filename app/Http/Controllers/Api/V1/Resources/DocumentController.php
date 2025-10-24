@@ -174,7 +174,7 @@ class DocumentController extends BaseResourceController
     }
 
     /**
-     * Update the specified document metadata.
+     * Update the specified document metadata and/or file.
      */
     public function update(UpdateDocumentRequest $request, $franchise_id, $document_id): JsonResponse
     {
@@ -195,7 +195,29 @@ class DocumentController extends BaseResourceController
                 return $this->notFoundResponse('Document not found.');
             }
 
-            $document->update($request->validated());
+            $updateData = $request->validated();
+
+            // Handle file replacement if a new file is provided
+            if ($request->hasFile('file')) {
+                // Delete the old file from storage
+                if (Storage::disk('local')->exists($document->file_path)) {
+                    Storage::disk('local')->delete($document->file_path);
+                }
+
+                // Upload the new file
+                $file = $request->file('file');
+                $fileName = time().'_'.Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'.'.$file->getClientOriginalExtension();
+                $filePath = $file->storeAs('documents/'.$franchise->id, $fileName, 'local');
+
+                // Add file information to update data
+                $updateData['file_path'] = $filePath;
+                $updateData['file_name'] = $fileName;
+                $updateData['file_extension'] = $file->getClientOriginalExtension();
+                $updateData['file_size'] = $file->getSize();
+                $updateData['mime_type'] = $file->getMimeType();
+            }
+
+            $document->update($updateData);
 
             return $this->successResponse($document->fresh(), 'Document updated successfully.');
         } catch (\Exception $e) {

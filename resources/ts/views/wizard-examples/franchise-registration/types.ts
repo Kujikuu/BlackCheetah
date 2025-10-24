@@ -1,6 +1,6 @@
 export interface PersonalInfoData {
   contactNumber: string
-  country: string
+  nationality: string
   state: string
   city: string
   address: string
@@ -33,9 +33,9 @@ export interface FranchiseDetailsData {
 export interface DocumentUploadData {
   fdd: File | null
   franchiseAgreement: File | null
-  operationsManual: File | null
-  brandGuidelines: File | null
-  legalDocuments: File[] | null
+  financialStudy: File | null
+  franchiseKit: File | null
+  additionalDocuments: File[] | null
 }
 
 export interface ReviewCompleteData {

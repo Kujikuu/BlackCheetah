@@ -153,6 +153,21 @@ interface ProductData {
 // 👉 Documents data (will be populated from API)
 const documentsData = ref<DocumentData[]>([])
 
+// 👉 Separate static documents from additional documents
+const staticDocuments = computed(() => {
+  return {
+    fdd: documentsData.value.find(doc => doc.type === 'fdd'),
+    franchiseAgreement: documentsData.value.find(doc => doc.type === 'franchise_agreement'),
+    financialStudy: documentsData.value.find(doc => doc.type === 'financial_study'),
+    franchiseKit: documentsData.value.find(doc => doc.type === 'franchise_kit'),
+  }
+})
+
+const additionalDocuments = computed(() => {
+  const staticTypes = ['fdd', 'franchise_agreement', 'financial_study', 'franchise_kit']
+  return documentsData.value.filter(doc => !staticTypes.includes(doc.type))
+})
+
 // // 👉 Products data (will be populated from API)
 const productsData = ref<ProductData[]>([])
 
@@ -454,6 +469,7 @@ const selectedDocument = ref<{
   name: string
   description: string
   file: File | null
+  file_name?: string | null
   type: string
   status: string
   is_confidential: boolean
@@ -463,6 +479,7 @@ const selectedDocument = ref<{
   name: '',
   description: '',
   file: null,
+  file_name: null,
   type: 'other',
   status: 'active',
   is_confidential: false,
@@ -566,6 +583,37 @@ const editDocument = (document: any) => {
   isEditDocumentModalVisible.value = true
 }
 
+const editStaticDocument = (documentType: string) => {
+  // Find the existing document of this type
+  const existingDoc = documentsData.value.find(doc => doc.type === documentType)
+  
+  // Get the display name for the document type
+  const documentNames: Record<string, string> = {
+    'fdd': 'Franchise Disclosure Document (FDD)',
+    'franchise_agreement': 'Franchise Agreement',
+    'financial_study': 'Financial Study',
+    'franchise_kit': 'Franchise Kit',
+  }
+  
+  selectedDocument.value = {
+    id: existingDoc?.id || null,
+    name: existingDoc?.name || documentNames[documentType] || documentType,
+    description: existingDoc?.description || `${documentNames[documentType]} for franchise`,
+    type: documentType,
+    file: null,
+    file_name: existingDoc?.file_name || null,
+    expiry_date: existingDoc?.expiry_date || null,
+    is_confidential: existingDoc?.is_confidential || false,
+    status: existingDoc?.status || 'active',
+  }
+  
+  if (existingDoc) {
+    isEditDocumentModalVisible.value = true
+  } else {
+    isAddDocumentModalVisible.value = true
+  }
+}
+
 const saveDocument = async () => {
   try {
     if (!franchiseData.value?.id) {
@@ -574,14 +622,18 @@ const saveDocument = async () => {
       return
     }
 
-    const payload = {
+    const payload: any = {
       name: selectedDocument.value.name,
       description: selectedDocument.value.description || '',
       type: selectedDocument.value.type,
       status: selectedDocument.value.status,
       is_confidential: selectedDocument.value.is_confidential,
       expiry_date: selectedDocument.value.expiry_date,
-      file: selectedDocument.value.file,
+    }
+
+    // Only add file if it's not null
+    if (selectedDocument.value.file) {
+      payload.file = selectedDocument.value.file
     }
 
     let response
@@ -630,7 +682,7 @@ const downloadDocument = async (document: any) => {
     const response = await franchiseApi.downloadDocument(franchiseData.value.id, document.id)
 
     // Create a blob from the response and trigger download
-    const blob = new Blob([response], { type: 'application/octet-stream' })
+    const blob = new Blob([response as any], { type: 'application/octet-stream' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
 
@@ -1526,11 +1578,149 @@ const resolveStatusVariant = (status: string) => {
 
       <!-- Documents Tab -->
       <VWindowItem value="documents">
+        <!-- Static Required Documents -->
+        <VCard class="mb-6">
+          <VCardItem class="pb-4">
+            <VCardTitle>Required Documents</VCardTitle>
+          </VCardItem>
+          
+          <VCardText>
+            <VAlert
+              type="info"
+              variant="tonal"
+              class="mb-4"
+            >
+              You can add more documents once your onboarding process is completed
+            </VAlert>
+
+            <VList
+              lines="two"
+              border
+              rounded
+            >
+              <!-- FDD -->
+              <VListItem>
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-file-text"
+                    color="primary"
+                    size="24"
+                  />
+                </template>
+
+                <VListItemTitle class="font-weight-medium">
+                  FDD
+                </VListItemTitle>
+                <VListItemSubtitle>
+                  {{ staticDocuments.fdd?.file_name || 'No file uploaded' }}
+                </VListItemSubtitle>
+
+                <template #append>
+                  <VBtn
+                    variant="text"
+                    icon="tabler-pencil"
+                    size="small"
+                    @click="editStaticDocument('fdd')"
+                  />
+                </template>
+              </VListItem>
+
+              <VDivider />
+
+              <!-- Franchise Agreement -->
+              <VListItem>
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-file-text"
+                    color="primary"
+                    size="24"
+                  />
+                </template>
+
+                <VListItemTitle class="font-weight-medium">
+                  Franchise Agreement
+                </VListItemTitle>
+                <VListItemSubtitle>
+                  {{ staticDocuments.franchiseAgreement?.file_name || 'No file uploaded' }}
+                </VListItemSubtitle>
+
+                <template #append>
+                  <VBtn
+                    variant="text"
+                    icon="tabler-pencil"
+                    size="small"
+                    @click="editStaticDocument('franchise_agreement')"
+                  />
+                </template>
+              </VListItem>
+
+              <VDivider />
+
+              <!-- Financial Study -->
+              <VListItem>
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-report-money"
+                    color="primary"
+                    size="24"
+                  />
+                </template>
+
+                <VListItemTitle class="font-weight-medium">
+                  Financial Study
+                </VListItemTitle>
+                <VListItemSubtitle>
+                  {{ staticDocuments.financialStudy?.file_name || 'No file uploaded' }}
+                </VListItemSubtitle>
+
+                <template #append>
+                  <VBtn
+                    variant="text"
+                    icon="tabler-pencil"
+                    size="small"
+                    @click="editStaticDocument('financial_study')"
+                  />
+                </template>
+              </VListItem>
+
+              <VDivider />
+
+              <!-- Franchise Kit -->
+              <VListItem>
+                <template #prepend>
+                  <VIcon
+                    icon="tabler-briefcase"
+                    color="primary"
+                    size="24"
+                  />
+                </template>
+
+                <VListItemTitle class="font-weight-medium">
+                  Franchise Kit
+                </VListItemTitle>
+                <VListItemSubtitle>
+                  {{ staticDocuments.franchiseKit?.file_name || 'No file uploaded' }}
+                </VListItemSubtitle>
+
+                <template #append>
+                  <VBtn
+                    variant="text"
+                    icon="tabler-pencil"
+                    size="small"
+                    @click="editStaticDocument('franchise_kit')"
+                  />
+                </template>
+              </VListItem>
+            </VList>
+          </VCardText>
+        </VCard>
+
+        <!-- Additional Documents -->
         <VCard>
           <VCardText>
             <div class="d-flex justify-space-between align-center mb-4">
               <h4 class="text-h6">
-                Franchise Documents
+                Additional Documents
               </h4>
               <VBtn
                 color="primary"
@@ -1541,9 +1731,9 @@ const resolveStatusVariant = (status: string) => {
               </VBtn>
             </div>
 
-            <VRow>
+            <VRow v-if="additionalDocuments.length > 0">
               <template
-                v-for="document in documentsData"
+                v-for="document in additionalDocuments"
                 :key="document.id"
               >
                 <VCol
@@ -1612,6 +1802,13 @@ const resolveStatusVariant = (status: string) => {
                 </VCol>
               </template>
             </VRow>
+            <VAlert
+              v-else
+              type="info"
+              variant="tonal"
+            >
+              No additional documents uploaded yet
+            </VAlert>
           </VCardText>
         </VCard>
       </VWindowItem>
@@ -1716,7 +1913,16 @@ const resolveStatusVariant = (status: string) => {
       v-model:is-dialog-visible="isAddDocumentModalVisible"
       :franchise-id="franchiseData?.id"
       :document-data="selectedDocument"
-      mode='unit'
+      mode="franchise"
+      @document-saved="onDocumentSaved"
+    />
+
+    <!-- Edit Document Modal -->
+    <AddDocumentDialog
+      v-model:is-dialog-visible="isEditDocumentModalVisible"
+      :franchise-id="franchiseData?.id"
+      :document-data="selectedDocument"
+      mode="franchise"
       @document-saved="onDocumentSaved"
     />
 
