@@ -310,7 +310,7 @@ const onImportCompleted = (file: File | null) => {
 const router = useRouter()
 
 const navigateToAddLead = () => {
-  router.push({ name: 'sales-add-lead' })
+  router.push({ name: 'broker-add-lead' })
 }
 </script>
 

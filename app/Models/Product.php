@@ -29,9 +29,9 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'unit_price' => 'decimal:2',
-        'cost_price' => 'decimal:2',
-        'weight' => 'decimal:2',
+        'unit_price' => 'float',
+        'cost_price' => 'float',
+        'weight' => 'float',
         'attributes' => 'array',
     ];
 

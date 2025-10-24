@@ -73,7 +73,7 @@ const onSubmit = async () => {
 
     if (response.success) {
       // Redirect to lead management page
-      router.push({ name: 'sales-lead-management' })
+      router.push({ name: 'broker-lead-management' })
     }
   }
   catch (error) {

@@ -11,7 +11,8 @@ class StoreLeadRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        // Only brokers can create leads
+        return auth()->check() && auth()->user()->role === 'broker';
     }
 
     /**

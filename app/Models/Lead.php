@@ -39,8 +39,8 @@ class Lead extends Model
     ];
 
     protected $casts = [
-        'estimated_investment' => 'decimal:2',
-        'franchise_fee_quoted' => 'decimal:2',
+        'estimated_investment' => 'float',
+        'franchise_fee_quoted' => 'float',
         'expected_decision_date' => 'date',
         'last_contact_date' => 'date',
         'next_follow_up_date' => 'date',

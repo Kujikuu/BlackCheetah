@@ -13,6 +13,7 @@ class Franchise extends Model
 
     protected $fillable = [
         'franchisor_id',
+        'broker_id',
         'business_name',
         'brand_name',
         'industry',
@@ -34,6 +35,7 @@ class Franchise extends Model
         'total_units',
         'active_units',
         'status',
+        'is_marketplace_listed',
         'plan',
         'business_hours',
         'social_media',
@@ -42,9 +44,10 @@ class Franchise extends Model
 
     protected $casts = [
         'established_date' => 'date',
-        'franchise_fee' => 'decimal:2',
-        'royalty_percentage' => 'decimal:2',
-        'marketing_fee_percentage' => 'decimal:2',
+        'franchise_fee' => 'float',
+        'royalty_percentage' => 'float',
+        'marketing_fee_percentage' => 'float',
+        'is_marketplace_listed' => 'boolean',
         'business_hours' => 'array',
         'social_media' => 'array',
         'documents' => 'array',
@@ -56,6 +59,14 @@ class Franchise extends Model
     public function franchisor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'franchisor_id');
+    }
+
+    /**
+     * Get the broker assigned to this franchise
+     */
+    public function broker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'broker_id');
     }
 
     /**
@@ -122,5 +133,13 @@ class Franchise extends Model
     public function scopeByIndustry($query, string $industry)
     {
         return $query->where('industry', $industry);
+    }
+
+    /**
+     * Scope to filter marketplace listed franchises
+     */
+    public function scopeMarketplaceListed($query)
+    {
+        return $query->where('is_marketplace_listed', true);
     }
 }

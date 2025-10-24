@@ -44,13 +44,13 @@ class Unit extends Model
     ];
 
     protected $casts = [
-        'latitude' => 'decimal:8',
-        'longitude' => 'decimal:8',
-        'size_sqft' => 'decimal:2',
-        'monthly_rent' => 'decimal:2',
-        'initial_investment' => 'decimal:2',
-        'monthly_revenue' => 'decimal:2',
-        'monthly_expenses' => 'decimal:2',
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'size_sqft' => 'float',
+        'monthly_rent' => 'float',
+        'initial_investment' => 'float',
+        'monthly_revenue' => 'float',
+        'monthly_expenses' => 'float',
         'lease_start_date' => 'date',
         'lease_end_date' => 'date',
         'opening_date' => 'date',

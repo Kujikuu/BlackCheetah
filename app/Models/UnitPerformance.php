@@ -31,14 +31,14 @@ class UnitPerformance extends Model
 
     protected $casts = [
         'period_date' => 'date',
-        'revenue' => 'decimal:2',
-        'expenses' => 'decimal:2',
-        'royalties' => 'decimal:2',
-        'profit' => 'decimal:2',
-        'average_transaction_value' => 'decimal:2',
-        'customer_rating' => 'decimal:2',
-        'customer_satisfaction_score' => 'decimal:2',
-        'growth_rate' => 'decimal:2',
+        'revenue' => 'float',
+        'expenses' => 'float',
+        'royalties' => 'float',
+        'profit' => 'float',
+        'average_transaction_value' => 'float',
+        'customer_rating' => 'float',
+        'customer_satisfaction_score' => 'float',
+        'growth_rate' => 'float',
         'additional_metrics' => 'array',
     ];
 

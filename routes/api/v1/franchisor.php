@@ -35,6 +35,14 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('franchisor')->gr
         Route::post('upload-logo', [FranchisorController::class, 'uploadLogo'])->name('api.v1.franchisor.franchise.upload-logo');
     });
 
+    // Marketplace management for franchises
+    Route::prefix('franchises')->group(function () {
+        Route::patch('{franchise}/assign-broker', [FranchisorController::class, 'assignBroker'])
+            ->name('api.v1.franchisor.franchises.assign-broker');
+        Route::patch('{franchise}/marketplace-toggle', [FranchisorController::class, 'toggleMarketplaceListing'])
+            ->name('api.v1.franchisor.franchises.marketplace-toggle');
+    });
+
     // Franchisor can access their franchise network data
     Route::get('franchise', [FranchisorController::class, 'myFranchise'])->name('api.v1.franchisor.franchise');
     Route::get('franchisees', [LeadManagementController::class, 'myFranchisees'])->name('api.v1.franchisor.franchisees');
@@ -119,11 +127,12 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('franchisor')->gr
     });
 
     // Lead management for franchisor (manage sales team leads)
+    // Note: Lead creation is restricted to brokers only. Franchisors can view, update, and manage leads.
     Route::prefix('leads')->group(function () {
         Route::get('/', [LeadController::class, 'index'])->name('api.v1.franchisor.leads.index');
         Route::get('statistics', [LeadController::class, 'statistics'])->name('api.v1.franchisor.leads.statistics');
         Route::get('{lead}', [LeadController::class, 'show'])->name('api.v1.franchisor.leads.show');
-        Route::post('/', [LeadController::class, 'store'])->name('api.v1.franchisor.leads.store');
+        // Route::post('/', [LeadController::class, 'store'])->name('api.v1.franchisor.leads.store'); // Disabled: Only brokers can create leads
         Route::put('{lead}', [LeadController::class, 'update'])->name('api.v1.franchisor.leads.update');
         Route::delete('{lead}', [LeadController::class, 'destroy'])->name('api.v1.franchisor.leads.destroy');
         Route::patch('{lead}/assign', [LeadController::class, 'assign'])->name('api.v1.franchisor.leads.assign');

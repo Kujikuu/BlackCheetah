@@ -20,4 +20,11 @@ export default [
     action: 'create',
     subject: 'TechnicalRequest',
   },
+  {
+    title: 'Properties',
+    to: 'broker-properties',
+    icon: { icon: 'tabler-building-store' },
+    action: 'manage',
+    subject: 'Property',
+  },
 ]

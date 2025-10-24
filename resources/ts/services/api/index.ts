@@ -10,9 +10,11 @@ export { financialApi, type FinancialApi } from './financial'
 export { franchiseApi, type FranchiseApi } from './franchise'
 export { franchiseeDashboardApi, type FranchiseeDashboardApi } from './franchisee-dashboard'
 export { leadApi, type LeadApi } from './lead'
+export { marketplaceApi, type MarketplaceApi } from './marketplace'
 export { notesApi, type NotesApi } from './notes'
 export { notificationsApi, type NotificationsApi } from './notifications'
 export { onboardingApi, type OnboardingApi } from './onboarding'
+export { propertyApi, type PropertyApi } from './property'
 export { royaltyApi, type RoyaltyApi } from './royalty'
 export { taskApi, type TaskApi } from './task'
 export { technicalRequestApi, type TechnicalRequestApi } from './technical-request'
@@ -189,3 +191,19 @@ export type {
   Broker,
   UpdateUserPayload,
 } from './users'
+
+export type {
+  // Property API
+  Property,
+  PropertyFilters,
+  CreatePropertyPayload,
+  UpdatePropertyPayload,
+} from './property'
+
+export type {
+  // Marketplace API
+  Franchise,
+  MarketplaceFilters,
+  MarketplaceInquiry,
+  InquiryPayload,
+} from './marketplace'

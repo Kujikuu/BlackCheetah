@@ -1511,4 +1511,75 @@ class FranchisorController extends BaseResourceController
 
         return $this->successResponse($staffMembers, 'Unit staff retrieved successfully');
     }
+
+    /**
+     * Assign a broker to a franchise
+     */
+    public function assignBroker(Request $request, Franchise $franchise): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+
+            // Verify that the franchise belongs to the authenticated franchisor
+            if ($franchise->franchisor_id !== $user->id) {
+                return $this->forbiddenResponse('You do not have permission to modify this franchise');
+            }
+
+            $validated = $request->validate([
+                'broker_id' => 'required|exists:users,id',
+            ]);
+
+            // Verify that the broker is indeed a broker role
+            $broker = User::where('id', $validated['broker_id'])
+                ->where('role', 'broker')
+                ->first();
+
+            if (!$broker) {
+                return $this->validationErrorResponse(
+                    ['broker_id' => ['Selected user is not a broker']],
+                    'Invalid broker selected'
+                );
+            }
+
+            $franchise->update(['broker_id' => $validated['broker_id']]);
+
+            return $this->successResponse(
+                $franchise->load(['broker:id,name,email,phone']),
+                'Broker assigned successfully'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to assign broker', $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Toggle franchise marketplace listing status
+     */
+    public function toggleMarketplaceListing(Franchise $franchise): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+
+            // Verify that the franchise belongs to the authenticated franchisor
+            if ($franchise->franchisor_id !== $user->id) {
+                return $this->forbiddenResponse('You do not have permission to modify this franchise');
+            }
+
+            $franchise->update([
+                'is_marketplace_listed' => !$franchise->is_marketplace_listed
+            ]);
+
+            return $this->successResponse(
+                [
+                    'franchise_id' => $franchise->id,
+                    'is_marketplace_listed' => $franchise->is_marketplace_listed,
+                ],
+                $franchise->is_marketplace_listed
+                    ? 'Franchise is now listed in marketplace'
+                    : 'Franchise removed from marketplace'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to update marketplace listing', $e->getMessage(), 500);
+        }
+    }
 }

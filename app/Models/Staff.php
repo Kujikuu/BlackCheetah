@@ -28,7 +28,7 @@ class Staff extends Model
     ];
 
     protected $casts = [
-        'salary' => 'decimal:2',
+        'salary' => 'float',
         'hire_date' => 'date',
         'shift_start' => 'datetime',
         'shift_end' => 'datetime',

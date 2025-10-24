@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Broker\PropertyController;
 use App\Http\Controllers\Api\V1\Resources\{TaskController, TechnicalRequestController, LeadController};
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +53,17 @@ Route::middleware(['auth:sanctum', 'role:broker'])->group(function () {
             Route::get('/', [TaskController::class, 'myBrokerTasks'])->name('api.v1.broker.tasks.index');
             Route::get('statistics', [TaskController::class, 'brokerTasksStatistics'])->name('api.v1.broker.tasks.statistics');
             Route::patch('{task}/status', [TaskController::class, 'updateBrokerTaskStatus'])->name('api.v1.broker.tasks.update-status');
+        });
+
+        // Property management for brokers
+        Route::prefix('properties')->group(function () {
+            Route::get('/', [PropertyController::class, 'index'])->name('api.v1.broker.properties.index');
+            Route::post('/', [PropertyController::class, 'store'])->name('api.v1.broker.properties.store');
+            Route::get('{property}', [PropertyController::class, 'show'])->name('api.v1.broker.properties.show');
+            Route::put('{property}', [PropertyController::class, 'update'])->name('api.v1.broker.properties.update');
+            Route::delete('{property}', [PropertyController::class, 'destroy'])->name('api.v1.broker.properties.destroy');
+            Route::post('bulk-delete', [PropertyController::class, 'bulkDelete'])->name('api.v1.broker.properties.bulk-delete');
+            Route::patch('{property}/mark-leased', [PropertyController::class, 'markLeased'])->name('api.v1.broker.properties.mark-leased');
         });
     });
 });

@@ -129,9 +129,9 @@ class AdminController extends BaseAdminController
     }
 
     /**
-     * Get all sales users
+     * Get all brokers users
      */
-    public function salesUsers(Request $request): JsonResponse
+    public function brokersUsers(Request $request): JsonResponse
     {
         try {
             $query = User::where('role', 'broker');
@@ -213,12 +213,12 @@ class AdminController extends BaseAdminController
             DB::commit();
 
             return $this->successResponse([
-                    'id' => $user->id,
-                    'fullName' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                    'joinedDate' => $user->created_at->format('Y-m-d'),
+                'id' => $user->id,
+                'fullName' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'status' => $user->status,
+                'joinedDate' => $user->created_at->format('Y-m-d'),
             ], 'User created successfully', 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -259,11 +259,11 @@ class AdminController extends BaseAdminController
             DB::commit();
 
             return $this->successResponse([
-                    'id' => $user->id,
-                    'fullName' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
+                'id' => $user->id,
+                'fullName' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'status' => $user->status,
             ], 'User updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -735,26 +735,26 @@ class AdminController extends BaseAdminController
             DB::commit();
 
             return $this->successResponse([
-                    'franchisee' => [
-                        'id' => $franchisee->id,
-                        'name' => $franchisee->name,
-                        'email' => $franchisee->email,
-                        'role' => $franchisee->role,
-                        'status' => $franchisee->status,
-                        'phone' => $franchisee->phone,
-                        'city' => $franchisee->city,
-                    ],
-                    'unit' => [
-                        'id' => $unit->id,
-                        'unit_name' => $unit->unit_name,
-                        'unit_code' => $unit->unit_code,
-                        'unit_type' => $unit->unit_type,
-                        'address' => $unit->address,
-                        'city' => $unit->city,
-                        'state_province' => $unit->state_province,
-                        'status' => $unit->status,
-                        'franchisee_id' => $unit->franchisee_id,
-                    ],
+                'franchisee' => [
+                    'id' => $franchisee->id,
+                    'name' => $franchisee->name,
+                    'email' => $franchisee->email,
+                    'role' => $franchisee->role,
+                    'status' => $franchisee->status,
+                    'phone' => $franchisee->phone,
+                    'city' => $franchisee->city,
+                ],
+                'unit' => [
+                    'id' => $unit->id,
+                    'unit_name' => $unit->unit_name,
+                    'unit_code' => $unit->unit_code,
+                    'unit_type' => $unit->unit_type,
+                    'address' => $unit->address,
+                    'city' => $unit->city,
+                    'state_province' => $unit->state_province,
+                    'status' => $unit->status,
+                    'franchisee_id' => $unit->franchisee_id,
+                ],
             ], 'Franchisee and unit created successfully', 201);
         } catch (\Exception $e) {
             DB::rollBack();
