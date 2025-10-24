@@ -581,14 +581,14 @@ class AdminController extends BaseAdminController
             $lastMonth = Carbon::now()->subMonth();
 
             // Current counts
-            $totalSalesUsers = User::where('role', 'broker')->count();
+            $totalBrokersUsers = User::where('role', 'broker')->count();
             $activeSales = User::where('role', 'broker')
                 ->where('status', 'active')->count();
             $pendingApproval = User::where('role', 'broker')
                 ->where('status', 'pending')->count();
 
             // Last month counts
-            $totalSalesUsersLastMonth = User::where('role', 'broker')
+            $totalBrokersUsersLastMonth = User::where('role', 'broker')
                 ->where('created_at', '<=', $lastMonth)->count();
             $activeSalesLastMonth = User::where('role', 'broker')
                 ->where('status', 'active')
@@ -598,8 +598,8 @@ class AdminController extends BaseAdminController
                 ->where('created_at', '<=', $lastMonth)->count();
 
             // Calculate growth percentages
-            $totalGrowth = $totalSalesUsersLastMonth > 0 ?
-                round((($totalSalesUsers - $totalSalesUsersLastMonth) / $totalSalesUsersLastMonth) * 100, 1) : ($totalSalesUsers > 0 ? 100 : 0);
+            $totalGrowth = $totalBrokersUsersLastMonth > 0 ?
+                round((($totalBrokersUsers - $totalBrokersUsersLastMonth) / $totalBrokersUsersLastMonth) * 100, 1) : ($totalBrokersUsers > 0 ? 100 : 0);
             $activeGrowth = $activeSalesLastMonth > 0 ?
                 round((($activeSales - $activeSalesLastMonth) / $activeSalesLastMonth) * 100, 1) : ($activeSales > 0 ? 100 : 0);
             $pendingGrowth = $pendingApprovalLastMonth > 0 ?
@@ -607,15 +607,15 @@ class AdminController extends BaseAdminController
 
             $stats = [
                 [
-                    'title' => 'Total Sales Users',
-                    'value' => (string) $totalSalesUsers,
+                    'title' => 'Total Brokers Users',
+                    'value' => (string) $totalBrokersUsers,
                     'change' => $totalGrowth,
-                    'desc' => 'All sales team members',
+                    'desc' => 'All brokers',
                     'icon' => 'tabler-chart-line',
                     'iconColor' => 'primary',
                 ],
                 [
-                    'title' => 'Active Sales',
+                    'title' => 'Active Brokers',
                     'value' => (string) $activeSales,
                     'change' => $activeGrowth,
                     'desc' => 'Currently active',
@@ -634,7 +634,7 @@ class AdminController extends BaseAdminController
 
             return $this->successResponse($stats);
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to fetch sales stats', $e->getMessage(), 500);
+            return $this->errorResponse('Failed to fetch brokers stats', $e->getMessage(), 500);
         }
     }
 
