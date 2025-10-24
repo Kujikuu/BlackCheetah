@@ -78,10 +78,10 @@ onMounted(() => {
               <VChip color="primary" class="mb-4">
                 {{ franchise.industry }}
               </VChip>
-              <h1 class="text-h2 text-white mb-4">
+              <h1 class="text-h2 mb-4">
                 {{ franchise.brand_name }}
               </h1>
-              <p class="text-h6 text-white mb-4">
+              <p class="text-h6 mb-4">
                 {{ franchise.business_name }}
               </p>
               <div class="d-flex gap-4 flex-wrap">

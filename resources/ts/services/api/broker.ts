@@ -32,7 +32,7 @@ export class BrokerApi {
    * Get franchises assigned to the authenticated broker
    */
   async getAssignedFranchises(): Promise<ApiResponse<AssignedFranchisesResponse>> {
-    return await $api('/v1/broker/brokers/assigned-franchises', {
+    return await $api('/v1/broker/assigned-franchises', {
       method: 'GET',
     })
   }
@@ -41,7 +41,7 @@ export class BrokerApi {
    * Toggle marketplace listing status for an assigned franchise
    */
   async toggleMarketplaceListing(franchiseId: number): Promise<ApiResponse<any>> {
-    return await $api(`/v1/broker/brokers/franchises/${franchiseId}/marketplace-toggle`, {
+    return await $api(`/v1/broker/franchises/${franchiseId}/marketplace-toggle`, {
       method: 'PATCH',
     })
   }
