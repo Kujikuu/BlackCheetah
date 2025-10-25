@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES } from '@/constants/taskConstants'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useUpdateTaskValidation } from '@/validation/tasksValidation'
 
 interface Task {
   id: number
@@ -33,6 +35,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useUpdateTaskValidation()
+
 const editedTask = ref<Task | null>(null)
 const isLoading = ref(false)
 
@@ -45,6 +51,10 @@ watch(() => props.task, (newTask) => {
 
 const saveTask = async () => {
   if (!editedTask.value) return
+
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
 
   try {
     isLoading.value = true
@@ -83,8 +93,9 @@ const saveTask = async () => {
     } else {
       console.error('Failed to update task:', response)
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating task:', error)
+    setBackendErrors(error)
   } finally {
     isLoading.value = false
   }
@@ -110,36 +121,46 @@ const handleCancel = () => {
         v-if="editedTask"
         class="pa-6"
       >
-        <VRow>
-          <VCol cols="12">
-            <VTextField
-              v-model="editedTask.title"
-              label="Task Title"
-              placeholder="Enter task title"
-              required
-            />
-          </VCol>
-          <VCol cols="12">
-            <VTextarea
-              v-model="editedTask.description"
-              label="Description"
-              placeholder="Enter task description"
-              rows="3"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VSelect
-              v-model="editedTask.category"
-              label="Category"
-              placeholder="Select category"
-              :items="TASK_CATEGORIES"
-              required
-            />
-          </VCol>
+        <VForm ref="formRef">
+          <VRow>
+            <VCol cols="12">
+              <VTextField
+                v-model="editedTask.title"
+                label="Task Title"
+                placeholder="Enter task title"
+                :rules="validationRules.title"
+                :error-messages="backendErrors.title"
+                @input="clearError('title')"
+                required
+              />
+            </VCol>
+            <VCol cols="12">
+              <VTextarea
+                v-model="editedTask.description"
+                label="Description"
+                placeholder="Enter task description"
+                rows="3"
+                :rules="validationRules.description"
+                :error-messages="backendErrors.description"
+                @input="clearError('description')"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VSelect
+                v-model="editedTask.category"
+                label="Category"
+                placeholder="Select category"
+                :items="TASK_CATEGORIES"
+                :rules="validationRules.category"
+                :error-messages="backendErrors.category"
+                @update:model-value="clearError('category')"
+                required
+              />
+            </VCol>
           <VCol
             cols="12"
             md="6"
@@ -185,6 +206,9 @@ const handleCancel = () => {
               v-model="editedTask.priority"
               label="Priority"
               :items="PRIORITY_OPTIONS"
+              :rules="validationRules.priority"
+              :error-messages="backendErrors.priority"
+              @update:model-value="clearError('priority')"
               required
             />
           </VCol>
@@ -196,6 +220,9 @@ const handleCancel = () => {
               v-model="editedTask.status"
               label="Status"
               :items="STATUS_OPTIONS"
+              :rules="validationRules.status"
+              :error-messages="backendErrors.status"
+              @update:model-value="clearError('status')"
               required
             />
           </VCol>
@@ -208,6 +235,9 @@ const handleCancel = () => {
               label="Estimated Hours"
               type="number"
               min="0"
+              :rules="validationRules.estimatedHours"
+              :error-messages="backendErrors.estimatedHours"
+              @input="clearError('estimatedHours')"
             />
           </VCol>
           <VCol
@@ -219,9 +249,13 @@ const handleCancel = () => {
               label="Actual Hours"
               type="number"
               min="0"
+              :rules="validationRules.actualHours"
+              :error-messages="backendErrors.actualHours"
+              @input="clearError('actualHours')"
             />
           </VCol>
         </VRow>
+        </VForm>
       </VCardText>
 
       <VDivider />

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useTaskUsers } from '@/composables/useTaskUsers'
 import { PRIORITY_OPTIONS, STATUS_OPTIONS, TASK_CATEGORIES } from '@/constants/taskConstants'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useStoreTaskValidation } from '@/validation/tasksValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -19,7 +21,7 @@ interface Emit {
 interface TaskForm {
   title: string
   description: string
-  category: string
+  category: string | null
   assignedTo: string
   startDate: string
   dueDate: string
@@ -36,11 +38,17 @@ const emit = defineEmits<Emit>()
 // 👉 Task users composable
 const { getUsersForSelect, initializeUsers, loading: usersLoading } = useTaskUsers()
 
+// 👉 Form validation
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useStoreTaskValidation()
+const isFormValid = ref(false)
+
 // 👉 Form data
 const taskForm = ref<TaskForm>({
   title: '',
   description: '',
-  category: '',
+  category: null,
   assignedTo: '',
   startDate: '',
   dueDate: '',
@@ -50,9 +58,6 @@ const taskForm = ref<TaskForm>({
   actualHours: 0,
   completionPercentage: 0,
 })
-
-// 👉 Form validation
-const isFormValid = ref(false)
 
 // 👉 Computed user options based on current tab
 const userOptions = computed(() => {
@@ -73,7 +78,7 @@ const resetForm = () => {
   taskForm.value = {
     title: '',
     description: '',
-    category: '',
+    category: null,
     assignedTo: '',
     startDate: '',
     dueDate: '',
@@ -85,8 +90,12 @@ const resetForm = () => {
   }
 }
 
-const onSubmit = () => {
-  if (isFormValid.value) {
+const onSubmit = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
     const newTask = {
       id: Date.now(), // Simple ID generation
       ...taskForm.value,
@@ -95,6 +104,9 @@ const onSubmit = () => {
     emit('taskCreated', newTask)
     resetForm()
     updateModelValue(false)
+  }
+  catch (error: any) {
+    setBackendErrors(error)
   }
 }
 
@@ -142,6 +154,7 @@ watch(() => props.currentTab, async newTab => {
     <VCard title="Create New Task">
       <VCardText class="pa-6">
         <VForm
+          ref="formRef"
           v-model="isFormValid"
           @submit.prevent="onSubmit"
         >
@@ -152,7 +165,9 @@ watch(() => props.currentTab, async newTab => {
                 v-model="taskForm.title"
                 label="Task Title"
                 placeholder="Enter task title"
-                :rules="[requiredRule]"
+                :rules="validationRules.title"
+                :error-messages="backendErrors.title"
+                @input="clearError('title')"
                 required
               />
             </VCol>
@@ -164,7 +179,9 @@ watch(() => props.currentTab, async newTab => {
                 label="Description"
                 placeholder="Enter task description"
                 rows="3"
-                :rules="[requiredRule]"
+                :rules="validationRules.description"
+                :error-messages="backendErrors.description"
+                @input="clearError('description')"
                 required
               />
             </VCol>
@@ -175,11 +192,13 @@ watch(() => props.currentTab, async newTab => {
               md="6"
             >
               <VSelect
-                v-model="taskForm.category"
+                v-model="taskForm.category as any"
                 label="Category"
                 placeholder="Select category"
                 :items="TASK_CATEGORIES"
-                :rules="[requiredRule]"
+                :rules="validationRules.category"
+                :error-messages="backendErrors.category"
+                @update:model-value="clearError('category')"
                 required
               />
             </VCol>
@@ -224,7 +243,9 @@ watch(() => props.currentTab, async newTab => {
                 v-model="taskForm.startDate"
                 label="Start Date"
                 type="date"
-                :rules="[requiredRule]"
+                :rules="validationRules.startDate"
+                :error-messages="backendErrors.startDate"
+                @input="clearError('startDate')"
                 required
               />
             </VCol>
@@ -238,7 +259,9 @@ watch(() => props.currentTab, async newTab => {
                 v-model="taskForm.dueDate"
                 label="Due Date"
                 type="date"
-                :rules="[requiredRule]"
+                :rules="validationRules.dueDate"
+                :error-messages="backendErrors.dueDate"
+                @input="clearError('dueDate')"
                 required
               />
             </VCol>
@@ -253,7 +276,9 @@ watch(() => props.currentTab, async newTab => {
                 label="Priority"
                 placeholder="Select priority"
                 :items="PRIORITY_OPTIONS"
-                :rules="[requiredRule]"
+                :rules="validationRules.priority"
+                :error-messages="backendErrors.priority"
+                @update:model-value="clearError('priority')"
                 required
               />
             </VCol>
@@ -268,7 +293,9 @@ watch(() => props.currentTab, async newTab => {
                 label="Status"
                 placeholder="Select status"
                 :items="STATUS_OPTIONS"
-                :rules="[requiredRule]"
+                :rules="validationRules.status"
+                :error-messages="backendErrors.status"
+                @update:model-value="clearError('status')"
                 required
               />
             </VCol>
@@ -282,6 +309,9 @@ watch(() => props.currentTab, async newTab => {
                 label="Estimated Hours"
                 type="number"
                 min="0"
+                :rules="validationRules.estimatedHours"
+                :error-messages="backendErrors.estimatedHours"
+                @input="clearError('estimatedHours')"
               />
             </VCol>
             <!-- Actual Hours -->
@@ -294,6 +324,9 @@ watch(() => props.currentTab, async newTab => {
                 label="Actual Hours"
                 type="number"
                 min="0"
+                :rules="validationRules.actualHours"
+                :error-messages="backendErrors.actualHours"
+                @input="clearError('actualHours')"
               />
             </VCol>
           </VRow>

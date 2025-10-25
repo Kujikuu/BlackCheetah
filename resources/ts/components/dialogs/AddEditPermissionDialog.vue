@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
+
 interface Props {
   isDialogVisible: boolean
   permissionName?: string
@@ -14,6 +17,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emit>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
+
 const currentPermissionName = ref('')
 
 const onReset = () => {
@@ -21,9 +28,18 @@ const onReset = () => {
   currentPermissionName.value = ''
 }
 
-const onSubmit = () => {
-  emit('update:isDialogVisible', false)
-  emit('update:permissionName', currentPermissionName.value)
+const onSubmit = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
+    emit('update:isDialogVisible', false)
+    emit('update:permissionName', currentPermissionName.value)
+  }
+  catch (error: any) {
+    setBackendErrors(error)
+  }
 }
 
 watch(() => props, () => {
@@ -51,7 +67,7 @@ watch(() => props, () => {
         </p>
 
         <!-- 👉 Form -->
-        <VForm>
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VAlert
             type="warning"
             title="Warning!"
@@ -68,9 +84,12 @@ watch(() => props, () => {
             <AppTextField
               v-model="currentPermissionName"
               placeholder="Enter Permission Name"
+              :rules="[rules.required('Permission name is required'), rules.maxLength(100, 'Permission name must not exceed 100 characters')]"
+              :error-messages="backendErrors.permissionName"
+              @input="clearError('permissionName')"
             />
 
-            <VBtn @click="onSubmit">
+            <VBtn type="submit" @click="onSubmit">
               {{ props.permissionName ? 'Update' : 'Add' }}
             </VBtn>
           </div>

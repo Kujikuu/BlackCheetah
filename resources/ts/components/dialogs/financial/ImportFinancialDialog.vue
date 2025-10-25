@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { financialApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
 
 interface Props {
   isDialogVisible: boolean
@@ -14,6 +16,10 @@ interface Emit {
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
+
 const isLoading = ref(false)
 const importCategory = ref<'sales' | 'expenses'>('sales')
 const importFile = ref<File | null>(null)
@@ -24,7 +30,9 @@ const dialogValue = computed({
 })
 
 const submitImport = async () => {
-  if (!importFile.value) return
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid || !importFile.value) return
 
   isLoading.value = true
   try {
@@ -37,8 +45,9 @@ const submitImport = async () => {
     emit('dataImported')
     dialogValue.value = false
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error importing data:', error)
+    setBackendErrors(error)
   }
   finally {
     isLoading.value = false
@@ -58,22 +67,30 @@ const handleClose = () => {
     <DialogCloseBtn @click="handleClose" />
     <VCard title="Import Data">
       <VCardText>
-        <VSelect
-          v-model="importCategory"
-          :items="[
-            { value: 'sales', title: 'Sales' },
-            { value: 'expenses', title: 'Expense' },
-          ]"
-          label="Category"
-          variant="outlined"
-          class="mb-4"
-        />
-        <VFileInput
-          v-model="importFile"
-          label="Choose file"
-          accept=".csv,.xlsx"
-          variant="outlined"
-        />
+        <VForm ref="formRef">
+          <VSelect
+            v-model="importCategory"
+            :items="[
+              { value: 'sales', title: 'Sales' },
+              { value: 'expenses', title: 'Expense' },
+            ]"
+            label="Category"
+            variant="outlined"
+            class="mb-4"
+            :rules="[rules.required('Category is required')]"
+            :error-messages="backendErrors.category"
+            @update:model-value="clearError('category')"
+          />
+          <VFileInput
+            v-model="importFile"
+            label="Choose file"
+            accept=".csv,.xlsx"
+            variant="outlined"
+            :rules="[rules.file('Please select a file'), rules.fileType(['csv', 'xlsx'], 'Only CSV and Excel files are allowed')]"
+            :error-messages="backendErrors.file"
+            @update:model-value="clearError('file')"
+          />
+        </VForm>
       </VCardText>
       <VCardActions>
         <VSpacer />

@@ -3,6 +3,8 @@ import { emailValidator, requiredValidator } from '@core/utils/validators'
 import { franchiseApi } from '@/services/api'
 import { useCountries } from '@/composables/useCountries'
 import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
 
 interface Props {
   isDialogVisible: boolean
@@ -15,6 +17,10 @@ interface Emit {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
 
 // Form data
 const currentStep = ref(1)
@@ -106,9 +112,15 @@ watch(() => props.isDialogVisible, visible => {
 })
 
 const submitForm = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) {
+    error.value = 'Please fill in all required fields'
+    return
+  }
+
   if (!formData.value.name || !formData.value.email || !formData.value.phone) {
     error.value = 'Please fill in all required fields'
-
     return
   }
 
@@ -174,6 +186,7 @@ const submitForm = async () => {
   catch (err: any) {
     console.error('Error creating franchisee with unit:', err)
     error.value = err.response?.data?.message || 'Failed to create franchisee and unit. Please try again.'
+    setBackendErrors(err)
   }
   finally {
     loading.value = false
@@ -232,14 +245,16 @@ const onDialogModelValueUpdate = (val: boolean) => {
           <VStepperWindow>
             <!-- Step 1: Basic Info -->
             <VStepperWindowItem :value="1">
-              <VForm>
+              <VForm ref="formRef">
                 <VRow>
                   <VCol cols="12">
                     <AppTextField
                       v-model="formData.name"
                       label="Branch Name"
                       placeholder="Enter Branch name"
-                      :rules="[requiredValidator]"
+                      :rules="[rules.required('Branch name is required'), ...rules.maxLength(255)]"
+                      :error-messages="backendErrors.name"
+                      @input="clearError('name')"
                     />
                   </VCol>
 
@@ -251,7 +266,9 @@ const onDialogModelValueUpdate = (val: boolean) => {
                       v-model="formData.email"
                       label="Email Address"
                       placeholder="Enter email address"
-                      :rules="[requiredValidator, emailValidator]"
+                      :rules="[rules.required('Email is required'), rules.email()]"
+                      :error-messages="backendErrors.email"
+                      @input="clearError('email')"
                     />
                   </VCol>
 
@@ -263,7 +280,9 @@ const onDialogModelValueUpdate = (val: boolean) => {
                       v-model="formData.phone"
                       label="Contact Number"
                       placeholder="Enter contact number"
-                      :rules="[requiredValidator]"
+                      :rules="[rules.required('Phone is required'), ...rules.maxLength(20)]"
+                      :error-messages="backendErrors.phone"
+                      @input="clearError('phone')"
                     />
                   </VCol>
 
@@ -277,7 +296,9 @@ const onDialogModelValueUpdate = (val: boolean) => {
                       :loading="isLoadingCountries"
                       label="Nationality"
                       placeholder="Select Nationality"
-                      :rules="[requiredValidator]"
+                      :rules="[rules.required('Nationality is required')]"
+                      :error-messages="backendErrors.nationality"
+                      @update:model-value="clearError('nationality')"
                       clearable
                     />
                   </VCol>
@@ -292,7 +313,9 @@ const onDialogModelValueUpdate = (val: boolean) => {
                       placeholder="Select Province"
                       :items="provinces"
                       :loading="isLoadingProvinces"
-                      :rules="[requiredValidator]"
+                      :rules="[rules.required('Province is required')]"
+                      :error-messages="backendErrors.state"
+                      @update:model-value="clearError('state')"
                       clearable
                     />
                   </VCol>
@@ -307,7 +330,9 @@ const onDialogModelValueUpdate = (val: boolean) => {
                       placeholder="Select City"
                       :items="availableCities"
                       :disabled="!formData.state"
-                      :rules="[requiredValidator]"
+                      :rules="[rules.required('City is required')]"
+                      :error-messages="backendErrors.city"
+                      @update:model-value="clearError('city')"
                       clearable
                     />
                   </VCol>
@@ -317,7 +342,9 @@ const onDialogModelValueUpdate = (val: boolean) => {
                       v-model="formData.address"
                       label="Address"
                       placeholder="Enter full address"
-                      :rules="[requiredValidator]"
+                      :rules="[rules.required('Address is required')]"
+                      :error-messages="backendErrors.address"
+                      @input="clearError('address')"
                     />
                   </VCol>
 

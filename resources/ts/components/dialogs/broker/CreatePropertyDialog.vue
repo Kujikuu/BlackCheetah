@@ -2,6 +2,8 @@
 import { propertyApi, type CreatePropertyPayload } from '@/services/api'
 import { useCountries } from '@/composables/useCountries'
 import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useStorePropertyValidation } from '@/validation/propertyValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -14,6 +16,11 @@ interface Emit {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
+
+// Validation
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useStorePropertyValidation()
 
 // Form state
 const formData = ref<CreatePropertyPayload>({
@@ -74,6 +81,10 @@ const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSa
 const availableCities = computed(() => getCitiesForProvince(formData.value.state_province || ''))
 
 const onSubmit = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   try {
     isSubmitting.value = true
 
@@ -85,8 +96,9 @@ const onSubmit = async () => {
       resetForm()
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error creating property:', error)
+    setBackendErrors(error)
   }
   finally {
     isSubmitting.value = false
@@ -104,36 +116,70 @@ const onCancel = () => {
     <DialogCloseBtn @click="onCancel" />
     <VCard title="Add New Property">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12">
-              <AppTextField v-model="formData.title" label="Property Title" placeholder="Enter property title"
-                :rules="[(v: any) => !!v || 'Title is required']" />
+              <AppTextField 
+                v-model="formData.title" 
+                label="Property Title" 
+                placeholder="Enter property title"
+                :rules="validationRules.title"
+                :error-messages="backendErrors.title"
+                @input="clearError('title')"
+              />
             </VCol>
 
             <VCol cols="12">
-              <AppTextarea v-model="formData.description" label="Description" placeholder="Enter property description"
-                rows="3" :rules="[(v: any) => !!v || 'Description is required']" />
+              <AppTextarea 
+                v-model="formData.description" 
+                label="Description" 
+                placeholder="Enter property description"
+                rows="3"
+                :rules="validationRules.description"
+                :error-messages="backendErrors.description"
+                @input="clearError('description')"
+              />
             </VCol>
 
             <VCol cols="12" md="6">
-              <AppSelect v-model="formData.property_type" label="Property Type" :items="[
-                { title: 'Retail', value: 'retail' },
-                { title: 'Office', value: 'office' },
-                { title: 'Kiosk', value: 'kiosk' },
-                { title: 'Food Court', value: 'food_court' },
-                { title: 'Standalone', value: 'standalone' },
-              ]" :rules="[(v: any) => !!v || 'Property type is required']" />
+              <AppSelect 
+                v-model="formData.property_type" 
+                label="Property Type" 
+                :items="[
+                  { title: 'Retail', value: 'retail' },
+                  { title: 'Office', value: 'office' },
+                  { title: 'Kiosk', value: 'kiosk' },
+                  { title: 'Food Court', value: 'food_court' },
+                  { title: 'Standalone', value: 'standalone' },
+                ]"
+                :rules="validationRules.propertyType"
+                :error-messages="backendErrors.propertyType"
+                @update:model-value="clearError('propertyType')"
+              />
             </VCol>
 
             <VCol cols="12" md="6">
-              <AppTextField v-model="formData.size_sqm" label="Size (m²)" type="number" placeholder="0"
-                :rules="[(v: any) => v > 0 || 'Size is required']" />
+              <AppTextField 
+                v-model="formData.size_sqm" 
+                label="Size (m²)" 
+                type="number" 
+                placeholder="0"
+                :rules="validationRules.sizeSqm"
+                :error-messages="backendErrors.sizeSqm"
+                @input="clearError('sizeSqm')"
+              />
             </VCol>
 
             <VCol cols="12" md="6">
-              <AppTextField v-model="formData.monthly_rent" label="Monthly Rent (SAR)" type="number" placeholder="0"
-                :rules="[(v: any) => v > 0 || 'Monthly rent is required']" />
+              <AppTextField 
+                v-model="formData.monthly_rent" 
+                label="Monthly Rent (SAR)" 
+                type="number" 
+                placeholder="0"
+                :rules="validationRules.monthlyRent"
+                :error-messages="backendErrors.monthlyRent"
+                @input="clearError('monthlyRent')"
+              />
             </VCol>
 
             <VCol cols="12" md="6">
@@ -151,19 +197,40 @@ const onCancel = () => {
             </VCol>
 
             <VCol cols="12" md="6">
-              <AppSelect v-model="formData.state_province" label="State/Province" placeholder="Select State/Province"
-                :items="provinces" :loading="isLoadingProvinces"
-                :rules="[(v: any) => !!v || 'State/Province is required']" />
+              <AppSelect 
+                v-model="formData.state_province" 
+                label="State/Province" 
+                placeholder="Select State/Province"
+                :items="provinces" 
+                :loading="isLoadingProvinces"
+                :rules="validationRules.stateProvince"
+                :error-messages="backendErrors.stateProvince"
+                @update:model-value="clearError('stateProvince')"
+              />
             </VCol>
 
             <VCol cols="12" md="6">
-              <AppSelect v-model="formData.city" label="City" placeholder="Select City" :items="availableCities"
-                :disabled="!formData.state_province" :rules="[(v: any) => !!v || 'City is required']" />
+              <AppSelect 
+                v-model="formData.city" 
+                label="City" 
+                placeholder="Select City" 
+                :items="availableCities"
+                :disabled="!formData.state_province"
+                :rules="validationRules.city"
+                :error-messages="backendErrors.city"
+                @update:model-value="clearError('city')"
+              />
             </VCol>
 
             <VCol cols="12">
-              <AppTextField v-model="formData.address" label="Address" placeholder="Enter full address"
-                :rules="[(v: any) => !!v || 'Address is required']" />
+              <AppTextField 
+                v-model="formData.address" 
+                label="Address" 
+                placeholder="Enter full address"
+                :rules="validationRules.address"
+                :error-messages="backendErrors.address"
+                @input="clearError('address')"
+              />
             </VCol>
 
             <VCol cols="12">

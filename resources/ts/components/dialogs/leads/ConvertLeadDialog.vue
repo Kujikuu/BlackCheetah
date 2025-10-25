@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { leadApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
 
 interface Props {
   isDialogVisible: boolean
@@ -15,6 +17,10 @@ interface Emit {
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
+
 const conversionNotes = ref('')
 const isLoading = ref(false)
 
@@ -28,6 +34,10 @@ const convertLead = async () => {
   if (!props.leadId)
     return
 
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   isLoading.value = true
 
   try {
@@ -36,8 +46,9 @@ const convertLead = async () => {
     emit('leadConverted')
     updateModelValue(false)
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error converting lead:', error)
+    setBackendErrors(error)
   }
   finally {
     isLoading.value = false
@@ -65,14 +76,19 @@ const convertLead = async () => {
           </p>
         </div>
 
-        <VTextarea
-          v-model="conversionNotes"
-          label="Conversion Notes (Optional)"
-          placeholder="Add any notes about the conversion..."
-          rows="3"
-          variant="outlined"
-          :disabled="isLoading"
-        />
+        <VForm ref="formRef">
+          <VTextarea
+            v-model="conversionNotes"
+            label="Conversion Notes (Optional)"
+            placeholder="Add any notes about the conversion..."
+            rows="3"
+            variant="outlined"
+            :disabled="isLoading"
+            :rules="[rules.string()]"
+            :error-messages="backendErrors.notes"
+            @input="clearError('notes')"
+          />
+        </VForm>
       </VCardText>
 
       <VCardText class="d-flex align-center justify-end gap-2">

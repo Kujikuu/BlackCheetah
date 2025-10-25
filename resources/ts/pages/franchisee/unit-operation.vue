@@ -14,8 +14,8 @@ import ViewStaffDialog from '@/components/dialogs/staff/ViewStaffDialog.vue'
 import AddReviewDialog from '@/components/dialogs/reviews/AddReviewDialog.vue'
 import EditReviewDialog from '@/components/dialogs/reviews/EditReviewDialog.vue'
 import EditProductDialog from '@/components/dialogs/products/EditProductDialog.vue'
-import EditStaffDialog from '@/components/dialogs/staff/EditStaffDialog.vue'
-import AddStaffDialog from '@/components/dialogs/staff/AddStaffDialog.vue'
+import EditUnitStaffDialog from '@/components/dialogs/staff/EditUnitStaffDialog.vue'
+import AddUnitStaffDialog from '@/components/dialogs/staff/AddUnitStaffDialog.vue'
 import EditUnitDialog from '@/components/dialogs/units/EditUnitDialog.vue'
 import AddProductToInventoryDialog from '@/components/dialogs/products/AddProductToInventoryDialog.vue'
 import type {
@@ -1807,7 +1807,7 @@ const reviewHeaders = [
     />
 
     <!-- Add Staff Dialog -->
-    <AddStaffDialog
+    <AddUnitStaffDialog
       v-model:is-dialog-visible="isAddStaffModalVisible"
       @staff-added="onStaffAdded"
     />
@@ -1819,7 +1819,7 @@ const reviewHeaders = [
     />
 
     <!-- Edit Staff Dialog -->
-    <EditStaffDialog
+    <EditUnitStaffDialog
       v-model:is-dialog-visible="isEditStaffModalVisible"
       :selected-staff="selectedStaff"
       @staff-updated="onStaffUpdated"

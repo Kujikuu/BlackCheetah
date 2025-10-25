@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { financialApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useStoreFinancialDataValidation } from '@/validation/financialValidation'
 
 interface AddDataForm {
   product: string
@@ -25,8 +27,15 @@ interface Emit {
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
+const formRef = ref()
 const isLoading = ref(false)
 const addDataCategory = ref<'sales' | 'expense'>('sales')
+
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+
+// Separate validation rules for sales and expense to avoid type issues
+const salesValidationRules = useStoreFinancialDataValidation('sales')
+const expenseValidationRules = useStoreFinancialDataValidation('expense')
 
 const addDataForm = ref<AddDataForm>({
   product: '',
@@ -45,27 +54,27 @@ const dialogValue = computed({
 })
 
 const submitAddData = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   isLoading.value = true
   try {
     if (addDataCategory.value === 'sales') {
       await financialApi.createSale({
         product: addDataForm.value.product,
-        unit_price: addDataForm.value.unitPrice,
+        unitPrice: addDataForm.value.unitPrice,
         quantity: addDataForm.value.quantitySold,
         date: addDataForm.value.dateOfSale,
-        customer_name: 'Walk-in Customer', // Default value for now
-        customer_email: 'customer@example.com', // Default value for now
-        franchise_id: 1, // TODO: Get from user context
-        unit_id: 1, // TODO: Get from user context or form
-      })
+      } as any)
     }
     else {
       await financialApi.createExpense({
-        expense_category: addDataForm.value.expenseCategory,
+        expenseCategory: addDataForm.value.expenseCategory,
         amount: addDataForm.value.amount,
         description: addDataForm.value.description,
         date: addDataForm.value.dateOfExpense,
-      })
+      } as any)
     }
 
     // Reset form
@@ -86,8 +95,9 @@ const submitAddData = async () => {
     emit('dataAdded')
     dialogValue.value = false
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error adding data:', error)
+    setBackendErrors(error)
   }
   finally {
     isLoading.value = false
@@ -107,70 +117,96 @@ const handleClose = () => {
     <DialogCloseBtn @click="handleClose" />
     <VCard title="Add New Data">
       <VCardText>
-        <VSelect
-          v-model="addDataCategory"
-          :items="[
-            { title: 'Sales', value: 'sales' },
-            { title: 'Expense', value: 'expense' },
-          ]"
-          label="Category"
-          class="mb-4"
-        />
+        <VForm ref="formRef">
+          <VSelect
+            v-model="addDataCategory"
+            :items="[
+              { title: 'Sales', value: 'sales' },
+              { title: 'Expense', value: 'expense' },
+            ]"
+            label="Category"
+            class="mb-4"
+          />
 
-        <!-- Sales Fields -->
-        <div v-if="addDataCategory === 'sales'">
-          <VTextField
-            v-model="addDataForm.product"
-            label="Product"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.dateOfSale"
-            label="Date of Sale"
-            type="date"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.unitPrice"
-            label="Unit Price"
-            type="number"
-            prefix="SAR"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.quantitySold"
-            label="Quantity Sold"
-            type="number"
-            class="mb-4"
-          />
-        </div>
+          <!-- Sales Fields -->
+          <div v-if="addDataCategory === 'sales'">
+            <VTextField
+              v-model="addDataForm.product"
+              label="Product"
+              class="mb-4"
+              :rules="(salesValidationRules as any).product"
+              :error-messages="backendErrors.product"
+              @input="clearError('product')"
+            />
+            <VTextField
+              v-model="addDataForm.dateOfSale"
+              label="Date of Sale"
+              type="date"
+              class="mb-4"
+              :rules="(salesValidationRules as any).date"
+              :error-messages="backendErrors.date"
+              @input="clearError('date')"
+            />
+            <VTextField
+              v-model="addDataForm.unitPrice"
+              label="Unit Price"
+              type="number"
+              prefix="SAR"
+              class="mb-4"
+              :rules="(salesValidationRules as any).unitPrice"
+              :error-messages="backendErrors.unitPrice"
+              @input="clearError('unitPrice')"
+            />
+            <VTextField
+              v-model="addDataForm.quantitySold"
+              label="Quantity Sold"
+              type="number"
+              class="mb-4"
+              :rules="(salesValidationRules as any).quantitySold"
+              :error-messages="backendErrors.quantitySold"
+              @input="clearError('quantitySold')"
+            />
+          </div>
 
-        <!-- Expense Fields -->
-        <div v-if="addDataCategory === 'expense'">
-          <VTextField
-            v-model="addDataForm.expenseCategory"
-            label="Expense Category"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.dateOfExpense"
-            label="Date of Expense"
-            type="date"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.amount"
-            label="Amount"
-            type="number"
-            prefix="SAR"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.description"
-            label="Description"
-            class="mb-4"
-          />
-        </div>
+          <!-- Expense Fields -->
+          <div v-if="addDataCategory === 'expense'">
+            <VTextField
+              v-model="addDataForm.expenseCategory"
+              label="Expense Category"
+              class="mb-4"
+              :rules="(expenseValidationRules as any).expenseCategory"
+              :error-messages="backendErrors.expenseCategory"
+              @input="clearError('expenseCategory')"
+            />
+            <VTextField
+              v-model="addDataForm.dateOfExpense"
+              label="Date of Expense"
+              type="date"
+              class="mb-4"
+              :rules="(expenseValidationRules as any).date"
+              :error-messages="backendErrors.date"
+              @input="clearError('date')"
+            />
+            <VTextField
+              v-model="addDataForm.amount"
+              label="Amount"
+              type="number"
+              prefix="SAR"
+              class="mb-4"
+              :rules="(expenseValidationRules as any).amount"
+              :error-messages="backendErrors.amount"
+              @input="clearError('amount')"
+            />
+            <VTextField
+              v-model="addDataForm.description"
+              label="Description"
+              class="mb-4"
+              :rules="(expenseValidationRules as any).description"
+              :error-messages="backendErrors.description"
+              @input="clearError('description')"
+            />
+          </div>
+        </VForm>
       </VCardText>
       <VCardActions>
         <VSpacer />

@@ -10,6 +10,22 @@ export interface ApiResponse<T = any> {
   message: string
 }
 
+// Validation error types
+export interface ValidationError {
+  field: string
+  message: string
+}
+
+export interface ValidationErrors {
+  [field: string]: string[]
+}
+
+export interface ApiErrorResponse {
+  success: false
+  message: string
+  errors?: ValidationErrors
+}
+
 // Paginated response for list endpoints
 export interface PaginatedResponse<T> {
   data: T[]

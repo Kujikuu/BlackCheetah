@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useStoreReviewValidation } from '@/validation/reviewValidation'
 
 interface ReviewForm {
   customerName: string
@@ -21,6 +23,10 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useStoreReviewValidation()
+
 const dialogValue = computed({
   get: () => props.isDialogVisible,
   set: val => emit('update:isDialogVisible', val),
@@ -34,24 +40,28 @@ const reviewForm = ref<ReviewForm>({
   date: '',
 })
 
-const handleAddReview = () => {
+const handleAddReview = async () => {
   // Validate form
-  if (!reviewForm.value.customerName || !reviewForm.value.comment || !reviewForm.value.date) {
-    return
-  }
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
 
-  emit('reviewAdded', { ...reviewForm.value })
-  
-  // Reset form
-  reviewForm.value = {
-    customerName: '',
-    customerEmail: '',
-    rating: 0,
-    comment: '',
-    date: '',
+  try {
+    emit('reviewAdded', { ...reviewForm.value })
+    
+    // Reset form
+    reviewForm.value = {
+      customerName: '',
+      customerEmail: '',
+      rating: 0,
+      comment: '',
+      date: '',
+    }
+    
+    dialogValue.value = false
   }
-  
-  dialogValue.value = false
+  catch (error: any) {
+    setBackendErrors(error)
+  }
 }
 
 const handleClose = () => {
@@ -75,27 +85,34 @@ const handleClose = () => {
     <DialogCloseBtn @click="handleClose" />
     <VCard title="Add Customer Review">
       <VCardText class="pa-6">
-        <VRow>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="reviewForm.customerName"
-              label="Customer Name"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="reviewForm.customerEmail"
-              label="Customer Email"
-              type="email"
-            />
-          </VCol>
+        <VForm ref="formRef">
+          <VRow>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="reviewForm.customerName"
+                label="Customer Name"
+                :rules="validationRules.customerName"
+                :error-messages="backendErrors.customerName"
+                @input="clearError('customerName')"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="reviewForm.customerEmail"
+                label="Customer Email"
+                type="email"
+                :rules="validationRules.customerEmail"
+                :error-messages="backendErrors.customerEmail"
+                @input="clearError('customerEmail')"
+              />
+            </VCol>
           <VCol
             cols="12"
             md="6"
@@ -116,6 +133,9 @@ const handleClose = () => {
               v-model="reviewForm.date"
               label="Date"
               type="date"
+              :rules="validationRules.date"
+              :error-messages="backendErrors.date"
+              @input="clearError('date')"
               required
             />
           </VCol>
@@ -124,10 +144,14 @@ const handleClose = () => {
               v-model="reviewForm.comment"
               label="Review Comment"
               rows="4"
+              :rules="validationRules.comment"
+              :error-messages="backendErrors.comment"
+              @input="clearError('comment')"
               required
             />
           </VCol>
         </VRow>
+        </VForm>
       </VCardText>
 
       <VDivider />

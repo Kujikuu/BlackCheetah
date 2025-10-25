@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { VForm } from 'vuetify/components/VForm'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
 
 interface Permission {
   name: string
@@ -30,6 +32,9 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emit>()
+
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
 
 // 👉 Permission List
 const permissions = ref<Permission[]>([
@@ -149,16 +154,32 @@ watch(() => props, () => {
   }
 })
 
-const onSubmit = () => {
-  const rolePermissions = {
-    name: role.value,
-    permissions: permissions.value,
+const onSubmit = async () => {
+  // Validate form
+  const { valid } = await refPermissionForm.value?.validate()
+  if (!valid) return
+
+  // Check if at least one permission is selected
+  if (checkedCount.value === 0) {
+    // Show error message
+    console.error('Please select at least one permission')
+    return
   }
 
-  emit('update:rolePermissions', rolePermissions)
-  emit('update:isDialogVisible', false)
-  isSelectAll.value = false
-  refPermissionForm.value?.reset()
+  try {
+    const rolePermissions = {
+      name: role.value,
+      permissions: permissions.value,
+    }
+
+    emit('update:rolePermissions', rolePermissions)
+    emit('update:isDialogVisible', false)
+    isSelectAll.value = false
+    refPermissionForm.value?.reset()
+  }
+  catch (error: any) {
+    setBackendErrors(error)
+  }
 }
 
 const onReset = () => {
@@ -188,12 +209,15 @@ const onReset = () => {
         </p>
 
         <!-- 👉 Form -->
-        <VForm ref="refPermissionForm">
+        <VForm ref="refPermissionForm" @submit.prevent="onSubmit">
           <!-- 👉 Role name -->
           <AppTextField
             v-model="role"
             label="Role Name"
             placeholder="Enter Role Name"
+            :rules="[rules.required('Role name is required'), rules.maxLength(100, 'Role name must not exceed 100 characters')]"
+            :error-messages="backendErrors.name"
+            @input="clearError('name')"
           />
 
           <h5 class="text-h5 my-6">
@@ -260,9 +284,19 @@ const onReset = () => {
             </template>
           </VTable>
 
+          <!-- 👉 Permissions validation message -->
+          <VAlert
+            v-if="checkedCount === 0"
+            type="warning"
+            variant="tonal"
+            class="mb-4"
+          >
+            Please select at least one permission for this role.
+          </VAlert>
+
           <!-- 👉 Actions button -->
           <div class="d-flex align-center justify-center gap-4">
-            <VBtn @click="onSubmit">
+            <VBtn type="submit" @click="onSubmit">
               Submit
             </VBtn>
 

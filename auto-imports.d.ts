@@ -12,11 +12,14 @@ declare global {
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const alphaDashValidator: typeof import('./resources/ts/@core/utils/validators')['alphaDashValidator']
   const alphaValidator: typeof import('./resources/ts/@core/utils/validators')['alphaValidator']
+  const alphanumericValidator: typeof import('./resources/ts/@core/utils/validators')['alphanumericValidator']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const avatarText: typeof import('./resources/ts/@core/utils/formatters')['avatarText']
   const betweenValidator: typeof import('./resources/ts/@core/utils/validators')['betweenValidator']
   const buildApiUrl: typeof import('./resources/ts/utils/api-router')['buildApiUrl']
+  const clearAllErrors: typeof import('./resources/ts/utils/formErrorMapper')['clearAllErrors']
+  const clearFieldError: typeof import('./resources/ts/utils/formErrorMapper')['clearFieldError']
   const computed: typeof import('vue')['computed']
   const computedAsync: typeof import('@vueuse/core')['computedAsync']
   const computedEager: typeof import('@vueuse/core')['computedEager']
@@ -32,6 +35,7 @@ declare global {
   const createInjectionState: typeof import('@vueuse/core')['createInjectionState']
   const createPinia: typeof import('pinia')['createPinia']
   const createProjection: typeof import('@vueuse/math')['createProjection']
+  const createReactiveErrors: typeof import('./resources/ts/utils/formErrorMapper')['createReactiveErrors']
   const createReactiveFn: typeof import('@vueuse/core')['createReactiveFn']
   const createReusableTemplate: typeof import('@vueuse/core')['createReusableTemplate']
   const createSharedComposable: typeof import('@vueuse/core')['createSharedComposable']
@@ -39,8 +43,10 @@ declare global {
   const createUnrefFn: typeof import('@vueuse/core')['createUnrefFn']
   const createUrl: typeof import('./resources/ts/@core/composable/createUrl')['createUrl']
   const customRef: typeof import('vue')['customRef']
+  const dateRangeValidator: typeof import('./resources/ts/@core/utils/validators')['dateRangeValidator']
   const debouncedRef: typeof import('@vueuse/core')['debouncedRef']
   const debouncedWatch: typeof import('@vueuse/core')['debouncedWatch']
+  const decimalValidator: typeof import('./resources/ts/@core/utils/validators')['decimalValidator']
   const defineAsyncComponent: typeof import('vue')['defineAsyncComponent']
   const defineComponent: typeof import('vue')['defineComponent']
   const definePage: typeof import('unplugin-vue-router/runtime')['definePage']
@@ -49,19 +55,26 @@ declare global {
   const effectScope: typeof import('vue')['effectScope']
   const emailValidator: typeof import('./resources/ts/@core/utils/validators')['emailValidator']
   const extendRef: typeof import('@vueuse/core')['extendRef']
+  const extractErrorMessage: typeof import('./resources/ts/utils/formErrorMapper')['extractErrorMessage']
+  const fileSizeValidator: typeof import('./resources/ts/@core/utils/validators')['fileSizeValidator']
+  const fileTypeValidator: typeof import('./resources/ts/@core/utils/validators')['fileTypeValidator']
   const formatCurrency: typeof import('./resources/ts/@core/utils/formatters')['formatCurrency']
   const formatDate: typeof import('./resources/ts/@core/utils/formatters')['formatDate']
   const formatDateToMonthShort: typeof import('./resources/ts/@core/utils/formatters')['formatDateToMonthShort']
+  const futureDateValidator: typeof import('./resources/ts/@core/utils/validators')['futureDateValidator']
   const getActivePinia: typeof import('pinia')['getActivePinia']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
   const getEndpoint: typeof import('./resources/ts/utils/api-router')['getEndpoint']
+  const getFieldError: typeof import('./resources/ts/utils/formErrorMapper')['getFieldError']
   const h: typeof import('vue')['h']
+  const hasValidationErrors: typeof import('./resources/ts/utils/formErrorMapper')['hasValidationErrors']
   const hexToRgb: typeof import('./resources/ts/@core/utils/colorConverter')['hexToRgb']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
   const inject: typeof import('vue')['inject']
   const injectLocal: typeof import('@vueuse/core')['injectLocal']
   const integerValidator: typeof import('./resources/ts/@core/utils/validators')['integerValidator']
+  const internationalPhoneValidator: typeof import('./resources/ts/@core/utils/validators')['internationalPhoneValidator']
   const isDefined: typeof import('@vueuse/core')['isDefined']
   const isEmpty: typeof import('./resources/ts/@core/utils/helpers')['isEmpty']
   const isEmptyArray: typeof import('./resources/ts/@core/utils/helpers')['isEmptyArray']
@@ -79,12 +92,17 @@ declare global {
   const logicOr: typeof import('@vueuse/math')['logicOr']
   const makeDestructurable: typeof import('@vueuse/core')['makeDestructurable']
   const mapActions: typeof import('pinia')['mapActions']
+  const mapBackendErrors: typeof import('./resources/ts/utils/formErrorMapper')['mapBackendErrors']
   const mapGetters: typeof import('pinia')['mapGetters']
   const mapInventoryResponse: typeof import('./resources/ts/utils/inventory')['mapInventoryResponse']
   const mapState: typeof import('pinia')['mapState']
   const mapStores: typeof import('pinia')['mapStores']
   const mapWritableState: typeof import('pinia')['mapWritableState']
   const markRaw: typeof import('vue')['markRaw']
+  const maxLengthValidator: typeof import('./resources/ts/@core/utils/validators')['maxLengthValidator']
+  const maxValueValidator: typeof import('./resources/ts/@core/utils/validators')['maxValueValidator']
+  const minLengthValidator: typeof import('./resources/ts/@core/utils/validators')['minLengthValidator']
+  const minValueValidator: typeof import('./resources/ts/@core/utils/validators')['minValueValidator']
   const nextTick: typeof import('vue')['nextTick']
   const onActivated: typeof import('vue')['onActivated']
   const onBeforeMount: typeof import('vue')['onBeforeMount']
@@ -108,8 +126,12 @@ declare global {
   const onWatcherCleanup: typeof import('vue')['onWatcherCleanup']
   const paginationMeta: typeof import('./resources/ts/utils/paginationMeta')['paginationMeta']
   const passwordValidator: typeof import('./resources/ts/@core/utils/validators')['passwordValidator']
+  const pastDateValidator: typeof import('./resources/ts/@core/utils/validators')['pastDateValidator']
   const pausableWatch: typeof import('@vueuse/core')['pausableWatch']
+  const percentageValidator: typeof import('./resources/ts/@core/utils/validators')['percentageValidator']
+  const positiveNumberValidator: typeof import('./resources/ts/@core/utils/validators')['positiveNumberValidator']
   const prefixWithPlus: typeof import('./resources/ts/@core/utils/formatters')['prefixWithPlus']
+  const priceValidator: typeof import('./resources/ts/@core/utils/validators')['priceValidator']
   const provide: typeof import('vue')['provide']
   const provideLocal: typeof import('@vueuse/core')['provideLocal']
   const reactify: typeof import('@vueuse/core')['reactify']
@@ -127,12 +149,18 @@ declare global {
   const refWithControl: typeof import('@vueuse/core')['refWithControl']
   const regexValidator: typeof import('./resources/ts/@core/utils/validators')['regexValidator']
   const registerPlugins: typeof import('./resources/ts/@core/utils/plugins')['registerPlugins']
+  const requiredEmailValidator: typeof import('./resources/ts/@core/utils/validators')['requiredEmailValidator']
+  const requiredPhoneValidator: typeof import('./resources/ts/@core/utils/validators')['requiredPhoneValidator']
+  const requiredPositiveNumberValidator: typeof import('./resources/ts/@core/utils/validators')['requiredPositiveNumberValidator']
+  const requiredTextValidator: typeof import('./resources/ts/@core/utils/validators')['requiredTextValidator']
   const requiredValidator: typeof import('./resources/ts/@core/utils/validators')['requiredValidator']
   const resolveComponent: typeof import('vue')['resolveComponent']
   const resolveRef: typeof import('@vueuse/core')['resolveRef']
   const resolveUnref: typeof import('@vueuse/core')['resolveUnref']
   const resolveVuetifyTheme: typeof import('./resources/ts/@core/utils/vuetify')['resolveVuetifyTheme']
   const rgbaToHex: typeof import('./resources/ts/@core/utils/colorConverter')['rgbaToHex']
+  const saudiNationalIdValidator: typeof import('./resources/ts/@core/utils/validators')['saudiNationalIdValidator']
+  const saudiPhoneValidator: typeof import('./resources/ts/@core/utils/validators')['saudiPhoneValidator']
   const setActivePinia: typeof import('pinia')['setActivePinia']
   const setMapStoreSuffix: typeof import('pinia')['setMapStoreSuffix']
   const shallowReactive: typeof import('vue')['shallowReactive']
@@ -232,6 +260,7 @@ declare global {
   const useFloor: typeof import('@vueuse/math')['useFloor']
   const useFocus: typeof import('@vueuse/core')['useFocus']
   const useFocusWithin: typeof import('@vueuse/core')['useFocusWithin']
+  const useFormValidation: typeof import('./resources/ts/composables/useFormValidation')['useFormValidation']
   const useFps: typeof import('@vueuse/core')['useFps']
   const useFranchisorDashboard: typeof import('./resources/ts/composables/useFranchisorDashboard')['useFranchisorDashboard']
   const useFullscreen: typeof import('@vueuse/core')['useFullscreen']
@@ -306,10 +335,12 @@ declare global {
   const useShare: typeof import('@vueuse/core')['useShare']
   const useSkins: typeof import('./resources/ts/@core/composable/useSkins')['useSkins']
   const useSlots: typeof import('vue')['useSlots']
+  const useSnackbar: typeof import('./resources/ts/composables/useSnackbar')['useSnackbar']
   const useSorted: typeof import('@vueuse/core')['useSorted']
   const useSpeechRecognition: typeof import('@vueuse/core')['useSpeechRecognition']
   const useSpeechSynthesis: typeof import('@vueuse/core')['useSpeechSynthesis']
   const useStepper: typeof import('@vueuse/core')['useStepper']
+  const useStorage: typeof import('@vueuse/core')['useStorage']
   const useStorageAsync: typeof import('@vueuse/core')['useStorageAsync']
   const useStyleTag: typeof import('@vueuse/core')['useStyleTag']
   const useSum: typeof import('@vueuse/math')['useSum']
@@ -339,6 +370,8 @@ declare global {
   const useUserMedia: typeof import('@vueuse/core')['useUserMedia']
   const useVModel: typeof import('@vueuse/core')['useVModel']
   const useVModels: typeof import('@vueuse/core')['useVModels']
+  const useValidation: typeof import('./resources/ts/composables/useValidation')['useValidation']
+  const useValidationRules: typeof import('./resources/ts/composables/useValidationRules')['useValidationRules']
   const useVibrate: typeof import('@vueuse/core')['useVibrate']
   const useVirtualList: typeof import('@vueuse/core')['useVirtualList']
   const useWakeLock: typeof import('@vueuse/core')['useWakeLock']
@@ -389,6 +422,8 @@ declare module 'vue' {
     readonly avatarText: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['avatarText']>
     readonly betweenValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['betweenValidator']>
     readonly buildApiUrl: UnwrapRef<typeof import('./resources/ts/utils/api-router')['buildApiUrl']>
+    readonly clearAllErrors: UnwrapRef<typeof import('./resources/ts/utils/formErrorMapper')['clearAllErrors']>
+    readonly clearFieldError: UnwrapRef<typeof import('./resources/ts/utils/formErrorMapper')['clearFieldError']>
     readonly computed: UnwrapRef<typeof import('vue')['computed']>
     readonly computedAsync: UnwrapRef<typeof import('@vueuse/core')['computedAsync']>
     readonly computedEager: UnwrapRef<typeof import('@vueuse/core')['computedEager']>
@@ -404,6 +439,7 @@ declare module 'vue' {
     readonly createInjectionState: UnwrapRef<typeof import('@vueuse/core')['createInjectionState']>
     readonly createPinia: UnwrapRef<typeof import('pinia')['createPinia']>
     readonly createProjection: UnwrapRef<typeof import('@vueuse/math')['createProjection']>
+    readonly createReactiveErrors: UnwrapRef<typeof import('./resources/ts/utils/formErrorMapper')['createReactiveErrors']>
     readonly createReactiveFn: UnwrapRef<typeof import('@vueuse/core')['createReactiveFn']>
     readonly createReusableTemplate: UnwrapRef<typeof import('@vueuse/core')['createReusableTemplate']>
     readonly createSharedComposable: UnwrapRef<typeof import('@vueuse/core')['createSharedComposable']>
@@ -420,6 +456,7 @@ declare module 'vue' {
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
     readonly emailValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['emailValidator']>
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
+    readonly extractErrorMessage: UnwrapRef<typeof import('./resources/ts/utils/formErrorMapper')['extractErrorMessage']>
     readonly formatCurrency: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['formatCurrency']>
     readonly formatDate: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['formatDate']>
     readonly formatDateToMonthShort: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['formatDateToMonthShort']>
@@ -427,7 +464,9 @@ declare module 'vue' {
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
     readonly getEndpoint: UnwrapRef<typeof import('./resources/ts/utils/api-router')['getEndpoint']>
+    readonly getFieldError: UnwrapRef<typeof import('./resources/ts/utils/formErrorMapper')['getFieldError']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
+    readonly hasValidationErrors: UnwrapRef<typeof import('./resources/ts/utils/formErrorMapper')['hasValidationErrors']>
     readonly hexToRgb: UnwrapRef<typeof import('./resources/ts/@core/utils/colorConverter')['hexToRgb']>
     readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
@@ -450,6 +489,7 @@ declare module 'vue' {
     readonly logicOr: UnwrapRef<typeof import('@vueuse/math')['logicOr']>
     readonly makeDestructurable: UnwrapRef<typeof import('@vueuse/core')['makeDestructurable']>
     readonly mapActions: UnwrapRef<typeof import('pinia')['mapActions']>
+    readonly mapBackendErrors: UnwrapRef<typeof import('./resources/ts/utils/formErrorMapper')['mapBackendErrors']>
     readonly mapGetters: UnwrapRef<typeof import('pinia')['mapGetters']>
     readonly mapInventoryResponse: UnwrapRef<typeof import('./resources/ts/utils/inventory')['mapInventoryResponse']>
     readonly mapState: UnwrapRef<typeof import('pinia')['mapState']>
@@ -602,6 +642,7 @@ declare module 'vue' {
     readonly useFloor: UnwrapRef<typeof import('@vueuse/math')['useFloor']>
     readonly useFocus: UnwrapRef<typeof import('@vueuse/core')['useFocus']>
     readonly useFocusWithin: UnwrapRef<typeof import('@vueuse/core')['useFocusWithin']>
+    readonly useFormValidation: UnwrapRef<typeof import('./resources/ts/composables/useFormValidation')['useFormValidation']>
     readonly useFps: UnwrapRef<typeof import('@vueuse/core')['useFps']>
     readonly useFranchisorDashboard: UnwrapRef<typeof import('./resources/ts/composables/useFranchisorDashboard')['useFranchisorDashboard']>
     readonly useFullscreen: UnwrapRef<typeof import('@vueuse/core')['useFullscreen']>
@@ -676,6 +717,7 @@ declare module 'vue' {
     readonly useShare: UnwrapRef<typeof import('@vueuse/core')['useShare']>
     readonly useSkins: UnwrapRef<typeof import('./resources/ts/@core/composable/useSkins')['useSkins']>
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
+    readonly useSnackbar: UnwrapRef<typeof import('./resources/ts/composables/useSnackbar')['useSnackbar']>
     readonly useSorted: UnwrapRef<typeof import('@vueuse/core')['useSorted']>
     readonly useSpeechRecognition: UnwrapRef<typeof import('@vueuse/core')['useSpeechRecognition']>
     readonly useSpeechSynthesis: UnwrapRef<typeof import('@vueuse/core')['useSpeechSynthesis']>
@@ -709,6 +751,7 @@ declare module 'vue' {
     readonly useUserMedia: UnwrapRef<typeof import('@vueuse/core')['useUserMedia']>
     readonly useVModel: UnwrapRef<typeof import('@vueuse/core')['useVModel']>
     readonly useVModels: UnwrapRef<typeof import('@vueuse/core')['useVModels']>
+    readonly useValidationRules: UnwrapRef<typeof import('./resources/ts/composables/useValidationRules')['useValidationRules']>
     readonly useVibrate: UnwrapRef<typeof import('@vueuse/core')['useVibrate']>
     readonly useVirtualList: UnwrapRef<typeof import('@vueuse/core')['useVirtualList']>
     readonly useWakeLock: UnwrapRef<typeof import('@vueuse/core')['useWakeLock']>

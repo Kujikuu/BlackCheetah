@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { UnitReview } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useUpdateReviewValidation } from '@/validation/reviewValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -14,6 +16,10 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useUpdateReviewValidation()
 
 const dialogValue = computed({
   get: () => props.isDialogVisible,
@@ -29,10 +35,19 @@ watch(() => props.selectedReview, (newReview) => {
   }
 }, { immediate: true })
 
-const handleSaveReview = () => {
-  if (editableReview.value) {
-    emit('reviewUpdated', editableReview.value)
-    dialogValue.value = false
+const handleSaveReview = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
+    if (editableReview.value) {
+      emit('reviewUpdated', editableReview.value)
+      dialogValue.value = false
+    }
+  }
+  catch (error: any) {
+    setBackendErrors(error)
   }
 }
 
@@ -52,27 +67,34 @@ const handleClose = () => {
         v-if="editableReview"
         class="pa-6"
       >
-        <VRow>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableReview.customerName"
-              label="Customer Name"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableReview.customerEmail"
-              label="Customer Email"
-              type="email"
-            />
-          </VCol>
+        <VForm ref="formRef">
+          <VRow>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableReview.customerName"
+                label="Customer Name"
+                :rules="validationRules.customerName"
+                :error-messages="backendErrors.customerName"
+                @input="clearError('customerName')"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableReview.customerEmail"
+                label="Customer Email"
+                type="email"
+                :rules="validationRules.customerEmail"
+                :error-messages="backendErrors.customerEmail"
+                @input="clearError('customerEmail')"
+              />
+            </VCol>
           <VCol
             cols="12"
             md="6"
@@ -93,6 +115,9 @@ const handleClose = () => {
               v-model="editableReview.date"
               label="Date"
               type="date"
+              :rules="validationRules.date"
+              :error-messages="backendErrors.date"
+              @input="clearError('date')"
               required
             />
           </VCol>
@@ -101,10 +126,14 @@ const handleClose = () => {
               v-model="editableReview.comment"
               label="Review Comment"
               rows="4"
+              :rules="validationRules.comment"
+              :error-messages="backendErrors.comment"
+              @input="clearError('comment')"
               required
             />
           </VCol>
         </VRow>
+        </VForm>
       </VCardText>
 
       <VDivider />

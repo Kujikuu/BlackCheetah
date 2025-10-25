@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { franchiseStaffApi, type FranchiseStaff, type StaffFilters } from '@/services/api'
 import ConfirmDeleteDialog from '@/components/dialogs/common/ConfirmDeleteDialog.vue'
-import AddStaffDialog from '@/components/dialogs/franchise/AddStaffDialog.vue'
-import EditStaffDialog from '@/components/dialogs/franchise/EditStaffDialog.vue'
+import AddFranchiseStaffDialog from '@/components/dialogs/franchise/AddFranchiseStaffDialog.vue'
+import EditFranchiseStaffDialog from '@/components/dialogs/franchise/EditFranchiseStaffDialog.vue'
 
 // Search and filters
 const searchQuery = ref('')
@@ -431,13 +431,13 @@ const deleteMessage = computed(() => {
     </VCard>
 
     <!-- Add Staff Dialog -->
-    <AddStaffDialog
+    <AddFranchiseStaffDialog
       v-model:is-dialog-visible="isAddStaffDialogVisible"
       @staff-created="onStaffCreated"
     />
 
     <!-- Edit Staff Dialog -->
-    <EditStaffDialog
+    <EditFranchiseStaffDialog
       v-model:is-dialog-visible="isEditStaffDialogVisible"
       :staff="selectedStaff"
       @staff-updated="onStaffUpdated"

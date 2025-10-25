@@ -2,6 +2,8 @@
 import { ref, computed, watch } from 'vue'
 import { $api } from '@/utils/api'
 import { franchiseApi, franchiseeDashboardApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useStoreDocumentValidation } from '@/validation/documentValidation'
 
 interface DocumentData {
   id: number | null
@@ -32,6 +34,10 @@ interface Emit {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useStoreDocumentValidation()
 
 const isLoading = ref(false)
 
@@ -96,6 +102,10 @@ const isUnitMode = computed(() => props.mode === 'unit')
 const currentNameField = computed(() => isUnitMode.value ? documentForm.value.title : documentForm.value.name)
 
 const saveDocument = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   // Validate based on mode
   if (isUnitMode.value && !props.unitId) {
     console.error('No unit ID available')
@@ -197,8 +207,9 @@ const saveDocument = async () => {
       }
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error saving document:', error)
+    setBackendErrors(error)
   }
   finally {
     isLoading.value = false
@@ -230,7 +241,7 @@ const dialogTitle = computed(() => {
     <DialogCloseBtn @click="handleClose" />
     <VCard :title="dialogTitle">
       <VCardText>
-        <VForm>
+        <VForm ref="formRef">
           <VRow>
             <VCol cols="12">
               <!-- Document Name/Title field - different labels based on mode -->
@@ -240,6 +251,9 @@ const dialogTitle = computed(() => {
                 label="Document Title"
                 placeholder="Enter document title"
                 variant="outlined"
+                :rules="validationRules.name"
+                :error-messages="backendErrors.name"
+                @input="clearError('name')"
                 required
               />
               <VTextField
@@ -248,6 +262,9 @@ const dialogTitle = computed(() => {
                 label="Document Name"
                 placeholder="Enter document name"
                 variant="outlined"
+                :rules="validationRules.name"
+                :error-messages="backendErrors.name"
+                @input="clearError('name')"
                 required
               />
             </VCol>
@@ -258,6 +275,9 @@ const dialogTitle = computed(() => {
                 placeholder="Enter document description"
                 rows="3"
                 variant="outlined"
+                :rules="validationRules.description"
+                :error-messages="backendErrors.description"
+                @input="clearError('description')"
                 :required="isUnitMode"
               />
             </VCol>
@@ -269,6 +289,9 @@ const dialogTitle = computed(() => {
                 placeholder="Select document type"
                 :items="documentTypeOptions"
                 variant="outlined"
+                :rules="validationRules.type"
+                :error-messages="backendErrors.type"
+                @update:model-value="clearError('type')"
                 required
               />
             </VCol>
@@ -295,13 +318,16 @@ const dialogTitle = computed(() => {
                 :accept="isUnitMode ? '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png' : '.pdf,.doc,.docx'"
                 prepend-icon="tabler-paperclip"
                 variant="outlined"
+                :rules="documentForm.id ? [] : validationRules.file"
+                :error-messages="backendErrors.file"
+                @update:model-value="clearError('file')"
                 :required="!documentForm.id"
               />
               <div v-if="isUnitMode" class="text-caption text-disabled mt-2">
-                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, JPEG, PNG
+                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, JPEG, PNG (Max 10MB)
               </div>
               <div v-else-if="documentForm.id" class="text-caption text-disabled mt-2">
-                Leave empty to keep the current file, or upload a new file to replace it
+                Leave empty to keep the current file, or upload a new file to replace it (Max 10MB)
               </div>
             </VCol>
           </VRow>

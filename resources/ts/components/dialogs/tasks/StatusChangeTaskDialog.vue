@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { taskApi, type Task } from '@/services/api'
 import { PRIORITY_OPTIONS, STATUS_OPTIONS } from '@/constants/taskConstants'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useUpdateTaskStatusValidation } from '@/validation/tasksValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -14,6 +16,10 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useUpdateTaskStatusValidation()
 
 const newStatus = ref('')
 const isLoading = ref(false)
@@ -56,8 +62,12 @@ const resolveStatusVariant = (status: string) => {
 }
 
 const updateTaskStatus = async () => {
-  if (!props.task || !newStatus.value)
+  if (!props.task)
     return
+
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
 
   isLoading.value = true
   try {
@@ -70,12 +80,11 @@ const updateTaskStatus = async () => {
     }
     else {
       console.error('Failed to update task status:', response.message)
-      // Optionally, show a toast notification
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error updating task status:', error)
-    // Optionally, show a toast notification
+    setBackendErrors(error)
   }
   finally {
     isLoading.value = false
@@ -113,14 +122,19 @@ const updateTaskStatus = async () => {
           </div>
         </div>
 
-        <VSelect
-          v-model="newStatus"
-          label="New Status"
-          :items="statusOptions"
-          item-title="title"
-          item-value="value"
-          required
-        />
+        <VForm ref="formRef">
+          <VSelect
+            v-model="newStatus"
+            label="New Status"
+            :items="statusOptions"
+            item-title="title"
+            item-value="value"
+            :rules="validationRules.status"
+            :error-messages="backendErrors.status"
+            @update:model-value="clearError('status')"
+            required
+          />
+        </VForm>
       </VCardText>
 
       <VDivider />

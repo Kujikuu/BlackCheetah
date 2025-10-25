@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { franchiseApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
 
 interface Props {
   isDialogVisible: boolean
@@ -16,6 +18,10 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
+
 const newStatus = ref<string>(props.currentStatus)
 const isLoading = ref(false)
 
@@ -25,7 +31,14 @@ watch(() => props.currentStatus, (newValue) => {
 }, { immediate: true })
 
 const changeUnitStatus = async () => {
-  if (!props.unitId || !newStatus.value || newStatus.value === props.currentStatus)
+  if (!props.unitId)
+    return
+
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  if (newStatus.value === props.currentStatus)
     return
 
   try {
@@ -42,6 +55,7 @@ const changeUnitStatus = async () => {
     }
   } catch (err: any) {
     console.error('Failed to change unit status:', err)
+    setBackendErrors(err)
   } finally {
     isLoading.value = false
   }
@@ -62,12 +76,17 @@ const handleCancel = () => {
     <DialogCloseBtn @click="handleCancel" />
     <VCard title="Change Unit Status">
       <VCardText>
-        <VSelect
-          v-model="newStatus"
-          label="Status"
-          :items="statusOptions"
-          placeholder="Select Status"
-        />
+        <VForm ref="formRef">
+          <VSelect
+            v-model="newStatus"
+            label="Status"
+            :items="statusOptions"
+            placeholder="Select Status"
+            :rules="[rules.required('Status is required')]"
+            :error-messages="backendErrors.status"
+            @update:model-value="clearError('status')"
+          />
+        </VForm>
       </VCardText>
 
       <VCardActions>
