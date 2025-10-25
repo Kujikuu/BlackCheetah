@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { marketplaceApi, type InquiryPayload } from '@/services/api'
+import { SaudiRiyal } from 'lucide-vue-next'
 
 interface Props {
   inquiryType: 'franchise' | 'property'
@@ -111,7 +112,7 @@ const submitInquiry = async () => {
           v-model="inquiryForm.investment_budget"
           label="Investment Budget (Optional)"
           placeholder="e.g., SAR 100,000 - SAR 500,000"
-          prepend-inner-icon="tabler-currency-dollar"
+          :prepend-inner-icon="SaudiRiyal"
           class="mb-3"
         />
 

@@ -32,7 +32,7 @@ export const { themeConfig, layoutConfig } = defineThemeConfig({
       ],
     },
     theme: 'system',
-    skin: Skins.Bordered,
+    skin: Skins.Default,
     iconRenderer: VIcon,
   },
   navbar: {
