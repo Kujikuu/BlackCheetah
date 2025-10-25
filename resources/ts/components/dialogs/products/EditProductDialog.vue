@@ -2,6 +2,8 @@
 import { ref, computed, watch } from 'vue'
 import type { UnitProduct } from '@/services/api'
 import { formatCurrency } from '@/@core/utils/formatters'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useUpdateProductValidation } from '@/validation/productValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -15,6 +17,10 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useUpdateProductValidation()
 
 const dialogValue = computed({
   get: () => props.isDialogVisible,
@@ -30,10 +36,19 @@ watch(() => props.selectedProduct, (newProduct) => {
   }
 }, { immediate: true })
 
-const handleSaveProduct = () => {
-  if (editableProduct.value) {
-    emit('productUpdated', editableProduct.value)
-    dialogValue.value = false
+const handleSaveProduct = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
+    if (editableProduct.value) {
+      emit('productUpdated', editableProduct.value)
+      dialogValue.value = false
+    }
+  }
+  catch (error: any) {
+    setBackendErrors(error)
   }
 }
 
@@ -53,24 +68,28 @@ const handleClose = () => {
         v-if="editableProduct"
         class="pa-6"
       >
-        <VRow>
-          <VCol cols="12">
-            <div class="text-body-2 text-disabled mb-3">
-              Product: <span class="font-weight-medium text-high-emphasis">{{ editableProduct.name }}</span>
-            </div>
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model.number="editableProduct.stock"
-              label="Stock Quantity"
-              type="number"
-              min="0"
-              required
-            />
-          </VCol>
+        <VForm ref="formRef">
+          <VRow>
+            <VCol cols="12">
+              <div class="text-body-2 text-disabled mb-3">
+                Product: <span class="font-weight-medium text-high-emphasis">{{ editableProduct.name }}</span>
+              </div>
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model.number="editableProduct.stock"
+                label="Stock Quantity"
+                type="number"
+                min="0"
+                :rules="validationRules.stock"
+                :error-messages="backendErrors.stock"
+                @input="clearError('stock')"
+                required
+              />
+            </VCol>
           <VCol
             cols="12"
             md="6"
@@ -90,6 +109,7 @@ const handleClose = () => {
             </div>
           </VCol>
         </VRow>
+        </VForm>
       </VCardText>
 
       <VDivider />

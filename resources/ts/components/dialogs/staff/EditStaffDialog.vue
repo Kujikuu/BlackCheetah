@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { UnitStaff } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useUpdateStaffValidation } from '@/validation/staffValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -14,6 +16,10 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useUpdateStaffValidation()
 
 const dialogValue = computed({
   get: () => props.isDialogVisible,
@@ -29,10 +35,19 @@ watch(() => props.selectedStaff, (newStaff) => {
   }
 }, { immediate: true })
 
-const handleSaveStaff = () => {
-  if (editableStaff.value) {
-    emit('staffUpdated', editableStaff.value)
-    dialogValue.value = false
+const handleSaveStaff = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
+    if (editableStaff.value) {
+      emit('staffUpdated', editableStaff.value)
+      dialogValue.value = false
+    }
+  }
+  catch (error: any) {
+    setBackendErrors(error)
   }
 }
 
@@ -68,47 +83,60 @@ const employmentTypeOptions = [
         v-if="editableStaff"
         class="pa-6"
       >
-        <VRow>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.name"
-              label="Full Name"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.email"
-              label="Email"
-              type="email"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.phone"
-              label="Phone"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.jobTitle"
-              label="Job Title"
-              required
-            />
-          </VCol>
+        <VForm ref="formRef">
+          <VRow>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.name"
+                label="Full Name"
+                :rules="validationRules.name"
+                :error-messages="backendErrors.name"
+                @input="clearError('name')"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.email"
+                label="Email"
+                type="email"
+                :rules="validationRules.email"
+                :error-messages="backendErrors.email"
+                @input="clearError('email')"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.phone"
+                label="Phone"
+                :rules="validationRules.phone"
+                :error-messages="backendErrors.phone"
+                @input="clearError('phone')"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.jobTitle"
+                label="Job Title"
+                :rules="validationRules.jobTitle"
+                :error-messages="backendErrors.jobTitle"
+                @input="clearError('jobTitle')"
+                required
+              />
+            </VCol>
           <VCol
             cols="12"
             md="6"
@@ -167,6 +195,9 @@ const employmentTypeOptions = [
               v-model="editableStaff.status"
               label="Status"
               :items="statusOptions"
+              :rules="validationRules.status"
+              :error-messages="backendErrors.status"
+              @update:model-value="clearError('status')"
               required
             />
           </VCol>
@@ -178,6 +209,9 @@ const employmentTypeOptions = [
               v-model="editableStaff.employmentType"
               label="Employment Type"
               :items="employmentTypeOptions"
+              :rules="validationRules.employmentType"
+              :error-messages="backendErrors.employmentType"
+              @update:model-value="clearError('employmentType')"
             />
           </VCol>
           <VCol cols="12">
@@ -185,9 +219,13 @@ const employmentTypeOptions = [
               v-model="editableStaff.notes"
               label="Notes"
               rows="2"
+              :rules="validationRules.notes"
+              :error-messages="backendErrors.notes"
+              @input="clearError('notes')"
             />
           </VCol>
         </VRow>
+        </VForm>
       </VCardText>
 
       <VDivider />

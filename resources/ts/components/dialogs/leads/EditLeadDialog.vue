@@ -2,6 +2,8 @@
 import { leadApi, type Lead } from '@/services/api'
 import { useCountries } from '@/composables/useCountries'
 import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useUpdateLeadValidation } from '@/validation/leadsValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -22,6 +24,11 @@ const dialogValue = computed({
 })
 
 const isSaving = ref(false)
+const formRef = ref()
+
+// Form validation
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useUpdateLeadValidation()
 
 // Form data
 const formData = ref({
@@ -108,6 +115,10 @@ watch(() => props.lead, (lead) => {
 const onSubmit = async () => {
   if (!props.lead) return
 
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   try {
     isSaving.value = true
 
@@ -132,8 +143,10 @@ const onSubmit = async () => {
       dialogValue.value = false
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error updating lead:', error)
+    // Map backend validation errors to form fields
+    setBackendErrors(error)
   }
   finally {
     isSaving.value = false
@@ -154,7 +167,10 @@ const onCancel = () => {
     <DialogCloseBtn @click="onCancel" />
     <VCard title="Edit Lead">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm
+          ref="formRef"
+          @submit.prevent="onSubmit"
+        >
           <VRow>
             <!-- First Name -->
             <VCol
@@ -165,6 +181,9 @@ const onCancel = () => {
                 v-model="formData.firstName"
                 label="First Name"
                 placeholder="Enter first name"
+                :rules="validationRules.firstName"
+                :error-messages="backendErrors.firstName"
+                @input="clearError('firstName')"
               />
             </VCol>
 
@@ -177,6 +196,9 @@ const onCancel = () => {
                 v-model="formData.lastName"
                 label="Last Name"
                 placeholder="Enter last name"
+                :rules="validationRules.lastName"
+                :error-messages="backendErrors.lastName"
+                @input="clearError('lastName')"
               />
             </VCol>
 
@@ -190,6 +212,9 @@ const onCancel = () => {
                 label="Email"
                 type="email"
                 placeholder="Enter email address"
+                :rules="validationRules.email"
+                :error-messages="backendErrors.email"
+                @input="clearError('email')"
               />
             </VCol>
 
@@ -202,6 +227,9 @@ const onCancel = () => {
                 v-model="formData.phone"
                 label="Phone"
                 placeholder="+966 50 123 4567"
+                :rules="validationRules.phone"
+                :error-messages="backendErrors.phone"
+                @input="clearError('phone')"
               />
             </VCol>
 
@@ -240,6 +268,9 @@ const onCancel = () => {
                 placeholder="Select nationality"
                 :items="nationalityOptions"
                 :loading="isLoadingCountries"
+                :rules="validationRules.nationality"
+                :error-messages="backendErrors.nationality"
+                @update:model-value="clearError('nationality')"
                 clearable
               />
             </VCol>
@@ -255,6 +286,8 @@ const onCancel = () => {
                 placeholder="Select province"
                 :items="provinces"
                 :loading="isLoadingProvinces"
+                :error-messages="backendErrors.state"
+                @update:model-value="clearError('state')"
                 clearable
               />
             </VCol>
@@ -270,6 +303,9 @@ const onCancel = () => {
                 placeholder="Select city"
                 :items="availableCities"
                 :disabled="!formData.state"
+                :rules="validationRules.city"
+                :error-messages="backendErrors.city"
+                @update:model-value="clearError('city')"
                 clearable
               />
             </VCol>
@@ -284,6 +320,9 @@ const onCancel = () => {
                 label="Lead Source"
                 :items="leadSources"
                 placeholder="Select source"
+                :rules="validationRules.source"
+                :error-messages="backendErrors.source"
+                @update:model-value="clearError('source')"
               />
             </VCol>
 
@@ -297,6 +336,9 @@ const onCancel = () => {
                 label="Status"
                 :items="leadStatuses"
                 placeholder="Select status"
+                :rules="validationRules.status"
+                :error-messages="backendErrors.status"
+                @update:model-value="clearError('status')"
               />
             </VCol>
 
@@ -310,6 +352,9 @@ const onCancel = () => {
                 label="Priority"
                 :items="priorities"
                 placeholder="Select priority"
+                :rules="validationRules.priority"
+                :error-messages="backendErrors.priority"
+                @update:model-value="clearError('priority')"
               />
             </VCol>
 

@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue'
 import type { UnitProduct } from '@/services/api'
 import { formatCurrency } from '@/@core/utils/formatters'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useStoreProductValidation } from '@/validation/productValidation'
 
 interface InventoryForm {
   quantity: number
@@ -21,6 +23,10 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useStoreProductValidation()
+
 const dialogValue = computed({
   get: () => props.isDialogVisible,
   set: val => emit('update:isDialogVisible', val),
@@ -39,23 +45,30 @@ const selectedProductPreview = computed(() => {
   return props.availableFranchiseProducts.find(p => p.id === selectedFranchiseProduct.value)
 })
 
-const handleAddProductToInventory = () => {
-  if (!selectedFranchiseProduct.value) return
+const handleAddProductToInventory = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid || !selectedFranchiseProduct.value) return
   
-  emit('productAdded', {
-    productId: selectedFranchiseProduct.value,
-    quantity: Number.parseInt(inventoryForm.value.quantity.toString()),
-    reorderLevel: Number.parseInt(inventoryForm.value.reorderLevel.toString()),
-  })
-  
-  // Reset form
-  selectedFranchiseProduct.value = null
-  inventoryForm.value = {
-    quantity: 0,
-    reorderLevel: 5,
+  try {
+    emit('productAdded', {
+      productId: selectedFranchiseProduct.value,
+      quantity: Number.parseInt(inventoryForm.value.quantity.toString()),
+      reorderLevel: Number.parseInt(inventoryForm.value.reorderLevel.toString()),
+    })
+    
+    // Reset form
+    selectedFranchiseProduct.value = null
+    inventoryForm.value = {
+      quantity: 0,
+      reorderLevel: 5,
+    }
+    
+    dialogValue.value = false
   }
-  
-  dialogValue.value = false
+  catch (error: any) {
+    setBackendErrors(error)
+  }
 }
 
 const handleClose = () => {
@@ -77,18 +90,22 @@ const handleClose = () => {
     <DialogCloseBtn @click="handleClose" />
     <VCard title="Add Product to Inventory">
       <VCardText class="pa-6">
-        <VRow>
-          <VCol cols="12">
-            <VSelect
-              v-model="selectedFranchiseProduct"
-              label="Select Product"
-              :items="props.availableFranchiseProducts"
-              item-title="name"
-              item-value="id"
-              required
-              placeholder="Choose a product from franchise catalog"
-              :no-data-text="props.availableFranchiseProducts.length === 0 ? 'No available franchise products to add' : 'No products match your search'"
-            >
+        <VForm ref="formRef">
+          <VRow>
+            <VCol cols="12">
+              <VSelect
+                v-model="selectedFranchiseProduct"
+                label="Select Product"
+                :items="props.availableFranchiseProducts"
+                item-title="name"
+                item-value="id"
+                :rules="validationRules.name"
+                :error-messages="backendErrors.name"
+                @update:model-value="clearError('name')"
+                required
+                placeholder="Choose a product from franchise catalog"
+                :no-data-text="props.availableFranchiseProducts.length === 0 ? 'No available franchise products to add' : 'No products match your search'"
+              >
               <template #item="{ item, props: itemProps }">
                 <VListItem v-bind="itemProps">
                   <VListItemTitle>{{ item.raw.name }}</VListItemTitle>
@@ -155,6 +172,9 @@ const handleClose = () => {
               label="Initial Stock Quantity"
               type="number"
               min="0"
+              :rules="validationRules.stock"
+              :error-messages="backendErrors.stock"
+              @input="clearError('stock')"
               required
               placeholder="Enter quantity to add"
             />
@@ -168,11 +188,15 @@ const handleClose = () => {
               label="Reorder Level"
               type="number"
               min="0"
+              :rules="validationRules.minimumStock"
+              :error-messages="backendErrors.minimumStock"
+              @input="clearError('minimumStock')"
               required
               placeholder="Minimum stock alert level"
             />
           </VCol>
         </VRow>
+        </VForm>
       </VCardText>
 
       <VDivider />

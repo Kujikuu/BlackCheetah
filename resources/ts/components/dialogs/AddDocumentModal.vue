@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useStoreDocumentValidation } from '@/validation/documentValidation'
+
 interface Props {
   isDialogVisible: boolean
 }
@@ -18,6 +21,15 @@ interface DocumentForm {
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
+// 👉 Form validation
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useStoreDocumentValidation()
+const isFormValid = ref(false)
+
+// 👉 File input ref
+const fileInput = ref<HTMLInputElement>()
+
 // 👉 Form data
 const documentForm = ref<DocumentForm>({
   title: '',
@@ -25,12 +37,6 @@ const documentForm = ref<DocumentForm>({
   type: '',
   file: null,
 })
-
-// 👉 Form validation
-const isFormValid = ref(false)
-
-// 👉 File input ref
-const fileInput = ref<HTMLInputElement>()
 
 // 👉 Document type options - matching backend validation types
 const documentTypeOptions = [
@@ -82,8 +88,12 @@ const formatFileSize = (bytes: number) => {
   return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 
-const onSubmit = () => {
-  if (isFormValid.value && documentForm.value.file) {
+const onSubmit = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid || !documentForm.value.file) return
+
+  try {
     const newDocument = {
       id: Date.now(), // Simple ID generation
       title: documentForm.value.title,
@@ -100,6 +110,9 @@ const onSubmit = () => {
     emit('documentAdded', newDocument)
     resetForm()
     updateModelValue(false)
+  }
+  catch (error: any) {
+    setBackendErrors(error)
   }
 }
 
@@ -131,6 +144,7 @@ watch(() => props.isDialogVisible, newVal => {
 
       <VCardText class="pa-6">
         <VForm
+          ref="formRef"
           v-model="isFormValid"
           @submit.prevent="onSubmit"
         >
@@ -141,7 +155,9 @@ watch(() => props.isDialogVisible, newVal => {
                 v-model="documentForm.title"
                 label="Document Title"
                 placeholder="Enter document title"
-                :rules="[requiredRule]"
+                :rules="validationRules.name"
+                :error-messages="backendErrors.name"
+                @input="clearError('name')"
                 required
               />
             </VCol>
@@ -153,7 +169,9 @@ watch(() => props.isDialogVisible, newVal => {
                 label="Description"
                 placeholder="Enter document description"
                 rows="3"
-                :rules="[requiredRule]"
+                :rules="validationRules.description"
+                :error-messages="backendErrors.description"
+                @input="clearError('description')"
                 required
               />
             </VCol>
@@ -165,7 +183,9 @@ watch(() => props.isDialogVisible, newVal => {
                 label="Document Type"
                 placeholder="Select document type"
                 :items="documentTypeOptions"
-                :rules="[requiredRule]"
+                :rules="validationRules.type"
+                :error-messages="backendErrors.type"
+                @update:model-value="clearError('type')"
                 required
               />
             </VCol>
@@ -178,12 +198,14 @@ watch(() => props.isDialogVisible, newVal => {
                 placeholder="Choose a file to upload"
                 prepend-icon="tabler-paperclip"
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
-                :rules="[fileRequiredRule]"
-                required
+                :rules="validationRules.file"
+                :error-messages="backendErrors.file"
                 @change="onFileChange"
+                @update:model-value="clearError('file')"
+                required
               />
               <div class="text-caption text-disabled mt-2">
-                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, JPEG, PNG
+                Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, JPEG, PNG (Max 10MB)
               </div>
             </VCol>
 

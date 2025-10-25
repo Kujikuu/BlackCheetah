@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { notesApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useAddNoteValidation } from '@/validation/notesValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -13,6 +15,10 @@ interface Emit {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useAddNoteValidation()
 
 const noteTitle = ref('')
 const noteDescription = ref('')
@@ -36,6 +42,10 @@ const handleFileUpload = (event: Event) => {
 }
 
 const onSubmit = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   try {
     const response = await notesApi.createNote({
       title: noteTitle.value,
@@ -53,19 +63,14 @@ const onSubmit = async () => {
       // Close dialog and reset form
       dialogValue.value = false
       resetForm()
-
-      // TODO: Show success toast
     }
     else {
       console.error('Failed to add note:', response.message)
-
-      // TODO: Show error toast
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error adding note:', error)
-
-    // TODO: Show error toast
+    setBackendErrors(error)
   }
 }
 
@@ -83,13 +88,16 @@ const onCancel = () => {
     <DialogCloseBtn @click="onCancel" />
     <VCard title="Add Note">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12">
               <AppTextField
                 v-model="noteTitle"
                 label="Title"
                 placeholder="Enter note title"
+                :rules="validationRules.note"
+                :error-messages="backendErrors.note"
+                @input="clearError('note')"
               />
             </VCol>
 
@@ -99,6 +107,9 @@ const onCancel = () => {
                 label="Description"
                 placeholder="Enter note description..."
                 rows="6"
+                :rules="validationRules.content"
+                :error-messages="backendErrors.content"
+                @input="clearError('content')"
               />
             </VCol>
 

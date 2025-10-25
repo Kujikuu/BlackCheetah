@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
+
 interface Details {
   number: string | number
   name: string
@@ -30,14 +33,47 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emit>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
+
 const cardDetails = ref<Details>(structuredClone(toRaw(props.cardDetails)))
 
 watch(() => props, () => {
   cardDetails.value = structuredClone(toRaw(props.cardDetails))
 })
 
-const formSubmit = () => {
-  emit('submit', cardDetails.value)
+const formSubmit = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
+    emit('submit', cardDetails.value)
+  }
+  catch (error: any) {
+    setBackendErrors(error)
+  }
+}
+
+// Custom validation rules for credit card
+const cardNumberRule = (value: string | number) => {
+  const str = value.toString().replace(/\s/g, '')
+  if (!str) return 'Card number is required'
+  if (!/^\d{13,19}$/.test(str)) return 'Card number must be 13-19 digits'
+  return true
+}
+
+const expiryRule = (value: string) => {
+  if (!value) return 'Expiry date is required'
+  if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(value)) return 'Expiry must be in MM/YY format'
+  return true
+}
+
+const cvvRule = (value: string) => {
+  if (!value) return 'CVV is required'
+  if (!/^\d{3,4}$/.test(value)) return 'CVV must be 3 or 4 digits'
+  return true
 }
 
 const dialogModelValueUpdate = (val: boolean) => {
@@ -68,7 +104,7 @@ const dialogModelValueUpdate = (val: boolean) => {
       </VCardItem>
 
       <VCardText class="pt-6">
-        <VForm @submit.prevent="() => {}">
+        <VForm ref="formRef" @submit.prevent="formSubmit">
           <VRow>
             <!-- 👉 Card Number -->
             <VCol cols="12">
@@ -76,7 +112,10 @@ const dialogModelValueUpdate = (val: boolean) => {
                 v-model="cardDetails.number"
                 label="Card Number"
                 placeholder="1356 3215 6548 7898"
-                type="number"
+                type="text"
+                :rules="[cardNumberRule]"
+                :error-messages="backendErrors.number"
+                @input="clearError('number')"
               />
             </VCol>
 
@@ -89,6 +128,9 @@ const dialogModelValueUpdate = (val: boolean) => {
                 v-model="cardDetails.name"
                 label="Name"
                 placeholder="Name on Card"
+                :rules="[rules.required('Name is required'), rules.maxLength(100, 'Name must not exceed 100 characters')]"
+                :error-messages="backendErrors.name"
+                @input="clearError('name')"
               />
             </VCol>
 
@@ -101,6 +143,9 @@ const dialogModelValueUpdate = (val: boolean) => {
                 v-model="cardDetails.expiry"
                 label="Expiry Date"
                 placeholder="MM/YY"
+                :rules="[expiryRule]"
+                :error-messages="backendErrors.expiry"
+                @input="clearError('expiry')"
               />
             </VCol>
 
@@ -111,9 +156,12 @@ const dialogModelValueUpdate = (val: boolean) => {
             >
               <AppTextField
                 v-model="cardDetails.cvv"
-                type="number"
+                type="text"
                 label="CVV Code"
                 placeholder="654"
+                :rules="[cvvRule]"
+                :error-messages="backendErrors.cvv"
+                @input="clearError('cvv')"
               />
             </VCol>
 

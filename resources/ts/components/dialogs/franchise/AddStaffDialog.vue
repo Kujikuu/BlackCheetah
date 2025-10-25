@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { franchiseStaffApi, type CreateStaffPayload } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useStoreFranchiseStaffValidation } from '@/validation/staffValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -12,6 +14,10 @@ interface Emit {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useStoreFranchiseStaffValidation()
 
 const formData = ref<CreateStaffPayload>({
   name: '',
@@ -65,6 +71,10 @@ const resetForm = () => {
 }
 
 const onSubmit = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   try {
     const response = await franchiseStaffApi.createStaff(formData.value)
 
@@ -74,8 +84,9 @@ const onSubmit = async () => {
       resetForm()
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error creating staff:', error)
+    setBackendErrors(error)
   }
 }
 
@@ -93,13 +104,16 @@ const onCancel = () => {
     <DialogCloseBtn @click="onCancel" />
     <VCard title="Add Staff Member">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12" md="6">
               <AppTextField
                 v-model="formData.name"
                 label="Name"
                 placeholder="Enter name"
+                :rules="validationRules.name"
+                :error-messages="backendErrors.name"
+                @input="clearError('name')"
                 required
               />
             </VCol>
@@ -110,6 +124,9 @@ const onCancel = () => {
                 label="Email"
                 placeholder="Enter email"
                 type="email"
+                :rules="validationRules.email"
+                :error-messages="backendErrors.email"
+                @input="clearError('email')"
                 required
               />
             </VCol>
@@ -119,6 +136,9 @@ const onCancel = () => {
                 v-model="formData.phone"
                 label="Phone"
                 placeholder="Enter phone number"
+                :rules="validationRules.phone"
+                :error-messages="backendErrors.phone"
+                @input="clearError('phone')"
               />
             </VCol>
 
@@ -127,6 +147,9 @@ const onCancel = () => {
                 v-model="formData.job_title"
                 label="Job Title"
                 placeholder="Enter job title"
+                :rules="validationRules.jobTitle"
+                :error-messages="backendErrors.jobTitle"
+                @input="clearError('jobTitle')"
                 required
               />
             </VCol>

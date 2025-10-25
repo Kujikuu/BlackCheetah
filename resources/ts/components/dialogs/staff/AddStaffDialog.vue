@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useStoreStaffValidation } from '@/validation/staffValidation'
 
 interface StaffForm {
   name: string
@@ -33,6 +35,10 @@ const dialogValue = computed({
   set: val => emit('update:isDialogVisible', val),
 })
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useStoreStaffValidation()
+
 const staffForm = ref<StaffForm>({
   name: '',
   email: '',
@@ -48,31 +54,35 @@ const staffForm = ref<StaffForm>({
   notes: '',
 })
 
-const handleAddStaff = () => {
+const handleAddStaff = async () => {
   // Validate form
-  if (!staffForm.value.name || !staffForm.value.email || !staffForm.value.jobTitle || !staffForm.value.hireDate || !staffForm.value.status) {
-    return
-  }
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
 
-  emit('staffAdded', { ...staffForm.value })
-  
-  // Reset form
-  staffForm.value = {
-    name: '',
-    email: '',
-    phone: '',
-    jobTitle: '',
-    department: '',
-    salary: 0,
-    hireDate: '',
-    shiftStart: '',
-    shiftEnd: '',
-    status: 'Active',
-    employmentType: 'full_time',
-    notes: '',
+  try {
+    emit('staffAdded', { ...staffForm.value })
+    
+    // Reset form
+    staffForm.value = {
+      name: '',
+      email: '',
+      phone: '',
+      jobTitle: '',
+      department: '',
+      salary: 0,
+      hireDate: '',
+      shiftStart: '',
+      shiftEnd: '',
+      status: 'Active',
+      employmentType: 'full_time',
+      notes: '',
+    }
+    
+    dialogValue.value = false
   }
-  
-  dialogValue.value = false
+  catch (error: any) {
+    setBackendErrors(error)
+  }
 }
 
 const handleClose = () => {
@@ -119,47 +129,60 @@ const employmentTypeOptions = [
     <DialogCloseBtn @click="handleClose" />
     <VCard title="Add New Staff Member">
       <VCardText class="pa-6">
-        <VRow>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.name"
-              label="Full Name"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.email"
-              label="Email"
-              type="email"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.phone"
-              label="Phone"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.jobTitle"
-              label="Job Title"
-              required
-            />
-          </VCol>
+        <VForm ref="formRef">
+          <VRow>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.name"
+                label="Full Name"
+                :rules="validationRules.name"
+                :error-messages="backendErrors.name"
+                @input="clearError('name')"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.email"
+                label="Email"
+                type="email"
+                :rules="validationRules.email"
+                :error-messages="backendErrors.email"
+                @input="clearError('email')"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.phone"
+                label="Phone"
+                :rules="validationRules.phone"
+                :error-messages="backendErrors.phone"
+                @input="clearError('phone')"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.jobTitle"
+                label="Job Title"
+                :rules="validationRules.jobTitle"
+                :error-messages="backendErrors.jobTitle"
+                @input="clearError('jobTitle')"
+                required
+              />
+            </VCol>
           <VCol
             cols="12"
             md="6"
@@ -188,6 +211,9 @@ const employmentTypeOptions = [
               v-model="staffForm.hireDate"
               label="Hire Date"
               type="date"
+              :rules="validationRules.hireDate"
+              :error-messages="backendErrors.hireDate"
+              @input="clearError('hireDate')"
               required
             />
           </VCol>
@@ -199,6 +225,9 @@ const employmentTypeOptions = [
               v-model="staffForm.shiftStart"
               label="Shift Start"
               type="time"
+              :rules="validationRules.shiftStart"
+              :error-messages="backendErrors.shiftStart"
+              @input="clearError('shiftStart')"
             />
           </VCol>
           <VCol
@@ -209,6 +238,9 @@ const employmentTypeOptions = [
               v-model="staffForm.shiftEnd"
               label="Shift End"
               type="time"
+              :rules="validationRules.shiftEnd"
+              :error-messages="backendErrors.shiftEnd"
+              @input="clearError('shiftEnd')"
             />
           </VCol>
           <VCol
@@ -219,6 +251,9 @@ const employmentTypeOptions = [
               v-model="staffForm.status"
               label="Status"
               :items="statusOptions"
+              :rules="validationRules.status"
+              :error-messages="backendErrors.status"
+              @update:model-value="clearError('status')"
               required
             />
           </VCol>
@@ -230,6 +265,9 @@ const employmentTypeOptions = [
               v-model="staffForm.employmentType"
               label="Employment Type"
               :items="employmentTypeOptions"
+              :rules="validationRules.employmentType"
+              :error-messages="backendErrors.employmentType"
+              @update:model-value="clearError('employmentType')"
               required
             />
           </VCol>
@@ -238,9 +276,13 @@ const employmentTypeOptions = [
               v-model="staffForm.notes"
               label="Notes"
               rows="2"
+              :rules="validationRules.notes"
+              :error-messages="backendErrors.notes"
+              @input="clearError('notes')"
             />
           </VCol>
         </VRow>
+        </VForm>
       </VCardText>
 
       <VDivider />

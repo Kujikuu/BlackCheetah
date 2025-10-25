@@ -12,11 +12,14 @@ declare global {
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const alphaDashValidator: typeof import('./resources/ts/@core/utils/validators')['alphaDashValidator']
   const alphaValidator: typeof import('./resources/ts/@core/utils/validators')['alphaValidator']
+  const alphanumericValidator: typeof import('./resources/ts/@core/utils/validators')['alphanumericValidator']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
   const avatarText: typeof import('./resources/ts/@core/utils/formatters')['avatarText']
   const betweenValidator: typeof import('./resources/ts/@core/utils/validators')['betweenValidator']
   const buildApiUrl: typeof import('./resources/ts/utils/api-router')['buildApiUrl']
+  const clearAllErrors: typeof import('./resources/ts/utils/formErrorMapper')['clearAllErrors']
+  const clearFieldError: typeof import('./resources/ts/utils/formErrorMapper')['clearFieldError']
   const computed: typeof import('vue')['computed']
   const computedAsync: typeof import('@vueuse/core')['computedAsync']
   const computedEager: typeof import('@vueuse/core')['computedEager']
@@ -32,6 +35,7 @@ declare global {
   const createInjectionState: typeof import('@vueuse/core')['createInjectionState']
   const createPinia: typeof import('pinia')['createPinia']
   const createProjection: typeof import('@vueuse/math')['createProjection']
+  const createReactiveErrors: typeof import('./resources/ts/utils/formErrorMapper')['createReactiveErrors']
   const createReactiveFn: typeof import('@vueuse/core')['createReactiveFn']
   const createReusableTemplate: typeof import('@vueuse/core')['createReusableTemplate']
   const createSharedComposable: typeof import('@vueuse/core')['createSharedComposable']
@@ -39,8 +43,10 @@ declare global {
   const createUnrefFn: typeof import('@vueuse/core')['createUnrefFn']
   const createUrl: typeof import('./resources/ts/@core/composable/createUrl')['createUrl']
   const customRef: typeof import('vue')['customRef']
+  const dateRangeValidator: typeof import('./resources/ts/@core/utils/validators')['dateRangeValidator']
   const debouncedRef: typeof import('@vueuse/core')['debouncedRef']
   const debouncedWatch: typeof import('@vueuse/core')['debouncedWatch']
+  const decimalValidator: typeof import('./resources/ts/@core/utils/validators')['decimalValidator']
   const defineAsyncComponent: typeof import('vue')['defineAsyncComponent']
   const defineComponent: typeof import('vue')['defineComponent']
   const definePage: typeof import('unplugin-vue-router/runtime')['definePage']
@@ -49,19 +55,26 @@ declare global {
   const effectScope: typeof import('vue')['effectScope']
   const emailValidator: typeof import('./resources/ts/@core/utils/validators')['emailValidator']
   const extendRef: typeof import('@vueuse/core')['extendRef']
+  const extractErrorMessage: typeof import('./resources/ts/utils/formErrorMapper')['extractErrorMessage']
+  const fileSizeValidator: typeof import('./resources/ts/@core/utils/validators')['fileSizeValidator']
+  const fileTypeValidator: typeof import('./resources/ts/@core/utils/validators')['fileTypeValidator']
   const formatCurrency: typeof import('./resources/ts/@core/utils/formatters')['formatCurrency']
   const formatDate: typeof import('./resources/ts/@core/utils/formatters')['formatDate']
   const formatDateToMonthShort: typeof import('./resources/ts/@core/utils/formatters')['formatDateToMonthShort']
+  const futureDateValidator: typeof import('./resources/ts/@core/utils/validators')['futureDateValidator']
   const getActivePinia: typeof import('pinia')['getActivePinia']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
   const getEndpoint: typeof import('./resources/ts/utils/api-router')['getEndpoint']
+  const getFieldError: typeof import('./resources/ts/utils/formErrorMapper')['getFieldError']
   const h: typeof import('vue')['h']
+  const hasValidationErrors: typeof import('./resources/ts/utils/formErrorMapper')['hasValidationErrors']
   const hexToRgb: typeof import('./resources/ts/@core/utils/colorConverter')['hexToRgb']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
   const inject: typeof import('vue')['inject']
   const injectLocal: typeof import('@vueuse/core')['injectLocal']
   const integerValidator: typeof import('./resources/ts/@core/utils/validators')['integerValidator']
+  const internationalPhoneValidator: typeof import('./resources/ts/@core/utils/validators')['internationalPhoneValidator']
   const isDefined: typeof import('@vueuse/core')['isDefined']
   const isEmpty: typeof import('./resources/ts/@core/utils/helpers')['isEmpty']
   const isEmptyArray: typeof import('./resources/ts/@core/utils/helpers')['isEmptyArray']
@@ -79,12 +92,17 @@ declare global {
   const logicOr: typeof import('@vueuse/math')['logicOr']
   const makeDestructurable: typeof import('@vueuse/core')['makeDestructurable']
   const mapActions: typeof import('pinia')['mapActions']
+  const mapBackendErrors: typeof import('./resources/ts/utils/formErrorMapper')['mapBackendErrors']
   const mapGetters: typeof import('pinia')['mapGetters']
   const mapInventoryResponse: typeof import('./resources/ts/utils/inventory')['mapInventoryResponse']
   const mapState: typeof import('pinia')['mapState']
   const mapStores: typeof import('pinia')['mapStores']
   const mapWritableState: typeof import('pinia')['mapWritableState']
   const markRaw: typeof import('vue')['markRaw']
+  const maxLengthValidator: typeof import('./resources/ts/@core/utils/validators')['maxLengthValidator']
+  const maxValueValidator: typeof import('./resources/ts/@core/utils/validators')['maxValueValidator']
+  const minLengthValidator: typeof import('./resources/ts/@core/utils/validators')['minLengthValidator']
+  const minValueValidator: typeof import('./resources/ts/@core/utils/validators')['minValueValidator']
   const nextTick: typeof import('vue')['nextTick']
   const onActivated: typeof import('vue')['onActivated']
   const onBeforeMount: typeof import('vue')['onBeforeMount']
@@ -108,8 +126,12 @@ declare global {
   const onWatcherCleanup: typeof import('vue')['onWatcherCleanup']
   const paginationMeta: typeof import('./resources/ts/utils/paginationMeta')['paginationMeta']
   const passwordValidator: typeof import('./resources/ts/@core/utils/validators')['passwordValidator']
+  const pastDateValidator: typeof import('./resources/ts/@core/utils/validators')['pastDateValidator']
   const pausableWatch: typeof import('@vueuse/core')['pausableWatch']
+  const percentageValidator: typeof import('./resources/ts/@core/utils/validators')['percentageValidator']
+  const positiveNumberValidator: typeof import('./resources/ts/@core/utils/validators')['positiveNumberValidator']
   const prefixWithPlus: typeof import('./resources/ts/@core/utils/formatters')['prefixWithPlus']
+  const priceValidator: typeof import('./resources/ts/@core/utils/validators')['priceValidator']
   const provide: typeof import('vue')['provide']
   const provideLocal: typeof import('@vueuse/core')['provideLocal']
   const reactify: typeof import('@vueuse/core')['reactify']
@@ -127,12 +149,18 @@ declare global {
   const refWithControl: typeof import('@vueuse/core')['refWithControl']
   const regexValidator: typeof import('./resources/ts/@core/utils/validators')['regexValidator']
   const registerPlugins: typeof import('./resources/ts/@core/utils/plugins')['registerPlugins']
+  const requiredEmailValidator: typeof import('./resources/ts/@core/utils/validators')['requiredEmailValidator']
+  const requiredPhoneValidator: typeof import('./resources/ts/@core/utils/validators')['requiredPhoneValidator']
+  const requiredPositiveNumberValidator: typeof import('./resources/ts/@core/utils/validators')['requiredPositiveNumberValidator']
+  const requiredTextValidator: typeof import('./resources/ts/@core/utils/validators')['requiredTextValidator']
   const requiredValidator: typeof import('./resources/ts/@core/utils/validators')['requiredValidator']
   const resolveComponent: typeof import('vue')['resolveComponent']
   const resolveRef: typeof import('@vueuse/core')['resolveRef']
   const resolveUnref: typeof import('@vueuse/core')['resolveUnref']
   const resolveVuetifyTheme: typeof import('./resources/ts/@core/utils/vuetify')['resolveVuetifyTheme']
   const rgbaToHex: typeof import('./resources/ts/@core/utils/colorConverter')['rgbaToHex']
+  const saudiNationalIdValidator: typeof import('./resources/ts/@core/utils/validators')['saudiNationalIdValidator']
+  const saudiPhoneValidator: typeof import('./resources/ts/@core/utils/validators')['saudiPhoneValidator']
   const setActivePinia: typeof import('pinia')['setActivePinia']
   const setMapStoreSuffix: typeof import('pinia')['setMapStoreSuffix']
   const shallowReactive: typeof import('vue')['shallowReactive']
@@ -232,6 +260,7 @@ declare global {
   const useFloor: typeof import('@vueuse/math')['useFloor']
   const useFocus: typeof import('@vueuse/core')['useFocus']
   const useFocusWithin: typeof import('@vueuse/core')['useFocusWithin']
+  const useFormValidation: typeof import('./resources/ts/composables/useFormValidation')['useFormValidation']
   const useFps: typeof import('@vueuse/core')['useFps']
   const useFranchisorDashboard: typeof import('./resources/ts/composables/useFranchisorDashboard')['useFranchisorDashboard']
   const useFullscreen: typeof import('@vueuse/core')['useFullscreen']
@@ -310,6 +339,7 @@ declare global {
   const useSpeechRecognition: typeof import('@vueuse/core')['useSpeechRecognition']
   const useSpeechSynthesis: typeof import('@vueuse/core')['useSpeechSynthesis']
   const useStepper: typeof import('@vueuse/core')['useStepper']
+  const useStorage: typeof import('@vueuse/core')['useStorage']
   const useStorageAsync: typeof import('@vueuse/core')['useStorageAsync']
   const useStyleTag: typeof import('@vueuse/core')['useStyleTag']
   const useSum: typeof import('@vueuse/math')['useSum']
@@ -339,6 +369,8 @@ declare global {
   const useUserMedia: typeof import('@vueuse/core')['useUserMedia']
   const useVModel: typeof import('@vueuse/core')['useVModel']
   const useVModels: typeof import('@vueuse/core')['useVModels']
+  const useValidation: typeof import('./resources/ts/composables/useValidation')['useValidation']
+  const useValidationRules: typeof import('./resources/ts/composables/useValidationRules')['useValidationRules']
   const useVibrate: typeof import('@vueuse/core')['useVibrate']
   const useVirtualList: typeof import('@vueuse/core')['useVirtualList']
   const useWakeLock: typeof import('@vueuse/core')['useWakeLock']
@@ -371,369 +403,4 @@ declare global {
   // @ts-ignore
   export type { Component, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
-}
-
-// for vue template auto import
-import { UnwrapRef } from 'vue'
-declare module 'vue' {
-  interface GlobalComponents {}
-  interface ComponentCustomProperties {
-    readonly $api: UnwrapRef<typeof import('./resources/ts/utils/api')['$api']>
-    readonly COOKIE_MAX_AGE_1_YEAR: UnwrapRef<typeof import('./resources/ts/utils/constants')['COOKIE_MAX_AGE_1_YEAR']>
-    readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
-    readonly acceptHMRUpdate: UnwrapRef<typeof import('pinia')['acceptHMRUpdate']>
-    readonly alphaDashValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['alphaDashValidator']>
-    readonly alphaValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['alphaValidator']>
-    readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
-    readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>
-    readonly avatarText: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['avatarText']>
-    readonly betweenValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['betweenValidator']>
-    readonly buildApiUrl: UnwrapRef<typeof import('./resources/ts/utils/api-router')['buildApiUrl']>
-    readonly computed: UnwrapRef<typeof import('vue')['computed']>
-    readonly computedAsync: UnwrapRef<typeof import('@vueuse/core')['computedAsync']>
-    readonly computedEager: UnwrapRef<typeof import('@vueuse/core')['computedEager']>
-    readonly computedInject: UnwrapRef<typeof import('@vueuse/core')['computedInject']>
-    readonly computedWithControl: UnwrapRef<typeof import('@vueuse/core')['computedWithControl']>
-    readonly confirmedValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['confirmedValidator']>
-    readonly controlledComputed: UnwrapRef<typeof import('@vueuse/core')['controlledComputed']>
-    readonly controlledRef: UnwrapRef<typeof import('@vueuse/core')['controlledRef']>
-    readonly createApp: UnwrapRef<typeof import('vue')['createApp']>
-    readonly createEventHook: UnwrapRef<typeof import('@vueuse/core')['createEventHook']>
-    readonly createGenericProjection: UnwrapRef<typeof import('@vueuse/math')['createGenericProjection']>
-    readonly createGlobalState: UnwrapRef<typeof import('@vueuse/core')['createGlobalState']>
-    readonly createInjectionState: UnwrapRef<typeof import('@vueuse/core')['createInjectionState']>
-    readonly createPinia: UnwrapRef<typeof import('pinia')['createPinia']>
-    readonly createProjection: UnwrapRef<typeof import('@vueuse/math')['createProjection']>
-    readonly createReactiveFn: UnwrapRef<typeof import('@vueuse/core')['createReactiveFn']>
-    readonly createReusableTemplate: UnwrapRef<typeof import('@vueuse/core')['createReusableTemplate']>
-    readonly createSharedComposable: UnwrapRef<typeof import('@vueuse/core')['createSharedComposable']>
-    readonly createTemplatePromise: UnwrapRef<typeof import('@vueuse/core')['createTemplatePromise']>
-    readonly createUnrefFn: UnwrapRef<typeof import('@vueuse/core')['createUnrefFn']>
-    readonly createUrl: UnwrapRef<typeof import('./resources/ts/@core/composable/createUrl')['createUrl']>
-    readonly customRef: UnwrapRef<typeof import('vue')['customRef']>
-    readonly debouncedRef: UnwrapRef<typeof import('@vueuse/core')['debouncedRef']>
-    readonly debouncedWatch: UnwrapRef<typeof import('@vueuse/core')['debouncedWatch']>
-    readonly defineAsyncComponent: UnwrapRef<typeof import('vue')['defineAsyncComponent']>
-    readonly defineComponent: UnwrapRef<typeof import('vue')['defineComponent']>
-    readonly defineStore: UnwrapRef<typeof import('pinia')['defineStore']>
-    readonly eagerComputed: UnwrapRef<typeof import('@vueuse/core')['eagerComputed']>
-    readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
-    readonly emailValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['emailValidator']>
-    readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
-    readonly formatCurrency: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['formatCurrency']>
-    readonly formatDate: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['formatDate']>
-    readonly formatDateToMonthShort: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['formatDateToMonthShort']>
-    readonly getActivePinia: UnwrapRef<typeof import('pinia')['getActivePinia']>
-    readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
-    readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
-    readonly getEndpoint: UnwrapRef<typeof import('./resources/ts/utils/api-router')['getEndpoint']>
-    readonly h: UnwrapRef<typeof import('vue')['h']>
-    readonly hexToRgb: UnwrapRef<typeof import('./resources/ts/@core/utils/colorConverter')['hexToRgb']>
-    readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
-    readonly inject: UnwrapRef<typeof import('vue')['inject']>
-    readonly injectLocal: UnwrapRef<typeof import('@vueuse/core')['injectLocal']>
-    readonly integerValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['integerValidator']>
-    readonly isDefined: UnwrapRef<typeof import('@vueuse/core')['isDefined']>
-    readonly isEmpty: UnwrapRef<typeof import('./resources/ts/@core/utils/helpers')['isEmpty']>
-    readonly isEmptyArray: UnwrapRef<typeof import('./resources/ts/@core/utils/helpers')['isEmptyArray']>
-    readonly isNullOrUndefined: UnwrapRef<typeof import('./resources/ts/@core/utils/helpers')['isNullOrUndefined']>
-    readonly isObject: UnwrapRef<typeof import('./resources/ts/@core/utils/helpers')['isObject']>
-    readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
-    readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
-    readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>
-    readonly isRef: UnwrapRef<typeof import('vue')['isRef']>
-    readonly isToday: UnwrapRef<typeof import('./resources/ts/@core/utils/helpers')['isToday']>
-    readonly kFormatter: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['kFormatter']>
-    readonly lengthValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['lengthValidator']>
-    readonly logicAnd: UnwrapRef<typeof import('@vueuse/math')['logicAnd']>
-    readonly logicNot: UnwrapRef<typeof import('@vueuse/math')['logicNot']>
-    readonly logicOr: UnwrapRef<typeof import('@vueuse/math')['logicOr']>
-    readonly makeDestructurable: UnwrapRef<typeof import('@vueuse/core')['makeDestructurable']>
-    readonly mapActions: UnwrapRef<typeof import('pinia')['mapActions']>
-    readonly mapGetters: UnwrapRef<typeof import('pinia')['mapGetters']>
-    readonly mapInventoryResponse: UnwrapRef<typeof import('./resources/ts/utils/inventory')['mapInventoryResponse']>
-    readonly mapState: UnwrapRef<typeof import('pinia')['mapState']>
-    readonly mapStores: UnwrapRef<typeof import('pinia')['mapStores']>
-    readonly mapWritableState: UnwrapRef<typeof import('pinia')['mapWritableState']>
-    readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
-    readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
-    readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
-    readonly onBeforeMount: UnwrapRef<typeof import('vue')['onBeforeMount']>
-    readonly onBeforeRouteLeave: UnwrapRef<typeof import('vue-router')['onBeforeRouteLeave']>
-    readonly onBeforeRouteUpdate: UnwrapRef<typeof import('vue-router')['onBeforeRouteUpdate']>
-    readonly onBeforeUnmount: UnwrapRef<typeof import('vue')['onBeforeUnmount']>
-    readonly onBeforeUpdate: UnwrapRef<typeof import('vue')['onBeforeUpdate']>
-    readonly onClickOutside: UnwrapRef<typeof import('@vueuse/core')['onClickOutside']>
-    readonly onDeactivated: UnwrapRef<typeof import('vue')['onDeactivated']>
-    readonly onErrorCaptured: UnwrapRef<typeof import('vue')['onErrorCaptured']>
-    readonly onKeyStroke: UnwrapRef<typeof import('@vueuse/core')['onKeyStroke']>
-    readonly onLongPress: UnwrapRef<typeof import('@vueuse/core')['onLongPress']>
-    readonly onMounted: UnwrapRef<typeof import('vue')['onMounted']>
-    readonly onRenderTracked: UnwrapRef<typeof import('vue')['onRenderTracked']>
-    readonly onRenderTriggered: UnwrapRef<typeof import('vue')['onRenderTriggered']>
-    readonly onScopeDispose: UnwrapRef<typeof import('vue')['onScopeDispose']>
-    readonly onServerPrefetch: UnwrapRef<typeof import('vue')['onServerPrefetch']>
-    readonly onStartTyping: UnwrapRef<typeof import('@vueuse/core')['onStartTyping']>
-    readonly onUnmounted: UnwrapRef<typeof import('vue')['onUnmounted']>
-    readonly onUpdated: UnwrapRef<typeof import('vue')['onUpdated']>
-    readonly onWatcherCleanup: UnwrapRef<typeof import('vue')['onWatcherCleanup']>
-    readonly paginationMeta: UnwrapRef<typeof import('./resources/ts/utils/paginationMeta')['paginationMeta']>
-    readonly passwordValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['passwordValidator']>
-    readonly pausableWatch: UnwrapRef<typeof import('@vueuse/core')['pausableWatch']>
-    readonly prefixWithPlus: UnwrapRef<typeof import('./resources/ts/@core/utils/formatters')['prefixWithPlus']>
-    readonly provide: UnwrapRef<typeof import('vue')['provide']>
-    readonly provideLocal: UnwrapRef<typeof import('@vueuse/core')['provideLocal']>
-    readonly reactify: UnwrapRef<typeof import('@vueuse/core')['reactify']>
-    readonly reactifyObject: UnwrapRef<typeof import('@vueuse/core')['reactifyObject']>
-    readonly reactive: UnwrapRef<typeof import('vue')['reactive']>
-    readonly reactiveComputed: UnwrapRef<typeof import('@vueuse/core')['reactiveComputed']>
-    readonly reactiveOmit: UnwrapRef<typeof import('@vueuse/core')['reactiveOmit']>
-    readonly reactivePick: UnwrapRef<typeof import('@vueuse/core')['reactivePick']>
-    readonly readonly: UnwrapRef<typeof import('vue')['readonly']>
-    readonly ref: UnwrapRef<typeof import('vue')['ref']>
-    readonly refAutoReset: UnwrapRef<typeof import('@vueuse/core')['refAutoReset']>
-    readonly refDebounced: UnwrapRef<typeof import('@vueuse/core')['refDebounced']>
-    readonly refDefault: UnwrapRef<typeof import('@vueuse/core')['refDefault']>
-    readonly refThrottled: UnwrapRef<typeof import('@vueuse/core')['refThrottled']>
-    readonly refWithControl: UnwrapRef<typeof import('@vueuse/core')['refWithControl']>
-    readonly regexValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['regexValidator']>
-    readonly registerPlugins: UnwrapRef<typeof import('./resources/ts/@core/utils/plugins')['registerPlugins']>
-    readonly requiredValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['requiredValidator']>
-    readonly resolveComponent: UnwrapRef<typeof import('vue')['resolveComponent']>
-    readonly resolveRef: UnwrapRef<typeof import('@vueuse/core')['resolveRef']>
-    readonly resolveUnref: UnwrapRef<typeof import('@vueuse/core')['resolveUnref']>
-    readonly resolveVuetifyTheme: UnwrapRef<typeof import('./resources/ts/@core/utils/vuetify')['resolveVuetifyTheme']>
-    readonly rgbaToHex: UnwrapRef<typeof import('./resources/ts/@core/utils/colorConverter')['rgbaToHex']>
-    readonly setActivePinia: UnwrapRef<typeof import('pinia')['setActivePinia']>
-    readonly setMapStoreSuffix: UnwrapRef<typeof import('pinia')['setMapStoreSuffix']>
-    readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
-    readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
-    readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
-    readonly storeToRefs: UnwrapRef<typeof import('pinia')['storeToRefs']>
-    readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
-    readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>
-    readonly templateRef: UnwrapRef<typeof import('@vueuse/core')['templateRef']>
-    readonly throttledRef: UnwrapRef<typeof import('@vueuse/core')['throttledRef']>
-    readonly throttledWatch: UnwrapRef<typeof import('@vueuse/core')['throttledWatch']>
-    readonly toRaw: UnwrapRef<typeof import('vue')['toRaw']>
-    readonly toReactive: UnwrapRef<typeof import('@vueuse/core')['toReactive']>
-    readonly toRef: UnwrapRef<typeof import('vue')['toRef']>
-    readonly toRefs: UnwrapRef<typeof import('vue')['toRefs']>
-    readonly toValue: UnwrapRef<typeof import('vue')['toValue']>
-    readonly triggerRef: UnwrapRef<typeof import('vue')['triggerRef']>
-    readonly tryOnBeforeMount: UnwrapRef<typeof import('@vueuse/core')['tryOnBeforeMount']>
-    readonly tryOnBeforeUnmount: UnwrapRef<typeof import('@vueuse/core')['tryOnBeforeUnmount']>
-    readonly tryOnMounted: UnwrapRef<typeof import('@vueuse/core')['tryOnMounted']>
-    readonly tryOnScopeDispose: UnwrapRef<typeof import('@vueuse/core')['tryOnScopeDispose']>
-    readonly tryOnUnmounted: UnwrapRef<typeof import('@vueuse/core')['tryOnUnmounted']>
-    readonly unref: UnwrapRef<typeof import('vue')['unref']>
-    readonly unrefElement: UnwrapRef<typeof import('@vueuse/core')['unrefElement']>
-    readonly until: UnwrapRef<typeof import('@vueuse/core')['until']>
-    readonly urlValidator: UnwrapRef<typeof import('./resources/ts/@core/utils/validators')['urlValidator']>
-    readonly useAbility: UnwrapRef<typeof import('./resources/ts/plugins/casl/composables/useAbility')['useAbility']>
-    readonly useAbs: UnwrapRef<typeof import('@vueuse/math')['useAbs']>
-    readonly useActiveElement: UnwrapRef<typeof import('@vueuse/core')['useActiveElement']>
-    readonly useAnimate: UnwrapRef<typeof import('@vueuse/core')['useAnimate']>
-    readonly useApi: UnwrapRef<typeof import('./resources/ts/composables/useApi')['useApi']>
-    readonly useArrayDifference: UnwrapRef<typeof import('@vueuse/core')['useArrayDifference']>
-    readonly useArrayEvery: UnwrapRef<typeof import('@vueuse/core')['useArrayEvery']>
-    readonly useArrayFilter: UnwrapRef<typeof import('@vueuse/core')['useArrayFilter']>
-    readonly useArrayFind: UnwrapRef<typeof import('@vueuse/core')['useArrayFind']>
-    readonly useArrayFindIndex: UnwrapRef<typeof import('@vueuse/core')['useArrayFindIndex']>
-    readonly useArrayFindLast: UnwrapRef<typeof import('@vueuse/core')['useArrayFindLast']>
-    readonly useArrayIncludes: UnwrapRef<typeof import('@vueuse/core')['useArrayIncludes']>
-    readonly useArrayJoin: UnwrapRef<typeof import('@vueuse/core')['useArrayJoin']>
-    readonly useArrayMap: UnwrapRef<typeof import('@vueuse/core')['useArrayMap']>
-    readonly useArrayReduce: UnwrapRef<typeof import('@vueuse/core')['useArrayReduce']>
-    readonly useArraySome: UnwrapRef<typeof import('@vueuse/core')['useArraySome']>
-    readonly useArrayUnique: UnwrapRef<typeof import('@vueuse/core')['useArrayUnique']>
-    readonly useAsyncQueue: UnwrapRef<typeof import('@vueuse/core')['useAsyncQueue']>
-    readonly useAsyncState: UnwrapRef<typeof import('@vueuse/core')['useAsyncState']>
-    readonly useAttrs: UnwrapRef<typeof import('vue')['useAttrs']>
-    readonly useAverage: UnwrapRef<typeof import('@vueuse/math')['useAverage']>
-    readonly useBase64: UnwrapRef<typeof import('@vueuse/core')['useBase64']>
-    readonly useBattery: UnwrapRef<typeof import('@vueuse/core')['useBattery']>
-    readonly useBluetooth: UnwrapRef<typeof import('@vueuse/core')['useBluetooth']>
-    readonly useBreakpoints: UnwrapRef<typeof import('@vueuse/core')['useBreakpoints']>
-    readonly useBroadcastChannel: UnwrapRef<typeof import('@vueuse/core')['useBroadcastChannel']>
-    readonly useBrowserLocation: UnwrapRef<typeof import('@vueuse/core')['useBrowserLocation']>
-    readonly useCached: UnwrapRef<typeof import('@vueuse/core')['useCached']>
-    readonly useCeil: UnwrapRef<typeof import('@vueuse/math')['useCeil']>
-    readonly useClamp: UnwrapRef<typeof import('@vueuse/math')['useClamp']>
-    readonly useClipboard: UnwrapRef<typeof import('@vueuse/core')['useClipboard']>
-    readonly useClipboardItems: UnwrapRef<typeof import('@vueuse/core')['useClipboardItems']>
-    readonly useCloned: UnwrapRef<typeof import('@vueuse/core')['useCloned']>
-    readonly useColorMode: UnwrapRef<typeof import('@vueuse/core')['useColorMode']>
-    readonly useConfirmDialog: UnwrapRef<typeof import('@vueuse/core')['useConfirmDialog']>
-    readonly useCookie: UnwrapRef<typeof import('./resources/ts/@core/composable/useCookie')['useCookie']>
-    readonly useCounter: UnwrapRef<typeof import('@vueuse/core')['useCounter']>
-    readonly useCountries: UnwrapRef<typeof import('./resources/ts/composables/useCountries')['useCountries']>
-    readonly useCssModule: UnwrapRef<typeof import('vue')['useCssModule']>
-    readonly useCssVar: UnwrapRef<typeof import('@vueuse/core')['useCssVar']>
-    readonly useCssVars: UnwrapRef<typeof import('vue')['useCssVars']>
-    readonly useCurrentElement: UnwrapRef<typeof import('@vueuse/core')['useCurrentElement']>
-    readonly useCycleList: UnwrapRef<typeof import('@vueuse/core')['useCycleList']>
-    readonly useDark: UnwrapRef<typeof import('@vueuse/core')['useDark']>
-    readonly useDateFormat: UnwrapRef<typeof import('@vueuse/core')['useDateFormat']>
-    readonly useDebounce: UnwrapRef<typeof import('@vueuse/core')['useDebounce']>
-    readonly useDebounceFn: UnwrapRef<typeof import('@vueuse/core')['useDebounceFn']>
-    readonly useDebouncedRefHistory: UnwrapRef<typeof import('@vueuse/core')['useDebouncedRefHistory']>
-    readonly useDeviceMotion: UnwrapRef<typeof import('@vueuse/core')['useDeviceMotion']>
-    readonly useDeviceOrientation: UnwrapRef<typeof import('@vueuse/core')['useDeviceOrientation']>
-    readonly useDevicePixelRatio: UnwrapRef<typeof import('@vueuse/core')['useDevicePixelRatio']>
-    readonly useDevicesList: UnwrapRef<typeof import('@vueuse/core')['useDevicesList']>
-    readonly useDisplayMedia: UnwrapRef<typeof import('@vueuse/core')['useDisplayMedia']>
-    readonly useDocumentVisibility: UnwrapRef<typeof import('@vueuse/core')['useDocumentVisibility']>
-    readonly useDraggable: UnwrapRef<typeof import('@vueuse/core')['useDraggable']>
-    readonly useDropZone: UnwrapRef<typeof import('@vueuse/core')['useDropZone']>
-    readonly useElementBounding: UnwrapRef<typeof import('@vueuse/core')['useElementBounding']>
-    readonly useElementByPoint: UnwrapRef<typeof import('@vueuse/core')['useElementByPoint']>
-    readonly useElementHover: UnwrapRef<typeof import('@vueuse/core')['useElementHover']>
-    readonly useElementSize: UnwrapRef<typeof import('@vueuse/core')['useElementSize']>
-    readonly useElementVisibility: UnwrapRef<typeof import('@vueuse/core')['useElementVisibility']>
-    readonly useEventBus: UnwrapRef<typeof import('@vueuse/core')['useEventBus']>
-    readonly useEventListener: UnwrapRef<typeof import('@vueuse/core')['useEventListener']>
-    readonly useEventSource: UnwrapRef<typeof import('@vueuse/core')['useEventSource']>
-    readonly useEyeDropper: UnwrapRef<typeof import('@vueuse/core')['useEyeDropper']>
-    readonly useFavicon: UnwrapRef<typeof import('@vueuse/core')['useFavicon']>
-    readonly useFetch: UnwrapRef<typeof import('@vueuse/core')['useFetch']>
-    readonly useFileDialog: UnwrapRef<typeof import('@vueuse/core')['useFileDialog']>
-    readonly useFileSystemAccess: UnwrapRef<typeof import('@vueuse/core')['useFileSystemAccess']>
-    readonly useFloor: UnwrapRef<typeof import('@vueuse/math')['useFloor']>
-    readonly useFocus: UnwrapRef<typeof import('@vueuse/core')['useFocus']>
-    readonly useFocusWithin: UnwrapRef<typeof import('@vueuse/core')['useFocusWithin']>
-    readonly useFps: UnwrapRef<typeof import('@vueuse/core')['useFps']>
-    readonly useFranchisorDashboard: UnwrapRef<typeof import('./resources/ts/composables/useFranchisorDashboard')['useFranchisorDashboard']>
-    readonly useFullscreen: UnwrapRef<typeof import('@vueuse/core')['useFullscreen']>
-    readonly useGamepad: UnwrapRef<typeof import('@vueuse/core')['useGamepad']>
-    readonly useGenerateImageVariant: UnwrapRef<typeof import('./resources/ts/@core/composable/useGenerateImageVariant')['useGenerateImageVariant']>
-    readonly useGeolocation: UnwrapRef<typeof import('@vueuse/core')['useGeolocation']>
-    readonly useI18n: UnwrapRef<typeof import('vue-i18n')['useI18n']>
-    readonly useId: UnwrapRef<typeof import('vue')['useId']>
-    readonly useIdle: UnwrapRef<typeof import('@vueuse/core')['useIdle']>
-    readonly useImage: UnwrapRef<typeof import('@vueuse/core')['useImage']>
-    readonly useInfiniteScroll: UnwrapRef<typeof import('@vueuse/core')['useInfiniteScroll']>
-    readonly useIntersectionObserver: UnwrapRef<typeof import('@vueuse/core')['useIntersectionObserver']>
-    readonly useInterval: UnwrapRef<typeof import('@vueuse/core')['useInterval']>
-    readonly useIntervalFn: UnwrapRef<typeof import('@vueuse/core')['useIntervalFn']>
-    readonly useKeyModifier: UnwrapRef<typeof import('@vueuse/core')['useKeyModifier']>
-    readonly useLastChanged: UnwrapRef<typeof import('@vueuse/core')['useLastChanged']>
-    readonly useLink: UnwrapRef<typeof import('vue-router')['useLink']>
-    readonly useLocalStorage: UnwrapRef<typeof import('@vueuse/core')['useLocalStorage']>
-    readonly useMagicKeys: UnwrapRef<typeof import('@vueuse/core')['useMagicKeys']>
-    readonly useManualRefHistory: UnwrapRef<typeof import('@vueuse/core')['useManualRefHistory']>
-    readonly useMath: UnwrapRef<typeof import('@vueuse/math')['useMath']>
-    readonly useMax: UnwrapRef<typeof import('@vueuse/math')['useMax']>
-    readonly useMediaControls: UnwrapRef<typeof import('@vueuse/core')['useMediaControls']>
-    readonly useMediaQuery: UnwrapRef<typeof import('@vueuse/core')['useMediaQuery']>
-    readonly useMemoize: UnwrapRef<typeof import('@vueuse/core')['useMemoize']>
-    readonly useMemory: UnwrapRef<typeof import('@vueuse/core')['useMemory']>
-    readonly useMin: UnwrapRef<typeof import('@vueuse/math')['useMin']>
-    readonly useModel: UnwrapRef<typeof import('vue')['useModel']>
-    readonly useMounted: UnwrapRef<typeof import('@vueuse/core')['useMounted']>
-    readonly useMouse: UnwrapRef<typeof import('@vueuse/core')['useMouse']>
-    readonly useMouseInElement: UnwrapRef<typeof import('@vueuse/core')['useMouseInElement']>
-    readonly useMousePressed: UnwrapRef<typeof import('@vueuse/core')['useMousePressed']>
-    readonly useMutationObserver: UnwrapRef<typeof import('@vueuse/core')['useMutationObserver']>
-    readonly useNavigation: UnwrapRef<typeof import('./resources/ts/composables/useNavigation')['useNavigation']>
-    readonly useNavigatorLanguage: UnwrapRef<typeof import('@vueuse/core')['useNavigatorLanguage']>
-    readonly useNetwork: UnwrapRef<typeof import('@vueuse/core')['useNetwork']>
-    readonly useNotifications: UnwrapRef<typeof import('./resources/ts/composables/useNotifications')['useNotifications']>
-    readonly useNow: UnwrapRef<typeof import('@vueuse/core')['useNow']>
-    readonly useObjectUrl: UnwrapRef<typeof import('@vueuse/core')['useObjectUrl']>
-    readonly useOffsetPagination: UnwrapRef<typeof import('@vueuse/core')['useOffsetPagination']>
-    readonly useOnline: UnwrapRef<typeof import('@vueuse/core')['useOnline']>
-    readonly usePageLeave: UnwrapRef<typeof import('@vueuse/core')['usePageLeave']>
-    readonly useParallax: UnwrapRef<typeof import('@vueuse/core')['useParallax']>
-    readonly useParentElement: UnwrapRef<typeof import('@vueuse/core')['useParentElement']>
-    readonly usePerformanceObserver: UnwrapRef<typeof import('@vueuse/core')['usePerformanceObserver']>
-    readonly usePermission: UnwrapRef<typeof import('@vueuse/core')['usePermission']>
-    readonly usePointer: UnwrapRef<typeof import('@vueuse/core')['usePointer']>
-    readonly usePointerLock: UnwrapRef<typeof import('@vueuse/core')['usePointerLock']>
-    readonly usePointerSwipe: UnwrapRef<typeof import('@vueuse/core')['usePointerSwipe']>
-    readonly usePrecision: UnwrapRef<typeof import('@vueuse/math')['usePrecision']>
-    readonly usePreferredColorScheme: UnwrapRef<typeof import('@vueuse/core')['usePreferredColorScheme']>
-    readonly usePreferredContrast: UnwrapRef<typeof import('@vueuse/core')['usePreferredContrast']>
-    readonly usePreferredDark: UnwrapRef<typeof import('@vueuse/core')['usePreferredDark']>
-    readonly usePreferredLanguages: UnwrapRef<typeof import('@vueuse/core')['usePreferredLanguages']>
-    readonly usePreferredReducedMotion: UnwrapRef<typeof import('@vueuse/core')['usePreferredReducedMotion']>
-    readonly usePrevious: UnwrapRef<typeof import('@vueuse/core')['usePrevious']>
-    readonly useProjection: UnwrapRef<typeof import('@vueuse/math')['useProjection']>
-    readonly useRafFn: UnwrapRef<typeof import('@vueuse/core')['useRafFn']>
-    readonly useRefHistory: UnwrapRef<typeof import('@vueuse/core')['useRefHistory']>
-    readonly useResizeObserver: UnwrapRef<typeof import('@vueuse/core')['useResizeObserver']>
-    readonly useResponsiveLeftSidebar: UnwrapRef<typeof import('./resources/ts/@core/composable/useResponsiveSidebar')['useResponsiveLeftSidebar']>
-    readonly useRound: UnwrapRef<typeof import('@vueuse/math')['useRound']>
-    readonly useRoute: UnwrapRef<typeof import('vue-router')['useRoute']>
-    readonly useRouter: UnwrapRef<typeof import('vue-router')['useRouter']>
-    readonly useSaudiProvinces: UnwrapRef<typeof import('./resources/ts/composables/useSaudiProvinces')['useSaudiProvinces']>
-    readonly useScreenOrientation: UnwrapRef<typeof import('@vueuse/core')['useScreenOrientation']>
-    readonly useScreenSafeArea: UnwrapRef<typeof import('@vueuse/core')['useScreenSafeArea']>
-    readonly useScriptTag: UnwrapRef<typeof import('@vueuse/core')['useScriptTag']>
-    readonly useScroll: UnwrapRef<typeof import('@vueuse/core')['useScroll']>
-    readonly useScrollLock: UnwrapRef<typeof import('@vueuse/core')['useScrollLock']>
-    readonly useSessionStorage: UnwrapRef<typeof import('@vueuse/core')['useSessionStorage']>
-    readonly useShare: UnwrapRef<typeof import('@vueuse/core')['useShare']>
-    readonly useSkins: UnwrapRef<typeof import('./resources/ts/@core/composable/useSkins')['useSkins']>
-    readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
-    readonly useSorted: UnwrapRef<typeof import('@vueuse/core')['useSorted']>
-    readonly useSpeechRecognition: UnwrapRef<typeof import('@vueuse/core')['useSpeechRecognition']>
-    readonly useSpeechSynthesis: UnwrapRef<typeof import('@vueuse/core')['useSpeechSynthesis']>
-    readonly useStepper: UnwrapRef<typeof import('@vueuse/core')['useStepper']>
-    readonly useStorageAsync: UnwrapRef<typeof import('@vueuse/core')['useStorageAsync']>
-    readonly useStyleTag: UnwrapRef<typeof import('@vueuse/core')['useStyleTag']>
-    readonly useSum: UnwrapRef<typeof import('@vueuse/math')['useSum']>
-    readonly useSupported: UnwrapRef<typeof import('@vueuse/core')['useSupported']>
-    readonly useSwipe: UnwrapRef<typeof import('@vueuse/core')['useSwipe']>
-    readonly useTaskUsers: UnwrapRef<typeof import('./resources/ts/composables/useTaskUsers')['useTaskUsers']>
-    readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>
-    readonly useTemplateRefsList: UnwrapRef<typeof import('@vueuse/core')['useTemplateRefsList']>
-    readonly useTextDirection: UnwrapRef<typeof import('@vueuse/core')['useTextDirection']>
-    readonly useTextSelection: UnwrapRef<typeof import('@vueuse/core')['useTextSelection']>
-    readonly useTextareaAutosize: UnwrapRef<typeof import('@vueuse/core')['useTextareaAutosize']>
-    readonly useThrottle: UnwrapRef<typeof import('@vueuse/core')['useThrottle']>
-    readonly useThrottleFn: UnwrapRef<typeof import('@vueuse/core')['useThrottleFn']>
-    readonly useThrottledRefHistory: UnwrapRef<typeof import('@vueuse/core')['useThrottledRefHistory']>
-    readonly useTimeAgo: UnwrapRef<typeof import('@vueuse/core')['useTimeAgo']>
-    readonly useTimeout: UnwrapRef<typeof import('@vueuse/core')['useTimeout']>
-    readonly useTimeoutFn: UnwrapRef<typeof import('@vueuse/core')['useTimeoutFn']>
-    readonly useTimeoutPoll: UnwrapRef<typeof import('@vueuse/core')['useTimeoutPoll']>
-    readonly useTimestamp: UnwrapRef<typeof import('@vueuse/core')['useTimestamp']>
-    readonly useTitle: UnwrapRef<typeof import('@vueuse/core')['useTitle']>
-    readonly useToNumber: UnwrapRef<typeof import('@vueuse/core')['useToNumber']>
-    readonly useToString: UnwrapRef<typeof import('@vueuse/core')['useToString']>
-    readonly useToggle: UnwrapRef<typeof import('@vueuse/core')['useToggle']>
-    readonly useTransition: UnwrapRef<typeof import('@vueuse/core')['useTransition']>
-    readonly useTrunc: UnwrapRef<typeof import('@vueuse/math')['useTrunc']>
-    readonly useUrlSearchParams: UnwrapRef<typeof import('@vueuse/core')['useUrlSearchParams']>
-    readonly useUserMedia: UnwrapRef<typeof import('@vueuse/core')['useUserMedia']>
-    readonly useVModel: UnwrapRef<typeof import('@vueuse/core')['useVModel']>
-    readonly useVModels: UnwrapRef<typeof import('@vueuse/core')['useVModels']>
-    readonly useVibrate: UnwrapRef<typeof import('@vueuse/core')['useVibrate']>
-    readonly useVirtualList: UnwrapRef<typeof import('@vueuse/core')['useVirtualList']>
-    readonly useWakeLock: UnwrapRef<typeof import('@vueuse/core')['useWakeLock']>
-    readonly useWebNotification: UnwrapRef<typeof import('@vueuse/core')['useWebNotification']>
-    readonly useWebSocket: UnwrapRef<typeof import('@vueuse/core')['useWebSocket']>
-    readonly useWebWorker: UnwrapRef<typeof import('@vueuse/core')['useWebWorker']>
-    readonly useWebWorkerFn: UnwrapRef<typeof import('@vueuse/core')['useWebWorkerFn']>
-    readonly useWindowFocus: UnwrapRef<typeof import('@vueuse/core')['useWindowFocus']>
-    readonly useWindowScroll: UnwrapRef<typeof import('@vueuse/core')['useWindowScroll']>
-    readonly useWindowSize: UnwrapRef<typeof import('@vueuse/core')['useWindowSize']>
-    readonly watch: UnwrapRef<typeof import('vue')['watch']>
-    readonly watchArray: UnwrapRef<typeof import('@vueuse/core')['watchArray']>
-    readonly watchAtMost: UnwrapRef<typeof import('@vueuse/core')['watchAtMost']>
-    readonly watchDebounced: UnwrapRef<typeof import('@vueuse/core')['watchDebounced']>
-    readonly watchDeep: UnwrapRef<typeof import('@vueuse/core')['watchDeep']>
-    readonly watchEffect: UnwrapRef<typeof import('vue')['watchEffect']>
-    readonly watchIgnorable: UnwrapRef<typeof import('@vueuse/core')['watchIgnorable']>
-    readonly watchImmediate: UnwrapRef<typeof import('@vueuse/core')['watchImmediate']>
-    readonly watchOnce: UnwrapRef<typeof import('@vueuse/core')['watchOnce']>
-    readonly watchPausable: UnwrapRef<typeof import('@vueuse/core')['watchPausable']>
-    readonly watchPostEffect: UnwrapRef<typeof import('vue')['watchPostEffect']>
-    readonly watchSyncEffect: UnwrapRef<typeof import('vue')['watchSyncEffect']>
-    readonly watchThrottled: UnwrapRef<typeof import('@vueuse/core')['watchThrottled']>
-    readonly watchTriggerable: UnwrapRef<typeof import('@vueuse/core')['watchTriggerable']>
-    readonly watchWithFilter: UnwrapRef<typeof import('@vueuse/core')['watchWithFilter']>
-    readonly whenever: UnwrapRef<typeof import('@vueuse/core')['whenever']>
-  }
 }

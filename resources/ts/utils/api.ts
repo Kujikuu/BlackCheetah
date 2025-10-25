@@ -51,6 +51,9 @@ export const $api = ofetch.create({
     // Transform error to consistent format and show user-friendly messages
     let userMessage = 'An unexpected error occurred'
     
+    // Preserve validation errors from 422 responses
+    let validationErrors = null
+    
     switch (response.status) {
       case 401:
         userMessage = 'You are not authorized to perform this action'
@@ -64,6 +67,8 @@ export const $api = ofetch.create({
         break
       case 422:
         userMessage = response._data?.message || 'Validation failed. Please check your input'
+        // Preserve validation errors for field-level display
+        validationErrors = response._data?.errors || null
         break
       case 500:
         userMessage = 'Server error. Please try again later'
@@ -72,8 +77,9 @@ export const $api = ofetch.create({
         userMessage = response._data?.message || `Error ${response.status}: ${response.statusText}`
     }
 
-    // Show toast notification for user-facing errors (only for 4xx/5xx, skip 401 redirects)
-    if (response.status >= 400 && response.status !== 401) {
+    // Show toast notification for user-facing errors (only for 4xx/5xx, skip 401 and 422)
+    // Skip 422 because validation errors are handled at the field level
+    if (response.status >= 400 && response.status !== 401 && response.status !== 422) {
       try {
         // Try to use toast if available (depends on UI framework)
         if (typeof useToast !== 'undefined') {
@@ -100,7 +106,8 @@ export const $api = ofetch.create({
     // Attach error details for debugging while maintaining consistent response shape
     Object.assign(response._data, errorResponse, { 
       _errorDetails: error,
-      _statusCode: response.status 
+      _statusCode: response.status,
+      errors: validationErrors, // Preserve validation errors
     })
 
     throw response

@@ -4,6 +4,8 @@ import office from '@images/svg/office.svg'
 import { useCountries } from '@/composables/useCountries'
 import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
 import { useDisplay } from 'vuetify'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
 
 interface BillingAddress {
   firstName: string | undefined
@@ -43,6 +45,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emit>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
+
 const billingAddress = ref<BillingAddress>(structuredClone(toRaw(props.billingAddress)))
 
 const resetForm = () => {
@@ -50,9 +56,18 @@ const resetForm = () => {
   billingAddress.value = structuredClone(toRaw(props.billingAddress))
 }
 
-const onFormSubmit = () => {
-  emit('update:isDialogVisible', false)
-  emit('submit', billingAddress.value)
+const onFormSubmit = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
+    emit('update:isDialogVisible', false)
+    emit('submit', billingAddress.value)
+  }
+  catch (error: any) {
+    setBackendErrors(error)
+  }
 }
 
 const selectedAddress = ref('Home')
@@ -106,55 +121,126 @@ const { smAndUp } = useDisplay()
         </div>
 
         <!-- 👉 Form -->
-        <VForm @submit.prevent="onFormSubmit">
+        <VForm ref="formRef" @submit.prevent="onFormSubmit">
           <VRow>
             <!-- 👉 First Name -->
             <VCol cols="12" md="6">
-              <AppTextField v-model="billingAddress.firstName" label="First Name" placeholder="John" />
+              <AppTextField 
+                v-model="billingAddress.firstName" 
+                label="First Name" 
+                placeholder="John"
+                :rules="[rules.required('First name is required'), rules.maxLength(50)]"
+                :error-messages="backendErrors.firstName"
+                @input="clearError('firstName')"
+              />
             </VCol>
 
             <!-- 👉 Last Name -->
             <VCol cols="12" md="6">
-              <AppTextField v-model="billingAddress.lastName" label="Last Name" placeholder="Doe" />
+              <AppTextField 
+                v-model="billingAddress.lastName" 
+                label="Last Name" 
+                placeholder="Doe"
+                :rules="[rules.required('Last name is required'), rules.maxLength(50)]"
+                :error-messages="backendErrors.lastName"
+                @input="clearError('lastName')"
+              />
             </VCol>
 
             <!-- 👉 Select Nationality -->
             <VCol cols="12">
-              <AppSelect v-model="billingAddress.nationality" label="Select Nationality"
-                placeholder="Select Nationality" :items="nationalityOptions" :loading="isLoadingCountries" clearable />
+              <AppSelect 
+                v-model="billingAddress.nationality" 
+                label="Select Nationality"
+                placeholder="Select Nationality" 
+                :items="nationalityOptions" 
+                :loading="isLoadingCountries" 
+                clearable
+                :rules="[rules.required('Nationality is required')]"
+                :error-messages="backendErrors.nationality"
+                @update:model-value="clearError('nationality')"
+              />
             </VCol>
 
             <!-- 👉 Address Line 1 -->
             <VCol cols="12">
-              <AppTextField v-model="billingAddress.addressLine1" label="Address Line 1"
-                placeholder="12, Business Park" />
+              <AppTextField 
+                v-model="billingAddress.addressLine1" 
+                label="Address Line 1"
+                placeholder="12, Business Park"
+                :rules="[rules.required('Address line 1 is required'), rules.maxLength(200)]"
+                :error-messages="backendErrors.addressLine1"
+                @input="clearError('addressLine1')"
+              />
             </VCol>
 
             <!-- 👉 Address Line 2 -->
             <VCol cols="12">
-              <AppTextField v-model="billingAddress.addressLine2" label="Address Line 2" placeholder="Mall Road" />
+              <AppTextField 
+                v-model="billingAddress.addressLine2" 
+                label="Address Line 2" 
+                placeholder="Mall Road"
+                :rules="[rules.maxLength(200)]"
+                :error-messages="backendErrors.addressLine2"
+                @input="clearError('addressLine2')"
+              />
             </VCol>
 
             <!-- 👉 Landmark -->
             <VCol cols="12" md="6">
-              <AppTextField v-model="billingAddress.landmark" label="Landmark" placeholder="Nr. Hard Rock Cafe" />
+              <AppTextField 
+                v-model="billingAddress.landmark" 
+                label="Landmark" 
+                placeholder="Nr. Hard Rock Cafe"
+                :rules="[rules.maxLength(100)]"
+                :error-messages="backendErrors.landmark"
+                @input="clearError('landmark')"
+              />
             </VCol>
 
             <!-- 👉 City -->
             <VCol cols="12" md="6">
-              <AppSelect v-model="billingAddress.city" label="City" placeholder="Select City" :items="availableCities"
-                :disabled="!billingAddress.state" clearable required />
+              <AppSelect 
+                v-model="billingAddress.city" 
+                label="City" 
+                placeholder="Select City" 
+                :items="availableCities"
+                :disabled="!billingAddress.state" 
+                clearable 
+                required
+                :rules="[rules.required('City is required')]"
+                :error-messages="backendErrors.city"
+                @update:model-value="clearError('city')"
+              />
             </VCol>
 
             <!-- 👉 State -->
             <VCol cols="12" md="6">
-              <AppSelect v-model="billingAddress.state" label="Province" placeholder="Select Province"
-                :items="provinces" :loading="isLoadingProvinces" clearable required />
+              <AppSelect 
+                v-model="billingAddress.state" 
+                label="Province" 
+                placeholder="Select Province"
+                :items="provinces" 
+                :loading="isLoadingProvinces" 
+                clearable 
+                required
+                :rules="[rules.required('Province is required')]"
+                :error-messages="backendErrors.state"
+                @update:model-value="clearError('state')"
+              />
             </VCol>
 
             <!-- 👉 Zip Code -->
             <VCol cols="12" md="6">
-              <AppTextField v-model="billingAddress.zipCode" label="Zip Code" placeholder="99950" type="number" />
+              <AppTextField 
+                v-model="billingAddress.zipCode" 
+                label="Zip Code" 
+                placeholder="99950" 
+                type="number"
+                :rules="[rules.numeric('Zip code must be numeric')]"
+                :error-messages="backendErrors.zipCode"
+                @input="clearError('zipCode')"
+              />
             </VCol>
 
             <VCol cols="12">

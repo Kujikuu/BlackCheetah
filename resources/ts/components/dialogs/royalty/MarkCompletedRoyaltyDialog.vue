@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { type PaymentData, type RoyaltyRecord, royaltyApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
 
 interface Props {
   isDialogVisible: boolean
@@ -15,6 +17,10 @@ interface Emit {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
 
 const isLoading = ref(false)
 
@@ -45,6 +51,10 @@ watch(() => props.selectedRoyalty, (royalty) => {
 const submitPayment = async () => {
   if (!props.selectedRoyalty) return
 
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   isLoading.value = true
   try {
     await royaltyApi.markAsPaid(props.selectedRoyalty.id, paymentData.value)
@@ -59,9 +69,9 @@ const submitPayment = async () => {
       attachment: null,
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error submitting payment:', error)
-    // Optionally, show a toast notification
+    setBackendErrors(error)
   }
   finally {
     isLoading.value = false
@@ -84,7 +94,7 @@ const handleFileUpload = (event: Event) => {
     <DialogCloseBtn @click="dialogValue = false" />
     <VCard title="Mark Royalty as Completed">
       <VCardText>
-        <VForm @submit.prevent="submitPayment">
+        <VForm ref="formRef" @submit.prevent="submitPayment">
           <VRow>
             <VCol
               cols="12"
@@ -96,7 +106,9 @@ const handleFileUpload = (event: Event) => {
                 type="number"
                 variant="outlined"
                 density="compact"
-                :rules="[v => !!v || 'Amount is required']"
+                :rules="[rules.required('Amount is required'), rules.numeric('Amount must be numeric'), rules.min(0, 'Amount must be positive')]"
+                :error-messages="backendErrors.amountPaid"
+                @input="clearError('amountPaid')"
               />
             </VCol>
             <VCol
@@ -109,7 +121,9 @@ const handleFileUpload = (event: Event) => {
                 type="date"
                 variant="outlined"
                 density="compact"
-                :rules="[v => !!v || 'Payment date is required']"
+                :rules="[rules.required('Payment date is required'), rules.date('Invalid date format')]"
+                :error-messages="backendErrors.paymentDate"
+                @input="clearError('paymentDate')"
               />
             </VCol>
             <VCol cols="12">
@@ -121,7 +135,9 @@ const handleFileUpload = (event: Event) => {
                 label="Payment Type"
                 variant="outlined"
                 density="compact"
-                :rules="[v => !!v || 'Payment type is required']"
+                :rules="[rules.required('Payment type is required')]"
+                :error-messages="backendErrors.paymentType"
+                @update:model-value="clearError('paymentType')"
               />
             </VCol>
             <VCol cols="12">
@@ -130,7 +146,10 @@ const handleFileUpload = (event: Event) => {
                 variant="outlined"
                 density="compact"
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                :rules="[rules.fileType(['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'], 'Invalid file type'), rules.fileSize(5, 'File must be less than 5MB')]"
+                :error-messages="backendErrors.attachment"
                 @change="handleFileUpload"
+                @update:model-value="clearError('attachment')"
               />
               <div class="text-caption text-medium-emphasis mt-1">
                 Supported formats: PDF, JPG, PNG, DOC, DOCX

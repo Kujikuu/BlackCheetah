@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { leadApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useMarkLeadAsLostValidation } from '@/validation/leadsValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -14,6 +16,10 @@ interface Emit {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useMarkLeadAsLostValidation()
 
 const reason = ref('')
 const isLoading = ref(false)
@@ -34,8 +40,12 @@ const updateModelValue = (val: boolean) => {
 }
 
 const markAsLost = async () => {
-  if (!props.leadId || !reason.value)
+  if (!props.leadId)
     return
+
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
 
   isLoading.value = true
 
@@ -45,8 +55,9 @@ const markAsLost = async () => {
     emit('leadMarkedAsLost')
     updateModelValue(false)
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error marking lead as lost:', error)
+    setBackendErrors(error)
   }
   finally {
     isLoading.value = false
@@ -77,15 +88,20 @@ const markAsLost = async () => {
           </p>
         </div>
 
-        <VSelect
-          v-model="reason"
-          :items="lostReasons"
-          label="Reason for Loss"
-          placeholder="Select a reason"
-          variant="outlined"
-          :disabled="isLoading"
-          required
-        />
+        <VForm ref="formRef">
+          <VSelect
+            v-model="reason"
+            :items="lostReasons"
+            label="Reason for Loss"
+            placeholder="Select a reason"
+            variant="outlined"
+            :disabled="isLoading"
+            :rules="validationRules.lostReason"
+            :error-messages="backendErrors.lostReason"
+            @update:model-value="clearError('lostReason')"
+            required
+          />
+        </VForm>
       </VCardText>
 
       <VCardText class="d-flex align-center justify-end gap-2">

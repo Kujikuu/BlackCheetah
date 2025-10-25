@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useValidationRules } from '@/composables/useValidationRules'
+
 interface Props {
   isDialogVisible: boolean
   title?: string
@@ -23,6 +26,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const rules = useValidationRules()
+
 const file = ref<File | null>(null)
 
 const handleFileUpload = (event: Event) => {
@@ -42,10 +49,19 @@ const downloadExample = () => {
   window.URL.revokeObjectURL(url)
 }
 
-const handleImport = () => {
-  emit('import', file.value)
-  emit('update:isDialogVisible', false)
-  file.value = null
+const handleImport = async () => {
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid || !file.value) return
+
+  try {
+    emit('import', file.value)
+    emit('update:isDialogVisible', false)
+    file.value = null
+  }
+  catch (error: any) {
+    setBackendErrors(error)
+  }
 }
 
 const handleCancel = () => {
@@ -74,15 +90,19 @@ const handleCancel = () => {
           </VBtn>
         </div>
 
-        <VFileInput
-          :model-value="file"
-          label="Select File"
-          :accept="fileAccept"
-          prepend-icon="tabler-file-upload"
-          show-size
-          @update:model-value="file = $event"
-          @change="handleFileUpload"
-        />
+        <VForm ref="formRef">
+          <VFileInput
+            :model-value="file"
+            label="Select File"
+            :accept="fileAccept"
+            prepend-icon="tabler-file-upload"
+            show-size
+            :rules="[rules.file('Please select a file')]"
+            :error-messages="backendErrors.file"
+            @update:model-value="file = $event; clearError('file')"
+            @change="handleFileUpload"
+          />
+        </VForm>
       </VCardText>
 
       <VCardActions>

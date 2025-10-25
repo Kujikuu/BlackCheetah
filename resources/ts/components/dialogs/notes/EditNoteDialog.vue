@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { notesApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useEditNoteValidation } from '@/validation/notesValidation'
 
 interface Attachment {
   name: string
@@ -29,6 +31,10 @@ interface Emit {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useEditNoteValidation()
 
 const editedNote = ref<Note | null>(null)
 const newAttachments = ref<File[]>([])
@@ -93,6 +99,10 @@ const onSubmit = async () => {
   if (!editedNote.value)
     return
 
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
   try {
     isSubmitting.value = true
 
@@ -115,19 +125,14 @@ const onSubmit = async () => {
       emit('noteUpdated')
       dialogValue.value = false
       newAttachments.value = []
-
-      // TODO: Show success toast
     }
     else {
       console.error('Failed to update note:', response.message)
-
-      // TODO: Show error toast
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error updating note:', error)
-
-    // TODO: Show error toast
+    setBackendErrors(error)
   }
   finally {
     isSubmitting.value = false
@@ -171,7 +176,7 @@ const getFileIcon = (type: string): string => {
     <DialogCloseBtn @click="onCancel" />
     <VCard v-if="editedNote" title="Edit Note">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12">
               <AppTextField
@@ -179,6 +184,9 @@ const getFileIcon = (type: string): string => {
                 label="Title"
                 placeholder="Enter note title"
                 :disabled="isSubmitting"
+                :rules="validationRules.note"
+                :error-messages="backendErrors.note"
+                @input="clearError('note')"
               />
             </VCol>
 
@@ -189,6 +197,9 @@ const getFileIcon = (type: string): string => {
                 placeholder="Enter note description..."
                 rows="6"
                 :disabled="isSubmitting"
+                :rules="validationRules.content"
+                :error-messages="backendErrors.content"
+                @input="clearError('content')"
               />
             </VCol>
 

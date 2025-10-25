@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { leadApi, usersApi } from '@/services/api'
+import { useFormValidation } from '@/composables/useFormValidation'
+import { useAssignLeadValidation } from '@/validation/leadsValidation'
 
 interface Broker {
   id: number
@@ -21,6 +23,10 @@ interface Emit {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
+
+const formRef = ref()
+const { backendErrors, setBackendErrors, clearError } = useFormValidation()
+const validationRules = useAssignLeadValidation()
 
 const selectedAssociateId = ref<number | null>(props.currentAssigneeId || null)
 const brokers = ref<Broker[]>([])
@@ -64,8 +70,12 @@ const fetchSalesAssociates = async () => {
 }
 
 const assignLead = async () => {
-  if (!props.leadId || selectedAssociateId.value === null)
+  if (!props.leadId)
     return
+
+  // Validate form
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
 
   isLoading.value = true
 
@@ -75,8 +85,9 @@ const assignLead = async () => {
     emit('leadAssigned')
     updateModelValue(false)
   }
-  catch (error) {
+  catch (error: any) {
     console.error('Error assigning lead:', error)
+    setBackendErrors(error)
   }
   finally {
     isLoading.value = false
@@ -104,24 +115,29 @@ watch(() => props.isDialogVisible, newVal => {
       </VCardItem>
 
       <VCardText>
-        <VSelect
-          v-model="selectedAssociateId"
-          :items="brokers"
-          item-title="name"
-          item-value="id"
-          label="Broker"
-          placeholder="Select a broker"
-          variant="outlined"
-          :loading="isLoadingAssociates"
-          :disabled="isLoading"
-        >
-          <template #item="{ props: itemProps, item }">
-            <VListItem v-bind="itemProps">
-              <VListItemTitle>{{ item.raw.name }}</VListItemTitle>
-              <VListItemSubtitle>{{ item.raw.email }}</VListItemSubtitle>
-            </VListItem>
-          </template>
-        </VSelect>
+        <VForm ref="formRef">
+          <VSelect
+            v-model="selectedAssociateId"
+            :items="brokers"
+            item-title="name"
+            item-value="id"
+            label="Broker"
+            placeholder="Select a broker"
+            variant="outlined"
+            :loading="isLoadingAssociates"
+            :disabled="isLoading"
+            :rules="validationRules.assignedTo"
+            :error-messages="backendErrors.assignedTo"
+            @update:model-value="clearError('assignedTo')"
+          >
+            <template #item="{ props: itemProps, item }">
+              <VListItem v-bind="itemProps">
+                <VListItemTitle>{{ item.raw.name }}</VListItemTitle>
+                <VListItemSubtitle>{{ item.raw.email }}</VListItemSubtitle>
+              </VListItem>
+            </template>
+          </VSelect>
+        </VForm>
       </VCardText>
 
       <VCardText class="d-flex align-center justify-end gap-2">
