@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useValidation } from '@/composables/useValidation'
+
 interface Props {
   isDialogVisible: boolean
 }
@@ -12,6 +14,13 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const csvFile = ref<File | null>(null)
+const formRef = ref()
+
+// Use validation composable
+const { fileValidationRules, validateForm } = useValidation()
+
+// File validation rules
+const fileRules = fileValidationRules(5, ['text/csv', '.csv'])
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -31,7 +40,11 @@ const downloadExampleCSV = () => {
   window.URL.revokeObjectURL(url)
 }
 
-const importCSV = () => {
+const importCSV = async () => {
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
+
   emit('import', csvFile.value)
   emit('update:isDialogVisible', false)
   csvFile.value = null
@@ -63,14 +76,18 @@ const handleCancel = () => {
           </VBtn>
         </div>
 
-        <VFileInput
-          v-model="csvFile"
-          label="Select CSV File"
-          accept=".csv"
-          prepend-icon="tabler-file-upload"
-          show-size
-          @change="handleFileUpload"
-        />
+        <VForm ref="formRef">
+          <VFileInput
+            v-model="csvFile"
+            label="Select CSV File"
+            accept=".csv"
+            prepend-icon="tabler-file-upload"
+            show-size
+            :rules="fileRules"
+            required
+            @change="handleFileUpload"
+          />
+        </VForm>
       </VCardText>
 
       <VCardActions>

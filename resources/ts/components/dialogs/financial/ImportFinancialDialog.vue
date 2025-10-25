@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { financialApi } from '@/services/api'
+import { useValidation } from '@/composables/useValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -17,6 +18,17 @@ const emit = defineEmits<Emit>()
 const isLoading = ref(false)
 const importCategory = ref<'sales' | 'expenses'>('sales')
 const importFile = ref<File | null>(null)
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  fileValidationRules,
+  validateForm 
+} = useValidation()
+
+// File validation rules
+const fileRules = fileValidationRules(10, ['text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '.csv', '.xlsx'])
 
 const dialogValue = computed({
   get: () => props.isDialogVisible,
@@ -25,6 +37,10 @@ const dialogValue = computed({
 
 const submitImport = async () => {
   if (!importFile.value) return
+
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
 
   isLoading.value = true
   try {
@@ -58,22 +74,28 @@ const handleClose = () => {
     <DialogCloseBtn @click="handleClose" />
     <VCard title="Import Data">
       <VCardText>
-        <VSelect
-          v-model="importCategory"
-          :items="[
-            { value: 'sales', title: 'Sales' },
-            { value: 'expenses', title: 'Expense' },
-          ]"
-          label="Category"
-          variant="outlined"
-          class="mb-4"
-        />
-        <VFileInput
-          v-model="importFile"
-          label="Choose file"
-          accept=".csv,.xlsx"
-          variant="outlined"
-        />
+        <VForm ref="formRef">
+          <VSelect
+            v-model="importCategory"
+            :items="[
+              { value: 'sales', title: 'Sales' },
+              { value: 'expenses', title: 'Expense' },
+            ]"
+            label="Category"
+            :rules="requiredTextRules"
+            required
+            variant="outlined"
+            class="mb-4"
+          />
+          <VFileInput
+            v-model="importFile"
+            label="Choose file"
+            accept=".csv,.xlsx"
+            :rules="fileRules"
+            required
+            variant="outlined"
+          />
+        </VForm>
       </VCardText>
       <VCardActions>
         <VSpacer />
@@ -86,7 +108,6 @@ const handleClose = () => {
         <VBtn
           color="primary"
           :loading="isLoading"
-          :disabled="!importFile"
           @click="submitImport"
         >
           Import

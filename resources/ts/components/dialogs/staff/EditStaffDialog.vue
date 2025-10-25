@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { UnitStaff } from '@/services/api'
+import { useValidation } from '@/composables/useValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -21,6 +22,18 @@ const dialogValue = computed({
 })
 
 const editableStaff = ref<any>(null)
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  requiredEmailRules, 
+  phoneRules, 
+  requiredTextWithLengthRules,
+  positiveNumberRules,
+  pastDateRules,
+  validateForm 
+} = useValidation()
 
 // Watch for changes in selectedStaff and create a copy for editing
 watch(() => props.selectedStaff, (newStaff) => {
@@ -29,11 +42,15 @@ watch(() => props.selectedStaff, (newStaff) => {
   }
 }, { immediate: true })
 
-const handleSaveStaff = () => {
-  if (editableStaff.value) {
-    emit('staffUpdated', editableStaff.value)
-    dialogValue.value = false
-  }
+const handleSaveStaff = async () => {
+  if (!editableStaff.value) return
+
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
+
+  emit('staffUpdated', editableStaff.value)
+  dialogValue.value = false
 }
 
 const handleClose = () => {
@@ -68,77 +85,88 @@ const employmentTypeOptions = [
         v-if="editableStaff"
         class="pa-6"
       >
-        <VRow>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.name"
-              label="Full Name"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.email"
-              label="Email"
-              type="email"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.phone"
-              label="Phone"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.jobTitle"
-              label="Job Title"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.department"
-              label="Department"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.salary"
-              label="Salary"
-              type="number"
-              prefix="SAR"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="editableStaff.hireDate"
-              label="Hire Date"
-              type="date"
-            />
-          </VCol>
+        <VForm ref="formRef">
+          <VRow>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.name"
+                label="Full Name"
+                :rules="requiredTextWithLengthRules(2, 100)"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.email"
+                label="Email"
+                type="email"
+                :rules="requiredEmailRules"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.phone"
+                label="Phone"
+                :rules="phoneRules"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.jobTitle"
+                label="Job Title"
+                :rules="requiredTextWithLengthRules(2, 100)"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.department"
+                label="Department"
+                :rules="requiredTextWithLengthRules(2, 100)"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.salary"
+                label="Salary"
+                type="number"
+                prefix="SAR"
+                :rules="positiveNumberRules"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="editableStaff.hireDate"
+                label="Hire Date"
+                type="date"
+                :rules="pastDateRules"
+                required
+              />
+            </VCol>
           <VCol
             cols="12"
             md="6"
@@ -167,6 +195,7 @@ const employmentTypeOptions = [
               v-model="editableStaff.status"
               label="Status"
               :items="statusOptions"
+              :rules="requiredTextRules"
               required
             />
           </VCol>
@@ -178,6 +207,8 @@ const employmentTypeOptions = [
               v-model="editableStaff.employmentType"
               label="Employment Type"
               :items="employmentTypeOptions"
+              :rules="requiredTextRules"
+              required
             />
           </VCol>
           <VCol cols="12">
@@ -185,9 +216,11 @@ const employmentTypeOptions = [
               v-model="editableStaff.notes"
               label="Notes"
               rows="2"
+              :rules="requiredTextWithLengthRules(0, 500)"
             />
           </VCol>
         </VRow>
+        </VForm>
       </VCardText>
 
       <VDivider />
@@ -203,7 +236,6 @@ const employmentTypeOptions = [
         </VBtn>
         <VBtn
           color="primary"
-          :disabled="!editableStaff?.name || !editableStaff?.email || !editableStaff?.jobTitle || !editableStaff?.status"
           @click="handleSaveStaff"
         >
           Save Changes

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { franchiseStaffApi, type FranchiseStaff, type UpdateStaffPayload } from '@/services/api'
+import { useValidation } from '@/composables/useValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -33,6 +34,19 @@ const dialogValue = computed({
   get: () => props.isDialogVisible,
   set: val => emit('update:isDialogVisible', val),
 })
+
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  requiredEmailRules, 
+  phoneRules, 
+  requiredTextWithLengthRules,
+  positiveNumberRules,
+  pastDateRules,
+  validateForm 
+} = useValidation()
 
 const statusOptions = [
   { title: 'Active', value: 'active' },
@@ -71,6 +85,10 @@ const onSubmit = async () => {
   if (!props.staff)
     return
 
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
+
   try {
     const response = await franchiseStaffApi.updateStaff(props.staff.id, formData.value)
 
@@ -97,13 +115,15 @@ const onCancel = () => {
     <DialogCloseBtn @click="onCancel" />
     <VCard title="Edit Staff Member">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12" md="6">
               <AppTextField
                 v-model="formData.name"
                 label="Name"
                 placeholder="Enter name"
+                :rules="requiredTextWithLengthRules(2, 100)"
+                required
               />
             </VCol>
 
@@ -113,6 +133,8 @@ const onCancel = () => {
                 label="Email"
                 placeholder="Enter email"
                 type="email"
+                :rules="requiredEmailRules"
+                required
               />
             </VCol>
 
@@ -121,6 +143,8 @@ const onCancel = () => {
                 v-model="formData.phone"
                 label="Phone"
                 placeholder="Enter phone number"
+                :rules="phoneRules"
+                required
               />
             </VCol>
 
@@ -129,6 +153,8 @@ const onCancel = () => {
                 v-model="formData.job_title"
                 label="Job Title"
                 placeholder="Enter job title"
+                :rules="requiredTextWithLengthRules(2, 100)"
+                required
               />
             </VCol>
 
@@ -137,6 +163,7 @@ const onCancel = () => {
                 v-model="formData.department"
                 label="Department"
                 placeholder="Enter department"
+                :rules="requiredTextWithLengthRules(2, 100)"
               />
             </VCol>
 
@@ -147,6 +174,8 @@ const onCancel = () => {
                 placeholder="Enter salary"
                 type="number"
                 prefix="SAR"
+                :rules="positiveNumberRules"
+                required
               />
             </VCol>
 
@@ -155,6 +184,8 @@ const onCancel = () => {
                 v-model="formData.hire_date"
                 label="Hire Date"
                 placeholder="Select hire date"
+                :rules="pastDateRules"
+                required
               />
             </VCol>
 
@@ -181,6 +212,8 @@ const onCancel = () => {
                 v-model="formData.status"
                 label="Status"
                 :items="statusOptions"
+                :rules="requiredTextRules"
+                required
               />
             </VCol>
 
@@ -189,6 +222,8 @@ const onCancel = () => {
                 v-model="formData.employment_type"
                 label="Employment Type"
                 :items="employmentTypeOptions"
+                :rules="requiredTextRules"
+                required
               />
             </VCol>
 
@@ -198,6 +233,7 @@ const onCancel = () => {
                 label="Notes"
                 placeholder="Enter any additional notes"
                 rows="3"
+                :rules="requiredTextWithLengthRules(0, 500)"
               />
             </VCol>
           </VRow>

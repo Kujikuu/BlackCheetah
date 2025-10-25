@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { leadApi } from '@/services/api'
+import { useValidation } from '@/composables/useValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -17,6 +18,10 @@ const emit = defineEmits<Emit>()
 
 const reason = ref('')
 const isLoading = ref(false)
+const formRef = ref()
+
+// Use validation composable
+const { requiredValidator, validateForm } = useValidation()
 
 const lostReasons = [
   'Not interested',
@@ -36,6 +41,10 @@ const updateModelValue = (val: boolean) => {
 const markAsLost = async () => {
   if (!props.leadId || !reason.value)
     return
+
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
 
   isLoading.value = true
 
@@ -77,15 +86,18 @@ const markAsLost = async () => {
           </p>
         </div>
 
-        <VSelect
-          v-model="reason"
-          :items="lostReasons"
-          label="Reason for Loss"
-          placeholder="Select a reason"
-          variant="outlined"
-          :disabled="isLoading"
-          required
-        />
+        <VForm ref="formRef">
+          <VSelect
+            v-model="reason"
+            :items="lostReasons"
+            label="Reason for Loss"
+            placeholder="Select a reason"
+            variant="outlined"
+            :disabled="isLoading"
+            :rules="[requiredValidator]"
+            required
+          />
+        </VForm>
       </VCardText>
 
       <VCardText class="d-flex align-center justify-end gap-2">
