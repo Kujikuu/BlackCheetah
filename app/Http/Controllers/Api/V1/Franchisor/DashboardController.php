@@ -212,7 +212,7 @@ class DashboardController extends BaseResourceController
                         'week' => 'Week '.Carbon::parse($royalty->created_at)->weekOfYear,
                         'date' => Carbon::parse($royalty->created_at)->format('M d, Y'),
                         'status' => $status,
-                        'icon' => 'tabler-currency-dollar',
+                        'icon' => 'tabler-coins',
                         'created_at' => $royalty->created_at->toISOString(),
                     ];
                 });

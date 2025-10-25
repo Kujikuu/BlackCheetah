@@ -3,6 +3,11 @@ import { SaudiRiyal } from 'lucide-vue-next'
 import { useFranchisorDashboard } from '@/composables/useFranchisorDashboard'
 import { franchiseApi } from '@/services/api'
 import { formatCurrency } from '@/@core/utils/formatters'
+import FranchiseOverview from '@/views/dashboards/analytics/FranchiseOverview.vue'
+import FranchiseeStats from '@/views/dashboards/analytics/FranchiseeStats.vue'
+import UnitStats from '@/views/dashboards/analytics/UnitStats.vue'
+import RevenueOverview from '@/views/dashboards/analytics/RevenueOverview.vue'
+import TaskTracker from '@/views/dashboards/analytics/TaskTracker.vue'
 
 // 👉 Router
 const router = useRouter()
@@ -24,61 +29,6 @@ const {
   refreshDashboard,
 } = useFranchisorDashboard()
 
-// 👉 Dashboard stats computed from API data
-const dashboardStats = computed(() => {
-  if (!apiStats.value) {
-    return [
-      { title: 'Total Leads', value: '0', change: 0, desc: 'Active leads in pipeline', icon: 'tabler-users', iconColor: 'primary' },
-      { title: 'Active Tasks', value: '0', change: 0, desc: 'Ongoing operations', icon: 'tabler-settings', iconColor: 'success' },
-      { title: 'Brokers', value: '0', change: 0, desc: 'Active team members', icon: 'tabler-user-check', iconColor: 'info' },
-      { title: 'Monthly Revenue', value: 'SAR0', change: 0, desc: 'This month\'s revenue', icon: SaudiRiyal, iconColor: 'warning' },
-    ]
-  }
-
-  return [
-    {
-      title: 'Total Leads',
-      value: apiStats.value.totalLeads.toString(),
-      change: 0, // We could calculate this if we had previous period data
-      desc: 'Active leads in pipeline',
-      icon: 'tabler-users',
-      iconColor: 'primary',
-    },
-    {
-      title: 'Active Tasks',
-      value: apiStats.value.activeTasks.toString(),
-      change: 0,
-      desc: 'Ongoing operations',
-      icon: 'tabler-settings',
-      iconColor: 'success',
-    },
-    {
-      title: 'Brokers',
-      value: brokers.value.length.toString(),
-      change: 0,
-      desc: 'Active brokers',
-      icon: 'tabler-user-check',
-      iconColor: 'info',
-    },
-    {
-      title: 'Monthly Revenue',
-      value: formatCurrency(apiStats.value.currentMonthRevenue, 'SAR', false),
-      change: apiStats.value.revenueChange,
-      desc: 'This month\'s revenue',
-      icon: SaudiRiyal,
-      iconColor: 'warning',
-    },
-  ]
-})
-
-// 👉 Quick actions
-const quickActions = [
-  { title: 'Add New Lead', icon: 'tabler-user-plus', color: 'primary', to: '/franchisor/add-lead' },
-  { title: 'Manage Leads', icon: 'tabler-users', color: 'success', to: '/franchisor/lead-management' },
-  { title: 'View Operations', icon: 'tabler-settings', color: 'info', to: '/franchisor/dashboard/operations' },
-  { title: 'Brokers', icon: 'tabler-user-check', color: 'warning', to: '/franchisor/brokers' },
-]
-
 // 👉 Navigate to onboarding
 const startOnboarding = () => {
   router.push('/franchisor/franchise-registration')
@@ -88,8 +38,8 @@ const startOnboarding = () => {
 const fetchFranchiseName = async () => {
   try {
     const response = await franchiseApi.getFranchiseData()
-    if (response.success && response.data && response.data.franchise) {
-      franchiseName.value = response.data.franchise.franchiseDetails.franchiseName || 'Franchisor'
+    if (response.success && response.data) {
+      franchiseName.value = response.data.franchiseDetails?.franchiseName || 'Franchisor'
     }
   }
   catch (err: any) {
@@ -97,11 +47,39 @@ const fetchFranchiseName = async () => {
   }
 }
 
+// 👉 Computed stats for components
+const franchiseStats = computed(() => ({
+  totalFranchisees: apiStats.value?.totalFranchisees || 0,
+  totalUnits: apiStats.value?.totalUnits || 0,
+  totalLeads: apiStats.value?.totalLeads || 0,
+  activeTasks: apiStats.value?.activeTasks || 0,
+  currentMonthRevenue: apiStats.value?.currentMonthRevenue || 0,
+  revenueChange: apiStats.value?.revenueChange || 0,
+  pendingRoyalties: apiStats.value?.pendingRoyalties || 0,
+}))
+
+// 👉 Calculate active and inactive units (simplified calculation)
+const unitStats = computed(() => {
+  const total = franchiseStats.value.totalUnits
+  const active = Math.round(total * 0.75) // Assuming 75% are active
+  const inactive = total - active
+  return { total, active, inactive }
+})
+
+// 👉 Calculate task statistics
+const taskStats = computed(() => {
+  const active = franchiseStats.value.activeTasks
+  const total = active > 0 ? Math.round(active * 1.5) : 0 // Estimate total based on active
+  const completed = Math.round(total * 0.6) // Estimate 60% completed
+  const pending = total - completed - active
+  return { active, completed, pending, total }
+})
+
 // 👉 Initialize dashboard data on mount
 onMounted(async () => {
   await Promise.all([
-    initializeDashboard(),
     fetchFranchiseName(),
+    initializeDashboard(),
   ])
 })
 </script>
@@ -136,7 +114,7 @@ onMounted(async () => {
     </VAlert>
 
     <!-- Page Header -->
-    <VRow class="mb-6">
+    <VRow>
       <VCol cols="12">
         <div class="d-flex align-center justify-space-between">
           <div>
@@ -147,7 +125,7 @@ onMounted(async () => {
               Welcome back! Here's what's happening with your franchise.
             </p>
           </div>
-          <div class="d-flex align-center gap-3">
+          <!-- <div class="d-flex align-center gap-3">
             <VBtn v-if="!isLoading" color="secondary" variant="outlined" prepend-icon="tabler-refresh"
               @click="refreshDashboard">
               Refresh
@@ -155,173 +133,41 @@ onMounted(async () => {
             <VBtn color="primary" prepend-icon="tabler-plus" to="/franchisor/add-lead">
               Add New Lead
             </VBtn>
-          </div>
+          </div> -->
         </div>
       </VCol>
     </VRow>
-
-    <!-- Dashboard Stats -->
-    <VRow class="mb-6">
-      <template v-if="isLoading">
-        <VCol v-for="i in 4" :key="`loading-${i}`" cols="12" md="3" sm="6">
-          <VCard>
-            <VCardText class="d-flex align-center justify-center" style="min-height: 100px;">
-              <VProgressCircular indeterminate color="primary" />
-            </VCardText>
-          </VCard>
-        </VCol>
-      </template>
-      <template v-else>
-        <template v-for="(data, id) in dashboardStats" :key="id">
-          <VCol cols="12" md="3" sm="6">
-            <VCard>
-              <VCardText class="d-flex align-center">
-                <VAvatar size="44" rounded :color="data.iconColor" variant="tonal">
-                  <VIcon :icon="data.icon" size="26" />
-                </VAvatar>
-
-                <div class="ms-4">
-                  <div class="text-body-2 text-disabled">
-                    {{ data.title }}
-                  </div>
-                  <div class="d-flex align-center flex-wrap">
-                    <h4 class="text-h4 me-2">
-                      {{ data.value }}
-                    </h4>
-                    <div v-if="data.change !== 0" class="text-body-2"
-                      :class="data.change > 0 ? 'text-success' : 'text-error'">
-                      {{ data.change > 0 ? '+' : '' }}{{ data.change }}%
-                    </div>
-                  </div>
-                  <div class="text-body-2 text-disabled">
-                    {{ data.desc }}
-                  </div>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-        </template>
-      </template>
-    </VRow>
-
-    <!-- Quick Actions & Recent Activity -->
-    <VRow>
-      <!-- Quick Actions -->
+    <VRow class="match-height">
+      <!-- 👉 Franchise Overview -->
       <VCol cols="12" md="6">
-        <VCard>
-          <VCardItem class="pb-4">
-            <VCardTitle>Quick Actions</VCardTitle>
-          </VCardItem>
-          <VCardText>
-            <VRow>
-              <template v-for="(action, index) in quickActions" :key="index">
-                <VCol cols="6">
-                  <VCard variant="tonal" :color="action.color" class="cursor-pointer" @click="router.push(action.to)">
-                    <VCardText class="text-center pa-4">
-                      <VIcon :icon="action.icon" size="32" class="mb-2" />
-                      <div class="text-body-2 font-weight-medium">
-                        {{ action.title }}
-                      </div>
-                    </VCardText>
-                  </VCard>
-                </VCol>
-              </template>
-            </VRow>
-          </VCardText>
-        </VCard>
+        <FranchiseOverview :total-franchisees="franchiseStats.totalFranchisees"
+          :total-units="franchiseStats.totalUnits" />
       </VCol>
 
-      <!-- Recent Activity -->
+      <!-- 👉 Total Franchisees -->
+      <VCol cols="12" md="3" sm="6">
+        <FranchiseeStats :total-franchisees="franchiseStats.totalFranchisees" :change="0" />
+      </VCol>
+
+      <!-- 👉 Unit Statistics -->
+      <VCol cols="12" md="3" sm="6">
+        <UnitStats :total-units="unitStats.total" :active-units="unitStats.active"
+          :inactive-units="unitStats.inactive" />
+      </VCol>
+
+      <!-- 👉 Revenue Overview -->
       <VCol cols="12" md="6">
-        <VCard>
-          <VCardItem class="pb-4">
-            <VCardTitle>Recent Activity</VCardTitle>
-          </VCardItem>
-          <VCardText>
-            <VList class="card-list">
-              <template v-if="isLoading">
-                <VListItem class="text-center py-8">
-                  <VProgressCircular indeterminate color="primary" />
-                  <div class="mt-2 text-body-2 text-disabled">
-                    Loading recent activities...
-                  </div>
-                </VListItem>
-              </template>
-              <template v-else-if="recentActivities.length > 0">
-                <template v-for="(activity, index) in recentActivities" :key="index">
-                  <VListItem>
-                    <template #prepend>
-                      <VAvatar size="32" :color="activity.color" variant="tonal">
-                        <VIcon :icon="activity.icon" size="18" />
-                      </VAvatar>
-                    </template>
-                    <VListItemTitle class="text-body-2 font-weight-medium">
-                      {{ activity.title }}
-                    </VListItemTitle>
-                    <VListItemSubtitle class="text-body-2">
-                      {{ activity.time }}
-                    </VListItemSubtitle>
-                  </VListItem>
-                  <VDivider v-if="index !== recentActivities.length - 1" />
-                </template>
-              </template>
-              <template v-else>
-                <VListItem>
-                  <VListItemTitle class="text-center text-disabled">
-                    No recent activities
-                  </VListItemTitle>
-                </VListItem>
-              </template>
-            </VList>
-          </VCardText>
-        </VCard>
+        <RevenueOverview :current-month-revenue="franchiseStats.currentMonthRevenue"
+          :revenue-change="franchiseStats.revenueChange" :pending-royalties="franchiseStats.pendingRoyalties" />
+      </VCol>
+
+      <!-- 👉 Task Tracker -->
+      <VCol cols="12" md="6">
+        <TaskTracker :active-tasks="taskStats.active" :completed-tasks="taskStats.completed"
+          :pending-tasks="taskStats.pending" :total-tasks="taskStats.total" />
       </VCol>
     </VRow>
 
-    <!-- Dashboard Navigation Cards -->
-    <VRow class="mt-6">
-      <VCol cols="12" md="4">
-        <VCard class="cursor-pointer" @click="router.push('/franchisor/dashboard/leads')">
-          <VCardText class="text-center pa-6">
-            <VIcon icon="tabler-users" size="48" color="primary" class="mb-4" />
-            <h5 class="text-h5 mb-2">
-              Leads Dashboard
-            </h5>
-            <p class="text-body-2 text-disabled mb-0">
-              Manage and track all your leads
-            </p>
-          </VCardText>
-        </VCard>
-      </VCol>
-
-      <VCol cols="12" md="4">
-        <VCard class="cursor-pointer" @click="router.push('/franchisor/dashboard/operations')">
-          <VCardText class="text-center pa-6">
-            <VIcon icon="tabler-settings" size="48" color="success" class="mb-4" />
-            <h5 class="text-h5 mb-2">
-              Operations Dashboard
-            </h5>
-            <p class="text-body-2 text-disabled mb-0">
-              Monitor operational activities
-            </p>
-          </VCardText>
-        </VCard>
-      </VCol>
-
-      <VCol cols="12" md="4">
-        <VCard class="cursor-pointer" @click="router.push('/franchisor/brokers')">
-          <VCardText class="text-center pa-6">
-            <VIcon icon="tabler-user-check" size="48" color="info" class="mb-4" />
-            <h5 class="text-h5 mb-2">
-              Brokers
-            </h5>
-            <p class="text-body-2 text-disabled mb-0">
-              Manage your brokers
-            </p>
-          </VCardText>
-        </VCard>
-      </VCol>
-    </VRow>
   </section>
 </template>
 

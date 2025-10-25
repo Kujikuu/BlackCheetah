@@ -5,6 +5,7 @@ import Footer from '@/views/front-pages/front-page-footer.vue'
 import InquiryForm from '@/views/front-pages/marketplace/inquiry-form.vue'
 import { useConfigStore } from '@core/stores/config'
 import { formatCurrency } from '@/@core/utils/formatters'
+import { SaudiRiyal } from 'lucide-vue-next'
 
 const store = useConfigStore()
 store.skin = 'default'
@@ -147,12 +148,12 @@ onMounted(() => {
 
                   <VCol cols="12" sm="6">
                     <div class="detail-item">
-                      <VIcon icon="tabler-currency-dollar" class="me-2" />
+                      <VIcon :icon="SaudiRiyal" class="me-2" />
                       <div>
                         <div class="text-sm text-medium-emphasis">
                           Monthly Rent
                         </div>
-                        <div class="text-h6">
+                        <div class="text-h6"> 
                           {{ formatCurrency(property.monthly_rent) }}
                         </div>
                       </div>

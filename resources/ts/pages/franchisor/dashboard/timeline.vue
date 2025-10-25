@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { franchiseApi, type DashboardTimelineData } from '@/services/api'
 import type { ApiResponse } from '@/types/api'
+import { SaudiRiyal } from 'lucide-vue-next'
 
 // 👉 Router composable
 const router = useRouter()
@@ -191,7 +192,7 @@ const extractType = (compositeId: string | number): string => {
 const viewDetails = (item: TimelineItem) => {
   const type = extractType(item.id)
   const id = extractId(item.id)
-  
+
   // Navigate to appropriate detail page based on activity type
   switch (type) {
     case 'unit':
@@ -223,7 +224,7 @@ const viewDetails = (item: TimelineItem) => {
 const takeAction = (item: TimelineItem) => {
   const type = extractType(item.id)
   const id = extractId(item.id)
-  
+
   // Navigate based on activity type
   switch (type) {
     case 'royalty':
@@ -245,7 +246,7 @@ const takeAction = (item: TimelineItem) => {
 
 const reschedule = (item: TimelineItem) => {
   const type = extractType(item.id)
-  
+
   // Navigate based on activity type
   switch (type) {
     case 'task':
@@ -269,13 +270,7 @@ onMounted(() => {
   <section>
     <!-- 👉 Stats Cards -->
     <VRow class="mb-6">
-      <VCol
-        v-for="stat in stats"
-        :key="stat.title"
-        cols="12"
-        sm="6"
-        md="3"
-      >
+      <VCol v-for="stat in stats" :key="stat.title" cols="12" sm="6" md="3">
         <VCard>
           <VCardText>
             <div class="d-flex justify-space-between align-center">
@@ -287,16 +282,8 @@ onMounted(() => {
                   {{ stat.value }}
                 </h4>
               </div>
-              <VAvatar
-                :color="stat.color"
-                variant="tonal"
-                rounded
-                size="42"
-              >
-                <VIcon
-                  :icon="stat.icon"
-                  size="26"
-                />
+              <VAvatar :color="stat.color" variant="tonal" rounded size="42">
+                <VIcon :icon="stat.icon" size="26" />
               </VAvatar>
             </div>
           </VCardText>
@@ -305,35 +292,20 @@ onMounted(() => {
     </VRow>
 
     <!-- 👉 Timeline Card -->
-    <VCard>
+    <div>
       <VCardItem>
         <VCardTitle>Development Timeline</VCardTitle>
         <template #append>
           <div style="inline-size: 10rem;">
-            <AppSelect
-              v-model="selectedFilter"
-              :items="filters"
-              placeholder="Filter"
-            />
+            <AppSelect v-model="selectedFilter" :items="filters" placeholder="Filter" />
           </div>
         </template>
       </VCardItem>
 
       <VCardText>
-        <VTimeline
-          align="start"
-          line-inset="19"
-          truncate-line="start"
-          justify="center"
-          :density="smAndDown ? 'compact' : 'default'"
-          class="mt-4"
-        >
-          <VTimelineItem
-            v-for="item in filteredTimelineItems"
-            :key="item.id"
-            fill-dot
-            size="small"
-          >
+        <VTimeline align="start" line-inset="19" truncate-line="start" justify="center"
+          :density="smAndDown ? 'compact' : 'default'" class="mt-4">
+          <VTimelineItem v-for="item in filteredTimelineItems" :key="item.id" fill-dot size="small">
             <template #opposite>
               <div class="d-flex flex-column">
                 <span class="app-timeline-meta text-sm font-weight-medium">
@@ -346,15 +318,8 @@ onMounted(() => {
             </template>
             <template #icon>
               <div class="v-timeline-avatar-wrapper rounded-circle">
-                <VAvatar
-                  size="32"
-                  :color="item.color"
-                  variant="tonal"
-                >
-                  <VIcon
-                    :icon="item.icon"
-                    size="20"
-                  />
+                <VAvatar size="32" :color="item.color" variant="tonal">
+                  <VIcon :icon="item.icon" size="20" />
                 </VAvatar>
               </div>
             </template>
@@ -362,12 +327,7 @@ onMounted(() => {
               <VCardItem class="pb-4">
                 <VCardTitle class="d-flex align-center justify-space-between">
                   <span>{{ item.title }}</span>
-                  <VChip
-                    :color="item.color"
-                    size="small"
-                    label
-                    class="text-capitalize"
-                  >
+                  <VChip :color="item.color" size="small" label class="text-capitalize">
                     {{ item.status }}
                   </VChip>
                 </VCardTitle>
@@ -378,29 +338,15 @@ onMounted(() => {
                 </p>
               </VCardText>
               <VCardActions>
-                <VBtn
-                  variant="tonal"
-                  size="small"
-                  @click="viewDetails(item)"
-                >
+                <VBtn variant="tonal" size="small" @click="viewDetails(item)">
                   View Details
                 </VBtn>
-                <VBtn
-                  v-if="item.status === 'overdue'"
-                  variant="tonal"
-                  color="error"
-                  size="small"
-                  @click="takeAction(item)"
-                >
+                <VBtn v-if="item.status === 'overdue'" variant="tonal" color="error" size="small"
+                  @click="takeAction(item)">
                   Take Action
                 </VBtn>
-                <VBtn
-                  v-if="item.status === 'scheduled'"
-                  variant="tonal"
-                  color="info"
-                  size="small"
-                  @click="reschedule(item)"
-                >
+                <VBtn v-if="item.status === 'scheduled'" variant="tonal" color="info" size="small"
+                  @click="reschedule(item)">
                   Reschedule
                 </VBtn>
               </VCardActions>
@@ -408,7 +354,7 @@ onMounted(() => {
           </VTimelineItem>
         </VTimeline>
       </VCardText>
-    </VCard>
+    </div>
   </section>
 </template>
 
