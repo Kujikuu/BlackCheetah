@@ -11,7 +11,7 @@ These component tests are templates for integration testing of dialog components
 1. **EditLeadDialog.test.ts** - Complex multi-field form
 2. **AddDataDialog.test.ts** - Conditional validation
 3. **CardAddEditDialog.test.ts** - Complex format validation
-4. **AddStaffDialog.test.ts** - Multi-field form
+4. **AddStaffDialog.test.ts** - Multi-field form (tests AddUnitStaffDialog)
 5. **ImportLeadsDialog.test.ts** - File upload validation
 6. **AddEditRoleDialog.test.ts** - Permission matrix
 7. **AddFranchiseeDialog.test.ts** - Multi-step form

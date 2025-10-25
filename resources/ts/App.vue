@@ -2,6 +2,7 @@
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
 import ScrollToTop from '@core/components/ScrollToTop.vue'
+import SnackbarNotification from '@/components/SnackbarNotification.vue'
 import initCore from '@core/initCore'
 import { initConfigStore, useConfigStore } from '@core/stores/config'
 import { hexToRgb } from '@core/utils/colorConverter'
@@ -33,6 +34,7 @@ const layout = computed(() => {
         <RouterView />
       </Component>
       <ScrollToTop />
+      <SnackbarNotification />
     </VApp>
   </VLocaleProvider>
 </template>

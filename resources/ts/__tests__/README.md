@@ -115,7 +115,7 @@ Tests form composable:
 - **CardAddEditDialog.test.ts** - Credit card validation
 
 #### Multi-Field Forms
-- **AddStaffDialog.test.ts** - 12+ field form
+- **AddStaffDialog.test.ts** - 12+ field form (tests AddUnitStaffDialog)
 
 #### File Upload
 - **ImportLeadsDialog.test.ts** - CSV import validation
@@ -252,13 +252,13 @@ it('should debug with breakpoint', () => {
 
 ### Priority List (Next 8 Dialogs)
 1. CreateTaskDialog - Use EditLeadDialog pattern
-2. CreatePropertyDialog - Use AddStaffDialog pattern
-3. AddNoteDialog - Use AddStaffDialog pattern
+2. CreatePropertyDialog - Use AddUnitStaffDialog/AddFranchiseStaffDialog pattern
+3. AddNoteDialog - Use AddUnitStaffDialog/AddFranchiseStaffDialog pattern
 4. AddDocumentModal - Use ImportLeadsDialog pattern
 5. AddReviewDialog - Use EditLeadDialog pattern
 6. EditUnitDialog - Use EditLeadDialog pattern
-7. AddEditAddressDialog - Use AddStaffDialog pattern
-8. UserInfoEditDialog - Use AddStaffDialog pattern
+7. AddEditAddressDialog - Use AddUnitStaffDialog/AddFranchiseStaffDialog pattern
+8. UserInfoEditDialog - Use AddUnitStaffDialog/AddFranchiseStaffDialog pattern
 
 **Estimated Time:** 15-20 mins per dialog = 3-4 hours total
 

@@ -1,5 +1,6 @@
 import { ofetch } from 'ofetch'
 import type { ApiResponse } from '@/types/api'
+import { useSnackbar } from '@/composables/useSnackbar'
 
 // Compute a scheme-safe base URL to avoid mixed content when the app is served over HTTPS
 const computeBaseURL = () => {
@@ -34,7 +35,16 @@ export const $api = ofetch.create({
       }
     }
     else {
-      console.warn('No access token found in cookies for request:', options.method, options.baseURL + (options.path || ''))
+      console.warn('No access token found in cookies for request:', options.method)
+    }
+  },
+  async onResponse({ response, options }) {
+    // Show success notifications for create/update/delete operations
+    const method = options.method?.toUpperCase()
+    if (method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      const { showSuccess } = useSnackbar()
+      const message = response._data?.message || 'Operation completed successfully'
+      showSuccess(message)
     }
   },
   async onResponseError({ response }) {
@@ -77,23 +87,11 @@ export const $api = ofetch.create({
         userMessage = response._data?.message || `Error ${response.status}: ${response.statusText}`
     }
 
-    // Show toast notification for user-facing errors (only for 4xx/5xx, skip 401 and 422)
+    // Show snackbar notification for user-facing errors (only for 4xx/5xx, skip 401 and 422)
     // Skip 422 because validation errors are handled at the field level
     if (response.status >= 400 && response.status !== 401 && response.status !== 422) {
-      try {
-        // Try to use toast if available (depends on UI framework)
-        if (typeof useToast !== 'undefined') {
-          const toast = useToast()
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: userMessage,
-          })
-        }
-      } catch (error) {
-        // Fallback to console if toast is not available
-        console.error('API Error (Toast unavailable):', userMessage)
-      }
+      const { showError } = useSnackbar()
+      showError(userMessage)
     }
 
     // Create a consistent error response format

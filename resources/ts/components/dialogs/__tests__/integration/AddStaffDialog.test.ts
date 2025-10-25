@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import AddStaffDialog from '../../staff/AddStaffDialog.vue'
+import AddUnitStaffDialog from '../../staff/AddUnitStaffDialog.vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -10,11 +10,11 @@ const vuetify = createVuetify({
   directives,
 })
 
-describe('AddStaffDialog.vue - Multi-Field Form', () => {
+describe('AddUnitStaffDialog.vue - Multi-Field Form', () => {
   let wrapper: any
 
   beforeEach(() => {
-    wrapper = mount(AddStaffDialog, {
+    wrapper = mount(AddUnitStaffDialog, {
       props: {
         isDialogVisible: true,
       },
