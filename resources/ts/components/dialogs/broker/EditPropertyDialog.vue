@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { propertyApi, type Property, type UpdatePropertyPayload } from '@/services/api'
+import { useValidation } from '@/composables/useValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -33,6 +34,16 @@ const formData = ref<UpdatePropertyPayload>({
 })
 
 const isSubmitting = ref(false)
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  requiredTextWithLengthRules,
+  positiveNumberRules,
+  addressRules,
+  validateForm 
+} = useValidation()
 
 // Computed for v-model dialog
 const dialogValue = computed({
@@ -66,6 +77,10 @@ const onSubmit = async () => {
   if (!props.property)
     return
 
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
+
   try {
     isSubmitting.value = true
 
@@ -97,15 +112,16 @@ const onCancel = () => {
     <DialogCloseBtn @click="onCancel" />
     <VCard title="Edit Property">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12">
-              <AppTextField v-model="formData.title" label="Property Title" placeholder="Enter property title" />
+              <AppTextField v-model="formData.title" label="Property Title" placeholder="Enter property title"
+                :rules="requiredTextWithLengthRules(5, 100)" required />
             </VCol>
 
             <VCol cols="12">
               <AppTextarea v-model="formData.description" label="Description" placeholder="Enter property description"
-                rows="3" />
+                rows="3" :rules="requiredTextWithLengthRules(10, 1000)" required />
             </VCol>
 
             <VCol cols="12" md="6">
@@ -115,25 +131,27 @@ const onCancel = () => {
                 { title: 'Kiosk', value: 'kiosk' },
                 { title: 'Food Court', value: 'food_court' },
                 { title: 'Standalone', value: 'standalone' },
-              ]" />
+              ]" :rules="requiredTextRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
-              <AppTextField v-model="formData.size_sqm" label="Size (m²)" type="number" placeholder="0" />
+              <AppTextField v-model="formData.size_sqm" label="Size (m²)" type="number" placeholder="0"
+                :rules="positiveNumberRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
-              <AppTextField v-model="formData.monthly_rent" label="Monthly Rent (SAR)" type="number" placeholder="0" />
+              <AppTextField v-model="formData.monthly_rent" label="Monthly Rent (SAR)" type="number" placeholder="0"
+                :rules="positiveNumberRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
               <AppTextField v-model="formData.deposit_amount" label="Deposit Amount (SAR)" type="number"
-                placeholder="0" />
+                placeholder="0" :rules="positiveNumberRules" />
             </VCol>
 
             <VCol cols="12" md="6">
               <AppTextField v-model="formData.lease_term_months" label="Lease Term (months)" type="number"
-                placeholder="12" />
+                placeholder="12" :rules="positiveNumberRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
@@ -142,19 +160,22 @@ const onCancel = () => {
 
             <VCol cols="12" md="6">
               <AppTextField v-model="formData.state_province" label="State/Province"
-                placeholder="Enter state/province" />
+                placeholder="Enter state/province" :rules="requiredTextRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
-              <AppTextField v-model="formData.city" label="City" placeholder="Enter city" />
+              <AppTextField v-model="formData.city" label="City" placeholder="Enter city"
+                :rules="requiredTextRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
-              <AppTextField v-model="formData.postal_code" label="Postal Code" placeholder="Enter postal code" />
+              <AppTextField v-model="formData.postal_code" label="Postal Code" placeholder="Enter postal code"
+                :rules="requiredTextWithLengthRules(5, 10)" required />
             </VCol>
 
             <VCol cols="12">
-              <AppTextField v-model="formData.address" label="Address" placeholder="Enter full address" />
+              <AppTextField v-model="formData.address" label="Address" placeholder="Enter full address"
+                :rules="addressRules" required />
             </VCol>
 
             <VCol cols="12">

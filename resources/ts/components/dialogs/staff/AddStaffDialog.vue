@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useValidation } from '@/composables/useValidation'
 
 interface StaffForm {
   name: string
@@ -33,6 +34,19 @@ const dialogValue = computed({
   set: val => emit('update:isDialogVisible', val),
 })
 
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  requiredEmailRules, 
+  phoneRules, 
+  requiredTextWithLengthRules,
+  positiveNumberRules,
+  pastDateRules,
+  validateForm 
+} = useValidation()
+
 const staffForm = ref<StaffForm>({
   name: '',
   email: '',
@@ -48,11 +62,10 @@ const staffForm = ref<StaffForm>({
   notes: '',
 })
 
-const handleAddStaff = () => {
-  // Validate form
-  if (!staffForm.value.name || !staffForm.value.email || !staffForm.value.jobTitle || !staffForm.value.hireDate || !staffForm.value.status) {
-    return
-  }
+const handleAddStaff = async () => {
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
 
   emit('staffAdded', { ...staffForm.value })
   
@@ -119,78 +132,88 @@ const employmentTypeOptions = [
     <DialogCloseBtn @click="handleClose" />
     <VCard title="Add New Staff Member">
       <VCardText class="pa-6">
-        <VRow>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.name"
-              label="Full Name"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.email"
-              label="Email"
-              type="email"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.phone"
-              label="Phone"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.jobTitle"
-              label="Job Title"
-              required
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.department"
-              label="Department"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.salary"
-              label="Salary"
-              type="number"
-              prefix="SAR"
-            />
-          </VCol>
-          <VCol
-            cols="12"
-            md="6"
-          >
-            <VTextField
-              v-model="staffForm.hireDate"
-              label="Hire Date"
-              type="date"
-              required
-            />
-          </VCol>
+        <VForm ref="formRef">
+          <VRow>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.name"
+                label="Full Name"
+                :rules="requiredTextWithLengthRules(2, 100)"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.email"
+                label="Email"
+                type="email"
+                :rules="requiredEmailRules"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.phone"
+                label="Phone"
+                :rules="phoneRules"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.jobTitle"
+                label="Job Title"
+                :rules="requiredTextWithLengthRules(2, 100)"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.department"
+                label="Department"
+                :rules="requiredTextWithLengthRules(2, 100)"
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.salary"
+                label="Salary"
+                type="number"
+                prefix="SAR"
+                :rules="positiveNumberRules"
+                required
+              />
+            </VCol>
+            <VCol
+              cols="12"
+              md="6"
+            >
+              <VTextField
+                v-model="staffForm.hireDate"
+                label="Hire Date"
+                type="date"
+                :rules="pastDateRules"
+                required
+              />
+            </VCol>
           <VCol
             cols="12"
             md="6"
@@ -219,6 +242,7 @@ const employmentTypeOptions = [
               v-model="staffForm.status"
               label="Status"
               :items="statusOptions"
+              :rules="requiredTextRules"
               required
             />
           </VCol>
@@ -230,6 +254,7 @@ const employmentTypeOptions = [
               v-model="staffForm.employmentType"
               label="Employment Type"
               :items="employmentTypeOptions"
+              :rules="requiredTextRules"
               required
             />
           </VCol>
@@ -238,9 +263,11 @@ const employmentTypeOptions = [
               v-model="staffForm.notes"
               label="Notes"
               rows="2"
+              :rules="requiredTextWithLengthRules(0, 500)"
             />
           </VCol>
         </VRow>
+        </VForm>
       </VCardText>
 
       <VDivider />
@@ -256,7 +283,6 @@ const employmentTypeOptions = [
         </VBtn>
         <VBtn
           color="primary"
-          :disabled="!staffForm.name || !staffForm.email || !staffForm.jobTitle || !staffForm.hireDate || !staffForm.status"
           @click="handleAddStaff"
         >
           Add Staff

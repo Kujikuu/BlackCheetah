@@ -2,6 +2,7 @@
 import { leadApi, type Lead } from '@/services/api'
 import { useCountries } from '@/composables/useCountries'
 import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
+import { useValidation } from '@/composables/useValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -22,6 +23,16 @@ const dialogValue = computed({
 })
 
 const isSaving = ref(false)
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  requiredEmailRules, 
+  phoneRules, 
+  requiredTextWithLengthRules,
+  validateForm 
+} = useValidation()
 
 // Form data
 const formData = ref({
@@ -108,6 +119,10 @@ watch(() => props.lead, (lead) => {
 const onSubmit = async () => {
   if (!props.lead) return
 
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
+
   try {
     isSaving.value = true
 
@@ -154,7 +169,10 @@ const onCancel = () => {
     <DialogCloseBtn @click="onCancel" />
     <VCard title="Edit Lead">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm 
+          ref="formRef"
+          @submit.prevent="onSubmit"
+        >
           <VRow>
             <!-- First Name -->
             <VCol
@@ -165,6 +183,8 @@ const onCancel = () => {
                 v-model="formData.firstName"
                 label="First Name"
                 placeholder="Enter first name"
+                :rules="requiredTextWithLengthRules(2, 50)"
+                required
               />
             </VCol>
 
@@ -177,6 +197,8 @@ const onCancel = () => {
                 v-model="formData.lastName"
                 label="Last Name"
                 placeholder="Enter last name"
+                :rules="requiredTextWithLengthRules(2, 50)"
+                required
               />
             </VCol>
 
@@ -190,6 +212,8 @@ const onCancel = () => {
                 label="Email"
                 type="email"
                 placeholder="Enter email address"
+                :rules="requiredEmailRules"
+                required
               />
             </VCol>
 
@@ -202,6 +226,8 @@ const onCancel = () => {
                 v-model="formData.phone"
                 label="Phone"
                 placeholder="+966 50 123 4567"
+                :rules="phoneRules"
+                required
               />
             </VCol>
 
@@ -214,6 +240,7 @@ const onCancel = () => {
                 v-model="formData.company"
                 label="Company Name"
                 placeholder="Enter company name"
+                :rules="requiredTextWithLengthRules(2, 100)"
               />
             </VCol>
 
@@ -226,6 +253,7 @@ const onCancel = () => {
                 v-model="formData.jobTitle"
                 label="Job Title"
                 placeholder="Enter job title"
+                :rules="requiredTextWithLengthRules(2, 100)"
               />
             </VCol>
 

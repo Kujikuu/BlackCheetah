@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { notesApi } from '@/services/api'
+import { useValidation } from '@/composables/useValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -17,6 +18,18 @@ const emit = defineEmits<Emit>()
 const noteTitle = ref('')
 const noteDescription = ref('')
 const attachments = ref<File[]>([])
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  requiredTextWithLengthRules,
+  fileValidationRules,
+  validateForm 
+} = useValidation()
+
+// File validation rules
+const fileRules = fileValidationRules(10, ['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'])
 
 const dialogValue = computed({
   get: () => props.isDialogVisible,
@@ -36,6 +49,10 @@ const handleFileUpload = (event: Event) => {
 }
 
 const onSubmit = async () => {
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
+
   try {
     const response = await notesApi.createNote({
       title: noteTitle.value,
@@ -83,13 +100,15 @@ const onCancel = () => {
     <DialogCloseBtn @click="onCancel" />
     <VCard title="Add Note">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12">
               <AppTextField
                 v-model="noteTitle"
                 label="Title"
                 placeholder="Enter note title"
+                :rules="requiredTextWithLengthRules(5, 100)"
+                required
               />
             </VCol>
 
@@ -99,6 +118,8 @@ const onCancel = () => {
                 label="Description"
                 placeholder="Enter note description..."
                 rows="6"
+                :rules="requiredTextWithLengthRules(10, 1000)"
+                required
               />
             </VCol>
 
@@ -110,6 +131,7 @@ const onCancel = () => {
                 placeholder="Upload files"
                 chips
                 show-size
+                :rules="fileRules"
                 @change="handleFileUpload"
               />
             </VCol>

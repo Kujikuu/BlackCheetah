@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { leadApi, usersApi } from '@/services/api'
+import { useValidation } from '@/composables/useValidation'
 
 interface Broker {
   id: number
@@ -26,6 +27,10 @@ const selectedAssociateId = ref<number | null>(props.currentAssigneeId || null)
 const brokers = ref<Broker[]>([])
 const isLoading = ref(false)
 const isLoadingAssociates = ref(false)
+const formRef = ref()
+
+// Use validation composable
+const { requiredValidator, validateForm } = useValidation()
 
 const updateModelValue = (val: boolean) => {
   emit('update:isDialogVisible', val)
@@ -67,6 +72,10 @@ const assignLead = async () => {
   if (!props.leadId || selectedAssociateId.value === null)
     return
 
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
+
   isLoading.value = true
 
   try {
@@ -104,24 +113,28 @@ watch(() => props.isDialogVisible, newVal => {
       </VCardItem>
 
       <VCardText>
-        <VSelect
-          v-model="selectedAssociateId"
-          :items="brokers"
-          item-title="name"
-          item-value="id"
-          label="Broker"
-          placeholder="Select a broker"
-          variant="outlined"
-          :loading="isLoadingAssociates"
-          :disabled="isLoading"
-        >
-          <template #item="{ props: itemProps, item }">
-            <VListItem v-bind="itemProps">
-              <VListItemTitle>{{ item.raw.name }}</VListItemTitle>
-              <VListItemSubtitle>{{ item.raw.email }}</VListItemSubtitle>
-            </VListItem>
-          </template>
-        </VSelect>
+        <VForm ref="formRef">
+          <VSelect
+            v-model="selectedAssociateId"
+            :items="brokers"
+            item-title="name"
+            item-value="id"
+            label="Broker"
+            placeholder="Select a broker"
+            variant="outlined"
+            :loading="isLoadingAssociates"
+            :disabled="isLoading"
+            :rules="[requiredValidator]"
+            required
+          >
+            <template #item="{ props: itemProps, item }">
+              <VListItem v-bind="itemProps">
+                <VListItemTitle>{{ item.raw.name }}</VListItemTitle>
+                <VListItemSubtitle>{{ item.raw.email }}</VListItemSubtitle>
+              </VListItem>
+            </template>
+          </VSelect>
+        </VForm>
       </VCardText>
 
       <VCardText class="d-flex align-center justify-end gap-2">

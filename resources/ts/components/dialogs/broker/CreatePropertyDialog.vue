@@ -2,6 +2,7 @@
 import { propertyApi, type CreatePropertyPayload } from '@/services/api'
 import { useCountries } from '@/composables/useCountries'
 import { useSaudiProvinces } from '@/composables/useSaudiProvinces'
+import { useValidation } from '@/composables/useValidation'
 
 interface Props {
   isDialogVisible: boolean
@@ -36,6 +37,16 @@ const formData = ref<CreatePropertyPayload>({
 })
 
 const isSubmitting = ref(false)
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  requiredTextWithLengthRules,
+  positiveNumberRules,
+  addressRules,
+  validateForm 
+} = useValidation()
 
 // Computed for v-model dialog
 const dialogValue = computed({
@@ -74,6 +85,10 @@ const { provinces, getCitiesForProvince, isLoading: isLoadingProvinces } = useSa
 const availableCities = computed(() => getCitiesForProvince(formData.value.state_province || ''))
 
 const onSubmit = async () => {
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
+
   try {
     isSubmitting.value = true
 
@@ -104,16 +119,16 @@ const onCancel = () => {
     <DialogCloseBtn @click="onCancel" />
     <VCard title="Add New Property">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12">
               <AppTextField v-model="formData.title" label="Property Title" placeholder="Enter property title"
-                :rules="[(v: any) => !!v || 'Title is required']" />
+                :rules="requiredTextWithLengthRules(5, 100)" required />
             </VCol>
 
             <VCol cols="12">
               <AppTextarea v-model="formData.description" label="Description" placeholder="Enter property description"
-                rows="3" :rules="[(v: any) => !!v || 'Description is required']" />
+                rows="3" :rules="requiredTextWithLengthRules(10, 1000)" required />
             </VCol>
 
             <VCol cols="12" md="6">
@@ -123,27 +138,27 @@ const onCancel = () => {
                 { title: 'Kiosk', value: 'kiosk' },
                 { title: 'Food Court', value: 'food_court' },
                 { title: 'Standalone', value: 'standalone' },
-              ]" :rules="[(v: any) => !!v || 'Property type is required']" />
+              ]" :rules="requiredTextRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
               <AppTextField v-model="formData.size_sqm" label="Size (m²)" type="number" placeholder="0"
-                :rules="[(v: any) => v > 0 || 'Size is required']" />
+                :rules="positiveNumberRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
               <AppTextField v-model="formData.monthly_rent" label="Monthly Rent (SAR)" type="number" placeholder="0"
-                :rules="[(v: any) => v > 0 || 'Monthly rent is required']" />
+                :rules="positiveNumberRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
               <AppTextField v-model="formData.deposit_amount" label="Deposit Amount (SAR)" type="number"
-                placeholder="0" />
+                placeholder="0" :rules="positiveNumberRules" />
             </VCol>
 
             <VCol cols="12" md="6">
               <AppTextField v-model="formData.lease_term_months" label="Lease Term (months)" type="number"
-                placeholder="12" />
+                placeholder="12" :rules="positiveNumberRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
@@ -153,17 +168,17 @@ const onCancel = () => {
             <VCol cols="12" md="6">
               <AppSelect v-model="formData.state_province" label="State/Province" placeholder="Select State/Province"
                 :items="provinces" :loading="isLoadingProvinces"
-                :rules="[(v: any) => !!v || 'State/Province is required']" />
+                :rules="requiredTextRules" required />
             </VCol>
 
             <VCol cols="12" md="6">
               <AppSelect v-model="formData.city" label="City" placeholder="Select City" :items="availableCities"
-                :disabled="!formData.state_province" :rules="[(v: any) => !!v || 'City is required']" />
+                :disabled="!formData.state_province" :rules="requiredTextRules" required />
             </VCol>
 
             <VCol cols="12">
               <AppTextField v-model="formData.address" label="Address" placeholder="Enter full address"
-                :rules="[(v: any) => !!v || 'Address is required']" />
+                :rules="addressRules" required />
             </VCol>
 
             <VCol cols="12">

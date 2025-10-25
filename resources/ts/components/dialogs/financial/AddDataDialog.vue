@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { financialApi } from '@/services/api'
+import { useValidation } from '@/composables/useValidation'
 
 interface AddDataForm {
   product: string
@@ -27,6 +28,16 @@ const emit = defineEmits<Emit>()
 
 const isLoading = ref(false)
 const addDataCategory = ref<'sales' | 'expense'>('sales')
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  requiredTextWithLengthRules,
+  positiveNumberRules,
+  pastDateRules,
+  validateForm 
+} = useValidation()
 
 const addDataForm = ref<AddDataForm>({
   product: '',
@@ -45,6 +56,10 @@ const dialogValue = computed({
 })
 
 const submitAddData = async () => {
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
+
   isLoading.value = true
   try {
     if (addDataCategory.value === 'sales') {
@@ -107,70 +122,90 @@ const handleClose = () => {
     <DialogCloseBtn @click="handleClose" />
     <VCard title="Add New Data">
       <VCardText>
-        <VSelect
-          v-model="addDataCategory"
-          :items="[
-            { title: 'Sales', value: 'sales' },
-            { title: 'Expense', value: 'expense' },
-          ]"
-          label="Category"
-          class="mb-4"
-        />
+        <VForm ref="formRef">
+          <VSelect
+            v-model="addDataCategory"
+            :items="[
+              { title: 'Sales', value: 'sales' },
+              { title: 'Expense', value: 'expense' },
+            ]"
+            label="Category"
+            :rules="requiredTextRules"
+            required
+            class="mb-4"
+          />
 
-        <!-- Sales Fields -->
-        <div v-if="addDataCategory === 'sales'">
-          <VTextField
-            v-model="addDataForm.product"
-            label="Product"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.dateOfSale"
-            label="Date of Sale"
-            type="date"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.unitPrice"
-            label="Unit Price"
-            type="number"
-            prefix="SAR"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.quantitySold"
-            label="Quantity Sold"
-            type="number"
-            class="mb-4"
-          />
-        </div>
+          <!-- Sales Fields -->
+          <div v-if="addDataCategory === 'sales'">
+            <VTextField
+              v-model="addDataForm.product"
+              label="Product"
+              :rules="requiredTextWithLengthRules(2, 100)"
+              required
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.dateOfSale"
+              label="Date of Sale"
+              type="date"
+              :rules="pastDateRules"
+              required
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.unitPrice"
+              label="Unit Price"
+              type="number"
+              prefix="SAR"
+              :rules="positiveNumberRules"
+              required
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.quantitySold"
+              label="Quantity Sold"
+              type="number"
+              :rules="positiveNumberRules"
+              required
+              class="mb-4"
+            />
+          </div>
 
-        <!-- Expense Fields -->
-        <div v-if="addDataCategory === 'expense'">
-          <VTextField
-            v-model="addDataForm.expenseCategory"
-            label="Expense Category"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.dateOfExpense"
-            label="Date of Expense"
-            type="date"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.amount"
-            label="Amount"
-            type="number"
-            prefix="SAR"
-            class="mb-4"
-          />
-          <VTextField
-            v-model="addDataForm.description"
-            label="Description"
-            class="mb-4"
-          />
-        </div>
+          <!-- Expense Fields -->
+          <div v-if="addDataCategory === 'expense'">
+            <VTextField
+              v-model="addDataForm.expenseCategory"
+              label="Expense Category"
+              :rules="requiredTextWithLengthRules(2, 100)"
+              required
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.dateOfExpense"
+              label="Date of Expense"
+              type="date"
+              :rules="pastDateRules"
+              required
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.amount"
+              label="Amount"
+              type="number"
+              prefix="SAR"
+              :rules="positiveNumberRules"
+              required
+              class="mb-4"
+            />
+            <VTextField
+              v-model="addDataForm.description"
+              label="Description"
+              :rules="requiredTextWithLengthRules(5, 500)"
+              required
+              class="mb-4"
+            />
+          </div>
+        </VForm>
       </VCardText>
       <VCardActions>
         <VSpacer />

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { notesApi } from '@/services/api'
+import { useValidation } from '@/composables/useValidation'
 
 interface Attachment {
   name: string
@@ -33,6 +34,18 @@ const emit = defineEmits<Emit>()
 const editedNote = ref<Note | null>(null)
 const newAttachments = ref<File[]>([])
 const isSubmitting = ref(false)
+const formRef = ref()
+
+// Use validation composable
+const { 
+  requiredTextRules, 
+  requiredTextWithLengthRules,
+  fileValidationRules,
+  validateForm 
+} = useValidation()
+
+// File validation rules
+const fileRules = fileValidationRules(10, ['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', '.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'])
 
 const dialogValue = computed({
   get: () => props.isDialogVisible,
@@ -92,6 +105,10 @@ const removeExistingAttachment = async (index: number) => {
 const onSubmit = async () => {
   if (!editedNote.value)
     return
+
+  // Validate form before submission
+  const isValid = await validateForm(formRef)
+  if (!isValid) return
 
   try {
     isSubmitting.value = true
@@ -171,13 +188,15 @@ const getFileIcon = (type: string): string => {
     <DialogCloseBtn @click="onCancel" />
     <VCard v-if="editedNote" title="Edit Note">
       <VCardText>
-        <VForm @submit.prevent="onSubmit">
+        <VForm ref="formRef" @submit.prevent="onSubmit">
           <VRow>
             <VCol cols="12">
               <AppTextField
                 v-model="editedNote.title"
                 label="Title"
                 placeholder="Enter note title"
+                :rules="requiredTextWithLengthRules(5, 100)"
+                required
                 :disabled="isSubmitting"
               />
             </VCol>
@@ -188,6 +207,8 @@ const getFileIcon = (type: string): string => {
                 label="Description"
                 placeholder="Enter note description..."
                 rows="6"
+                :rules="requiredTextWithLengthRules(10, 1000)"
+                required
                 :disabled="isSubmitting"
               />
             </VCol>
@@ -247,6 +268,7 @@ const getFileIcon = (type: string): string => {
                 placeholder="Upload files"
                 chips
                 show-size
+                :rules="fileRules"
                 :disabled="isSubmitting"
                 @change="handleFileUpload"
               />
