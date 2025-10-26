@@ -126,6 +126,77 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created 5 brokers');
 
+        // 2. Create Franchise
+        $this->command->info('Creating franchise...');
+
+        $franchise = Franchise::create([
+            'franchisor_id' => $franchisor->id,
+            'broker_id' => $brokers[0]->id,
+            
+            // Franchise Details
+            'business_name' => 'Black Cheetah International',
+            'brand_name' => 'Black Cheetah',
+            'website' => 'https://blackcheetah.com',
+            'logo' => null, // Can be updated later
+            'description' => 'Premium fast-food restaurant franchise specializing in gourmet burgers and artisan coffee. We offer a unique dining experience with high-quality ingredients and exceptional customer service.',
+            
+            // Legal Details
+            'business_registration_number' => 'BR-' . rand(100000, 999999),
+            'tax_id' => 'TAX-' . rand(100000, 999999),
+            'business_type' => 'llc', // Business structure: llc, corporation, partnership, sole_proprietorship
+            'industry' => 'Food & Beverage',
+            'established_date' => Carbon::now()->subYears(3),
+            
+            // Contact Details (Headquarters)
+            'headquarters_country' => 'Saudi Arabia',
+            'headquarters_city' => 'Riyadh',
+            'headquarters_address' => 'King Fahd Road, Al Olaya District, Riyadh 12345',
+            'contact_phone' => '+966112345678',
+            'contact_email' => 'info@blackcheetah.com',
+            
+            // Financial Details
+            'franchise_fee' => 50000.00,
+            'royalty_percentage' => 10.00,
+            'marketing_fee_percentage' => 3.00,
+            
+            // Social Media & Business Hours (JSON fields)
+            'social_media' => json_encode([
+                'facebook' => 'https://facebook.com/blackcheetah',
+                'instagram' => 'https://instagram.com/blackcheetah',
+                'twitter' => 'https://twitter.com/blackcheetah',
+                'linkedin' => 'https://linkedin.com/company/blackcheetah',
+            ]),
+            'business_hours' => json_encode([
+                'monday' => ['open' => '08:00', 'close' => '22:00'],
+                'tuesday' => ['open' => '08:00', 'close' => '22:00'],
+                'wednesday' => ['open' => '08:00', 'close' => '22:00'],
+                'thursday' => ['open' => '08:00', 'close' => '22:00'],
+                'friday' => ['open' => '14:00', 'close' => '23:00'],
+                'saturday' => ['open' => '08:00', 'close' => '23:00'],
+                'sunday' => ['open' => '08:00', 'close' => '22:00'],
+            ]),
+            
+            // Operational
+            'total_units' => 1,
+            'active_units' => 1,
+            'status' => 'active',
+            'is_marketplace_listed' => true,
+        ]);
+
+        $this->command->info('✅ Created franchise');
+
+        // Link brokers and franchisee to franchise
+        $this->command->info('Linking users to franchise...');
+
+        foreach ($brokers as $broker) {
+            $broker->update(['franchise_id' => $franchise->id]);
+        }
+
+        $franchisee->update(['franchise_id' => $franchise->id]);
+        $broker->update(['franchise_id' => $franchise->id]);
+
+        $this->command->info('✅ Linked brokers and franchisee to franchise');
+
         // Create 5 Properties for brokers
         $this->command->info('Creating properties...');
 
@@ -268,49 +339,6 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created 5 marketplace inquiries');
 
-        // 2. Create Franchise
-        $this->command->info('Creating franchise...');
-
-        $franchise = Franchise::create([
-            'franchisor_id' => $franchisor->id,
-            'broker_id' => $brokers[0]->id,
-            'business_name' => 'Black Cheetah International',
-            'brand_name' => 'Black Cheetah',
-            'industry' => 'Food & Beverage',
-            'description' => 'Premium fast-food restaurant franchise',
-            'website' => 'https://blackcheetah.com',
-            'business_registration_number' => 'BR-' . rand(100000, 999999),
-            'tax_id' => 'TAX-' . rand(100000, 999999),
-            'business_type' => 'llc',
-            'established_date' => Carbon::now()->subYears(3),
-            'headquarters_country' => 'Saudi Arabia',
-            'headquarters_city' => 'Riyadh',
-            'headquarters_address' => 'King Fahd Road, Riyadh 12345',
-            'contact_phone' => '+966112345678',
-            'contact_email' => 'info@blackcheetah.com',
-            'franchise_fee' => 50000.00,
-            'royalty_percentage' => 10.00,
-            'marketing_fee_percentage' => 3.00,
-            'total_units' => 1,
-            'active_units' => 1,
-            'status' => 'active',
-            'is_marketplace_listed' => true,
-        ]);
-
-        $this->command->info('✅ Created franchise');
-
-        // Link brokers and franchisee to franchise
-        $this->command->info('Linking users to franchise...');
-
-        foreach ($brokers as $broker) {
-            $broker->update(['franchise_id' => $franchise->id]);
-        }
-
-        $franchisee->update(['franchise_id' => $franchise->id]);
-        $broker->update(['franchise_id' => $franchise->id]);
-
-        $this->command->info('✅ Linked brokers and franchisee to franchise');
-
         // 3. Create 1 Unit linked to franchisee
         $this->command->info('Creating unit...');
 
@@ -348,6 +376,7 @@ class MinimalDataSeeder extends Seeder
             $expenses = rand(40000, 80000);
             $royalties = $revenue * 0.10;
             $profit = $revenue - $expenses - $royalties;
+            $totalTransactions = rand(150, 400);
 
             UnitPerformance::create([
                 'franchise_id' => $franchise->id,
@@ -358,13 +387,13 @@ class MinimalDataSeeder extends Seeder
                 'expenses' => $expenses,
                 'royalties' => $royalties,
                 'profit' => max($profit, 0),
-                'total_transactions' => rand(150, 400),
-                'average_transaction_value' => $revenue / rand(150, 400),
+                'total_transactions' => $totalTransactions,
+                'average_transaction_value' => round($revenue / $totalTransactions, 2),
                 'customer_reviews_count' => rand(20, 60),
-                'customer_rating' => rand(35, 50) / 10, // 3.5 to 5.0
+                'customer_rating' => round(rand(35, 50) / 10, 1), // 3.5 to 5.0
                 'employee_count' => 5,
-                'customer_satisfaction_score' => rand(750, 950) / 10, // 75.0 to 95.0
-                'growth_rate' => rand(-50, 200) / 10, // -5.0 to 20.0
+                'customer_satisfaction_score' => round(rand(70, 98) / 10, 1), // 7.0 to 9.8 out of 10
+                'growth_rate' => round(rand(-50, 200) / 10, 1), // -5.0 to 20.0
                 'additional_metrics' => null,
             ]);
         }
