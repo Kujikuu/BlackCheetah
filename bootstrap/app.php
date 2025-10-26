@@ -39,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'onboarding' => \App\Http\Middleware\CheckOnboardingStatus::class,
+            'franchise.check' => \App\Http\Middleware\CheckFranchiseStatus::class,
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         ]);
 
@@ -47,6 +48,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Auth\Middleware\Authenticate::class,
             \App\Http\Middleware\Authenticate::class
         );
+
+        // Disable guest redirect for API-first SPA (return null to send 401 JSON instead)
+        $middleware->redirectGuestsTo(fn () => null);
 
         // Add CORS middleware to API routes
         $middleware->api(prepend: [

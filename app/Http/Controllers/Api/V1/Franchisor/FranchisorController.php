@@ -998,14 +998,14 @@ class FranchisorController extends BaseResourceController
                 'tax_id' => $validatedData['franchiseDetails']['legalDetails']['taxId'],
                 'business_type' => $validatedData['franchiseDetails']['legalDetails']['businessStructure'],
                 'established_date' => null, // Will be filled later
-                'headquarters_country' => $validatedData['franchiseDetails']['contactDetails']['country'],
+                'headquarters_country' => $validatedData['franchiseDetails']['contactDetails']['nationality'],
                 'headquarters_city' => $validatedData['franchiseDetails']['contactDetails']['city'],
                 'headquarters_address' => $validatedData['franchiseDetails']['contactDetails']['address'],
                 'contact_phone' => $validatedData['franchiseDetails']['contactDetails']['contactNumber'],
                 'contact_email' => $validatedData['franchiseDetails']['contactDetails']['email'],
-                'franchise_fee' => null, // Will be filled later
-                'royalty_percentage' => null, // Will be filled later
-                'marketing_fee_percentage' => null,
+                'franchise_fee' => $validatedData['franchiseDetails']['financialDetails']['franchiseFee'] ?? null,
+                'royalty_percentage' => $validatedData['franchiseDetails']['financialDetails']['royaltyPercentage'] ?? null,
+                'marketing_fee_percentage' => $validatedData['franchiseDetails']['financialDetails']['marketingFeePercentage'] ?? null,
                 'total_units' => 0,
                 'active_units' => 0,
                 'status' => 'pending_approval', // Start as pending until approved
@@ -1207,8 +1207,8 @@ class FranchisorController extends BaseResourceController
                     if (array_key_exists('address', $validatedData['franchiseDetails']['contactDetails'])) {
                         $updateData['headquarters_address'] = $validatedData['franchiseDetails']['contactDetails']['address'];
                     }
-                    if (array_key_exists('country', $validatedData['franchiseDetails']['contactDetails'])) {
-                        $updateData['headquarters_country'] = $validatedData['franchiseDetails']['contactDetails']['country'];
+                    if (array_key_exists('nationality', $validatedData['franchiseDetails']['contactDetails'])) {
+                        $updateData['headquarters_country'] = $validatedData['franchiseDetails']['contactDetails']['nationality'];
                     }
                     if (array_key_exists('city', $validatedData['franchiseDetails']['contactDetails'])) {
                         $updateData['headquarters_city'] = $validatedData['franchiseDetails']['contactDetails']['city'];

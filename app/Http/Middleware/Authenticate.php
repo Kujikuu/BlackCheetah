@@ -12,12 +12,8 @@ class Authenticate extends Middleware
      */
     protected function redirectTo(Request $request): ?string
     {
-        // For API requests, return null to avoid redirect and let Laravel return 401 JSON response
-        if ($request->expectsJson() || $request->is('api/*')) {
-            return null;
-        }
-
-        // For web requests in SPA, redirect to frontend login page
-        return '/login';
+        // For this SPA application, always return null to let Laravel return 401 JSON response
+        // The frontend will handle redirecting to the login page
+        return null;
     }
 }

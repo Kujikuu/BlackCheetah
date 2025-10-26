@@ -30,7 +30,7 @@ class RegisterFranchiseRequest extends FormRequest
             // Franchise Details
             'franchiseDetails.franchiseDetails.franchiseName' => 'required|string|max:255',
             'franchiseDetails.franchiseDetails.website' => 'nullable|url|max:255',
-            'franchiseDetails.franchiseDetails.logo' => 'nullable|string',
+            'franchiseDetails.franchiseDetails.logo' => 'nullable|string|max:500',
 
             // Legal Details
             'franchiseDetails.legalDetails.legalEntityName' => 'required|string|max:255',
@@ -47,6 +47,11 @@ class RegisterFranchiseRequest extends FormRequest
             'franchiseDetails.contactDetails.nationality' => 'required|string|max:100',
             'franchiseDetails.contactDetails.state' => 'required|string|max:100',
             'franchiseDetails.contactDetails.city' => 'required|string|max:100',
+
+            // Financial Details
+            'franchiseDetails.financialDetails.franchiseFee' => 'nullable|numeric|min:0',
+            'franchiseDetails.financialDetails.royaltyPercentage' => 'nullable|numeric|min:0|max:100',
+            'franchiseDetails.financialDetails.marketingFeePercentage' => 'nullable|numeric|min:0|max:100',
 
             // Documents (optional for now)
             'documents.fdd' => 'nullable|string',

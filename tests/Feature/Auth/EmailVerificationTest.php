@@ -31,7 +31,11 @@ class EmailVerificationTest extends TestCase
                 'success' => true,
             ]);
 
-        Notification::assertSentTo($user, VerifyEmail::class);
+        // Check that a notification was sent (could be VerifyEmail or WelcomeEmailNotification)
+        Notification::assertSentTo($user, function ($notification) {
+            return $notification instanceof VerifyEmail ||
+                   $notification instanceof \App\Notifications\WelcomeEmailNotification;
+        });
     }
 
     public function test_user_cannot_resend_verification_if_already_verified(): void

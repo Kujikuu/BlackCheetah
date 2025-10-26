@@ -34,7 +34,7 @@ class FranchiseRegistrationTest extends TestCase
         $franchiseData = [
             'personalInfo' => [
                 'contactNumber' => '+1-555-123-4567',
-                'country' => 'United States',
+                'nationality' => 'United States',
                 'state' => 'California',
                 'city' => 'Los Angeles',
                 'address' => '123 Business Ave, Suite 100',
@@ -57,7 +57,7 @@ class FranchiseRegistrationTest extends TestCase
                     'contactNumber' => '+1-555-123-4567',
                     'email' => 'info@testcoffee.com',
                     'address' => '123 Business Ave, Suite 100',
-                    'country' => 'United States',
+                    'nationality' => 'United States',
                     'state' => 'California',
                     'city' => 'Los Angeles',
                 ],
@@ -103,7 +103,7 @@ class FranchiseRegistrationTest extends TestCase
         $this->franchisor->refresh();
         $this->assertEquals('+1-555-123-4567', $this->franchisor->phone);
         $this->assertEquals('123 Business Ave, Suite 100', $this->franchisor->address);
-        $this->assertEquals('United States', $this->franchisor->country);
+        $this->assertEquals('United States', $this->franchisor->nationality);
         $this->assertEquals('California', $this->franchisor->state);
         $this->assertEquals('Los Angeles', $this->franchisor->city);
     }
@@ -200,10 +200,10 @@ class FranchiseRegistrationTest extends TestCase
         $updateData = [
             'personalInfo' => [
                 'contactNumber' => '+1-555-999-8888',
+                'nationality' => 'Updated Country',
                 'address' => '456 Updated St',
                 'city' => 'Updated City',
                 'state' => 'Updated State',
-                'country' => 'Updated Country',
             ],
             'franchiseDetails' => [
                 'franchiseDetails' => [
@@ -219,9 +219,9 @@ class FranchiseRegistrationTest extends TestCase
                     'contactNumber' => '+1-555-999-8888',
                     'email' => 'updated@example.com',
                     'address' => '456 Updated St',
+                    'nationality' => 'Updated Country',
                     'city' => 'Updated City',
                     'state' => 'Updated State',
-                    'country' => 'Updated Country',
                 ],
             ],
         ];
@@ -248,7 +248,7 @@ class FranchiseRegistrationTest extends TestCase
         $this->franchisor->refresh();
         $this->assertEquals('+1-555-999-8888', $this->franchisor->phone);
         $this->assertEquals('456 Updated St', $this->franchisor->address);
-        $this->assertEquals('Updated Country', $this->franchisor->country);
+        $this->assertEquals('Updated Country', $this->franchisor->nationality);
         $this->assertEquals('Updated State', $this->franchisor->state);
         $this->assertEquals('Updated City', $this->franchisor->city);
     }
@@ -268,9 +268,9 @@ class FranchiseRegistrationTest extends TestCase
 
     public function test_non_franchisor_access(): void
     {
-        // Create a user with sales role (not franchisor)
-        $salesUser = User::factory()->create(['role' => 'sales']);
-        $token = $salesUser->createToken('test-token');
+        // Create a user with broker role (not franchisor)
+        $brokerUser = User::factory()->create(['role' => 'broker']);
+        $token = $brokerUser->createToken('test-token');
 
         $response = $this->postJson('/api/v1/franchisor/franchise/register', [], [
             'Authorization' => 'Bearer '.$token->plainTextToken,
@@ -278,10 +278,149 @@ class FranchiseRegistrationTest extends TestCase
         ]);
         $response->assertStatus(403);
 
-        $response = $this->getJson('/api/v1/franchisor/franchise/data');
+        $response = $this->getJson('/api/v1/franchisor/franchise/data', [
+            'Authorization' => 'Bearer '.$token->plainTextToken,
+            'Accept' => 'application/json',
+        ]);
         $response->assertStatus(403);
 
-        $response = $this->putJson('/api/v1/franchisor/franchise/update', []);
+        $response = $this->putJson('/api/v1/franchisor/franchise/update', [], [
+            'Authorization' => 'Bearer '.$token->plainTextToken,
+            'Accept' => 'application/json',
+        ]);
         $response->assertStatus(403);
+    }
+
+    public function test_franchisor_can_check_franchise_status(): void
+    {
+        $token = $this->franchisor->createToken('test-token');
+
+        $response = $this->actingAs($this->franchisor, 'sanctum')
+            ->getJson('/api/v1/onboarding/franchise-status');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'requires_franchise_registration' => true,
+                    'has_franchise' => false,
+                ],
+            ]);
+    }
+
+    public function test_franchisor_with_franchise_has_different_status(): void
+    {
+        // Create a franchise for the franchisor
+        Franchise::factory()->create([
+            'franchisor_id' => $this->franchisor->id,
+        ]);
+
+        $response = $this->actingAs($this->franchisor, 'sanctum')
+            ->getJson('/api/v1/onboarding/franchise-status');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'requires_franchise_registration' => false,
+                    'has_franchise' => true,
+                ],
+            ]);
+    }
+
+    public function test_middleware_blocks_franchisor_without_franchise_from_dashboard(): void
+    {
+        // Ensure franchisor has no franchise
+        Franchise::where('franchisor_id', $this->franchisor->id)->delete();
+
+        $response = $this->actingAs($this->franchisor, 'sanctum')
+            ->getJson('/api/v1/franchisor/dashboard/stats');
+
+        $response->assertStatus(403)
+            ->assertJson([
+                'message' => 'Franchise registration required',
+                'requires_franchise_registration' => true,
+                'redirect_to' => '/franchisor/franchise-registration',
+            ]);
+    }
+
+    public function test_middleware_allows_franchisor_with_franchise_to_access_dashboard(): void
+    {
+        // Create a franchise for the franchisor
+        Franchise::factory()->create([
+            'franchisor_id' => $this->franchisor->id,
+        ]);
+
+        $response = $this->actingAs($this->franchisor, 'sanctum')
+            ->getJson('/api/v1/franchisor/dashboard/stats');
+
+        // Should not be blocked by franchise check middleware
+        // Actual response depends on DashboardController implementation
+        $this->assertNotEquals(403, $response->status());
+    }
+
+    public function test_middleware_allows_franchise_registration_route_without_franchise(): void
+    {
+        // Ensure franchisor has no franchise
+        Franchise::where('franchisor_id', $this->franchisor->id)->delete();
+
+        // Should be able to access franchise registration even without a franchise
+        $response = $this->actingAs($this->franchisor, 'sanctum')
+            ->getJson('/api/v1/franchisor/franchise/data');
+
+        // Should return 404 or empty data, not 403
+        $this->assertNotEquals(403, $response->status());
+    }
+
+    public function test_login_response_includes_franchise_registration_flag(): void
+    {
+        // Ensure franchisor has no franchise
+        Franchise::where('franchisor_id', $this->franchisor->id)->delete();
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $this->franchisor->email,
+            'password' => 'password', // Default factory password
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'requiresFranchiseRegistration' => true,
+            ]);
+    }
+
+    public function test_login_response_shows_no_registration_needed_when_franchise_exists(): void
+    {
+        // Create a franchise for the franchisor
+        Franchise::factory()->create([
+            'franchisor_id' => $this->franchisor->id,
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $this->franchisor->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'requiresFranchiseRegistration' => false,
+            ]);
+    }
+
+    public function test_non_franchisor_login_does_not_have_franchise_registration_flag(): void
+    {
+        $broker = User::factory()->create([
+            'role' => 'broker',
+            'email' => 'broker@test.com',
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $broker->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'requiresFranchiseRegistration' => false,
+            ]);
     }
 }

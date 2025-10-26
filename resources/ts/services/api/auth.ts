@@ -44,6 +44,7 @@ export interface AuthResponse {
     nationality?: string
   }
   userAbilityRules: any[]
+  requiresFranchiseRegistration?: boolean
 }
 
 export interface ApiResponse<T = any> {

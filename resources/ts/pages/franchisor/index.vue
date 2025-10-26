@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SaudiRiyal } from 'lucide-vue-next'
 import { useFranchisorDashboard } from '@/composables/useFranchisorDashboard'
+import { useFranchiseCheck } from '@/composables/useFranchiseCheck'
 import { franchiseApi } from '@/services/api'
 import { formatCurrency } from '@/@core/utils/formatters'
 import FranchiseOverview from '@/views/dashboards/analytics/FranchiseOverview.vue'
@@ -11,6 +12,9 @@ import TaskTracker from '@/views/dashboards/analytics/TaskTracker.vue'
 
 // 👉 Router
 const router = useRouter()
+
+// 👉 Franchise check
+const { checkAndRedirect } = useFranchiseCheck()
 
 // 👉 Franchise name
 const franchiseName = ref<string>('Franchisor')
@@ -24,6 +28,7 @@ const {
   recentActivities,
   profileCompletionStatus,
   isProfileComplete,
+  franchiseExists,
   dismissBanner,
   initializeDashboard,
   refreshDashboard,
@@ -39,7 +44,7 @@ const fetchFranchiseName = async () => {
   try {
     const response = await franchiseApi.getFranchiseData()
     if (response.success && response.data) {
-      franchiseName.value = response.data.franchiseDetails?.franchiseName || 'Franchisor'
+      franchiseName.value = response.data.franchise?.franchiseDetails?.franchiseName || 'Franchisor'
     }
   }
   catch (err: any) {
@@ -77,11 +82,18 @@ const taskStats = computed(() => {
 
 // 👉 Initialize dashboard data on mount
 onMounted(async () => {
-  if (!isProfileComplete.value) {
-    await Promise.all([
-      fetchFranchiseName(),
-      initializeDashboard()
-    ])
+  // Check if franchisor needs to complete franchise registration first
+  const needsRedirect = await checkAndRedirect()
+  if (needsRedirect) {
+    return // Stop execution if redirected
+  }
+
+  // Initialize dashboard to check franchise status (this will set franchiseExists flag)
+  await initializeDashboard()
+
+  // Only fetch franchise data if franchise exists to avoid API errors
+  if (franchiseExists.value) {
+    await fetchFranchiseName()
   }
 })
 </script>

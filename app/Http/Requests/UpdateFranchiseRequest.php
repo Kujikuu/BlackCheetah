@@ -47,6 +47,11 @@ class UpdateFranchiseRequest extends FormRequest
             'franchiseDetails.contactDetails.nationality' => 'sometimes|nullable|string|max:100',
             'franchiseDetails.contactDetails.state' => 'sometimes|nullable|string|max:100',
             'franchiseDetails.contactDetails.city' => 'sometimes|nullable|string|max:100',
+
+            // Financial Details
+            'franchiseDetails.financialDetails.franchiseFee' => 'sometimes|nullable|numeric|min:0',
+            'franchiseDetails.financialDetails.royaltyPercentage' => 'sometimes|nullable|numeric|min:0|max:100',
+            'franchiseDetails.financialDetails.marketingFeePercentage' => 'sometimes|nullable|numeric|min:0|max:100',
         ];
     }
 

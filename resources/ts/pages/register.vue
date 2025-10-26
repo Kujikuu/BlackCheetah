@@ -61,48 +61,15 @@ const register = async () => {
       role: form.value.role,
     })
 
-    // Persist token and basic user data
+    // Registration now returns the same format as login
     if (resp.success && resp.data) {
-      useCookie<string>('accessToken').value = resp.data.token
-      useCookie<any>('userData').value = {
-        id: resp.data.user.id,
-        fullName: resp.data.user.name,
-        username: resp.data.user.email,
-        avatar: undefined,
-        email: resp.data.user.email,
-        role: resp.data.user.role,
-        status: resp.data.user.status,
-      }
-    }
+      // Persist auth data in cookies (same as login)
+      useCookie<string>('accessToken').value = resp.data.accessToken
+      useCookie<any>('userData').value = resp.data.userData
+      useCookie<Rule[]>('userAbilityRules').value = resp.data.userAbilityRules
 
-    // Attempt login to fetch ability rules from backend and ensure consistent cookies
-    let loginResp
-    try {
-      loginResp = await authApi.login({
-        email: form.value.email,
-        password: form.value.password,
-      })
-
-      if (loginResp.success && loginResp.data) {
-        useCookie<string>('accessToken').value = loginResp.data.access_token
-        useCookie<any>('userData').value = {
-          id: loginResp.data.user.id,
-          fullName: loginResp.data.user.name,
-          username: loginResp.data.user.email,
-          avatar: loginResp.data.user.avatar,
-          email: loginResp.data.user.email,
-          role: loginResp.data.user.role,
-        }
-        // Note: The ability rules might need to be fetched separately or handled differently
-        // For now, we'll set empty rules as this seems to be handled in the catch block anyway
-        useCookie<Rule[]>('userAbilityRules').value = []
-        updateAbility([])
-      }
-    }
-    catch (e) {
-      // If auto-login fails, proceed with registration token and empty abilities
-      useCookie<Rule[]>('userAbilityRules').value = []
-      updateAbility([])
+      // Update CASL ability rules
+      updateAbility(resp.data.userAbilityRules)
     }
 
     // Redirect to email verification page

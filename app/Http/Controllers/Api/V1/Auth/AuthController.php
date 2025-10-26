@@ -75,6 +75,7 @@ class AuthController extends Controller
                     ['action' => 'manage', 'subject' => 'Lead'],
                     ['action' => 'manage', 'subject' => 'User'],
                     ['action' => 'read', 'subject' => 'Franchise'],
+                    ['action' => 'manage', 'subject' => 'Franchise'], // Allow franchise registration/management
                     ['action' => 'read', 'subject' => 'Unit'],
                     ['action' => 'manage', 'subject' => 'Task'],
                     ['action' => 'read', 'subject' => 'Performance'],
@@ -111,6 +112,13 @@ class AuthController extends Controller
                 ];
             }
 
+            // Check if franchisor needs to complete franchise registration
+            $requiresFranchiseRegistration = false;
+            if ($user->role === 'franchisor') {
+                $franchise = $user->franchise()->first();
+                $requiresFranchiseRegistration = !$franchise;
+            }
+
             return response()->json([
                 'accessToken' => $token,
                 'userData' => [
@@ -124,6 +132,7 @@ class AuthController extends Controller
                     'nationality' => $user->nationality,
                 ],
                 'userAbilityRules' => $userAbilityRules,
+                'requiresFranchiseRegistration' => $requiresFranchiseRegistration,
             ]);
         } catch (\Exception $e) {
             return $this->errorResponse('Login failed', $e->getMessage(), 500);
@@ -169,18 +178,83 @@ class AuthController extends Controller
             // Send welcome email with verification link
             $user->sendEmailVerificationNotification();
 
+            // Create token
             $token = $user->createToken('API Token')->plainTextToken;
 
-            return $this->successResponse([
-                'user' => [
+            // Define user abilities based on role (same as login)
+            $userAbilityRules = [];
+            if ($user->role === 'admin') {
+                $userAbilityRules = [
+                    ['action' => 'manage', 'subject' => 'all'],
+                ];
+            } elseif ($user->role === 'franchisor') {
+                $userAbilityRules = [
+                    ['action' => 'read', 'subject' => 'FranchisorDashboard'],
+                    ['action' => 'read', 'subject' => 'Lead'],
+                    ['action' => 'manage', 'subject' => 'Lead'],
+                    ['action' => 'manage', 'subject' => 'User'],
+                    ['action' => 'read', 'subject' => 'Franchise'],
+                    ['action' => 'manage', 'subject' => 'Franchise'],
+                    ['action' => 'read', 'subject' => 'Unit'],
+                    ['action' => 'manage', 'subject' => 'Task'],
+                    ['action' => 'read', 'subject' => 'Performance'],
+                    ['action' => 'read', 'subject' => 'Revenue'],
+                    ['action' => 'manage', 'subject' => 'Royalty'],
+                    ['action' => 'create', 'subject' => 'TechnicalRequest'],
+                ];
+            } elseif ($user->role === 'franchisee') {
+                $userAbilityRules = [
+                    ['action' => 'read', 'subject' => 'FranchiseeDashboard'],
+                    ['action' => 'read', 'subject' => 'Unit'],
+                    ['action' => 'read', 'subject' => 'Task'],
+                    ['action' => 'read', 'subject' => 'Performance'],
+                    ['action' => 'read', 'subject' => 'Revenue'],
+                    ['action' => 'read', 'subject' => 'Royalty'],
+                    ['action' => 'create', 'subject' => 'TechnicalRequest'],
+                ];
+            } elseif ($user->role === 'broker') {
+                $userAbilityRules = [
+                    ['action' => 'read', 'subject' => 'Dashboard'],
+                    ['action' => 'read', 'subject' => 'BrokerDashboard'],
+                    ['action' => 'manage', 'subject' => 'Brokerage'],
+                    ['action' => 'manage', 'subject' => 'Lead'],
+                    ['action' => 'manage', 'subject' => 'LeadManagement'],
+                    ['action' => 'read', 'subject' => 'Task'],
+                    ['action' => 'update', 'subject' => 'Task'],
+                    ['action' => 'read', 'subject' => 'TechnicalRequest'],
+                    ['action' => 'create', 'subject' => 'TechnicalRequest'],
+                    ['action' => 'update', 'subject' => 'TechnicalRequest'],
+                    ['action' => 'read', 'subject' => 'Statistics'],
+                    ['action' => 'manage', 'subject' => 'Note'],
+                    ['action' => 'manage', 'subject' => 'Property'],
+                    ['action' => 'manage', 'subject' => 'Franchise'],
+                ];
+            }
+
+            // Check if franchisor needs to complete franchise registration
+            $requiresFranchiseRegistration = false;
+            if ($user->role === 'franchisor') {
+                $franchise = $user->franchise()->first();
+                $requiresFranchiseRegistration = !$franchise;
+            }
+
+            // Return same format as login endpoint
+            return response()->json([
+                'accessToken' => $token,
+                'userData' => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'fullName' => $user->name,
+                    'username' => $user->email,
+                    'avatar' => $user->avatar ? asset('uploads/'.$user->avatar) : null,
                     'email' => $user->email,
                     'role' => $user->role,
                     'status' => $user->status,
+                    'nationality' => $user->nationality,
                 ],
-                'token' => $token,
-            ], 'Registration successful. Please check your email to verify your account.', 201);
+                'userAbilityRules' => $userAbilityRules,
+                'requiresFranchiseRegistration' => $requiresFranchiseRegistration,
+                'message' => 'Registration successful. Please check your email to verify your account.',
+            ], 201);
         } catch (\Exception $e) {
             return $this->errorResponse('Registration failed', $e->getMessage(), 500);
         }

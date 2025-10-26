@@ -91,9 +91,14 @@ const franchiseRegistrationData = ref<FranchiseRegistrationData>({
       contactNumber: '',
       email: '',
       address: '',
-      country: '',
+      nationality: '',
       state: '',
       city: '',
+    },
+    financialDetails: {
+      franchiseFee: '',
+      royaltyPercentage: '',
+      marketingFeePercentage: '',
     },
   },
   documents: {
@@ -118,12 +123,21 @@ const onSubmit = async () => {
   try {
     console.log('Submitting franchise registration:', franchiseRegistrationData.value)
 
-    // First, register the franchise
-    const registrationResponse = await franchiseApi.registerFranchise({
+    // Prepare registration payload - exclude logo file as it needs separate upload
+    const registrationPayload = {
       personalInfo: franchiseRegistrationData.value.personalInfo,
-      franchiseDetails: franchiseRegistrationData.value.franchiseDetails,
+      franchiseDetails: {
+        ...franchiseRegistrationData.value.franchiseDetails,
+        franchiseDetails: {
+          ...franchiseRegistrationData.value.franchiseDetails.franchiseDetails,
+          logo: null, // Logo will be uploaded separately after registration
+        },
+      },
       reviewComplete: franchiseRegistrationData.value.reviewComplete,
-    })
+    }
+
+    // First, register the franchise
+    const registrationResponse = await franchiseApi.registerFranchise(registrationPayload)
 
     if (!registrationResponse.success) {
       showSnackbar(registrationResponse.message || 'Failed to register franchise', 'error')
@@ -132,6 +146,17 @@ const onSubmit = async () => {
     }
 
     const franchiseId = registrationResponse.data.franchise_id
+
+    // Upload logo if provided
+    if (franchiseRegistrationData.value.franchiseDetails.franchiseDetails.logo) {
+      try {
+        await franchiseApi.uploadLogo(franchiseRegistrationData.value.franchiseDetails.franchiseDetails.logo as File)
+      }
+      catch (logoError) {
+        console.error('Logo upload error:', logoError)
+        // Don't fail the entire registration if logo upload fails
+      }
+    }
 
     // Upload documents if any are provided
     const documentUploadPromises = []

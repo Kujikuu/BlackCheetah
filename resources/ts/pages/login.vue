@@ -46,6 +46,12 @@ const login = async () => {
     // Update CASL ability rules
     updateAbility(resp.userAbilityRules)
 
+    // Check if franchisor needs to complete franchise registration
+    if (resp.requiresFranchiseRegistration === true) {
+      router.push('/franchisor/franchise-registration')
+      return
+    }
+
     // Redirect directly to role-specific dashboard
     const userRole = resp.userData.role
     switch (userRole) {

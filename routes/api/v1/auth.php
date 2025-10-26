@@ -67,5 +67,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('onboarding')->group(function () {
         Route::get('/status', [OnboardingController::class, 'checkOnboardingStatus'])->name('api.v1.onboarding.status');
         Route::post('/complete', [OnboardingController::class, 'completeProfile'])->name('api.v1.onboarding.complete');
+        Route::get('/franchise-status', [OnboardingController::class, 'checkFranchiseStatus'])->name('api.v1.onboarding.franchise-status');
     });
 });

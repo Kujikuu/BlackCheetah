@@ -36,10 +36,10 @@ const localFormData = computed({
         <VExpansionPanelText>
           <VRow>
             <VCol cols="6">
-              <strong>Contact:</strong> {{ allFormData.personalInfo.contactNumber || 'Not provided' }}
+              <strong>Contact Number:</strong> {{ allFormData.personalInfo.contactNumber || 'Not provided' }}
             </VCol>
             <VCol cols="6">
-              <strong>Country:</strong> {{ allFormData.personalInfo.country || 'Not provided' }}
+              <strong>Nationality:</strong> {{ allFormData.personalInfo.nationality || 'Not provided' }}
             </VCol>
             <VCol cols="6">
               <strong>State:</strong> {{ allFormData.personalInfo.state || 'Not provided' }}
@@ -56,26 +56,104 @@ const localFormData = computed({
 
       <VExpansionPanel title="Franchise Details">
         <VExpansionPanelText>
-          <VRow>
-            <VCol cols="6">
-              <strong>Franchise Name:</strong> {{ allFormData.franchiseDetails?.franchiseDetails?.franchiseName || 'Not provided' }}
-            </VCol>
-            <VCol cols="6">
-              <strong>Website:</strong> {{ allFormData.franchiseDetails?.franchiseDetails?.website || 'Not provided' }}
-            </VCol>
-            <VCol cols="6">
-              <strong>Legal Entity:</strong> {{ allFormData.franchiseDetails?.legalDetails?.legalEntityName || 'Not provided' }}
-            </VCol>
-            <VCol cols="6">
-              <strong>Business Structure:</strong> {{ allFormData.franchiseDetails?.legalDetails?.businessStructure || 'Not provided' }}
-            </VCol>
-            <VCol cols="6">
-              <strong>Industry:</strong> {{ allFormData.franchiseDetails?.legalDetails?.industry || 'Not provided' }}
-            </VCol>
-            <VCol cols="6">
-              <strong>Funding Amount:</strong> {{ allFormData.franchiseDetails?.legalDetails?.fundingAmount || 'Not provided' }}
-            </VCol>
-          </VRow>
+          <div class="mb-4">
+            <h6 class="text-subtitle-1 mb-2 text-primary">
+              Basic Information
+            </h6>
+            <VRow>
+              <VCol cols="12" md="6">
+                <strong>Franchise Name:</strong> {{ allFormData.franchiseDetails?.franchiseDetails?.franchiseName || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Website:</strong> {{ allFormData.franchiseDetails?.franchiseDetails?.website || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Logo:</strong> 
+                <VChip
+                  :color="allFormData.franchiseDetails?.franchiseDetails?.logo ? 'success' : 'secondary'"
+                  size="small"
+                  class="ms-2"
+                >
+                  {{ allFormData.franchiseDetails?.franchiseDetails?.logo ? 'Uploaded' : 'Not uploaded' }}
+                </VChip>
+              </VCol>
+            </VRow>
+          </div>
+
+          <VDivider class="my-4" />
+
+          <div class="mb-4">
+            <h6 class="text-subtitle-1 mb-2 text-primary">
+              Legal Details
+            </h6>
+            <VRow>
+              <VCol cols="12" md="6">
+                <strong>Legal Entity Name:</strong> {{ allFormData.franchiseDetails?.legalDetails?.legalEntityName || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Business Structure:</strong> {{ allFormData.franchiseDetails?.legalDetails?.businessStructure || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Tax ID:</strong> {{ allFormData.franchiseDetails?.legalDetails?.taxId || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Industry:</strong> {{ allFormData.franchiseDetails?.legalDetails?.industry || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Funding Amount:</strong> {{ allFormData.franchiseDetails?.legalDetails?.fundingAmount || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Funding Source:</strong> {{ allFormData.franchiseDetails?.legalDetails?.fundingSource || 'Not provided' }}
+              </VCol>
+            </VRow>
+          </div>
+
+          <VDivider class="my-4" />
+
+          <div>
+            <h6 class="text-subtitle-1 mb-2 text-primary">
+              Contact Details
+            </h6>
+            <VRow>
+              <VCol cols="12" md="6">
+                <strong>Contact Number:</strong> {{ allFormData.franchiseDetails?.contactDetails?.contactNumber || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Email:</strong> {{ allFormData.franchiseDetails?.contactDetails?.email || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Nationality:</strong> {{ allFormData.franchiseDetails?.contactDetails?.nationality || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>State:</strong> {{ allFormData.franchiseDetails?.contactDetails?.state || 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>City:</strong> {{ allFormData.franchiseDetails?.contactDetails?.city || 'Not provided' }}
+              </VCol>
+              <VCol cols="12">
+                <strong>Address:</strong> {{ allFormData.franchiseDetails?.contactDetails?.address || 'Not provided' }}
+              </VCol>
+            </VRow>
+          </div>
+
+          <VDivider class="my-4" />
+
+          <div>
+            <h6 class="text-subtitle-1 mb-2 text-primary">
+              Financial Details
+            </h6>
+            <VRow>
+              <VCol cols="12" md="6">
+                <strong>Franchise Fee:</strong> {{ allFormData.franchiseDetails?.financialDetails?.franchiseFee ? `$${allFormData.franchiseDetails.financialDetails.franchiseFee}` : 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Royalty Percentage:</strong> {{ allFormData.franchiseDetails?.financialDetails?.royaltyPercentage ? `${allFormData.franchiseDetails.financialDetails.royaltyPercentage}%` : 'Not provided' }}
+              </VCol>
+              <VCol cols="12" md="6">
+                <strong>Marketing Fee Percentage:</strong> {{ allFormData.franchiseDetails?.financialDetails?.marketingFeePercentage ? `${allFormData.franchiseDetails.financialDetails.marketingFeePercentage}%` : 'Not provided' }}
+              </VCol>
+            </VRow>
+          </div>
         </VExpansionPanelText>
       </VExpansionPanel>
 
@@ -85,48 +163,47 @@ const localFormData = computed({
             <VListItem>
               <VListItemTitle>
                 <VIcon
-                  :icon="allFormData.documents.fdd ? 'tabler-check' : 'tabler-x'"
-                  :color="allFormData.documents.fdd ? 'success' : 'error'"
+                  :icon="allFormData.documents?.fdd ? 'tabler-check' : 'tabler-minus'"
+                  :color="allFormData.documents?.fdd ? 'success' : 'secondary'"
                   class="me-2"
                 />
                 Franchise Disclosure Document (FDD)
                 <VChip
-                  v-if="!allFormData.documents.fdd"
-                  color="error"
+                  v-if="allFormData.documents?.fdd"
+                  color="success"
                   size="small"
                   class="ms-2"
                 >
-                  Required
+                  {{ allFormData.documents.fdd?.name || 'Uploaded' }}
+                </VChip>
+                <VChip
+                  v-else
+                  color="secondary"
+                  size="small"
+                  class="ms-2"
+                >
+                  Optional
                 </VChip>
               </VListItemTitle>
             </VListItem>
             <VListItem>
               <VListItemTitle>
                 <VIcon
-                  :icon="allFormData.documents.franchiseAgreement ? 'tabler-check' : 'tabler-x'"
-                  :color="allFormData.documents.franchiseAgreement ? 'success' : 'error'"
+                  :icon="allFormData.documents?.franchiseAgreement ? 'tabler-check' : 'tabler-minus'"
+                  :color="allFormData.documents?.franchiseAgreement ? 'success' : 'secondary'"
                   class="me-2"
                 />
                 Franchise Agreement
                 <VChip
-                  v-if="!allFormData.documents.franchiseAgreement"
-                  color="error"
+                  v-if="allFormData.documents?.franchiseAgreement"
+                  color="success"
                   size="small"
                   class="ms-2"
                 >
-                  Required
+                  {{ allFormData.documents.franchiseAgreement?.name || 'Uploaded' }}
                 </VChip>
-              </VListItemTitle>
-            </VListItem>
-            <VListItem>
-              <VListItemTitle>
-                <VIcon
-                  :icon="allFormData.documents.operationsManual ? 'tabler-check' : 'tabler-minus'"
-                  :color="allFormData.documents.operationsManual ? 'success' : 'secondary'"
-                  class="me-2"
-                />
-                Operations Manual
                 <VChip
+                  v-else
                   color="secondary"
                   size="small"
                   class="ms-2"
@@ -138,12 +215,21 @@ const localFormData = computed({
             <VListItem>
               <VListItemTitle>
                 <VIcon
-                  :icon="allFormData.documents.brandGuidelines ? 'tabler-check' : 'tabler-minus'"
-                  :color="allFormData.documents.brandGuidelines ? 'success' : 'secondary'"
+                  :icon="allFormData.documents?.financialStudy ? 'tabler-check' : 'tabler-minus'"
+                  :color="allFormData.documents?.financialStudy ? 'success' : 'secondary'"
                   class="me-2"
                 />
-                Brand Guidelines
+                Financial Study
                 <VChip
+                  v-if="allFormData.documents?.financialStudy"
+                  color="success"
+                  size="small"
+                  class="ms-2"
+                >
+                  {{ allFormData.documents.financialStudy?.name || 'Uploaded' }}
+                </VChip>
+                <VChip
+                  v-else
                   color="secondary"
                   size="small"
                   class="ms-2"
@@ -155,21 +241,57 @@ const localFormData = computed({
             <VListItem>
               <VListItemTitle>
                 <VIcon
-                  :icon="allFormData.documents.legalDocuments ? 'tabler-check' : 'tabler-minus'"
-                  :color="allFormData.documents.legalDocuments ? 'success' : 'secondary'"
+                  :icon="allFormData.documents?.franchiseKit ? 'tabler-check' : 'tabler-minus'"
+                  :color="allFormData.documents?.franchiseKit ? 'success' : 'secondary'"
                   class="me-2"
                 />
-                Additional Legal Documents
+                Franchise Kit
                 <VChip
+                  v-if="allFormData.documents?.franchiseKit"
+                  color="success"
+                  size="small"
+                  class="ms-2"
+                >
+                  {{ allFormData.documents.franchiseKit?.name || 'Uploaded' }}
+                </VChip>
+                <VChip
+                  v-else
                   color="secondary"
                   size="small"
                   class="ms-2"
                 >
                   Optional
+                </VChip>
+              </VListItemTitle>
+            </VListItem>
+            <VListItem v-if="allFormData.documents?.additionalDocuments && allFormData.documents.additionalDocuments.length > 0">
+              <VListItemTitle>
+                <VIcon
+                  icon="tabler-check"
+                  color="success"
+                  class="me-2"
+                />
+                Additional Documents
+                <VChip
+                  color="success"
+                  size="small"
+                  class="ms-2"
+                >
+                  {{ allFormData.documents.additionalDocuments.length }} file(s)
                 </VChip>
               </VListItemTitle>
             </VListItem>
           </VList>
+          
+          <VAlert
+            v-if="!allFormData.documents?.fdd && !allFormData.documents?.franchiseAgreement && !allFormData.documents?.financialStudy && !allFormData.documents?.franchiseKit"
+            type="info"
+            variant="tonal"
+            class="mt-4"
+          >
+            <VAlertTitle>Documents Optional</VAlertTitle>
+            You can upload documents now or add them later from your dashboard after registration.
+          </VAlert>
         </VExpansionPanelText>
       </VExpansionPanel>
     </VExpansionPanels>

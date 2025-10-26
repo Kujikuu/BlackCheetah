@@ -39,7 +39,7 @@ export const useFranchisorDashboard = () => {
 
   // Profile completion
   const profileCompletionStatus = ref<ProfileCompletionStatus | null>(null)
-  const franchiseExists = ref<boolean>(true) // Track if franchise exists
+  const franchiseExists = ref<boolean>(false) // Track if franchise exists - starts as false until confirmed
 
   // Track if banner was dismissed for current session only
   const bannerDismissed = ref(false)
@@ -123,7 +123,7 @@ export const useFranchisorDashboard = () => {
       if (response.success && response.data) {
         // API returns paginated data, so we need to access response.data.data
         const associatesArray = Array.isArray(response.data) ? response.data : response.data.data || []
-        
+
         // Map the API response to match the composable's expected interface
         salesAssociates.value = associatesArray.map((associate: any) => ({
           id: associate.id,
@@ -186,8 +186,8 @@ export const useFranchisorDashboard = () => {
         profileCompletionStatus.value = null
       }
       else {
-        // For other errors, assume franchise exists to be safe
-        franchiseExists.value = true
+        // For other errors, keep franchiseExists as false to be safe
+        franchiseExists.value = false
         console.error('Profile completion error:', err)
       }
     }
@@ -266,14 +266,19 @@ export const useFranchisorDashboard = () => {
    * Initialize dashboard data
    */
   const initializeDashboard = async () => {
-    await Promise.all([
-      fetchDashboardStats(),
-      fetchSalesAssociates(),
-      fetchLeads(10),
-      fetchProfileCompletion(),
-    ])
+    // First check if franchise exists by fetching profile completion
+    await fetchProfileCompletion()
 
-    generateRecentActivities()
+    // Only fetch dashboard data if franchise exists
+    if (franchiseExists.value) {
+      await Promise.all([
+        fetchDashboardStats(),
+        fetchSalesAssociates(),
+        fetchLeads(10),
+      ])
+
+      generateRecentActivities()
+    }
   }
 
   /**
@@ -295,10 +300,11 @@ export const useFranchisorDashboard = () => {
       if (err.status === 404)
         return false
 
-      // For other errors, assume franchise exists to be safe
+      // For other errors (auth errors, network errors, etc.), return false to be safe
+      // This ensures the user sees the onboarding banner instead of dashboard errors
       console.error('Error checking franchise existence:', err)
 
-      return true
+      return false
     }
   }
 
