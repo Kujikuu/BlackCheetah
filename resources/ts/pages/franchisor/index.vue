@@ -77,10 +77,12 @@ const taskStats = computed(() => {
 
 // 👉 Initialize dashboard data on mount
 onMounted(async () => {
-  await Promise.all([
-    fetchFranchiseName(),
-    initializeDashboard(),
-  ])
+  if (!isProfileComplete.value) {
+    await Promise.all([
+      fetchFranchiseName(),
+      initializeDashboard()
+    ])
+  }
 })
 </script>
 

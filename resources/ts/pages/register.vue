@@ -58,6 +58,7 @@ const register = async () => {
       email: form.value.email,
       password: form.value.password,
       password_confirmation: form.value.password_confirmation,
+      role: form.value.role,
     })
 
     // Persist token and basic user data
@@ -104,24 +105,8 @@ const register = async () => {
       updateAbility([])
     }
 
-    // Redirect directly to role-specific dashboard
-    const userRole = loginResp?.success && loginResp?.data ? loginResp.data.user.role : form.value.role || 'franchisor'
-    switch (userRole) {
-      case 'admin':
-        router.push('/admin/dashboard')
-        break
-      case 'franchisor':
-        router.push('/franchisor')
-        break
-      case 'franchisee':
-        router.push('/franchisee/dashboard/sales')
-        break
-      case 'broker':
-        router.push('/brokers/lead-management')
-        break
-      default:
-        router.push('/')
-    }
+    // Redirect to email verification page
+    router.push({ name: 'verify-email' })
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null
@@ -336,6 +321,9 @@ const register = async () => {
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
                   @click:append-inner="isPasswordVisible = !isPasswordVisible"
                 />
+                <p class="text-caption text-disabled mt-1">
+                  Password must be at least 8 characters and contain uppercase, lowercase, number, and special character.
+                </p>
               </VCol>
 
               <!-- Confirm Password -->

@@ -21,6 +21,7 @@ class AuthController extends Controller
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'password' => 'required|string|min:6',
+                'remember' => 'boolean',
             ]);
 
             if ($validator->fails()) {
@@ -30,11 +31,33 @@ class AuthController extends Controller
             // Manually verify user credentials to avoid guard-related issues
             $user = \App\Models\User::where('email', $request->email)->first();
 
+            // Check if account is locked
+            if ($user && $user->isLocked()) {
+                $remainingTime = $user->remainingLockTime();
+                return $this->errorResponse(
+                    "Your account has been temporarily locked due to multiple failed login attempts. Please try again in {$remainingTime} minutes.",
+                    null,
+                    429
+                );
+            }
+
             if (!$user || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+                // Increment failed login attempts
+                if ($user) {
+                    $user->incrementFailedLoginAttempts();
+                }
+
                 return $this->unauthorizedResponse('Invalid credentials');
             }
 
-            $token = $user->createToken('API Token')->plainTextToken;
+            // Reset failed login attempts on successful login
+            $user->resetFailedLoginAttempts();
+
+            // Create token with expiration based on remember me
+            $tokenName = 'API Token';
+            $expiresAt = $request->input('remember', false) ? now()->addDays(30) : null;
+            
+            $token = $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken;
 
             // Update last login
             $user->update(['last_login_at' => now()]);
@@ -116,8 +139,19 @@ class AuthController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|min:6|confirmed',
-                'role' => 'required|in:franchisor,franchisee,broker',
+                'password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'confirmed',
+                    'regex:/[a-z]/',      // must contain at least one lowercase letter
+                    'regex:/[A-Z]/',      // must contain at least one uppercase letter
+                    'regex:/[0-9]/',      // must contain at least one digit
+                    'regex:/[@$!%*#?&]/', // must contain a special character
+                ],
+                'role' => 'required|in:franchisor,broker',
+            ], [
+                'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*#?&).',
             ]);
 
             if ($validator->fails()) {
@@ -132,6 +166,9 @@ class AuthController extends Controller
                 'status' => 'pending',
             ]);
 
+            // Send welcome email with verification link
+            $user->sendEmailVerificationNotification();
+
             $token = $user->createToken('API Token')->plainTextToken;
 
             return $this->successResponse([
@@ -143,7 +180,7 @@ class AuthController extends Controller
                     'status' => $user->status,
                 ],
                 'token' => $token,
-            ], 'Registration successful', 201);
+            ], 'Registration successful. Please check your email to verify your account.', 201);
         } catch (\Exception $e) {
             return $this->errorResponse('Registration failed', $e->getMessage(), 500);
         }

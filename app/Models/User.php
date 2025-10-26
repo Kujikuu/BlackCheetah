@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -10,10 +10,30 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * Get the notification routing information for mail.
+     *
+     * @return string
+     */
+    public function routeNotificationForMail(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * Send the email verification notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\WelcomeEmailNotification());
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -39,6 +59,9 @@ class User extends Authenticatable
         'profile_completion',
         'profile_completed',
         'franchise_id',
+        'failed_login_attempts',
+        'locked_until',
+        'last_failed_login_at',
     ];
 
     /**
@@ -63,6 +86,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'date_of_birth' => 'date',
             'last_login_at' => 'datetime',
+            'locked_until' => 'datetime',
+            'last_failed_login_at' => 'datetime',
             'preferences' => 'array',
             'profile_completion' => 'array',
             'profile_completed' => 'boolean',
@@ -147,5 +172,65 @@ class User extends Authenticatable
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    /**
+     * Check if account is currently locked
+     */
+    public function isLocked(): bool
+    {
+        if ($this->locked_until === null) {
+            return false;
+        }
+
+        if ($this->locked_until->isPast()) {
+            // Lock period has expired, reset the lock
+            $this->update([
+                'locked_until' => null,
+                'failed_login_attempts' => 0,
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Increment failed login attempts
+     */
+    public function incrementFailedLoginAttempts(): void
+    {
+        $this->increment('failed_login_attempts');
+        $this->update(['last_failed_login_at' => now()]);
+
+        // Lock account after 5 failed attempts for 15 minutes
+        if ($this->failed_login_attempts >= 5) {
+            $this->update(['locked_until' => now()->addMinutes(15)]);
+        }
+    }
+
+    /**
+     * Reset failed login attempts
+     */
+    public function resetFailedLoginAttempts(): void
+    {
+        $this->update([
+            'failed_login_attempts' => 0,
+            'locked_until' => null,
+            'last_failed_login_at' => null,
+        ]);
+    }
+
+    /**
+     * Get remaining lock time in minutes
+     */
+    public function remainingLockTime(): ?int
+    {
+        if (!$this->isLocked()) {
+            return null;
+        }
+
+        return (int) now()->diffInMinutes($this->locked_until, false);
     }
 }
