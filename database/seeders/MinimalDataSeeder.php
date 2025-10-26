@@ -6,8 +6,11 @@ use App\Models\Document;
 use App\Models\Franchise;
 use App\Models\Inventory;
 use App\Models\Lead;
+use App\Models\MarketplaceInquiry;
+use App\Models\Note;
 use App\Models\Notification;
 use App\Models\Product;
+use App\Models\Property;
 use App\Models\Revenue;
 use App\Models\Review;
 use App\Models\Royalty;
@@ -16,6 +19,7 @@ use App\Models\Task;
 use App\Models\TechnicalRequest;
 use App\Models\Transaction;
 use App\Models\Unit;
+use App\Models\UnitPerformance;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -122,11 +126,154 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created 5 brokers');
 
+        // Create 5 Properties for brokers
+        $this->command->info('Creating properties...');
+
+        $properties = [];
+        $propertyData = [
+            [
+                'title' => 'Prime Retail Space - Riyadh Mall',
+                'property_type' => 'retail',
+                'city' => 'Riyadh',
+                'size_sqm' => 250.00,
+                'monthly_rent' => 35000.00,
+                'status' => 'available',
+            ],
+            [
+                'title' => 'Food Court Location - Jeddah Plaza',
+                'property_type' => 'food_court',
+                'city' => 'Jeddah',
+                'size_sqm' => 120.00,
+                'monthly_rent' => 25000.00,
+                'status' => 'available',
+            ],
+            [
+                'title' => 'Kiosk Space - Dammam Center',
+                'property_type' => 'kiosk',
+                'city' => 'Dammam',
+                'size_sqm' => 30.00,
+                'monthly_rent' => 12000.00,
+                'status' => 'available',
+            ],
+            [
+                'title' => 'Standalone Building - Khobar District',
+                'property_type' => 'standalone',
+                'city' => 'Khobar',
+                'size_sqm' => 400.00,
+                'monthly_rent' => 55000.00,
+                'status' => 'under_negotiation',
+            ],
+            [
+                'title' => 'Office Space - Medina Business Park',
+                'property_type' => 'office',
+                'city' => 'Medina',
+                'size_sqm' => 150.00,
+                'monthly_rent' => 20000.00,
+                'status' => 'available',
+            ],
+        ];
+
+        foreach ($propertyData as $index => $data) {
+            $properties[] = Property::create([
+                'broker_id' => $brokers[$index]->id,
+                'title' => $data['title'],
+                'description' => 'Excellent location for franchise business. High foot traffic area with great visibility.',
+                'property_type' => $data['property_type'],
+                'size_sqm' => $data['size_sqm'],
+                'state_province' => 'Riyadh Province',
+                'city' => $data['city'],
+                'address' => 'Main Street, Commercial District',
+                'postal_code' => rand(10000, 99999),
+                'latitude' => 24.7136 + (rand(-100, 100) / 100),
+                'longitude' => 46.6753 + (rand(-100, 100) / 100),
+                'monthly_rent' => $data['monthly_rent'],
+                'deposit_amount' => $data['monthly_rent'] * 2,
+                'lease_term_months' => 36,
+                'available_from' => Carbon::now()->addDays(rand(7, 60)),
+                'amenities' => json_encode(['parking', 'security', 'wifi', 'air_conditioning']),
+                'images' => json_encode([
+                    ['url' => 'properties/property_' . ($index + 1) . '_1.jpg', 'alt' => 'Main View'],
+                    ['url' => 'properties/property_' . ($index + 1) . '_2.jpg', 'alt' => 'Interior'],
+                ]),
+                'status' => $data['status'],
+                'contact_info' => $brokers[$index]->phone . ' | ' . $brokers[$index]->email,
+            ]);
+        }
+
+        $this->command->info('✅ Created 5 properties');
+
+        // Create 5 Marketplace Inquiries
+        $this->command->info('Creating marketplace inquiries...');
+
+        $inquiryData = [
+            [
+                'name' => 'Abdullah Al-Rashid',
+                'email' => 'abdullah.rashid@example.com',
+                'phone' => '+966501234567',
+                'type' => 'franchise',
+                'message' => 'I am interested in opening a Black Cheetah franchise in Riyadh. Please provide more details.',
+                'status' => 'new',
+            ],
+            [
+                'name' => 'Sara Al-Masri',
+                'email' => 'sara.masri@example.com',
+                'phone' => '+966502345678',
+                'type' => 'property',
+                'message' => 'I would like to know more about the retail space in Riyadh Mall.',
+                'status' => 'contacted',
+            ],
+            [
+                'name' => 'Mohammed Al-Faisal',
+                'email' => 'mohammed.faisal@example.com',
+                'phone' => '+966503456789',
+                'type' => 'franchise',
+                'message' => 'Looking to invest in a franchise opportunity in Jeddah.',
+                'status' => 'contacted',
+            ],
+            [
+                'name' => 'Nora Al-Hassan',
+                'email' => 'nora.hassan@example.com',
+                'phone' => '+966504567890',
+                'type' => 'property',
+                'message' => 'Interested in the food court location in Jeddah Plaza.',
+                'status' => 'new',
+            ],
+            [
+                'name' => 'Khaled Al-Zahrani',
+                'email' => 'khaled.zahrani@example.com',
+                'phone' => '+966505678901',
+                'type' => 'franchise',
+                'message' => 'Please send franchise information and investment requirements.',
+                'status' => 'closed',
+            ],
+        ];
+
+        foreach ($inquiryData as $index => $data) {
+            $inquiryType = $data['type'];
+
+            MarketplaceInquiry::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'inquiry_type' => $inquiryType,
+                'franchise_id' => $inquiryType === 'franchise' ? $franchise->id : null,
+                'property_id' => $inquiryType === 'property' ? $properties[($index < 2 ? 0 : 1)]->id : null,
+                'message' => $data['message'],
+                'investment_budget' => rand(100000, 500000) . ' SAR',
+                'preferred_location' => ['Riyadh', 'Jeddah', 'Dammam', 'Any location'][rand(0, 3)],
+                'timeline' => ['Immediate', 'Within 1 month', 'Within 3 months', 'Within 6 months'][rand(0, 3)],
+                'status' => $data['status'],
+            ]);
+        }
+
+        $this->command->info('✅ Created 5 marketplace inquiries');
+
         // 2. Create Franchise
         $this->command->info('Creating franchise...');
 
         $franchise = Franchise::create([
             'franchisor_id' => $franchisor->id,
+            'broker_id' => $brokers[0]->id,
             'business_name' => 'Black Cheetah International',
             'brand_name' => 'Black Cheetah',
             'industry' => 'Food & Beverage',
@@ -147,6 +294,7 @@ class MinimalDataSeeder extends Seeder
             'total_units' => 1,
             'active_units' => 1,
             'status' => 'active',
+            'is_marketplace_listed' => true,
         ]);
 
         $this->command->info('✅ Created franchise');
@@ -190,6 +338,38 @@ class MinimalDataSeeder extends Seeder
         ]);
 
         $this->command->info('✅ Created unit');
+
+        // Create 5 Monthly Unit Performance Records
+        $this->command->info('Creating unit performance records...');
+
+        for ($i = 0; $i < 5; $i++) {
+            $periodDate = Carbon::now()->subMonths($i)->startOfMonth();
+            $revenue = rand(80000, 150000);
+            $expenses = rand(40000, 80000);
+            $royalties = $revenue * 0.10;
+            $profit = $revenue - $expenses - $royalties;
+
+            UnitPerformance::create([
+                'franchise_id' => $franchise->id,
+                'unit_id' => $unit->id,
+                'period_type' => 'monthly',
+                'period_date' => $periodDate,
+                'revenue' => $revenue,
+                'expenses' => $expenses,
+                'royalties' => $royalties,
+                'profit' => max($profit, 0),
+                'total_transactions' => rand(150, 400),
+                'average_transaction_value' => $revenue / rand(150, 400),
+                'customer_reviews_count' => rand(20, 60),
+                'customer_rating' => rand(35, 50) / 10, // 3.5 to 5.0
+                'employee_count' => 5,
+                'customer_satisfaction_score' => rand(750, 950) / 10, // 75.0 to 95.0
+                'growth_rate' => rand(-50, 200) / 10, // -5.0 to 20.0
+                'additional_metrics' => null,
+            ]);
+        }
+
+        $this->command->info('✅ Created 5 unit performance records');
 
         // 4. Create 5 Products
         $this->command->info('Creating products...');
@@ -403,6 +583,33 @@ class MinimalDataSeeder extends Seeder
         }
 
         $this->command->info('✅ Created 7 leads (2 for main broker user, 5 for brokers)');
+
+        // Create 5 Notes for Leads
+        $this->command->info('Creating notes for leads...');
+
+        $noteData = [
+            ['title' => 'Initial Contact', 'description' => 'Called the lead and had a positive conversation. Interested in franchise details.'],
+            ['title' => 'Follow-up Meeting', 'description' => 'Scheduled a meeting for next week to discuss investment requirements.'],
+            ['title' => 'Financial Discussion', 'description' => 'Discussed financial aspects. Lead has sufficient capital for investment.'],
+            ['title' => 'Site Visit Planned', 'description' => 'Lead wants to visit existing franchise location before making decision.'],
+            ['title' => 'Document Sent', 'description' => 'Sent franchise disclosure document and contract template for review.'],
+        ];
+
+        $leads = Lead::where('franchise_id', $franchise->id)->get();
+
+        foreach ($noteData as $index => $data) {
+            if ($index < count($leads)) {
+                Note::create([
+                    'lead_id' => $leads[$index]->id,
+                    'user_id' => $leads[$index]->assigned_to,
+                    'title' => $data['title'],
+                    'description' => $data['description'],
+                    'attachments' => null,
+                ]);
+            }
+        }
+
+        $this->command->info('✅ Created 5 notes for leads');
 
         // Create 5 Documents
         $this->command->info('Creating documents...');
@@ -629,8 +836,9 @@ class MinimalDataSeeder extends Seeder
         $this->command->info('📊 Summary:');
         $this->command->info('  - 4 Users (admin, franchisor, franchisee, broker)');
         $this->command->info('  - 5 Brokers (related to franchisor)');
-        $this->command->info('  - 1 Franchise');
+        $this->command->info('  - 1 Franchise (with marketplace listing)');
         $this->command->info('  - 1 Unit');
+        $this->command->info('  - 5 Unit Performance records');
         $this->command->info('  - 5 Products');
         $this->command->info('  - 5 Inventory records');
         $this->command->info('  - 5 Sales');
@@ -638,10 +846,13 @@ class MinimalDataSeeder extends Seeder
         $this->command->info('  - 5 Royalties');
         $this->command->info('  - 5 Technical Requests');
         $this->command->info('  - 7 Leads (2 for broker user, 5 for brokers)');
+        $this->command->info('  - 5 Notes (attached to leads)');
         $this->command->info('  - 5 Documents');
         $this->command->info('  - 5 Staff');
         $this->command->info('  - 5 Customer Reviews');
         $this->command->info('  - 5 Tasks');
+        $this->command->info('  - 5 Properties (distributed across brokers)');
+        $this->command->info('  - 5 Marketplace Inquiries (3 franchise, 2 property)');
         $this->command->info('  - 16 Notifications (Admin: 3, Franchisor: 4, Franchisee: 5, Broker: 4)');
         $this->command->info('');
         $this->command->info('🔑 Login Credentials:');
