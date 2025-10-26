@@ -24,9 +24,14 @@ export interface FranchiseDetailsData {
     contactNumber: string
     email: string
     address: string
-    country: string
+    nationality: string
     state: string
     city: string
+  }
+  financialDetails: {
+    franchiseFee: string
+    royaltyPercentage: string
+    marketingFeePercentage: string
   }
 }
 

@@ -33,6 +33,7 @@ const login = async () => {
         body: {
           email: form.value.email,
           password: form.value.password,
+          remember: form.value.remember,
         },
       },
     )
@@ -44,6 +45,12 @@ const login = async () => {
 
     // Update CASL ability rules
     updateAbility(resp.userAbilityRules)
+
+    // Check if franchisor needs to complete franchise registration
+    if (resp.requiresFranchiseRegistration === true) {
+      router.push('/franchisor/franchise-registration')
+      return
+    }
 
     // Redirect directly to role-specific dashboard
     const userRole = resp.userData.role
@@ -66,7 +73,14 @@ const login = async () => {
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null
-    if (data?.errors) {
+
+    // Handle rate limiting / account lockout (429 status)
+    if (e?.status === 429 || e?.response?.status === 429) {
+      errorMessages.value = {
+        general: data?.message || 'Too many login attempts. Your account has been temporarily locked.',
+      }
+    }
+    else if (data?.errors) {
       errorMessages.value = {
         email: data.errors.email,
         password: data.errors.password,

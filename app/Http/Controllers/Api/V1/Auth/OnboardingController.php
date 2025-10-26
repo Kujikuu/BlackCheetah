@@ -40,6 +40,28 @@ class OnboardingController extends Controller
     }
 
     /**
+     * Check if franchisor needs to complete franchise registration
+     */
+    public function checkFranchiseStatus(): JsonResponse
+    {
+        $user = Auth::user();
+
+        if (! $user || $user->role !== 'franchisor') {
+            return $this->successResponse([
+                'requires_franchise_registration' => false,
+            ], 'User is not a franchisor');
+        }
+
+        $franchise = $user->franchise()->first();
+
+        return $this->successResponse([
+            'requires_franchise_registration' => !$franchise,
+            'has_franchise' => (bool) $franchise,
+            'franchise_id' => $franchise?->id,
+        ]);
+    }
+
+    /**
      * Complete the franchisee's profile during onboarding.
      */
     public function completeProfile(CompleteProfileRequest $request): JsonResponse

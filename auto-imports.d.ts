@@ -262,6 +262,7 @@ declare global {
   const useFocusWithin: typeof import('@vueuse/core')['useFocusWithin']
   const useFormValidation: typeof import('./resources/ts/composables/useFormValidation')['useFormValidation']
   const useFps: typeof import('@vueuse/core')['useFps']
+  const useFranchiseCheck: typeof import('./resources/ts/composables/useFranchiseCheck')['useFranchiseCheck']
   const useFranchisorDashboard: typeof import('./resources/ts/composables/useFranchisorDashboard')['useFranchisorDashboard']
   const useFullscreen: typeof import('@vueuse/core')['useFullscreen']
   const useGamepad: typeof import('@vueuse/core')['useGamepad']
@@ -644,6 +645,7 @@ declare module 'vue' {
     readonly useFocusWithin: UnwrapRef<typeof import('@vueuse/core')['useFocusWithin']>
     readonly useFormValidation: UnwrapRef<typeof import('./resources/ts/composables/useFormValidation')['useFormValidation']>
     readonly useFps: UnwrapRef<typeof import('@vueuse/core')['useFps']>
+    readonly useFranchiseCheck: UnwrapRef<typeof import('./resources/ts/composables/useFranchiseCheck')['useFranchiseCheck']>
     readonly useFranchisorDashboard: UnwrapRef<typeof import('./resources/ts/composables/useFranchisorDashboard')['useFranchisorDashboard']>
     readonly useFullscreen: UnwrapRef<typeof import('@vueuse/core')['useFullscreen']>
     readonly useGamepad: UnwrapRef<typeof import('@vueuse/core')['useGamepad']>

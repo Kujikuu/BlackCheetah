@@ -298,7 +298,9 @@ export class FranchiseApi {
    * Get franchise data for current franchisor
    */
   async getFranchiseData(): Promise<ApiResponse<FranchiseData>> {
-    return await $api(`${this.getBaseUrl()}/data`)
+    return await $api(`${this.getBaseUrl()}/data`, {
+      ignoreErrorToast: true, // Don't show error toast for 404 (no franchise) - this is expected
+    } as any)
   }
 
   /**
@@ -417,7 +419,9 @@ export class FranchiseApi {
    * Get profile completion status
    */
   async getProfileCompletionStatus(): Promise<ApiResponse<ProfileCompletionStatus>> {
-    return await $api('/v1/franchisor/profile/completion-status')
+    return await $api('/v1/franchisor/profile/completion-status', {
+      ignoreErrorToast: true, // Don't show error toast for 404 (no franchise) - this is expected
+    } as any)
   }
 
   /**
@@ -585,7 +589,7 @@ export class FranchiseApi {
     formData.append('description', `${name} uploaded during franchise registration`)
     formData.append('type', type)
 
-    return await $api(`/v1/documents/${franchiseId}`, {
+    return await $api(`/v1/franchises/${franchiseId}/documents`, {
       method: 'POST',
       body: formData,
     })

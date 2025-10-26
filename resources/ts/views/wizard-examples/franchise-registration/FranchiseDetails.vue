@@ -20,9 +20,14 @@ interface FranchiseDetailsData {
     contactNumber: string
     email: string
     address: string
-    country: string
+    nationality: string
     state: string
     city: string
+  }
+  financialDetails: {
+    franchiseFee: string
+    royaltyPercentage: string
+    marketingFeePercentage: string
   }
 }
 
@@ -42,7 +47,7 @@ const localFormData = computed({
   set: val => emit('update:formData', val),
 })
 
-// Get countries from composable
+// Get nationalities from composable
 const { countries: nationalityOptions, isLoading: isLoadingCountries } = useCountries()
 
 // Get Saudi provinces and cities
@@ -185,7 +190,8 @@ const fundingSources = [
           <AppTextField
             v-model="localFormData.legalDetails.fundingAmount"
             label="Secured Funding Amount"
-            placeholder="$0.00"
+            placeholder="0.00"
+            prefix="SAR"
             type="number"
           />
         </VCol>
@@ -241,11 +247,11 @@ const fundingSources = [
           md="4"
         >
           <AppSelect
-            v-model="localFormData.contactDetails.country"
-            label="Country"
+            v-model="localFormData.contactDetails.nationality"
+            label="Nationality"
             :items="nationalityOptions"
             :loading="isLoadingCountries"
-            placeholder="Select country"
+            placeholder="Select nationality"
             clearable
           />
         </VCol>
@@ -273,6 +279,49 @@ const fundingSources = [
             :items="availableCities"
             :disabled="!localFormData.contactDetails.state"
             clearable
+          />
+        </VCol>
+      </VRow>
+
+      <!-- Financial Details Section -->
+      <h6 class="text-h6 my-4">
+        Financial Details
+      </h6>
+      <VRow>
+        <VCol
+          cols="12"
+          md="4"
+        >
+          <AppTextField
+            v-model="localFormData.financialDetails.franchiseFee"
+            label="Franchise Fee"
+            placeholder="Enter franchise fee"
+            type="number"
+            prefix="$"
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="4"
+        >
+          <AppTextField
+            v-model="localFormData.financialDetails.royaltyPercentage"
+            label="Royalty Percentage"
+            placeholder="Enter royalty percentage"
+            type="number"
+            suffix="%"
+          />
+        </VCol>
+        <VCol
+          cols="12"
+          md="4"
+        >
+          <AppTextField
+            v-model="localFormData.financialDetails.marketingFeePercentage"
+            label="Marketing Fee Percentage"
+            placeholder="Enter marketing fee percentage"
+            type="number"
+            suffix="%"
           />
         </VCol>
       </VRow>

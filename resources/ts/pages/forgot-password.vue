@@ -5,6 +5,7 @@ import authV1BottomShape from '@images/svg/auth-v1-bottom-shape.svg?raw'
 import authV1TopShape from '@images/svg/auth-v1-top-shape.svg?raw'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
+import { authApi } from '@/services/api/auth'
 
 const { smAndUp } = useDisplay()
 
@@ -15,23 +16,39 @@ const form = ref({
 const loading = ref(false)
 const infoMessage = ref<string | null>(null)
 const errorMessage = ref<string | null>(null)
+const errorMessages = ref<{ email?: string[] } | null>(null)
 
 const onSubmit = async () => {
+  if (!form.value.email) {
+    errorMessage.value = 'Please enter your email address.'
+    return
+  }
+
   loading.value = true
   infoMessage.value = null
   errorMessage.value = null
+  errorMessages.value = null
 
   try {
-    // No backend endpoint wired; provide UX feedback
-    infoMessage.value = 'If this email exists, a password reset link will be sent.'
-    setTimeout(() => {
-      infoMessage.value = null
-    }, 3000)
+    const response = await authApi.forgotPassword({ email: form.value.email })
+
+    if (response.success) {
+      infoMessage.value = response.message || 'If that email address exists in our system, we have sent a password reset link to it.'
+      form.value.email = '' // Clear form on success
+    }
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null
 
-    errorMessage.value = data?.message || 'Failed to request password reset.'
+    if (data?.errors) {
+      errorMessages.value = {
+        email: data.errors.email,
+      }
+      errorMessage.value = data.message
+    }
+    else {
+      errorMessage.value = data?.message || 'Failed to request password reset. Please try again.'
+    }
   }
   finally {
     loading.value = false
@@ -111,6 +128,7 @@ const onSubmit = async () => {
                   label="Email"
                   type="email"
                   placeholder="Email"
+                  :error-messages="errorMessages?.email"
                 />
               </VCol>
 

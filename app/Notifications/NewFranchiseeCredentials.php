@@ -3,11 +3,10 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewFranchiseeCredentials extends Notification implements ShouldQueue
+class NewFranchiseeCredentials extends Notification
 {
     use Queueable;
 

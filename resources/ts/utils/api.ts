@@ -47,7 +47,7 @@ export const $api = ofetch.create({
       showSuccess(message)
     }
   },
-  async onResponseError({ response }) {
+  async onResponseError({ response, options }) {
     const error = {
       status: response.status,
       statusText: response.statusText,
@@ -87,9 +87,13 @@ export const $api = ofetch.create({
         userMessage = response._data?.message || `Error ${response.status}: ${response.statusText}`
     }
 
+    // Check if error toast should be suppressed (via custom ignoreErrorToast option)
+    const ignoreErrorToast = (options as any)?.ignoreErrorToast || false
+
     // Show snackbar notification for user-facing errors (only for 4xx/5xx, skip 401 and 422)
     // Skip 422 because validation errors are handled at the field level
-    if (response.status >= 400 && response.status !== 401 && response.status !== 422) {
+    // Also skip if ignoreErrorToast is explicitly set
+    if (!ignoreErrorToast && response.status >= 400 && response.status !== 401 && response.status !== 422) {
       const { showError } = useSnackbar()
       showError(userMessage)
     }

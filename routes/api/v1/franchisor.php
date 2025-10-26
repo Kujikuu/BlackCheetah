@@ -15,8 +15,19 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('franchisor')->group(function () {
-    // Dashboard endpoints
-    Route::prefix('dashboard')->group(function () {
+    // Franchise registration routes (no franchise check required)
+    Route::prefix('franchise')->withoutMiddleware('franchise.check')->group(function () {
+        Route::post('register', [FranchisorController::class, 'registerFranchise'])->name('api.v1.franchisor.franchise.register');
+        Route::get('data', [FranchisorController::class, 'getFranchiseData'])->name('api.v1.franchisor.franchise.data');
+    });
+
+    // Profile completion status (no franchise check required)
+    Route::get('profile/completion-status', [FranchisorController::class, 'profileCompletionStatus'])->name('api.v1.franchisor.profile.completion-status');
+
+    // All other routes require franchise to be registered
+    Route::middleware(['franchise.check'])->group(function () {
+        // Dashboard endpoints
+        Route::prefix('dashboard')->group(function () {
         Route::get('stats', [DashboardController::class, 'stats'])->name('api.v1.franchisor.dashboard.stats');
         Route::get('finance', [FranchisorFinancialController::class, 'stats'])->name('api.v1.franchisor.dashboard.finance');
         Route::get('leads', [LeadManagementController::class, 'leadsStats'])->name('api.v1.franchisor.dashboard.leads');
@@ -24,13 +35,8 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('franchisor')->gr
         Route::get('timeline', [DashboardController::class, 'timelineStats'])->name('api.v1.franchisor.dashboard.timeline');
     });
 
-    // Profile completion status
-    Route::get('profile/completion-status', [FranchisorController::class, 'profileCompletionStatus'])->name('api.v1.franchisor.profile.completion-status');
-
-    // Franchise registration and management
+    // Franchise management (requires franchise to exist)
     Route::prefix('franchise')->group(function () {
-        Route::post('register', [FranchisorController::class, 'registerFranchise'])->name('api.v1.franchisor.franchise.register');
-        Route::get('data', [FranchisorController::class, 'getFranchiseData'])->name('api.v1.franchisor.franchise.data');
         Route::put('update', [FranchisorController::class, 'updateFranchise'])->name('api.v1.franchisor.franchise.update');
         Route::post('upload-logo', [FranchisorController::class, 'uploadLogo'])->name('api.v1.franchisor.franchise.upload-logo');
     });
@@ -150,4 +156,5 @@ Route::middleware(['auth:sanctum', 'role:franchisor'])->prefix('franchisor')->gr
         Route::get('export', [LeadController::class, 'exportCsv'])->name('api.v1.franchisor.leads.export');
         Route::delete('bulk-delete', [LeadController::class, 'bulkDelete'])->name('api.v1.franchisor.leads.bulk-delete');
     });
+    }); // End franchise.check middleware group
 });

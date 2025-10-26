@@ -10,12 +10,16 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import { authApi } from '@/services/api'
 
+// Step management
+const currentStep = ref(1)
+const selectedRole = ref<'broker' | 'franchisor' | ''>('')
+
 const form = ref({
   name: '',
   email: '',
   password: '',
   password_confirmation: '',
-  role: 'franchisor',
+  role: '',
   privacyPolicies: false,
 })
 
@@ -26,6 +30,18 @@ const errorMessages = ref<{ name?: string[]; email?: string[]; password?: string
 const router = useRouter()
 const { smAndUp } = useDisplay()
 const { updateAbility } = useAbility()
+
+// Step 1: Role selection
+const selectRole = (role: 'broker' | 'franchisor') => {
+  selectedRole.value = role
+}
+
+const proceedToStep2 = () => {
+  if (selectedRole.value) {
+    form.value.role = selectedRole.value
+    currentStep.value = 2
+  }
+}
 
 const register = async () => {
   if (!form.value.privacyPolicies) {
@@ -42,70 +58,22 @@ const register = async () => {
       email: form.value.email,
       password: form.value.password,
       password_confirmation: form.value.password_confirmation,
+      role: form.value.role,
     })
 
-    // Persist token and basic user data
+    // Registration now returns the same format as login
     if (resp.success && resp.data) {
-      useCookie<string>('accessToken').value = resp.data.token
-      useCookie<any>('userData').value = {
-        id: resp.data.user.id,
-        fullName: resp.data.user.name,
-        username: resp.data.user.email,
-        avatar: undefined,
-        email: resp.data.user.email,
-        role: resp.data.user.role,
-        status: resp.data.user.status,
-      }
+      // Persist auth data in cookies (same as login)
+      useCookie<string>('accessToken').value = resp.data.accessToken
+      useCookie<any>('userData').value = resp.data.userData
+      useCookie<Rule[]>('userAbilityRules').value = resp.data.userAbilityRules
+
+      // Update CASL ability rules
+      updateAbility(resp.data.userAbilityRules)
     }
 
-    // Attempt login to fetch ability rules from backend and ensure consistent cookies
-    let loginResp
-    try {
-      loginResp = await authApi.login({
-        email: form.value.email,
-        password: form.value.password,
-      })
-
-      if (loginResp.success && loginResp.data) {
-        useCookie<string>('accessToken').value = loginResp.data.access_token
-        useCookie<any>('userData').value = {
-          id: loginResp.data.user.id,
-          fullName: loginResp.data.user.name,
-          username: loginResp.data.user.email,
-          avatar: loginResp.data.user.avatar,
-          email: loginResp.data.user.email,
-          role: loginResp.data.user.role,
-        }
-        // Note: The ability rules might need to be fetched separately or handled differently
-        // For now, we'll set empty rules as this seems to be handled in the catch block anyway
-        useCookie<Rule[]>('userAbilityRules').value = []
-        updateAbility([])
-      }
-    }
-    catch (e) {
-      // If auto-login fails, proceed with registration token and empty abilities
-      useCookie<Rule[]>('userAbilityRules').value = []
-      updateAbility([])
-    }
-
-    // Redirect directly to role-specific dashboard
-    const userRole = loginResp?.success && loginResp?.data ? loginResp.data.user.role : form.value.role || 'franchisor'
-    switch (userRole) {
-      case 'admin':
-        router.push('/admin/dashboard')
-        break
-      case 'franchisor':
-        router.push('/franchisor')
-        break
-      case 'franchisee':
-        router.push('/franchisee/dashboard/sales')
-        break
-      case 'broker':
-        router.push('/brokers/lead-management')
-        break
-      default:
-        router.push('/')
-    }
+    // Redirect to email verification page
+    router.push({ name: 'verify-email' })
   }
   catch (e: any) {
     const data = e?.data || e?.response?._data || null
@@ -163,16 +131,118 @@ const register = async () => {
           </VCardTitle>
         </VCardItem>
 
-        <VCardText>
+        <!-- Step 1: Role Selection -->
+        <VCardText v-if="currentStep === 1">
+          <h4 class="text-h4 mb-1 text-center">
+            Join as a Broker or Franchisor
+          </h4>
+          <p class="mb-6 text-center">
+            Select your role to get started
+          </p>
+
+          <VRow class="role-selection-cards mb-6">
+            <!-- Franchisor Card -->
+            <VCol cols="12" sm="6">
+              <VCard
+                :class="[
+                  'role-card cursor-pointer',
+                  { 'role-card-selected': selectedRole === 'franchisor' }
+                ]"
+                variant="outlined"
+                @click="selectRole('franchisor')"
+              >
+                <VCardText class="pa-6">
+                  <div class="d-flex justify-space-between align-start mb-4">
+                    <VIcon
+                      icon="tabler-briefcase"
+                      size="48"
+                      class="text-primary"
+                    />
+                    <div class="role-radio">
+                      <div
+                        :class="[
+                          'radio-outer',
+                          { 'radio-selected': selectedRole === 'franchisor' }
+                        ]"
+                      >
+                        <div v-if="selectedRole === 'franchisor'" class="radio-inner" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-body-1 font-weight-medium">
+                    I'm a franchisor, managing franchises
+                  </div>
+                </VCardText>
+              </VCard>
+            </VCol>
+
+            <!-- Broker Card -->
+            <VCol cols="12" sm="6">
+              <VCard
+                :class="[
+                  'role-card cursor-pointer',
+                  { 'role-card-selected': selectedRole === 'broker' }
+                ]"
+                variant="outlined"
+                @click="selectRole('broker')"
+              >
+                <VCardText class="pa-6">
+                  <div class="d-flex justify-space-between align-start mb-4">
+                    <VIcon
+                      icon="tabler-users"
+                      size="48"
+                      class="text-primary"
+                    />
+                    <div class="role-radio">
+                      <div
+                        :class="[
+                          'radio-outer',
+                          { 'radio-selected': selectedRole === 'broker' }
+                        ]"
+                      >
+                        <div v-if="selectedRole === 'broker'" class="radio-inner" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-body-1 font-weight-medium">
+                    I'm a broker, connecting opportunities
+                  </div>
+                </VCardText>
+              </VCard>
+            </VCol>
+          </VRow>
+
+          <VBtn
+            block
+            size="large"
+            :disabled="!selectedRole"
+            @click="proceedToStep2"
+          >
+            Create Account
+          </VBtn>
+
+          <div class="text-center text-base mt-6">
+            <span>Already have an account?</span>
+            <RouterLink
+              class="text-primary ms-1"
+              :to="{ name: 'login' }"
+            >
+              Log In
+            </RouterLink>
+          </div>
+        </VCardText>
+
+        <!-- Step 2: Registration Form -->
+        <VCardText v-if="currentStep === 2">
           <h4 class="text-h4 mb-1">
-            Adventure starts here 🚀
+            Complete Your Registration as {{ selectedRole === 'franchisor' ? 'Franchisor' : 'Broker' }}
           </h4>
           <p class="mb-0">
-            Make your app management easy and fun!
+            Fill in your details to create your account
           </p>
         </VCardText>
 
-        <VCardText>
+        <VCardText v-if="currentStep === 2">
           <VForm @submit.prevent="register">
             <VRow>
               <VCol cols="12">
@@ -206,18 +276,6 @@ const register = async () => {
                 />
               </VCol>
 
-              <!-- Role -->
-              <!--
-                <VCol cols="12">
-                <AppSelect
-                v-model="form.role"
-                :items="['franchisor', 'franchisee', 'broker']"
-                label="Role"
-                :error-messages="errorMessages?.role"
-                />
-                </VCol>
-              -->
-
               <!-- Password -->
               <VCol cols="12">
                 <AppTextField
@@ -230,6 +288,9 @@ const register = async () => {
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
                   @click:append-inner="isPasswordVisible = !isPasswordVisible"
                 />
+                <p class="text-caption text-disabled mt-1">
+                  Password must be at least 8 characters and contain uppercase, lowercase, number, and special character.
+                </p>
               </VCol>
 
               <!-- Confirm Password -->
@@ -315,4 +376,57 @@ const register = async () => {
 
 <style lang="scss">
 @use "@core-scss/template/pages/page-auth";
+
+// Role selection cards styling
+.role-selection-cards {
+  .role-card {
+    transition: all 0.2s ease-in-out;
+    border: 2px solid rgba(var(--v-border-color), var(--v-border-opacity));
+    
+    &:hover {
+      border-color: rgb(var(--v-theme-primary));
+      box-shadow: 0 2px 8px rgba(var(--v-theme-primary), 0.15);
+    }
+    
+    &.role-card-selected {
+      border-color: rgb(var(--v-theme-primary));
+      background-color: rgba(var(--v-theme-primary), 0.04);
+      box-shadow: 0 2px 12px rgba(var(--v-theme-primary), 0.2);
+    }
+  }
+
+  // Custom radio button
+  .role-radio {
+    .radio-outer {
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba(var(--v-border-color), var(--v-border-opacity));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease-in-out;
+      
+      &.radio-selected {
+        border-color: rgb(var(--v-theme-primary));
+      }
+      
+      .radio-inner {
+        width: 12px;
+        height: 12px;
+        background-color: rgb(var(--v-theme-primary));
+        border-radius: 50%;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .role-selection-cards {
+    .role-card {
+      margin-bottom: 1rem;
+    }
+  }
+}
 </style>
