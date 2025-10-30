@@ -116,61 +116,6 @@ const isPageActive = computed(() => menuItems.some(item => item.navItems.some(li
             {{ item }}
           </RouterLink>
 
-          <!-- <div class="font-weight-medium cursor-pointer">
-            <div
-              :class="[isMenuOpen ? 'mb-6 active-link' : '', isPageActive ? 'active-link' : '']"
-              style="color: rgba(var(--v-theme-on-surface));"
-              class="page-link"
-              @click="isMenuOpen = !isMenuOpen"
-            >
-              Pages <VIcon :icon="isMenuOpen ? 'tabler-chevron-up' : 'tabler-chevron-down'" />
-            </div>
-
-            <div
-              class="px-4"
-              :class="isMenuOpen ? 'd-block' : 'd-none'"
-            >
-              <div
-                v-for="(item, index) in menuItems"
-                :key="index"
-              >
-                <div class="d-flex align-center gap-x-3 mb-4">
-                  <VAvatar
-                    variant="tonal"
-                    color="primary"
-                    rounded
-                    :icon="item.listIcon"
-                  />
-                  <div class="text-body-1 text-high-emphasis font-weight-medium">
-                    {{ item.listTitle }}
-                  </div>
-                </div>
-                <ul class="mb-6">
-                  <li
-                    v-for="listItem in item.navItems"
-                    :key="listItem.name"
-                    style="list-style: none;"
-                    class="text-body-1 mb-4 text-no-wrap"
-                  >
-                    <RouterLink
-                      :to="listItem.to"
-                      :target="item.listTitle === 'Page' ? '_self' : '_blank'"
-                      class="mega-menu-item"
-                      :class="isCurrentRoute(listItem.to) ? 'active-link' : 'text-high-emphasis'"
-                    >
-                      <VIcon
-                        icon="tabler-circle"
-                        :size="10"
-                        class="me-2"
-                      />
-                      <span>  {{ listItem.name }}</span>
-                    </RouterLink>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div> -->
-
           <RouterLink
             v-if="isAuthenticated"
             :to="getDashboardRoute()"
@@ -340,15 +285,17 @@ const isPageActive = computed(() => menuItems.some(item => item.navItems.some(li
 
         <VSpacer />
 
-        <div class="d-flex gap-x-4">
+        <div class="d-flex align-center navbar-actions" :class="{ 'navbar-actions-mobile': !display.mdAndUp }">
           <NavbarThemeSwitcher />
 
+          <!-- Desktop buttons -->
           <VBtn
             v-if="!isAuthenticated && display.lgAndUp"
             prepend-icon="tabler-rocket"
             variant="elevated"
             color="primary"
             :to="{ name: 'register' }"
+            class="d-none d-lg-flex"
           >
             Create Account
           </VBtn>
@@ -358,17 +305,41 @@ const isPageActive = computed(() => menuItems.some(item => item.navItems.some(li
             variant="elevated"
             color="primary"
             :to="getDashboardRoute()"
+            class="d-none d-lg-flex"
           >
             Go to Dashboard
           </VBtn>
 
+          <!-- Mobile/Tablet buttons - Icon only -->
           <VBtn
-            v-if="!isAuthenticated"
+            v-if="!isAuthenticated && display.mdAndUp && !display.lgAndUp"
+            icon="tabler-rocket"
+            variant="elevated"
+            color="primary"
+            :to="{ name: 'register' }"
+            size="small"
+            class="d-flex d-lg-none"
+          />
+          <VBtn
+            v-if="isAuthenticated && display.mdAndUp && !display.lgAndUp"
+            icon="tabler-dashboard"
+            variant="elevated"
+            color="primary"
+            :to="getDashboardRoute()"
+            size="small"
+            class="d-flex d-lg-none"
+          />
+
+          <!-- Login button - Hidden on mobile (available in drawer) -->
+          <VBtn
+            v-if="!isAuthenticated && display.mdAndUp"
             prepend-icon="tabler-login"
             variant="outlined"
             :to="{ name: 'login' }"
+            :size="display.lgAndUp ? 'default' : 'small'"
+            class="d-none d-md-flex"
           >
-            Login
+            <span v-if="display.lgAndUp">Login</span>
           </VBtn>
         </div>
       </VAppBar>
@@ -478,6 +449,20 @@ const isPageActive = computed(() => menuItems.some(item => item.navItems.some(li
   content: "";
   inline-size: 100%;
 }
+
+.navbar-actions {
+  gap: 1rem;
+}
+
+.navbar-actions-mobile {
+  gap: 0.5rem;
+}
+
+@media (max-width: 959px) {
+  .navbar-actions {
+    gap: 0.5rem;
+  }
+}
 </style>
 
 <style lang="scss">
@@ -497,6 +482,14 @@ const isPageActive = computed(() => menuItems.some(item => item.navItems.some(li
 .front-page-navbar {
   .v-toolbar__content {
     padding-inline: 30px !important;
+
+    @media (max-width: 959px) {
+      padding-inline: 16px !important;
+    }
+
+    @media (max-width: 599px) {
+      padding-inline: 12px !important;
+    }
   }
 
   .v-toolbar {
