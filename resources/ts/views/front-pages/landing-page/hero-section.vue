@@ -265,8 +265,7 @@ section {
 
 .hero-title {
   animation: shine 2s ease-in-out infinite alternate;
-  background: linear-gradient(135deg, #F2A649 0%, #000000 47.92%, #F2A649 100%);
-  //  stylelint-disable-next-line property-no-vendor-prefix
+  background: linear-gradient(135deg, #F2A649 0%, #f3ca98 47.92%, #F2A649 100%);
   -webkit-background-clip: text;
   background-clip: text;
   background-size: 200% auto;
