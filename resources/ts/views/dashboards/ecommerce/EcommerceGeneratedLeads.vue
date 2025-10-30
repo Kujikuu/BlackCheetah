@@ -73,7 +73,7 @@ const chartOptions = computed(() => {
             show: true,
             value: {
               fontSize: '1.375rem',
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
               color: headingColor,
               fontWeight: 600,
               offsetY: -15,
@@ -83,7 +83,7 @@ const chartOptions = computed(() => {
             },
             name: {
               offsetY: 20,
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
             },
             total: {
               show: true,
@@ -91,7 +91,7 @@ const chartOptions = computed(() => {
               color: currentTheme.success,
               fontSize: '.8125rem',
               label: 'Total',
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
               formatter() {
                 return '184'
               },

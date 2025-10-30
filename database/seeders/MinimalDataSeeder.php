@@ -40,7 +40,7 @@ class MinimalDataSeeder extends Seeder
 
         $admin = User::create([
             'name' => 'Admin User',
-            'email' => 'admin@cheetah.com',
+            'email' => 'admin@cheetah.com.sa',
             'password' => Hash::make('password'),
             'role' => 'admin',
             'phone' => '+966500000001',
@@ -54,7 +54,7 @@ class MinimalDataSeeder extends Seeder
 
         $franchisor = User::create([
             'name' => 'Franchisor User',
-            'email' => 'franchisor@cheetah.com',
+            'email' => 'franchisor@cheetah.com.sa',
             'password' => Hash::make('password'),
             'role' => 'franchisor',
             'phone' => '+966500000002',
@@ -68,7 +68,7 @@ class MinimalDataSeeder extends Seeder
 
         $franchisee = User::create([
             'name' => 'Franchisee User',
-            'email' => 'franchisee@cheetah.com',
+            'email' => 'franchisee@cheetah.com.sa',
             'password' => Hash::make('password'),
             'role' => 'franchisee',
             'phone' => '+966500000003',
@@ -82,7 +82,7 @@ class MinimalDataSeeder extends Seeder
 
         $broker = User::create([
             'name' => 'Broker User',
-            'email' => 'broker@cheetah.com',
+            'email' => 'broker@cheetah.com.sa',
             'password' => Hash::make('password'),
             'role' => 'broker',
             'phone' => '+966500000004',
@@ -101,11 +101,11 @@ class MinimalDataSeeder extends Seeder
 
         $brokers = [];
         $brokerData = [
-            ['name' => 'Ahmed Al-Salem', 'email' => 'ahmed.salem@cheetah.com'],
-            ['name' => 'Fatima Al-Khalid', 'email' => 'fatima.khalid@cheetah.com'],
-            ['name' => 'Mohammed Al-Rashid', 'email' => 'mohammed.rashid@cheetah.com'],
-            ['name' => 'Layla Al-Hassan', 'email' => 'layla.hassan@cheetah.com'],
-            ['name' => 'Omar Al-Mansour', 'email' => 'omar.mansour@cheetah.com'],
+            ['name' => 'Ahmed Al-Salem', 'email' => 'ahmed.salem@cheetah.com.sa'],
+            ['name' => 'Fatima Al-Khalid', 'email' => 'fatima.khalid@cheetah.com.sa'],
+            ['name' => 'Mohammed Al-Rashid', 'email' => 'mohammed.rashid@cheetah.com.sa'],
+            ['name' => 'Layla Al-Hassan', 'email' => 'layla.hassan@cheetah.com.sa'],
+            ['name' => 'Omar Al-Mansour', 'email' => 'omar.mansour@cheetah.com.sa'],
         ];
 
         foreach ($brokerData as $index => $data) {
@@ -132,39 +132,39 @@ class MinimalDataSeeder extends Seeder
         $franchise = Franchise::create([
             'franchisor_id' => $franchisor->id,
             'broker_id' => $brokers[0]->id,
-            
+
             // Franchise Details
-            'business_name' => 'Black Cheetah International',
-            'brand_name' => 'Black Cheetah',
-            'website' => 'https://blackcheetah.com',
+            'business_name' => 'Cheetah International',
+            'brand_name' => 'Cheetah',
+            'website' => 'https://cheetah.com.sa',
             'logo' => null, // Can be updated later
             'description' => 'Premium fast-food restaurant franchise specializing in gourmet burgers and artisan coffee. We offer a unique dining experience with high-quality ingredients and exceptional customer service.',
-            
+
             // Legal Details
             'business_registration_number' => 'BR-' . rand(100000, 999999),
             'tax_id' => 'TAX-' . rand(100000, 999999),
             'business_type' => 'llc', // Business structure: llc, corporation, partnership, sole_proprietorship
             'industry' => 'Food & Beverage',
             'established_date' => Carbon::now()->subYears(3),
-            
+
             // Contact Details (Headquarters)
             'headquarters_country' => 'Saudi Arabia',
             'headquarters_city' => 'Riyadh',
             'headquarters_address' => 'King Fahd Road, Al Olaya District, Riyadh 12345',
             'contact_phone' => '+966112345678',
-            'contact_email' => 'info@blackcheetah.com',
-            
+            'contact_email' => 'info@cheetah.com.sa',
+
             // Financial Details
             'franchise_fee' => 50000.00,
             'royalty_percentage' => 10.00,
             'marketing_fee_percentage' => 3.00,
-            
+
             // Social Media & Business Hours (JSON fields)
             'social_media' => json_encode([
-                'facebook' => 'https://facebook.com/blackcheetah',
-                'instagram' => 'https://instagram.com/blackcheetah',
-                'twitter' => 'https://twitter.com/blackcheetah',
-                'linkedin' => 'https://linkedin.com/company/blackcheetah',
+                'facebook' => 'https://facebook.com/cheetah',
+                'instagram' => 'https://instagram.com/cheetah',
+                'twitter' => 'https://twitter.com/cheetah',
+                'linkedin' => 'https://linkedin.com/company/cheetah',
             ]),
             'business_hours' => json_encode([
                 'monday' => ['open' => '08:00', 'close' => '22:00'],
@@ -175,7 +175,7 @@ class MinimalDataSeeder extends Seeder
                 'saturday' => ['open' => '08:00', 'close' => '23:00'],
                 'sunday' => ['open' => '08:00', 'close' => '22:00'],
             ]),
-            
+
             // Operational
             'total_units' => 1,
             'active_units' => 1,
@@ -282,7 +282,7 @@ class MinimalDataSeeder extends Seeder
                 'email' => 'abdullah.rashid@example.com',
                 'phone' => '+966501234567',
                 'type' => 'franchise',
-                'message' => 'I am interested in opening a Black Cheetah franchise in Riyadh. Please provide more details.',
+                'message' => 'I am interested in opening a Cheetah franchise in Riyadh. Please provide more details.',
                 'status' => 'new',
             ],
             [
@@ -354,7 +354,7 @@ class MinimalDataSeeder extends Seeder
             'address' => 'King Fahd Road, Al Olaya District',
             'postal_code' => '12345',
             'phone' => '+966112345679',
-            'email' => 'riyadh@blackcheetah.com',
+            'email' => 'riyadh@cheetah.com.sa',
             'size_sqft' => 2700.00, // ~250 sqm
             'monthly_rent' => 15000.00,
             'initial_investment' => 300000.00,
@@ -643,11 +643,11 @@ class MinimalDataSeeder extends Seeder
         // Create 5 Documents
         $this->command->info('Creating documents...');
         $docNames = [
+            'FDD',
             'Franchise Agreement',
-            'Operations Manual',
-            'Training Certificate',
-            'Business License',
-            'Insurance Policy',
+            'Financial Study',
+            'Franchise Kit',
+            'Other',
         ];
 
         foreach ($docNames as $i => $docName) {
@@ -655,7 +655,7 @@ class MinimalDataSeeder extends Seeder
                 'franchise_id' => $franchise->id,
                 'name' => $docName,
                 'description' => 'Important document: ' . $docName,
-                'type' => ['contract', 'manual', 'certificate', 'license', 'policy'][$i],
+                'type' => ['fdd', 'franchise_agreement', 'financial_study', 'franchise_kit', 'other'][$i],
                 'file_path' => 'documents/' . str_replace(' ', '_', strtolower($docName)) . '.pdf',
                 'file_name' => str_replace(' ', '_', strtolower($docName)) . '.pdf',
                 'file_extension' => 'pdf',
@@ -812,7 +812,7 @@ class MinimalDataSeeder extends Seeder
 
         // Franchisee notifications (5 notifications)
         $franchiseeNotifications = [
-            ['type' => 'App\\Notifications\\WelcomeNotification', 'title' => 'Welcome to Black Cheetah', 'message' => 'Your franchise account has been activated.'],
+            ['type' => 'App\\Notifications\\WelcomeNotification', 'title' => 'Welcome to Cheetah', 'message' => 'Your franchise account has been activated.'],
             ['type' => 'App\\Notifications\\RoyaltyNotification', 'title' => 'Royalty Payment Due', 'message' => 'Your monthly royalty payment is due in 5 days.'],
             ['type' => 'App\\Notifications\\TaskNotification', 'title' => 'Task Assigned', 'message' => 'You have been assigned a new task: Submit Monthly Report.'],
             ['type' => 'App\\Notifications\\TechnicalRequestNotification', 'title' => 'Technical Request Update', 'message' => 'Your technical request has been updated to In Progress.'],
@@ -885,16 +885,16 @@ class MinimalDataSeeder extends Seeder
         $this->command->info('  - 16 Notifications (Admin: 3, Franchisor: 4, Franchisee: 5, Broker: 4)');
         $this->command->info('');
         $this->command->info('🔑 Login Credentials:');
-        $this->command->info('  Admin:      admin@cheetah.com / password');
-        $this->command->info('  Franchisor: franchisor@cheetah.com / password');
-        $this->command->info('  Franchisee: franchisee@cheetah.com / password');
-        $this->command->info('  Broker:     broker@cheetah.com / password');
+        $this->command->info('  Admin:      admin@cheetah.com.sa / password');
+        $this->command->info('  Franchisor: franchisor@cheetah.com.sa / password');
+        $this->command->info('  Franchisee: franchisee@cheetah.com.sa / password');
+        $this->command->info('  Broker:     broker@cheetah.com.sa / password');
         $this->command->info('');
         $this->command->info('🔑 Brokers Credentials:');
-        $this->command->info('  Ahmed:      ahmed.salem@cheetah.com / password');
-        $this->command->info('  Fatima:     fatima.khalid@cheetah.com / password');
-        $this->command->info('  Mohammed:   mohammed.rashid@cheetah.com / password');
-        $this->command->info('  Layla:      layla.hassan@cheetah.com / password');
-        $this->command->info('  Omar:       omar.mansour@cheetah.com / password');
+        $this->command->info('  Ahmed:      ahmed.salem@cheetah.com.sa / password');
+        $this->command->info('  Fatima:     fatima.khalid@cheetah.com.sa / password');
+        $this->command->info('  Mohammed:   mohammed.rashid@cheetah.com.sa / password');
+        $this->command->info('  Layla:      layla.hassan@cheetah.com.sa / password');
+        $this->command->info('  Omar:       omar.mansour@cheetah.com.sa / password');
     }
 }

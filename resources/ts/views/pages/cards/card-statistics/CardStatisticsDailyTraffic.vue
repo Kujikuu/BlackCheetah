@@ -62,7 +62,7 @@ const chartOptions = computed(() => {
         style: {
           colors: `rgba(${hexToRgb(currentTheme['on-surface'])},${variableTheme['disabled-opacity']})`,
           fontSize: '13px',
-          fontFamily: 'Public sans',
+          fontFamily: 'allotrope',
         },
         show: true,
       },

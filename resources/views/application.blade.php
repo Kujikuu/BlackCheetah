@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ config('app.name', 'Laravel') }} - Franchise Management System</title>
   <link rel="stylesheet" type="text/css" href="{{ asset('loader.css') }}" />
+  <link rel="stylesheet" href="https://use.typekit.net/drr3mgu.css">
   @vite(['resources/ts/main.ts'])
 </head>
 
@@ -29,7 +30,7 @@
 
   <script>
     const loaderColor = localStorage.getItem('vuexy-initial-loader-bg') || '#FFFFFF'
-    const primaryColor = localStorage.getItem('vuexy-initial-loader-color') || '#f05a23'
+    const primaryColor = localStorage.getItem('vuexy-initial-loader-color') || '#F2A649'
 
     if (loaderColor)
       document.documentElement.style.setProperty('--initial-loader-bg', loaderColor)

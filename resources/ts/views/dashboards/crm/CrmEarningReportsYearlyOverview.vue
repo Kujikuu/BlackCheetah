@@ -69,7 +69,7 @@ const chartConfigs = computed(() => {
             fontSize: '15px',
             colors: [legendColor],
             fontWeight: '600',
-            fontFamily: 'Public Sans',
+            fontFamily: 'allotrope',
           },
         },
         legend: {
@@ -91,7 +91,7 @@ const chartConfigs = computed(() => {
             style: {
               colors: labelColor,
               fontSize: '13px',
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
             },
           },
         },
@@ -104,7 +104,7 @@ const chartConfigs = computed(() => {
             style: {
               fontSize: '13px',
               colors: labelColor,
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
             },
             min: 0,
             max: 60000,
@@ -209,7 +209,7 @@ const chartConfigs = computed(() => {
             fontSize: '15px',
             colors: [legendColor],
             fontWeight: '600',
-            fontFamily: 'Public Sans',
+            fontFamily: 'allotrope',
           },
         },
         legend: {
@@ -231,7 +231,7 @@ const chartConfigs = computed(() => {
             style: {
               colors: labelColor,
               fontSize: '13px',
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
             },
           },
         },
@@ -244,7 +244,7 @@ const chartConfigs = computed(() => {
             style: {
               fontSize: '13px',
               colors: labelColor,
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
             },
             min: 0,
             max: 60000,
@@ -348,7 +348,7 @@ const chartConfigs = computed(() => {
             fontSize: '15px',
             colors: [legendColor],
             fontWeight: '600',
-            fontFamily: 'Public Sans',
+            fontFamily: 'allotrope',
           },
         },
         legend: {
@@ -370,7 +370,7 @@ const chartConfigs = computed(() => {
             style: {
               colors: labelColor,
               fontSize: '13px',
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
             },
           },
         },
@@ -383,7 +383,7 @@ const chartConfigs = computed(() => {
             style: {
               fontSize: '13px',
               colors: labelColor,
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
             },
             min: 0,
             max: 60000,
@@ -487,7 +487,7 @@ const chartConfigs = computed(() => {
             fontSize: '15px',
             colors: [legendColor],
             fontWeight: '600',
-            fontFamily: 'Public Sans',
+            fontFamily: 'allotrope',
           },
         },
         legend: {
@@ -509,7 +509,7 @@ const chartConfigs = computed(() => {
             style: {
               colors: labelColor,
               fontSize: '13px',
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
             },
           },
         },
@@ -522,7 +522,7 @@ const chartConfigs = computed(() => {
             style: {
               fontSize: '13px',
               colors: labelColor,
-              fontFamily: 'Public Sans',
+              fontFamily: 'allotrope',
             },
             min: 0,
             max: 60000,
