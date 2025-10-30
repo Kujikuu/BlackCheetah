@@ -70,10 +70,7 @@ const heroTitleGradient = computed(() => {
       >
         <VContainer>
           <div class="hero-text-box text-center px-6">
-            <h1 
-              class="hero-title mb-4"
-              :style="{ background: heroTitleGradient }"
-            >
+            <h1 class="hero-title mb-4" :style="{ background: heroTitleGradient, backgroundClip: 'text' }">
               Simplify Your Franchise Operations
             </h1>
             <h6 class="mb-6 text-h6">
