@@ -75,10 +75,10 @@ const getDashboardRoute = () => {
 }
 
 .banner-bg-light {
-  background-image: url("@images/front-pages/landing-page/cta-bg.png");
+  background-image: url("@images/front-pages/backgrounds/cta-bg.png");
 }
 
 .banner-bg-dark {
-  background-image: url("@images/front-pages/landing-page/cta-bg-dark.png");
+  background-image: url("@images/front-pages/backgrounds/cta-bg-dark.png");
 }
 </style>
