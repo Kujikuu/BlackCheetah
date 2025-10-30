@@ -56,7 +56,7 @@ const chartOptions = {
       style: {
         colors: labelColor,
         fontSize: '13px',
-        fontFamily: 'Public Sans',
+        fontFamily: 'allotrope',
         fontWeight: 400,
       },
     },
@@ -74,7 +74,7 @@ const chartOptions = {
       style: {
         colors: labelColor,
         fontSize: '13px',
-        fontFamily: 'Public Sans',
+        fontFamily: 'allotrope',
         fontWeight: 400,
       },
       formatter(o: any) {
@@ -97,7 +97,7 @@ const chartOptions = {
       vertical: 0,
     },
     fontSize: '13px',
-    fontFamily: 'Public Sans',
+    fontFamily: 'allotrope',
     fontWeight: 400,
     labels: {
       colors: bodyColor,

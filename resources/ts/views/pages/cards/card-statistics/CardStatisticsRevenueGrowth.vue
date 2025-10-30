@@ -75,7 +75,7 @@ const chartOptions = computed(() => {
         style: {
           colors: labelColor,
           fontSize: '13px',
-          fontFamily: 'Public sans',
+          fontFamily: 'allotrope',
         },
       },
     },
