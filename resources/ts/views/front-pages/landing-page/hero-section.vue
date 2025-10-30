@@ -49,6 +49,12 @@ const translateMouse = computed(() => {
   // Provide a default return value when `window` is undefined
   return { transform: 'perspective(1200px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)' }
 })
+
+const heroTitleGradient = computed(() => {
+  return theme.current.value.dark
+    ? 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 47.92%, #ffffff 100%)'
+    : 'linear-gradient(135deg, #000000 0%, #1a1a1a 47.92%, #000000 100%)'
+})
 </script>
 
 
@@ -64,7 +70,10 @@ const translateMouse = computed(() => {
       >
         <VContainer>
           <div class="hero-text-box text-center px-6">
-            <h1 class="hero-title mb-4">
+            <h1 
+              class="hero-title mb-4"
+              :style="{ background: heroTitleGradient }"
+            >
               Simplify Your Franchise Operations
             </h1>
             <h6 class="mb-6 text-h6">
@@ -264,7 +273,6 @@ section {
 
 .hero-title {
   animation: shine 2s ease-in-out infinite alternate;
-  background: linear-gradient(135deg, #F2A649 0%, #f3ca98 47.92%, #F2A649 100%);
   -webkit-background-clip: text;
   background-clip: text;
   background-size: 200% auto;
