@@ -1,21 +1,20 @@
 <script setup lang="ts">
 import { useMouse } from '@vueuse/core'
 import { useTheme, useDisplay } from 'vuetify'
+import heroElementsDark from '@images/front-pages/landing-page/hero-elements-dark.png'
+import heroElementsLight from '@images/front-pages/landing-page/hero-elements-light.png'
+import heroDashboardDark from '@images/front-pages/landing-page/hero-dashboard-dark.png'
+import heroDashboardLight from '@images/front-pages/landing-page/hero-dashboard-light.png'
 
 const theme = useTheme()
 const display = useDisplay()
 
-// Using placeholder.co for temporary images
 const heroElementsImg = computed(() => 
-  theme.current.value.dark 
-    ? 'https://placehold.co/1200x800/1e1e2d/6366f1?text=Hero+Dark'
-    : 'https://placehold.co/1200x800/f8f9fa/6366f1?text=Hero+Light'
+  theme.current.value.dark ? heroElementsDark : heroElementsLight
 )
 
 const heroDashboardImg = computed(() => 
-  theme.current.value.dark 
-    ? 'https://placehold.co/1400x900/1e1e2d/6366f1?text=Dashboard+Dark'
-    : 'https://placehold.co/1400x900/f8f9fa/6366f1?text=Dashboard+Light'
+  theme.current.value.dark ? heroDashboardDark : heroDashboardLight
 )
 
 const { x, y } = useMouse({ touch: false })
