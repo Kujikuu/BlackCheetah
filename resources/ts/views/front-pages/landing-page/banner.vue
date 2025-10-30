@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { useTheme, useDisplay } from 'vuetify'
+import ctaDashboardDark from '@images/front-pages/landing-page/cta-dashboard.png'
+import ctaDashboardLight from '@images/front-pages/landing-page/cta-dashboard.png'
 
 const theme = useTheme()
 const display = useDisplay()
 
-// Using placeholder.co for temporary images
 const ctaDashborad = computed(() => 
   theme.current.value.dark 
-    ? 'https://placehold.co/454x238/1e1e2d/6366f1?text=CTA+Dashboard+Dark'
-    : 'https://placehold.co/454x238/f8f9fa/6366f1?text=CTA+Dashboard+Light'
+    ? ctaDashboardDark
+    : ctaDashboardLight
 )
 
 // Check if user is authenticated
@@ -33,7 +34,7 @@ const getDashboardRoute = () => {
 </script>
 
 <template>
-  <div class="landing-cta bg-surface" :class="$vuetify.theme.current.dark ? 'banner-bg-dark' : 'banner-bg-light'">
+  <div class="landing-cta bg-surface" :class="theme.current.value.dark ? 'banner-bg-dark' : 'banner-bg-light'">
     <VContainer>
       <div class="d-flex justify-center justify-md-space-between flex-wrap gap-6 gap-x-10 position-relative pt-12">
         <div class="align-self-center">
@@ -44,7 +45,7 @@ const getDashboardRoute = () => {
             Create your account and start managing your franchise.
           </h5>
           <VBtn color="primary" :to="isAuthenticated ? getDashboardRoute() : { name: 'register' }"
-            :size="$vuetify.display.smAndUp ? 'large' : 'default'">
+            :size="display.smAndUp ? 'large' : 'default'">
             {{ isAuthenticated ? 'Go to Dashboard' : 'Get Started' }}
           </VBtn>
         </div>
@@ -74,10 +75,10 @@ const getDashboardRoute = () => {
 }
 
 .banner-bg-light {
-  background-image: url("@images/front-pages/backgrounds/cta-bg.png");
+  background-image: url("@images/front-pages/landing-page/cta-bg.png");
 }
 
 .banner-bg-dark {
-  background-image: url("@images/front-pages/backgrounds/cta-bg-dark.png");
+  background-image: url("@images/front-pages/landing-page/cta-bg-dark.png");
 }
 </style>
