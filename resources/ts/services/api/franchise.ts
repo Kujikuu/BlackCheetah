@@ -323,7 +323,13 @@ export class FranchiseApi {
     return await $api(`${this.getBaseUrl()}/upload-logo`, {
       method: 'POST',
       body: formData,
-    })
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        // Let the browser set the Content-Type with boundary for FormData
+        'Content-Type': undefined as any,
+      },
+    } as any)
   }
 
   /**
