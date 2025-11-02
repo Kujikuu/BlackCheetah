@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Franchise } from '@/services/api'
 import { formatCurrency } from '@/@core/utils/formatters'
+import placeholderImage from '@images/illustrations/sidebar-pic-1.png'
 
 interface Props {
   franchise: Franchise
@@ -11,11 +12,7 @@ defineProps<Props>()
 
 <template>
   <VCard class="franchise-card h-100">
-    <VImg
-      :src="franchise.logo || '/images/placeholder.png'"
-      height="200"
-      cover
-    />
+    <VImg :src="franchise.logo || placeholderImage" :height="200" contain />
 
     <VCardTitle>{{ franchise.brand_name }}</VCardTitle>
 
@@ -39,12 +36,8 @@ defineProps<Props>()
     </VCardText>
 
     <VCardActions>
-      <VBtn
-        color="primary"
-        variant="tonal"
-        block
-        :to="{ name: 'marketplace-franchise-details', params: { id: franchise.id } }"
-      >
+      <VBtn color="primary" variant="tonal" block
+        :to="{ name: 'marketplace-franchise-details', params: { id: franchise.id } }">
         Learn More
       </VBtn>
     </VCardActions>
@@ -61,4 +54,3 @@ defineProps<Props>()
   }
 }
 </style>
-

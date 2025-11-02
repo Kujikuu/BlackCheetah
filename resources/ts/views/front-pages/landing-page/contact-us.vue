@@ -23,7 +23,7 @@ const message = ref('')
           Touch
         </h4>
         <p class="text-body-1 mb-0">
-          Have questions about BlackCheetah? Our team is here to help you find the right solution for your franchise.
+          Have questions about Cheetah? Our team is here to help you find the right solution for your franchise.
         </p>
       </div>
 
@@ -37,7 +37,7 @@ const message = ref('')
                 <VCardText class="pa-4 pb-1">
                   <div class="d-flex justify-space-between flex-wrap gap-y-4">
                     <div v-for="(item, index) in [
-                      { title: 'Email', icon: 'tabler-mail', color: 'primary', value: 'support@blackcheetah.com' },
+                      { title: 'Email', icon: 'tabler-mail', color: 'primary', value: 'support@cheetah.com.sa' },
                     ]" :key="index" class="d-flex gap-x-3 align-center">
                       <div>
                         <VAvatar size="36" :color="item.color" variant="tonal" class="rounded-sm">

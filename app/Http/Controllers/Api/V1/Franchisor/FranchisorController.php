@@ -22,6 +22,8 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
 class FranchisorController extends BaseResourceController
@@ -1379,20 +1381,59 @@ class FranchisorController extends BaseResourceController
                 'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
 
-            // Store the logo file
-            $logoPath = $request->file('logo')->store('franchise-logos', 'public');
-            $logoUrl = asset('storage/'.$logoPath);
+            $file = $request->file('logo');
+
+            // Delete old logo if exists
+            if ($franchise->logo) {
+                try {
+                    // Try to extract relative path from URL
+                    $oldLogoUrl = $franchise->logo;
+                    $baseUrl = rtrim(config('app.url'), '/');
+                    $oldLogoPath = str_replace($baseUrl.'/', '', $oldLogoUrl);
+                    $oldLogoPath = ltrim($oldLogoPath, '/');
+
+                    // Delete from uploads disk if it's in uploads directory
+                    if (str_starts_with($oldLogoPath, 'uploads/')) {
+                        $relativePath = str_replace('uploads/', '', $oldLogoPath);
+                        if (Storage::disk('uploads')->exists($relativePath)) {
+                            Storage::disk('uploads')->delete($relativePath);
+                        }
+                    }
+                    // Delete from public disk if it's in storage directory
+                    elseif (str_starts_with($oldLogoPath, 'storage/')) {
+                        $relativePath = str_replace('storage/', '', $oldLogoPath);
+                        if (Storage::disk('public')->exists($relativePath)) {
+                            Storage::disk('public')->delete($relativePath);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Log but don't fail if old logo deletion fails
+                    Log::warning('Failed to delete old logo: '.$e->getMessage());
+                }
+            }
+
+            // Generate unique filename
+            $extension = $file->getClientOriginalExtension();
+            $filename = 'logo_'.time().'_'.$franchise->id.'.'.$extension;
+
+            // Store in public/uploads/franchise-logos (no symlink needed)
+            $logoPath = $file->storeAs('franchise-logos', $filename, 'uploads');
+
+            // Generate URL
+            $logoUrl = asset('uploads/'.$logoPath);
 
             // Update franchise with new logo URL
             $franchise->update(['logo' => $logoUrl]);
 
             return $this->successResponse([
                 'logo_url' => $logoUrl,
+                'logo_path' => $logoPath,
             ], 'Logo uploaded successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to upload logo', $e->getMessage(), 500);
+            Log::error('Logo upload failed: '.$e->getMessage());
+            return $this->errorResponse('Failed to upload logo: '.$e->getMessage(), null, 500);
         }
     }
 

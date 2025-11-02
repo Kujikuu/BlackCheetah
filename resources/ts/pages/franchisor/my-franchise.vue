@@ -182,7 +182,9 @@ const productsData = ref<ProductData[]>([])
 
 // 👉 Logo upload handling
 const logoFile = ref<File | null>(null)
+const logoPreview = ref<string | null>(null)
 const isUploadingLogo = ref(false)
+const logoLoadError = ref(false)
 
 // 👉 Marketplace and Broker Management
 const availableBrokers = ref<BrokerInfo[]>([])
@@ -194,6 +196,8 @@ const isBrokerDialogVisible = ref(false)
 const loadFranchiseData = async () => {
   try {
     isLoading.value = true
+    // Reset logo load error when loading new data
+    logoLoadError.value = false
 
     const response = await franchiseApi.getFranchiseData()
 
@@ -337,28 +341,59 @@ const openBrokerDialog = () => {
   isBrokerDialogVisible.value = true
 }
 
+// 👉 Handle logo file selection
+const handleLogoFileChange = (files: File | File[] | null) => {
+  const file = Array.isArray(files) ? files[0] : files
+  logoFile.value = file
+  logoLoadError.value = false
+  
+  if (file) {
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      logoPreview.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+  else {
+    logoPreview.value = null
+  }
+}
+
 // 👉 Upload logo
 const uploadLogo = async (): Promise<string | null> => {
   if (!logoFile.value)
     return null
 
   isUploadingLogo.value = true
+  logoLoadError.value = false
 
   try {
     const response = await franchiseApi.uploadLogo(logoFile.value)
 
-    if (response.success) {
+    if (response.success && response.data?.logo_url) {
+      showSnackbar('Logo uploaded successfully', 'success')
+      // Clear file input and preview after successful upload
+      logoFile.value = null
+      logoPreview.value = null
       return response.data.logo_url
     }
     else {
       showSnackbar(response.message || 'Failed to upload logo', 'error')
-
       return null
     }
   }
   catch (error: any) {
     console.error('Failed to upload logo:', error)
-    showSnackbar('Failed to upload logo', 'error')
+    
+    // Show detailed validation errors if available
+    if (error.status === 422 && error.data?.errors) {
+      const errorMessages = Object.values(error.data.errors).flat()
+      showSnackbar(`Validation failed: ${errorMessages.join(', ')}`, 'error')
+    }
+    else {
+      showSnackbar(error.data?.message || 'Failed to upload logo', 'error')
+    }
 
     return null
   }
@@ -373,17 +408,15 @@ const updateFranchiseData = async () => {
     isUpdating.value = true
 
     // Upload logo first if a new one is selected
-    let logoUrl = franchiseData.value.franchiseDetails.logo
     if (logoFile.value) {
       const uploadedLogoUrl = await uploadLogo()
-      if (uploadedLogoUrl) {
-        logoUrl = uploadedLogoUrl
-        franchiseData.value.franchiseDetails.logo = logoUrl
-      }
-      else {
+      if (!uploadedLogoUrl) {
         // If logo upload failed, don't proceed with the update
         return
       }
+      // Update logo URL immediately so it's included in the update payload
+      franchiseData.value.franchiseDetails.logo = uploadedLogoUrl
+      logoLoadError.value = false
     }
 
     // Transform the data to match the backend's expected nested structure
@@ -395,12 +428,13 @@ const updateFranchiseData = async () => {
         state: franchiseData.value.personalInfo.state || undefined,
         country: franchiseData.value.personalInfo.country || undefined,
       },
-      franchiseDetails: {
-        franchiseDetails: {
-          franchiseName: franchiseData.value.franchiseDetails.franchiseName || undefined,
-          website: franchiseData.value.franchiseDetails.website || undefined,
-          logo: franchiseData.value.franchiseDetails.logo || undefined,
-        },
+          franchiseDetails: {
+            franchiseDetails: {
+              franchiseName: franchiseData.value.franchiseDetails.franchiseName || undefined,
+              website: franchiseData.value.franchiseDetails.website || undefined,
+              // Always include logo URL if it exists (either from upload or existing)
+              logo: franchiseData.value.franchiseDetails.logo || undefined,
+            },
         legalDetails: {
           legalEntityName: franchiseData.value.legalDetails.legalEntityName || undefined,
           businessStructure: franchiseData.value.legalDetails.businessStructure, // Keep original case
@@ -429,9 +463,6 @@ const updateFranchiseData = async () => {
 
     if (response.success) {
       showSnackbar('Franchise information updated successfully', 'success')
-
-      // Clear the logo file after successful update
-      logoFile.value = null
 
       // Reload franchise data to get the updated information
       await loadFranchiseData()
@@ -484,6 +515,13 @@ const saveChanges = async () => {
     originalData.value = null
   }
 }
+
+// 👉 Watch for logo URL changes to reset error state
+watch(() => franchiseData.value.franchiseDetails.logo, (newLogo) => {
+  if (newLogo) {
+    logoLoadError.value = false
+  }
+})
 
 // 👉 Load data on component mount
 onMounted(async () => {
@@ -1205,32 +1243,55 @@ const resolveStatusVariant = (status: string) => {
                           >
                             <div
                               v-if="franchiseData.franchiseDetails.logo"
-                              class="d-flex align-center"
+                              class="d-flex align-center gap-3"
+                            >
+                              <VImg :height="128" v-if="!logoLoadError && franchiseData.franchiseDetails.logo" :src="franchiseData.franchiseDetails.logo" alt="Franchise Logo" contain @error="logoLoadError = true" />
+                              <VIcon v-else icon="tabler-image-off" size="32" />
+                            </div>
+                            <div
+                              v-else
+                              class="d-flex align-center gap-3"
                             >
                               <VAvatar
-                                size="40"
-                                class="me-3"
+                                size="64"
+                                rounded
+                                variant="tonal"
+                                color="secondary"
                               >
-                                <VImg
-                                  :src="franchiseData.franchiseDetails.logo"
-                                  alt="Franchise Logo"
+                                <VIcon
+                                  icon="tabler-photo"
+                                  size="32"
                                 />
                               </VAvatar>
-                              <span>Logo uploaded</span>
+                              <span class="text-disabled">No logo uploaded</span>
                             </div>
-                            <span
-                              v-else
-                              class="text-disabled"
-                            >No logo uploaded</span>
                           </div>
-                          <VFileInput
-                            v-else
-                            v-model="logoFile"
-                            label="Franchise Logo"
-                            accept="image/*"
-                            prepend-icon="tabler-upload"
-                            :loading="isUploadingLogo"
-                          />
+                          <div v-else>
+                            <VFileInput
+                              v-model="logoFile"
+                              label="Franchise Logo"
+                              accept="image/*"
+                              prepend-icon="tabler-upload"
+                              :loading="isUploadingLogo"
+                              @update:model-value="handleLogoFileChange"
+                            />
+                            
+                            <!-- Logo Preview -->
+                            <div
+                              v-if="logoPreview || franchiseData.franchiseDetails.logo"
+                              class="mt-4"
+                            >
+                              <div class="text-body-2 text-disabled mb-2">
+                                Preview
+                              </div>
+                              <VImg
+                                :height="128"
+                                :src="(logoPreview || franchiseData.franchiseDetails.logo) || undefined"
+                                alt="Logo Preview"
+                                contain
+                              />
+                            </div>
+                          </div>
                         </div>
                       </VCol>
                     </VRow>

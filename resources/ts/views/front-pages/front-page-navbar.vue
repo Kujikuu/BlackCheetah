@@ -444,7 +444,7 @@ const isPageActive = computed(() => menuItems.some(item => item.navItems.some(li
 .front-page-navbar::after {
   position: fixed;
   z-index: 2;
-  backdrop-filter: saturate(100%) blur(6px);
+  // backdrop-filter: saturate(100%) blur(6px);
   block-size: 5rem;
   content: "";
   inline-size: 100%;
