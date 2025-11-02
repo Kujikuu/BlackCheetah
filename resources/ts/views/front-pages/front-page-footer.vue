@@ -73,7 +73,7 @@ const pagesList: Menu[] = [
                 <li class="mb-4">
                   <div :class="theme.current.value.dark ? 'text-body-1' : 'text-white-variant'">
                     <VIcon icon="tabler-mail" size="20" class="me-2" />
-                    support@blackcheetah.com
+                    support@cheetah.com.sa
                   </div>
                 </li>
                 <li class="mb-4">
@@ -100,7 +100,7 @@ const pagesList: Menu[] = [
       <VContainer>
         <div class="d-flex justify-space-between flex-wrap gap-y-5 align-center">
           <div class="text-body-1 text-white-variant text-wrap me-4">
-            &copy; {{ new Date().getFullYear() }} BlackCheetah. All rights reserved.
+            &copy; {{ new Date().getFullYear() }} Cheetah. All rights reserved.
           </div>
 
           <div class="d-flex gap-x-6">

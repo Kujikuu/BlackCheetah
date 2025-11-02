@@ -42,8 +42,8 @@ class NewFranchiseeCredentials extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Welcome to BlackCheetah - Your Franchisee Account')
-            ->greeting('Welcome to BlackCheetah!')
+            ->subject('Welcome to Cheetah - Your Franchisee Account')
+            ->greeting('Welcome to Cheetah!')
             ->line('Your franchisee account has been created successfully.')
             ->line('**Unit Code:** '.$this->unitCode)
             ->line('**Email:** '.$notifiable->email)
@@ -52,7 +52,7 @@ class NewFranchiseeCredentials extends Notification
             ->action('Login to Your Account', $this->loginUrl)
             ->line('For security reasons, please change your password after your first login.')
             ->line('If you have any questions, please contact our support team.')
-            ->line('Thank you for joining BlackCheetah!');
+            ->line('Thank you for joining Cheetah!');
     }
 
     /**

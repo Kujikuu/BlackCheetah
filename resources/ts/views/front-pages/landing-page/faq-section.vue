@@ -3,12 +3,12 @@ import boyWithLogo from '@images/front-pages/landing-page/faq-boy-with-logos.png
 
 const faqData = [
   {
-    question: 'What is BlackCheetah?',
-    answer: 'BlackCheetah is a comprehensive franchise management platform designed to streamline operations for franchisors, franchisees, and brokers. It provides tools for lead management, financial tracking, performance analytics, task management, and more—all in one centralized system.',
+    question: 'What is Cheetah?',
+    answer: 'Cheetah is a comprehensive franchise management platform designed to streamline operations for franchisors, franchisees, and brokers. It provides tools for lead management, financial tracking, performance analytics, task management, and more—all in one centralized system.',
   },
   {
-    question: 'Who can use BlackCheetah?',
-    answer: 'BlackCheetah is designed for multiple user roles: Franchisors can manage their entire franchise network, Franchisees can monitor their unit operations and performance, Brokers can track and nurture leads, and Admins can oversee the entire system. Each role has a customized dashboard with relevant features.',
+    question: 'Who can use Cheetah?',
+    answer: 'Cheetah is designed for multiple user roles: Franchisors can manage their entire franchise network, Franchisees can monitor their unit operations and performance, Brokers can track and nurture leads, and Admins can oversee the entire system. Each role has a customized dashboard with relevant features.',
   },
   {
     question: 'How does lead management work?',
@@ -16,19 +16,19 @@ const faqData = [
   },
   {
     question: 'Can I track multiple franchise locations?',
-    answer: 'Yes! BlackCheetah supports unlimited franchise units on our Enterprise plan. You can monitor performance, track financials, manage tasks, and view analytics for each location individually or across your entire network. The system provides both unit-level and network-wide insights.',
+    answer: 'Yes! Cheetah supports unlimited franchise units on our Enterprise plan. You can monitor performance, track financials, manage tasks, and view analytics for each location individually or across your entire network. The system provides both unit-level and network-wide insights.',
   },
   {
     question: 'What financial features are included?',
-    answer: 'BlackCheetah includes comprehensive financial management tools: revenue tracking, automated royalty calculations, expense management, financial reporting, transaction history, and customizable financial dashboards. You can generate detailed reports for individual units or your entire franchise network.',
+    answer: 'Cheetah includes comprehensive financial management tools: revenue tracking, automated royalty calculations, expense management, financial reporting, transaction history, and customizable financial dashboards. You can generate detailed reports for individual units or your entire franchise network.',
   },
   // {
   //   question: 'Is there mobile access?',
-  //   answer: 'Yes, BlackCheetah is fully responsive and accessible from any device. Whether you\'re using a desktop, tablet, or smartphone, you\'ll have full access to all features. This allows franchisees and franchisors to manage operations on the go.',
+  //   answer: 'Yes, Cheetah is fully responsive and accessible from any device. Whether you\'re using a desktop, tablet, or smartphone, you\'ll have full access to all features. This allows franchisees and franchisors to manage operations on the go.',
   // },
   // {
   //   question: 'How secure is my data?',
-  //   answer: 'We take security seriously. BlackCheetah uses industry-standard encryption, secure data centers, regular backups, and role-based access controls. All data is encrypted in transit and at rest. We comply with international data protection regulations to ensure your franchise data is safe and secure.',
+  //   answer: 'We take security seriously. Cheetah uses industry-standard encryption, secure data centers, regular backups, and role-based access controls. All data is encrypted in transit and at rest. We comply with international data protection regulations to ensure your franchise data is safe and secure.',
   // },
   {
     question: 'Do you offer training and support?',

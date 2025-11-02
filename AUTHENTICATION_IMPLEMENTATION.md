@@ -1,7 +1,7 @@
 # Production-Grade Authentication Implementation Summary
 
 ## Overview
-This document summarizes the production-grade authentication system that has been implemented for the BlackCheetah Franchise Management System.
+This document summarizes the production-grade authentication system that has been implemented for the Cheetah Franchise Management System.
 
 ## Features Implemented
 
@@ -182,7 +182,7 @@ MAIL_USERNAME=your-email@yourdomain.com
 MAIL_PASSWORD=your-password
 MAIL_ENCRYPTION=ssl
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
-MAIL_FROM_NAME="BlackCheetah"
+MAIL_FROM_NAME="Cheetah"
 ```
 
 ## Testing Commands

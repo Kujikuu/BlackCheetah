@@ -2,7 +2,7 @@
 globs: *.vue,app/Http/Controllers/*,*.ts
 alwaysApply: false
 ---
-# BlackCheetah Franchise Management System - Cursor Rules
+# Cheetah Franchise Management System - Cursor Rules
 
 ## API Development Patterns
 

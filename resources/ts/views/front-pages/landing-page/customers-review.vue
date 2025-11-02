@@ -34,7 +34,7 @@ const brandLogo5 = useGenerateImageVariant(logo5light, logo5dark)
 // Customer Review Data
 const reviewData = [
   {
-    desc: 'BlackCheetah transformed how we manage our 50+ franchise locations. Lead tracking and financial reporting have never been easier.',
+    desc: 'Cheetah transformed how we manage our 50+ franchise locations. Lead tracking and financial reporting have never been easier.',
     img: logo1,
     rating: 5,
     name: 'Mohammed Al-Rashid',
@@ -50,7 +50,7 @@ const reviewData = [
     avatar: avatar5,
   },
   {
-    desc: 'Managing our growing franchise network across Saudi Arabia has become seamless with BlackCheetah. The royalty tracking feature alone has saved us countless hours.',
+    desc: 'Managing our growing franchise network across Saudi Arabia has become seamless with Cheetah. The royalty tracking feature alone has saved us countless hours.',
     img: logo3,
     rating: 5,
     name: 'Abdullah bin Saleh',
@@ -66,7 +66,7 @@ const reviewData = [
     avatar: avatar6,
   },
   {
-    desc: 'BlackCheetah helped us scale from 5 to 30 locations in just 2 years. The performance analytics give us the insights we need to support our franchisees.',
+    desc: 'Cheetah helped us scale from 5 to 30 locations in just 2 years. The performance analytics give us the insights we need to support our franchisees.',
     img: logo3,
     rating: 5,
     name: 'Khalid Al-Dosari',
@@ -74,7 +74,7 @@ const reviewData = [
     avatar: avatar3,
   },
   {
-    desc: 'BlackCheetah transformed how we manage our 50+ franchise locations. Lead tracking and financial reporting have never been easier.',
+    desc: 'Cheetah transformed how we manage our 50+ franchise locations. Lead tracking and financial reporting have never been easier.',
     img: logo1,
     rating: 5,
     name: 'Mohammed Al-Rashid',
@@ -90,7 +90,7 @@ const reviewData = [
     avatar: avatar6,
   },
   {
-    desc: 'Managing our growing franchise network across Saudi Arabia has become seamless with BlackCheetah. The royalty tracking feature alone has saved us countless hours.',
+    desc: 'Managing our growing franchise network across Saudi Arabia has become seamless with Cheetah. The royalty tracking feature alone has saved us countless hours.',
     img: logo3,
     rating: 5,
     name: 'Abdullah bin Saleh',
@@ -106,7 +106,7 @@ const reviewData = [
     avatar: avatar5,
   },
   {
-    desc: 'BlackCheetah helped us scale from 5 to 30 locations in just 2 years. The performance analytics give us the insights we need to support our franchisees.',
+    desc: 'Cheetah helped us scale from 5 to 30 locations in just 2 years. The performance analytics give us the insights we need to support our franchisees.',
     img: logo2,
     rating: 5,
     name: 'Khalid Al-Dosari',

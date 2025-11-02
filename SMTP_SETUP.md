@@ -45,7 +45,7 @@ MAIL_USERNAME=noreply@yourdomain.com
 MAIL_PASSWORD=your-secure-password
 MAIL_ENCRYPTION=ssl
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
-MAIL_FROM_NAME="BlackCheetah"
+MAIL_FROM_NAME="Cheetah"
 ```
 
 ### 3. Test Email Functionality
