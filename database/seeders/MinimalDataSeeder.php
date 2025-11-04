@@ -704,6 +704,36 @@ class MinimalDataSeeder extends Seeder
 
         $this->command->info('✅ Created 5 staff members and linked them to unit');
 
+        // Create 5 Franchise Staff (franchise-level staff, not unit-specific)
+        $this->command->info('Creating franchise staff...');
+        $franchiseStaffData = [
+            ['Sara Al-Rashid', 'sara.rashid@cheetah.com.sa', 'Franchise Manager', 'Management'],
+            ['Mohammed Al-Hassan', 'mohammed.hassan@cheetah.com.sa', 'Operations Director', 'Operations'],
+            ['Fatima Al-Zahrani', 'fatima.zahrani@cheetah.com.sa', 'Finance Manager', 'Finance'],
+            ['Ahmed Al-Mahmoud', 'ahmed.mahmoud@cheetah.com.sa', 'Marketing Director', 'Marketing'],
+            ['Layla Al-Qasimi', 'layla.qasimi@cheetah.com.sa', 'HR Manager', 'Human Resources'],
+        ];
+
+        $franchiseStaff = [];
+        foreach ($franchiseStaffData as $index => $data) {
+            $franchiseStaff[] = Staff::create([
+                'franchise_id' => $franchise->id,
+                'name' => $data[0],
+                'email' => $data[1],
+                'phone' => '+966' . rand(500000000, 599999999),
+                'job_title' => $data[2],
+                'department' => $data[3],
+                'salary' => rand(8000, 15000),
+                'hire_date' => Carbon::now()->subMonths(rand(6, 24)),
+                'employment_type' => 'full_time',
+                'status' => 'active',
+                'shift_start' => Carbon::createFromTime(9, 0, 0),
+                'shift_end' => Carbon::createFromTime(17, 0, 0),
+            ]);
+        }
+
+        $this->command->info('✅ Created 5 franchise staff members');
+
         // Create 5 Customer Reviews
         $this->command->info('Creating reviews...');
         $reviewComments = [
@@ -763,6 +793,35 @@ class MinimalDataSeeder extends Seeder
         }
 
         $this->command->info('✅ Created 5 tasks');
+
+        // Create 4 Tasks assigned to Franchisor
+        $this->command->info('Creating franchisor tasks...');
+        $franchisorTaskData = [
+            ['Review Franchise Performance', 'Review monthly performance metrics and prepare quarterly report', 'operations'],
+            ['Approve Marketing Budget', 'Review and approve the Q4 marketing budget proposal', 'finance'],
+            ['Conduct Staff Evaluation', 'Complete annual performance evaluations for franchise staff', 'support'],
+            ['Update Franchise Policies', 'Review and update franchise operation policies and procedures', 'compliance'],
+        ];
+
+        $franchisorPriorities = ['high', 'medium', 'medium', 'low'];
+        $franchisorStatuses = ['pending', 'in_progress', 'pending', 'completed'];
+
+        foreach ($franchisorTaskData as $i => $data) {
+            Task::create([
+                'title' => $data[0],
+                'description' => $data[1],
+                'type' => $data[2],
+                'priority' => $franchisorPriorities[$i],
+                'status' => $franchisorStatuses[$i],
+                'assigned_to' => $franchisor->id,
+                'created_by' => $franchisor->id,
+                'franchise_id' => $franchise->id,
+                'unit_id' => null, // Franchisor tasks are not unit-specific
+                'due_date' => Carbon::now()->addDays(rand(3, 14)),
+            ]);
+        }
+
+        $this->command->info('✅ Created 4 franchisor tasks');
 
         // Create notifications for each role (2-5 per role)
         $this->command->info('Creating notifications...');
@@ -877,9 +936,11 @@ class MinimalDataSeeder extends Seeder
         $this->command->info('  - 7 Leads (2 for broker user, 5 for brokers)');
         $this->command->info('  - 5 Notes (attached to leads)');
         $this->command->info('  - 5 Documents');
-        $this->command->info('  - 5 Staff');
+        $this->command->info('  - 5 Unit Staff');
+        $this->command->info('  - 5 Franchise Staff');
         $this->command->info('  - 5 Customer Reviews');
-        $this->command->info('  - 5 Tasks');
+        $this->command->info('  - 5 Tasks (assigned to brokers/franchisees)');
+        $this->command->info('  - 4 Franchisor Tasks (assigned to franchisor)');
         $this->command->info('  - 5 Properties (distributed across brokers)');
         $this->command->info('  - 5 Marketplace Inquiries (3 franchise, 2 property)');
         $this->command->info('  - 16 Notifications (Admin: 3, Franchisor: 4, Franchisee: 5, Broker: 4)');
