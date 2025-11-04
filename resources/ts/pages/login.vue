@@ -47,7 +47,7 @@ const login = async () => {
     updateAbility(resp.userAbilityRules)
 
     // Check if franchisor needs to complete franchise registration
-    if (resp.requiresFranchiseRegistration === true) {
+    if (resp.userData.role === 'franchisor' && resp.userData.franchise_id === null) {
       router.push('/franchisor/franchise-registration')
       return
     }
@@ -220,7 +220,7 @@ const login = async () => {
                 </RouterLink>
               </VCol>
 
-              <VCol
+              <!-- <VCol
                 cols="12"
                 class="d-flex align-center"
               >
@@ -229,13 +229,12 @@ const login = async () => {
                 <VDivider />
               </VCol>
 
-              <!-- auth providers -->
               <VCol
                 cols="12"
                 class="text-center"
               >
                 <AuthProvider />
-              </VCol>
+              </VCol> -->
             </VRow>
           </VForm>
         </VCardText>

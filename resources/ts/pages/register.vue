@@ -350,7 +350,7 @@ const register = async () => {
                 </RouterLink>
               </VCol>
 
-              <VCol
+              <!-- <VCol
                 cols="12"
                 class="d-flex align-center"
               >
@@ -359,13 +359,13 @@ const register = async () => {
                 <VDivider />
               </VCol>
 
-              <!-- auth providers -->
+              
               <VCol
                 cols="12"
                 class="text-center"
               >
                 <AuthProvider />
-              </VCol>
+              </VCol> -->
             </VRow>
           </VForm>
         </VCardText>
