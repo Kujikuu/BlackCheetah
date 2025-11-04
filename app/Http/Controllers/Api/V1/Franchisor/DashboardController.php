@@ -86,11 +86,41 @@ class DashboardController extends BaseResourceController
                 ->where('status', 'pending')
                 ->sum('total_amount');
 
+            // Unit statistics by status
+            $activeUnits = Unit::whereHas('franchise', function ($query) use ($franchise) {
+                $query->where('franchisor_id', $franchise->id);
+            })
+                ->whereIn('status', ['active', 'operational'])
+                ->count();
+
+            $inactiveUnits = $totalUnits - $activeUnits;
+
+            // Task statistics by status
+            $completedTasks = Task::where('franchise_id', $franchise->id)
+                ->where('status', 'completed')
+                ->count();
+
+            $pendingTasks = Task::where('franchise_id', $franchise->id)
+                ->where('status', 'pending')
+                ->count();
+
+            $inProgressTasks = Task::where('franchise_id', $franchise->id)
+                ->where('status', 'in_progress')
+                ->count();
+
+            $totalTasks = Task::where('franchise_id', $franchise->id)
+                ->count();
+
             return $this->successResponse([
                 'totalFranchisees' => $totalFranchisees,
                 'totalUnits' => $totalUnits,
+                'activeUnits' => $activeUnits,
+                'inactiveUnits' => $inactiveUnits,
                 'totalLeads' => $totalLeads,
                 'activeTasks' => $activeTasks,
+                'completedTasks' => $completedTasks,
+                'pendingTasks' => $pendingTasks,
+                'totalTasks' => $totalTasks,
                 'currentMonthRevenue' => $currentMonthRevenue,
                 'revenueChange' => round($revenueChange, 2),
                 'pendingRoyalties' => $pendingRoyalties,

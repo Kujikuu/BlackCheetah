@@ -26,14 +26,17 @@ watch([isFallbackStateActive, refLoadingIndicator], () => {
     class="layout-wrapper layout-blank"
     data-allow-mismatch
   >
-    <RouterView #="{Component}">
+    <RouterView v-slot="{ Component, route }">
       <Suspense
+        :key="route.path"
         :timeout="0"
         @fallback="isFallbackStateActive = true"
         @resolve="isFallbackStateActive = false"
       >
         <template #default>
-          <Component :is="Component" />
+          <div>
+            <Component :is="Component" />
+          </div>
         </template>
         <template #fallback>
           <div />

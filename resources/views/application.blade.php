@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <link rel="icon" href="{{ asset('favicon.ico') }}" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ config('app.name', 'Laravel') }} - Franchise Management System</title>
+  <title>{{ config('app.name', 'Laravel') }} - Franchise Management Platform</title>
   <link rel="stylesheet" type="text/css" href="{{ asset('loader.css') }}" />
   <link rel="stylesheet" href="https://use.typekit.net/drr3mgu.css">
   @vite(['resources/ts/main.ts'])

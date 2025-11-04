@@ -234,6 +234,7 @@ watch([searchQuery, selectedStatus, selectedPropertyType], () => {
         <VRow>
           <VCol cols="12" sm="3">
             <AppSelect v-model="selectedStatus" placeholder="Select Status" :items="[
+              { title: 'All Statuses', value: '' },
               { title: 'Available', value: 'available' },
               { title: 'Under Negotiation', value: 'under_negotiation' },
               { title: 'Leased', value: 'leased' },
@@ -243,6 +244,7 @@ watch([searchQuery, selectedStatus, selectedPropertyType], () => {
 
           <VCol cols="12" sm="3">
             <AppSelect v-model="selectedPropertyType" placeholder="Property Type" :items="[
+              { title: 'All Types', value: '' },
               { title: 'Retail', value: 'retail' },
               { title: 'Office', value: 'office' },
               { title: 'Kiosk', value: 'kiosk' },

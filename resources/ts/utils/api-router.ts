@@ -7,6 +7,7 @@
 export type ApiResource =
   | 'leads'
   | 'tasks'
+  | 'properties'
   | 'royalties'
   | 'technical-requests'
   | 'units'
@@ -28,7 +29,7 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
     case 'leads':
       switch (userRole) {
         case 'broker':
-          return '/v1/brokers/leads'
+          return '/v1/broker/brokers/leads'
         case 'franchisor':
           return '/v1/franchisor/leads'
         default:
@@ -38,13 +39,21 @@ export function getEndpoint(resource: ApiResource, role?: UserRole): string {
     case 'tasks':
       switch (userRole) {
         case 'broker':
-          return '/v1/brokers/tasks'
+          return '/v1/broker/brokers/tasks'
         case 'franchisor':
           return '/v1/franchisor/tasks'
         case 'franchisee':
           return '/v1/unit-manager/tasks'
         default:
           return '/v1/tasks'
+      }
+
+    case 'properties':
+      switch (userRole) {
+        case 'broker':
+          return '/v1/broker/brokers/properties'
+        default:
+          return '/v1/properties'
       }
 
     case 'royalties':

@@ -19,7 +19,7 @@ class RoyaltyResource extends JsonResource
             'royalty_number' => $this->royalty_number,
             'billing_period' => $this->period_description,
             'franchisee_name' => $this->franchisee->name ?? 'N/A',
-            'store_location' => $this->unit->location ?? $this->franchise->name ?? 'N/A',
+            'store_location' => $this->unit ? ($this->unit->city . ($this->unit->unit_name ? ' - ' . $this->unit->unit_name : '')) : ($this->franchise->name ?? 'N/A'),
             'due_date' => $this->due_date?->format('Y-m-d'),
             'gross_sales' => (float) $this->gross_revenue,
             'royalty_percentage' => (float) $this->royalty_percentage,

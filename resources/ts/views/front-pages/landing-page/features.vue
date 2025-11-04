@@ -96,7 +96,7 @@ const featuresData = [
 
 .section-title::after {
   position: absolute;
-  background: url("../../../assets/images/front-pages/icons/section-title-icon.png") no-repeat left bottom;
+  background: url("@images/front-pages/icons/section-title-icon.png") no-repeat left bottom;
   background-size: contain;
   block-size: 100%;
   content: "";

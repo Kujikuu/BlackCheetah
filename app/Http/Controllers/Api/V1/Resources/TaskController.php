@@ -389,19 +389,15 @@ class TaskController extends BaseResourceController
     {
         $user = $request->user();
 
-        // Get franchise for the broker user
-        $franchise = Franchise::where('franchisor_id', $user->franchise_id)
-            ->orWhere('id', $user->franchise_id)
-            ->first();
+        // Build query for tasks assigned to this broker user
+        $query = Task::where('assigned_to', $user->id);
 
-        if (! $franchise) {
-            return $this->notFoundResponse('No franchise found for current user');
+        // If broker belongs to a franchise, filter by franchise
+        if ($user->franchise_id) {
+            $query->where('franchise_id', $user->franchise_id);
         }
 
-        // Build query for tasks assigned to this broker user
-        $query = Task::where('assigned_to', $user->id)
-            ->where('franchise_id', $franchise->id)
-            ->with(['franchise', 'unit', 'assignedTo', 'createdBy', 'lead']);
+        $query->with(['franchise', 'unit', 'assignedTo', 'createdBy', 'lead']);
 
         // Apply filters
         if ($request->has('status')) {
@@ -474,19 +470,15 @@ class TaskController extends BaseResourceController
     {
         $user = $request->user();
 
-        // Get franchise for the broker user
-        $franchise = Franchise::where('franchisor_id', $user->franchise_id)
-            ->orWhere('id', $user->franchise_id)
-            ->first();
+        // Get tasks for this broker user
+        $query = Task::where('assigned_to', $user->id);
 
-        if (! $franchise) {
-            return $this->notFoundResponse('No franchise found for current user');
+        // If broker belongs to a franchise, filter by franchise
+        if ($user->franchise_id) {
+            $query->where('franchise_id', $user->franchise_id);
         }
 
-        // Get tasks for this broker user
-        $allTasks = Task::where('assigned_to', $user->id)
-            ->where('franchise_id', $franchise->id)
-            ->get();
+        $allTasks = $query->get();
 
         $totalTasks = $allTasks->count();
         $completedTasks = $allTasks->where('status', 'completed')->count();
