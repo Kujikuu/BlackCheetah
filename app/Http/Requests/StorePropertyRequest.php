@@ -42,6 +42,8 @@ class StorePropertyRequest extends FormRequest
             'amenities.*' => 'string|max:255',
             'images' => 'nullable|array',
             'images.*' => 'string|max:500',
+            'property_images' => 'nullable|array|max:10',
+            'property_images.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120',
             'status' => 'nullable|string|in:available,under_negotiation,leased,unavailable',
             'contact_info' => 'nullable|string|max:1000',
         ];
@@ -64,6 +66,10 @@ class StorePropertyRequest extends FormRequest
             'state_province.required' => 'State/Province is required.',
             'city.required' => 'City is required.',
             'address.required' => 'Address is required.',
+            'property_images.max' => 'You can upload a maximum of 10 images.',
+            'property_images.*.image' => 'Each file must be an image.',
+            'property_images.*.mimes' => 'Images must be in JPEG, JPG, PNG, or WEBP format.',
+            'property_images.*.max' => 'Each image must not exceed 5MB.',
         ];
     }
 }

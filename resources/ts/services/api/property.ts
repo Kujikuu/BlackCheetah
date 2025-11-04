@@ -1,4 +1,5 @@
 import { $api } from '@/utils/api'
+import { getEndpoint } from '@/utils/api-router'
 
 // Type definitions
 export interface Property {
@@ -109,7 +110,7 @@ export interface PaginatedResponse<T> {
 
 export class PropertyApi {
   private getBaseUrl(): string {
-    return '/api/v1/brokers/properties'
+    return getEndpoint('properties')
   }
 
   /**
@@ -132,7 +133,35 @@ export class PropertyApi {
   /**
    * Create new property
    */
-  async createProperty(payload: CreatePropertyPayload): Promise<ApiResponse<Property>> {
+  async createProperty(payload: CreatePropertyPayload, images?: File[]): Promise<ApiResponse<Property>> {
+    // If there are images, use FormData
+    if (images && images.length > 0) {
+      const formData = new FormData()
+
+      // Append all property data
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value))
+          }
+          else {
+            formData.append(key, String(value))
+          }
+        }
+      })
+
+      // Append images
+      images.forEach((image) => {
+        formData.append('property_images[]', image)
+      })
+
+      return await $api(this.getBaseUrl(), {
+        method: 'POST',
+        body: formData,
+      })
+    }
+
+    // No images, send as JSON
     return await $api(this.getBaseUrl(), {
       method: 'POST',
       body: payload,
@@ -142,7 +171,38 @@ export class PropertyApi {
   /**
    * Update existing property
    */
-  async updateProperty(id: number, payload: UpdatePropertyPayload): Promise<ApiResponse<Property>> {
+  async updateProperty(id: number, payload: UpdatePropertyPayload, images?: File[]): Promise<ApiResponse<Property>> {
+    // If there are images, use FormData
+    if (images && images.length > 0) {
+      const formData = new FormData()
+
+      // Add _method field for Laravel to recognize PUT request
+      formData.append('_method', 'PUT')
+
+      // Append all property data
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value))
+          }
+          else {
+            formData.append(key, String(value))
+          }
+        }
+      })
+
+      // Append images
+      images.forEach((image) => {
+        formData.append('property_images[]', image)
+      })
+
+      return await $api(`${this.getBaseUrl()}/${id}`, {
+        method: 'POST',
+        body: formData,
+      })
+    }
+
+    // No images, send as JSON
     return await $api(`${this.getBaseUrl()}/${id}`, {
       method: 'PUT',
       body: payload,

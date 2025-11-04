@@ -18,7 +18,7 @@ onMounted(async () => {
     // Check if user is authenticated before fetching
     const accessToken = useCookie('accessToken').value
     if (!accessToken) {
-      console.warn('No access token available, skipping notification fetch')
+      // Silently skip notification fetch for unauthenticated users
       return
     }
 
@@ -28,7 +28,7 @@ onMounted(async () => {
   catch (error: any) {
     // Handle 401 errors gracefully (user not authenticated)
     if (error?.status === 401 || error?._statusCode === 401) {
-      console.warn('User not authenticated, skipping notification fetch')
+      // Silently skip notification fetch for unauthenticated users
       return
     }
     console.error('Failed to load notifications:', error)

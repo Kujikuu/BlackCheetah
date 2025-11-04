@@ -44,7 +44,7 @@ const fetchFranchiseName = async () => {
   try {
     const response = await franchiseApi.getFranchiseData()
     if (response.success && response.data) {
-      franchiseName.value = response.data.franchise?.franchiseDetails?.franchiseName || 'Franchisor'
+      franchiseName.value = response.data.franchiseDetails?.franchiseName || 'Franchisor'
     }
   }
   catch (err: any) {
@@ -56,29 +56,35 @@ const fetchFranchiseName = async () => {
 const franchiseStats = computed(() => ({
   totalFranchisees: apiStats.value?.totalFranchisees || 0,
   totalUnits: apiStats.value?.totalUnits || 0,
+  activeUnits: apiStats.value?.activeUnits || 0,
+  inactiveUnits: apiStats.value?.inactiveUnits || 0,
   totalLeads: apiStats.value?.totalLeads || 0,
   activeTasks: apiStats.value?.activeTasks || 0,
+  completedTasks: apiStats.value?.completedTasks || 0,
+  pendingTasks: apiStats.value?.pendingTasks || 0,
+  totalTasks: apiStats.value?.totalTasks || 0,
   currentMonthRevenue: apiStats.value?.currentMonthRevenue || 0,
+  currentMonthSales: apiStats.value?.currentMonthSales || 0,
+  currentMonthExpenses: apiStats.value?.currentMonthExpenses || 0,
+  currentMonthProfit: apiStats.value?.currentMonthProfit || 0,
   revenueChange: apiStats.value?.revenueChange || 0,
   pendingRoyalties: apiStats.value?.pendingRoyalties || 0,
 }))
 
-// 👉 Calculate active and inactive units (simplified calculation)
-const unitStats = computed(() => {
-  const total = franchiseStats.value.totalUnits
-  const active = Math.round(total * 0.75) // Assuming 75% are active
-  const inactive = total - active
-  return { total, active, inactive }
-})
+// 👉 Unit stats from backend
+const unitStats = computed(() => ({
+  total: franchiseStats.value.totalUnits,
+  active: franchiseStats.value.activeUnits,
+  inactive: franchiseStats.value.inactiveUnits,
+}))
 
-// 👉 Calculate task statistics
-const taskStats = computed(() => {
-  const active = franchiseStats.value.activeTasks
-  const total = active > 0 ? Math.round(active * 1.5) : 0 // Estimate total based on active
-  const completed = Math.round(total * 0.6) // Estimate 60% completed
-  const pending = total - completed - active
-  return { active, completed, pending, total }
-})
+// 👉 Task stats from backend
+const taskStats = computed(() => ({
+  active: franchiseStats.value.activeTasks,
+  completed: franchiseStats.value.completedTasks,
+  pending: franchiseStats.value.pendingTasks,
+  total: franchiseStats.value.totalTasks,
+}))
 
 // 👉 Initialize dashboard data on mount
 onMounted(async () => {
@@ -172,7 +178,9 @@ onMounted(async () => {
       <!-- 👉 Revenue Overview -->
       <VCol cols="12" md="6">
         <RevenueOverview :current-month-revenue="franchiseStats.currentMonthRevenue"
-          :revenue-change="franchiseStats.revenueChange" :pending-royalties="franchiseStats.pendingRoyalties" />
+          :revenue-change="franchiseStats.revenueChange" :pending-royalties="franchiseStats.pendingRoyalties"
+          :current-month-sales="franchiseStats.currentMonthSales" :current-month-expenses="franchiseStats.currentMonthExpenses"
+          :current-month-profit="franchiseStats.currentMonthProfit" />
       </VCol>
 
       <!-- 👉 Task Tracker -->

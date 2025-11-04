@@ -10,6 +10,8 @@ use App\Http\Requests\UpdatePropertyRequest;
 use App\Models\Property;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PropertyController extends BaseResourceController
 {
@@ -78,6 +80,17 @@ class PropertyController extends BaseResourceController
         $data = $request->validated();
         $data['broker_id'] = auth()->id();
 
+        // Handle image uploads if present
+        if ($request->hasFile('property_images')) {
+            $images = [];
+            foreach ($request->file('property_images') as $image) {
+                $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
+                $path = $image->storeAs('property-images', $filename, 'uploads');
+                $images[] = '/uploads/' . $path;
+            }
+            $data['images'] = $images;
+        }
+
         $property = Property::create($data);
 
         return $this->successResponse(
@@ -112,7 +125,28 @@ class PropertyController extends BaseResourceController
             return $this->forbiddenResponse('You do not have permission to update this property');
         }
 
-        $property->update($request->validated());
+        $data = $request->validated();
+
+        // Handle image uploads if present
+        if ($request->hasFile('property_images')) {
+            // Delete old images from storage
+            if ($property->images) {
+                foreach ($property->images as $oldImage) {
+                    $imagePath = str_replace('/uploads/', '', $oldImage);
+                    Storage::disk('uploads')->delete($imagePath);
+                }
+            }
+
+            $images = [];
+            foreach ($request->file('property_images') as $image) {
+                $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
+                $path = $image->storeAs('property-images', $filename, 'uploads');
+                $images[] = '/uploads/' . $path;
+            }
+            $data['images'] = $images;
+        }
+
+        $property->update($data);
 
         return $this->successResponse(
             $property->load(['broker']),
@@ -128,6 +162,14 @@ class PropertyController extends BaseResourceController
         // Ensure broker can only delete their own properties
         if ($property->broker_id !== auth()->id()) {
             return $this->forbiddenResponse('You do not have permission to delete this property');
+        }
+
+        // Delete associated images from storage
+        if ($property->images) {
+            foreach ($property->images as $image) {
+                $imagePath = str_replace('/uploads/', '', $image);
+                Storage::disk('uploads')->delete($imagePath);
+            }
         }
 
         $property->delete();

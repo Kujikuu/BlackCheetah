@@ -1,10 +1,17 @@
 export default [
   {
-    title: 'Franchise Opportunities',
+    title: 'Franchise Management',
     to: 'broker-assigned-franchises',
     icon: { icon: 'tabler-building-store' },
     action: 'manage',
     subject: 'Franchise',
+  },
+  {
+    title: 'Property Management',
+    to: 'broker-properties',
+    icon: { icon: 'tabler-map-pin' },
+    action: 'manage',
+    subject: 'Property',
   },
   {
     title: 'Lead Management',
@@ -26,12 +33,5 @@ export default [
     icon: { icon: 'tabler-headset' },
     action: 'create',
     subject: 'TechnicalRequest',
-  },
-  {
-    title: 'Properties',
-    to: 'broker-properties',
-    icon: { icon: 'tabler-map-pin' },
-    action: 'manage',
-    subject: 'Property',
   }
 ]

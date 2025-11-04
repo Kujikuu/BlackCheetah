@@ -34,9 +34,7 @@ export const $api = ofetch.create({
         Authorization: `Bearer ${accessToken}`,
       }
     }
-    else {
-      console.warn('No access token found in cookies for request:', options.method)
-    }
+    // Silently proceed without token for unauthenticated requests
   },
   async onResponse({ response, options }) {
     // Show success notifications for create/update/delete operations

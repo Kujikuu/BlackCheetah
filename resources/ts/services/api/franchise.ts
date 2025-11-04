@@ -99,9 +99,17 @@ export interface Franchisee {
 export interface FranchisorDashboardStats {
   totalFranchisees: number
   totalUnits: number
+  activeUnits: number
+  inactiveUnits: number
   totalLeads: number
   activeTasks: number
+  completedTasks: number
+  pendingTasks: number
+  totalTasks: number
   currentMonthRevenue: number
+  currentMonthSales: number
+  currentMonthExpenses: number
+  currentMonthProfit: number
   revenueChange: number
   pendingRoyalties: number
 }

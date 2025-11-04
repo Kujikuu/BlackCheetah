@@ -8,27 +8,33 @@ interface Props {
     currentMonthRevenue?: number
     revenueChange?: number
     pendingRoyalties?: number
+    currentMonthSales?: number
+    currentMonthExpenses?: number
+    currentMonthProfit?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
     currentMonthRevenue: 0,
     revenueChange: 0,
     pendingRoyalties: 0,
+    currentMonthSales: 0,
+    currentMonthExpenses: 0,
+    currentMonthProfit: 0,
 })
 
 const vuetifyTheme = useTheme()
 
-// Generate weekly revenue data
+// Generate weekly profit/loss data (using absolute values for visualization)
 const series = computed(() => [
     {
         data: [
-            Math.round(props.currentMonthRevenue * 0.10),
-            Math.round(props.currentMonthRevenue * 0.15),
-            Math.round(props.currentMonthRevenue * 0.12),
-            Math.round(props.currentMonthRevenue * 0.13),
-            Math.round(props.currentMonthRevenue * 0.20),
-            Math.round(props.currentMonthRevenue * 0.15),
-            Math.round(props.currentMonthRevenue * 0.15),
+            Math.round(Math.abs(props.currentMonthProfit) * 0.10),
+            Math.round(Math.abs(props.currentMonthProfit) * 0.15),
+            Math.round(Math.abs(props.currentMonthProfit) * 0.12),
+            Math.round(Math.abs(props.currentMonthProfit) * 0.13),
+            Math.round(Math.abs(props.currentMonthProfit) * 0.20),
+            Math.round(Math.abs(props.currentMonthProfit) * 0.15),
+            Math.round(Math.abs(props.currentMonthProfit) * 0.15),
         ],
     },
 ])
@@ -118,25 +124,25 @@ const chartOptions = computed(() => {
 
 const revenueReports = computed(() => [
     {
-        color: 'primary',
-        icon: SaudiRiyal,
-        title: 'Revenue',
-        amount: formatCurrency(props.currentMonthRevenue, 'SAR', false),
+        color: 'success',
+        icon: 'tabler-trending-up',
+        title: 'Sales',
+        amount: formatCurrency(props.currentMonthSales, 'SAR', false),
         progress: '100',
     },
     {
-        color: 'warning',
-        icon: 'tabler-receipt',
-        title: 'Pending',
-        amount: formatCurrency(props.pendingRoyalties, 'SAR', false),
-        progress: props.currentMonthRevenue > 0 ? Math.round((props.pendingRoyalties / props.currentMonthRevenue) * 100).toString() : '0',
+        color: 'error',
+        icon: 'tabler-trending-down',
+        title: 'Expenses',
+        amount: formatCurrency(props.currentMonthExpenses, 'SAR', false),
+        progress: props.currentMonthSales > 0 ? Math.round((props.currentMonthExpenses / props.currentMonthSales) * 100).toString() : '0',
     },
     {
-        color: props.revenueChange >= 0 ? 'success' : 'error',
-        icon: props.revenueChange >= 0 ? 'tabler-trending-up' : 'tabler-trending-down',
-        title: 'Growth',
-        amount: `${props.revenueChange >= 0 ? '+' : ''}${props.revenueChange}%`,
-        progress: Math.abs(props.revenueChange).toString(),
+        color: props.currentMonthProfit >= 0 ? 'success' : 'error',
+        icon: props.currentMonthProfit >= 0 ? 'tabler-coins' : 'tabler-alert-triangle',
+        title: props.currentMonthProfit >= 0 ? 'Profit' : 'Loss',
+        amount: formatCurrency(Math.abs(props.currentMonthProfit), 'SAR', false),
+        progress: props.currentMonthSales > 0 ? Math.round((Math.abs(props.currentMonthProfit) / props.currentMonthSales) * 100).toString() : '0',
     },
 ])
 
@@ -149,8 +155,8 @@ const moreList = [
 <template>
     <VCard>
         <VCardItem class="pb-sm-0">
-            <VCardTitle>Revenue Reports</VCardTitle>
-            <VCardSubtitle>Monthly Revenue Overview</VCardSubtitle>
+            <VCardTitle>Financial Overview</VCardTitle>
+            <VCardSubtitle>Monthly Sales, Expenses & Profit</VCardSubtitle>
 
             <!-- <template #append>
                 <div class="mt-n4 me-n2">
@@ -163,8 +169,8 @@ const moreList = [
             <VRow>
                 <VCol cols="12" sm="5" lg="6" class="d-flex flex-column align-self-center">
                     <div class="d-flex align-center gap-2 mb-3 flex-wrap">
-                        <h2 class="text-h2">
-                            {{ formatCurrency(currentMonthRevenue, 'SAR', false) }}
+                        <h2 class="text-h2" :class="currentMonthProfit >= 0 ? 'text-success' : 'text-error'">
+                            {{ formatCurrency(Math.abs(currentMonthProfit), 'SAR', false) }}
                         </h2>
                         <VChip v-if="revenueChange !== 0" label size="small"
                             :color="revenueChange > 0 ? 'success' : 'error'">
@@ -173,7 +179,7 @@ const moreList = [
                     </div>
 
                     <span class="text-sm text-medium-emphasis">
-                        Current month revenue compared to last month
+                        {{ currentMonthProfit >= 0 ? 'Current month profit' : 'Current month loss' }} compared to last month
                     </span>
                 </VCol>
 

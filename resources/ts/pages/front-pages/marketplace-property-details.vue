@@ -20,6 +20,10 @@ const propertyId = computed(() => Number(route.params.id))
 const property = ref<Property | null>(null)
 const isLoading = ref(false)
 
+// Gallery state
+const lightboxOpen = ref(false)
+const currentImageIndex = ref(0)
+
 // Fetch property details
 const fetchPropertyDetails = async () => {
   try {
@@ -73,12 +77,11 @@ const formattedPropertyType = computed(() => {
   ).join(' ')
 })
 
-// Compute image source with proper fallback
-// Compute image source with proper fallback
-const imageSrc = computed(() => {
+// Process images array
+const propertyImages = computed(() => {
   // Handle case where images might be null, undefined, or not an array
   if (!property.value?.images) {
-    return placeholderImage
+    return []
   }
 
   // Handle case where images might be a string (JSON)
@@ -86,28 +89,80 @@ const imageSrc = computed(() => {
   if (typeof imagesArray === 'string') {
     try {
       imagesArray = JSON.parse(imagesArray)
-    } catch {
-      return placeholderImage
+    }
+    catch {
+      return []
     }
   }
 
-  // Ensure it's an array
-  if (!Array.isArray(imagesArray) || imagesArray.length === 0) {
-    return placeholderImage
+  // Ensure it's an array and filter valid images
+  if (!Array.isArray(imagesArray)) {
+    return []
   }
 
-  // Get first image and validate it
-  const firstImage = imagesArray[0]
-  if (firstImage && typeof firstImage === 'string' && firstImage.trim() !== '' && !firstImage.startsWith('[')) {
-    return firstImage
+  return imagesArray.filter(img =>
+    img && typeof img === 'string' && img.trim() !== '' && !img.startsWith('['),
+  )
+})
+
+// Compute main image source with proper fallback
+const imageSrc = computed(() => {
+  if (propertyImages.value.length > 0) {
+    return propertyImages.value[0]
   }
 
   return placeholderImage
 })
 
+// Open lightbox at specific index
+const openLightbox = (index: number) => {
+  currentImageIndex.value = index
+  lightboxOpen.value = true
+}
+
+// Navigate lightbox
+const previousImage = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--
+  }
+  else {
+    currentImageIndex.value = propertyImages.value.length - 1
+  }
+}
+
+const nextImage = () => {
+  if (currentImageIndex.value < propertyImages.value.length - 1) {
+    currentImageIndex.value++
+  }
+  else {
+    currentImageIndex.value = 0
+  }
+}
+
+// Handle keyboard navigation
+const handleKeydown = (event: KeyboardEvent) => {
+  if (!lightboxOpen.value)
+    return
+
+  if (event.key === 'ArrowLeft') {
+    previousImage()
+  }
+  else if (event.key === 'ArrowRight') {
+    nextImage()
+  }
+  else if (event.key === 'Escape') {
+    lightboxOpen.value = false
+  }
+}
+
 // Lifecycle
 onMounted(() => {
   fetchPropertyDetails()
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
 })
 </script>
 
@@ -142,8 +197,21 @@ onMounted(() => {
       <!-- Hero Section with Full-Width Image -->
       <section class="property-hero">
         <div class="hero-image-wrapper">
-          <VImg :src="imageSrc" cover class="hero-image" />
+          <VImg :src="imageSrc" cover class="hero-image" @click="propertyImages.length > 0 ? openLightbox(0) : null" :class="{ 'cursor-pointer': propertyImages.length > 0 }" />
           <div class="hero-overlay" />
+          
+          <!-- View Gallery Button -->
+          <VBtn
+            v-if="propertyImages.length > 1"
+            color="white"
+            variant="elevated"
+            class="view-gallery-btn"
+            prepend-icon="tabler-photo"
+            @click="openLightbox(0)"
+          >
+            View All {{ propertyImages.length }} Photos
+          </VBtn>
+
           <VContainer class="hero-content">
             <VRow>
               <VCol cols="12" md="8" lg="7">
@@ -162,6 +230,48 @@ onMounted(() => {
           </VContainer>
         </div>
       </section>
+
+      <!-- Image Gallery Thumbnails -->
+      <VContainer v-if="propertyImages.length > 1" class="py-6">
+        <VCard elevation="2" class="rounded-lg">
+          <VCardItem>
+            <VCardTitle class="text-h5">Property Images</VCardTitle>
+          </VCardItem>
+          <VCardText>
+            <VRow>
+              <VCol
+                v-for="(image, index) in propertyImages.slice(0, 6)"
+                :key="index"
+                cols="6"
+                sm="4"
+                md="2"
+              >
+                <VCard
+                  class="gallery-thumbnail"
+                  elevation="0"
+                  @click="openLightbox(index)"
+                >
+                  <VImg
+                    :src="image"
+                    aspect-ratio="1"
+                    cover
+                    class="rounded cursor-pointer"
+                  />
+                  <!-- Show "+X more" overlay on last thumbnail if there are more images -->
+                  <div
+                    v-if="index === 5 && propertyImages.length > 6"
+                    class="more-images-overlay"
+                  >
+                    <div class="text-h4 font-weight-bold text-white">
+                      +{{ propertyImages.length - 6 }}
+                    </div>
+                  </div>
+                </VCard>
+              </VCol>
+            </VRow>
+          </VCardText>
+        </VCard>
+      </VContainer>
 
       <!-- Main Content -->
       <VContainer class="py-8">
@@ -364,6 +474,91 @@ onMounted(() => {
     </template>
 
     <Footer />
+
+    <!-- Lightbox Dialog -->
+    <VDialog
+      v-model="lightboxOpen"
+      fullscreen
+      transition="dialog-bottom-transition"
+      class="lightbox-dialog"
+    >
+      <VCard color="black">
+        <!-- Close Button -->
+        <VBtn
+          icon
+          size="large"
+          color="white"
+          class="lightbox-close-btn"
+          @click="lightboxOpen = false"
+        >
+          <VIcon icon="tabler-x" size="28" />
+        </VBtn>
+
+        <!-- Image Counter -->
+        <div class="lightbox-counter">
+          <VChip color="rgba(0, 0, 0, 0.7)" class="text-white">
+            {{ currentImageIndex + 1 }} / {{ propertyImages.length }}
+          </VChip>
+        </div>
+
+        <!-- Main Image -->
+        <VCardText class="d-flex align-center justify-center pa-0" style="height: 100vh;">
+          <div class="lightbox-content">
+            <VImg
+              :src="propertyImages[currentImageIndex]"
+              max-height="90vh"
+              max-width="90vw"
+              contain
+              class="lightbox-image"
+            />
+          </div>
+        </VCardText>
+
+        <!-- Navigation Buttons -->
+        <VBtn
+          v-if="propertyImages.length > 1"
+          icon
+          size="large"
+          color="white"
+          class="lightbox-nav-btn lightbox-prev-btn"
+          @click="previousImage"
+        >
+          <VIcon icon="tabler-chevron-left" size="32" />
+        </VBtn>
+
+        <VBtn
+          v-if="propertyImages.length > 1"
+          icon
+          size="large"
+          color="white"
+          class="lightbox-nav-btn lightbox-next-btn"
+          @click="nextImage"
+        >
+          <VIcon icon="tabler-chevron-right" size="32" />
+        </VBtn>
+
+        <!-- Thumbnail Strip -->
+        <div v-if="propertyImages.length > 1" class="lightbox-thumbnails">
+          <div class="thumbnail-strip">
+            <VCard
+              v-for="(image, index) in propertyImages"
+              :key="index"
+              class="thumbnail-item"
+              :class="{ 'active': index === currentImageIndex }"
+              elevation="0"
+              @click="currentImageIndex = index"
+            >
+              <VImg
+                :src="image"
+                aspect-ratio="1"
+                cover
+                class="rounded cursor-pointer"
+              />
+            </VCard>
+          </div>
+        </div>
+      </VCard>
+    </VDialog>
   </div>
 </template>
 
@@ -464,6 +659,190 @@ onMounted(() => {
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Gallery styles
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.view-gallery-btn {
+  position: absolute;
+  bottom: 5rem;
+  right: 2rem;
+  z-index: 4;
+
+  @media (max-width: 959px) {
+    bottom: 4rem;
+    right: 1.5rem;
+  }
+
+  @media (max-width: 599px) {
+    bottom: 3rem;
+    right: 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+.gallery-thumbnail {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.more-images-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+// Lightbox styles
+.lightbox-dialog {
+  .v-overlay__content {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.lightbox-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.5) !important;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.7) !important;
+  }
+}
+
+.lightbox-counter {
+  position: absolute;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.lightbox-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem 6rem;
+
+  @media (max-width: 599px) {
+    padding: 3rem 0.5rem 8rem;
+  }
+}
+
+.lightbox-image {
+  width: 100%;
+  height: 100%;
+}
+
+.lightbox-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.5) !important;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.7) !important;
+  }
+
+  @media (max-width: 599px) {
+    &.lightbox-prev-btn {
+      left: 0.5rem;
+    }
+
+    &.lightbox-next-btn {
+      right: 0.5rem;
+    }
+  }
+}
+
+.lightbox-prev-btn {
+  left: 1rem;
+}
+
+.lightbox-next-btn {
+  right: 1rem;
+}
+
+.lightbox-thumbnails {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 1rem;
+  z-index: 10;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+  }
+}
+
+.thumbnail-strip {
+  display: flex;
+  gap: 0.5rem;
+  min-width: min-content;
+}
+
+.thumbnail-item {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  &.active {
+    opacity: 1;
+    border-color: white;
+  }
+
+  @media (max-width: 599px) {
+    width: 60px;
+    height: 60px;
   }
 }
 </style>
