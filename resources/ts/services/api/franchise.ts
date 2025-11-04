@@ -107,6 +107,9 @@ export interface FranchisorDashboardStats {
   pendingTasks: number
   totalTasks: number
   currentMonthRevenue: number
+  currentMonthSales: number
+  currentMonthExpenses: number
+  currentMonthProfit: number
   revenueChange: number
   pendingRoyalties: number
 }

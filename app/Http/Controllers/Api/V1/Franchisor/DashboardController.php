@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\Revenue;
 use App\Models\Royalty;
 use App\Models\Task;
+use App\Models\Transaction;
 use App\Models\Unit;
 use App\Models\User;
 use Carbon\Carbon;
@@ -42,15 +43,11 @@ class DashboardController extends BaseResourceController
 
             // Total franchisees under this franchisor
             $totalFranchisees = User::where('role', 'franchisee')
-                ->whereHas('franchise', function ($query) use ($franchise) {
-                    $query->where('franchisor_id', $franchise->id);
-                })
+                ->where('franchise_id', $franchise->id)
                 ->count();
 
             // Total units under this franchisor
-            $totalUnits = Unit::whereHas('franchise', function ($query) use ($franchise) {
-                $query->where('franchisor_id', $franchise->id);
-            })->count();
+            $totalUnits = Unit::where('franchise_id', $franchise->id)->count();
 
             // Total leads for this franchisor
             $totalLeads = Lead::where('franchise_id', $franchise->id)->count();
@@ -79,6 +76,42 @@ class DashboardController extends BaseResourceController
                 ? (($currentMonthRevenue - $previousMonthRevenue) / $previousMonthRevenue) * 100
                 : 0;
 
+            // Get the most recent month with data, fallback to current month
+            $latestRevenue = Revenue::where('franchise_id', $franchise->id)
+                ->where('status', 'verified')
+                ->where('payment_status', 'completed')
+                ->orderBy('period_year', 'desc')
+                ->orderBy('period_month', 'desc')
+                ->first();
+
+            // Use latest month with data, or current month if no data exists
+            $analysisMonth = $latestRevenue ? $latestRevenue->period_month : $currentMonth->month;
+            $analysisYear = $latestRevenue ? $latestRevenue->period_year : $currentMonth->year;
+
+            // Sales: Sum of verified/completed revenue for analysis month
+            $currentMonthSales = Revenue::where('franchise_id', $franchise->id)
+                ->where('period_year', $analysisYear)
+                ->where('period_month', $analysisMonth)
+                ->where('status', 'verified')
+                ->where('payment_status', 'completed')
+                ->sum('net_amount');
+
+            // Expenses: Sum of expense transactions + monthly unit expenses for analysis month
+            $currentMonthExpenses = Transaction::where('franchise_id', $franchise->id)
+                ->whereYear('transaction_date', $analysisYear)
+                ->whereMonth('transaction_date', $analysisMonth)
+                ->whereIn('type', ['expense', 'royalty', 'marketing_fee'])
+                ->where('status', 'completed')
+                ->sum('amount');
+
+            // Add monthly unit expenses
+            $monthlyUnitExpenses = Unit::where('franchise_id', $franchise->id)->sum('monthly_expenses');
+
+            $totalExpenses = $currentMonthExpenses + $monthlyUnitExpenses;
+
+            // Profit: Sales - Expenses
+            $currentMonthProfit = $currentMonthSales - $totalExpenses;
+
             // Pending royalties
             $pendingRoyalties = Royalty::whereHas('unit.franchise', function ($query) use ($franchise) {
                 $query->where('franchisor_id', $franchise->id);
@@ -87,9 +120,7 @@ class DashboardController extends BaseResourceController
                 ->sum('total_amount');
 
             // Unit statistics by status
-            $activeUnits = Unit::whereHas('franchise', function ($query) use ($franchise) {
-                $query->where('franchisor_id', $franchise->id);
-            })
+            $activeUnits = Unit::where('franchise_id', $franchise->id)
                 ->whereIn('status', ['active', 'operational'])
                 ->count();
 
@@ -112,18 +143,21 @@ class DashboardController extends BaseResourceController
                 ->count();
 
             return $this->successResponse([
-                'totalFranchisees' => $totalFranchisees,
-                'totalUnits' => $totalUnits,
-                'activeUnits' => $activeUnits,
-                'inactiveUnits' => $inactiveUnits,
-                'totalLeads' => $totalLeads,
-                'activeTasks' => $activeTasks,
-                'completedTasks' => $completedTasks,
-                'pendingTasks' => $pendingTasks,
-                'totalTasks' => $totalTasks,
-                'currentMonthRevenue' => $currentMonthRevenue,
-                'revenueChange' => round($revenueChange, 2),
-                'pendingRoyalties' => $pendingRoyalties,
+                'totalFranchisees' => (int) $totalFranchisees,
+                'totalUnits' => (int) $totalUnits,
+                'activeUnits' => (int) $activeUnits,
+                'inactiveUnits' => (int) $inactiveUnits,
+                'totalLeads' => (int) $totalLeads,
+                'activeTasks' => (int) $activeTasks,
+                'completedTasks' => (int) $completedTasks,
+                'pendingTasks' => (int) $pendingTasks,
+                'totalTasks' => (int) $totalTasks,
+                'currentMonthRevenue' => (float) $currentMonthRevenue,
+                'currentMonthSales' => (float) $currentMonthSales,
+                'currentMonthExpenses' => (float) $totalExpenses,
+                'currentMonthProfit' => (float) $currentMonthProfit,
+                'revenueChange' => (float) round($revenueChange, 2),
+                'pendingRoyalties' => (float) $pendingRoyalties,
             ], 'Dashboard statistics retrieved successfully');
         } catch (\Exception $e) {
             return $this->errorResponse('Failed to fetch dashboard statistics', 500, $e->getMessage());

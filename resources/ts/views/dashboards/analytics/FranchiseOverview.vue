@@ -87,7 +87,7 @@ const franchiseAnalytics = computed(() => [
                                     </h6>
                                 </VCol>
 
-                                <VCol v-for="d in item.data" :key="d.number" cols="6" class="text-no-wrap pb-2">
+                                <VCol v-for="d in item.data" :key="d.text" cols="6" class="text-no-wrap pb-2">
                                     <VChip label variant="flat" size="default"
                                         color="rgb(var(--v-theme-primary-darken-1))"
                                         class="font-weight-medium text-white rounded me-2 px-2"
